@@ -1,8 +1,9 @@
+import { Buffer } from 'node:buffer';
+
 import { once } from 'es-toolkit';
 
-import { fromBase64, toBase64 } from './base64';
-
 import type { OAuthScope } from './UserCalls';
+import type { EpochMs } from '@seedcord/types';
 import type { Promisable } from 'type-fest';
 
 // discord gives the bot an access token and a refresh token for every user who logs in. anyone who has
@@ -28,11 +29,6 @@ import type { Promisable } from 'type-fest';
  * user's id.
  *
  * A seedcord `KvCollection<string>` fits, and so does a `Map<string, string>`.
- *
- * @example
- * ```ts
- * const store: TokenStore = bot.kv.collection<string>('oauth-tokens');
- * ```
  */
 export interface TokenStore {
     get(userId: string): Promisable<string | undefined>;
@@ -43,7 +39,7 @@ export interface TokenStore {
 export interface SavedTokens {
     accessToken: string;
     refreshToken: string;
-    expiresAt: number; // epoch ms
+    expiresAt: EpochMs;
     scopes: OAuthScope[];
 }
 
@@ -90,17 +86,18 @@ export class TokenVault {
             encoder.encode(JSON.stringify(tokens))
         );
         // iv first, then the scrambled tokens. read() splits them at IV_BYTES
-        const record = new Uint8Array(IV_BYTES + sealed.byteLength);
+        const record = Buffer.alloc(IV_BYTES + sealed.byteLength);
         record.set(iv);
         record.set(new Uint8Array(sealed), IV_BYTES);
-        await this.records.set(userId, toBase64(record));
+        await this.records.set(userId, record.toString('base64'));
     }
 
     public async read(userId: string): Promise<SavedTokens | undefined> {
         const stored = await this.records.get(userId);
         if (stored === undefined) return undefined;
 
-        const bytes = fromBase64(stored);
+        // Buffer reads any string without throwing. a record that isn't ours fails at decrypt below
+        const bytes = new Uint8Array(Buffer.from(stored, 'base64'));
         const key = await this.key();
         const opened = await crypto.subtle
             .decrypt(this.cipher(bytes.subarray(0, IV_BYTES), userId), key, bytes.subarray(IV_BYTES))

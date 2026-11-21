@@ -35,7 +35,8 @@ export type GuildJoinOptions = Except<RESTPutAPIGuildMemberJSONBody, 'access_tok
 export type UserRest = Pick<REST, 'get' | 'post' | 'put' | 'patch' | 'delete'>;
 
 // the string is never a real argument. it's the parameter type because typescript prints it in the
-// compile error
+// editor's hover, and in the error for a call that passes an argument. a call without arguments only
+// gets "Expected 1 arguments, but got 0"
 type ScopedArgs<
     TAllowed extends OAuthScope,
     TScope extends OAuthScope,
@@ -87,8 +88,8 @@ export interface UserCalls<TScopes extends OAuthScope = never, TExtra extends OA
     ): ScopedResult<TScopes, 'role_connections.write', RESTGetAPICurrentUserApplicationRoleConnectionResult>;
     /**
      * Replaces what the application has stored for the user's Linked Roles. Needs the
-     * `role_connections.write` scope. Discord stores a value it's given without checking it against the
-     * record's type.
+     * `role_connections.write` scope. Discord doesn't check the values against the metadata types that
+     * you registered.
      */
     setRoleConnection(
         ...args: ScopedArgs<

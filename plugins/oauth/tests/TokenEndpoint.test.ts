@@ -1,9 +1,10 @@
 import { REST } from '@discordjs/rest';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { TokenEndpoint } from '#src/TokenEndpoint';
 
-import { CommonJsREST, fakeDiscord } from './fakeDiscord';
+import { fakeDiscord, WEEK_SECONDS } from './fakeDiscord';
 
 import type { SeenRequest } from './fakeDiscord';
 
@@ -15,11 +16,11 @@ const GRANTED = {
     token_type: 'Bearer',
     access_token: 'access-1',
     refresh_token: 'refresh-1',
-    expires_in: 604_800,
+    expires_in: WEEK_SECONDS,
     scope: 'identify guilds'
 };
 
-const INVALID_GRANT = { status: 400, json: { error: 'invalid_grant' } };
+const refusal = (error: string): { status: number; json: { error: string } } => ({ status: 400, json: { error } });
 
 async function endpointAgainst(reply: Parameters<typeof fakeDiscord>[0]): Promise<{
     endpoint: TokenEndpoint;
@@ -64,34 +65,42 @@ describe('TokenEndpoint', () => {
     it('refreshes with the refresh token', async () => {
         const { endpoint, requests } = await endpointAgainst(() => ({ json: GRANTED }));
 
-        expect(await endpoint.refresh('refresh-0')).toEqual(GRANTED);
+        expect(await endpoint.refresh('refresh-0')).toEqual({ kind: 'granted', grant: GRANTED });
         expect(requests[0]?.headers.authorization).toBe(BASIC);
         expect(formOf(requests[0])).toEqual({ grant_type: 'refresh_token', refresh_token: 'refresh-0' });
     });
 
-    it('resolves to undefined when Discord answers invalid_grant', async () => {
-        const { endpoint } = await endpointAgainst(() => INVALID_GRANT);
+    it('resolves to undefined for a code that Discord answers invalid_grant to', async () => {
+        const { endpoint } = await endpointAgainst(() => refusal('invalid_grant'));
 
         expect(await endpoint.exchange({ code: 'used', redirectUri: 'https://bot.test/cb' })).toBeUndefined();
-        expect(await endpoint.refresh('used')).toBeUndefined();
     });
 
-    it('resolves to undefined for invalid_grant on the CommonJS build of @discordjs/rest', async () => {
-        const discord = await fakeDiscord(() => ({
-            status: 400,
-            json: { error: 'invalid_grant', error_description: 'Invalid "code" in request.' }
-        }));
-        const endpoint = new TokenEndpoint(new CommonJsREST({ api: discord.api }), APP_ID, SECRET);
+    it('throws when Discord refuses a code for any other reason', async () => {
+        const { endpoint } = await endpointAgainst(() => refusal('invalid_scope'));
 
-        expect(await endpoint.exchange({ code: 'made-up', redirectUri: 'https://bot.test/cb' })).toBeUndefined();
+        await expect(endpoint.exchange({ code: 'c', redirectUri: 'https://bot.test/cb' })).rejects.toMatchObject({
+            code: 'invalid_scope'
+        });
     });
 
-    it("throws on any other refusal and keeps the bot's token set", async () => {
+    it.each([
+        ['invalid_grant', true],
+        ['invalid_request', false]
+    ])('reports a refresh that Discord answers %s to as refused', async (error, invalidGrant) => {
+        const { endpoint } = await endpointAgainst(() => refusal(error));
+
+        expect(await endpoint.refresh('used')).toMatchObject({ kind: 'refused', invalidGrant, error: { code: error } });
+    });
+
+    it("throws with the fix when Discord refuses the client secret, and keeps the bot's token set", async () => {
         const { endpoint, rest, requests } = await endpointAgainst((request) =>
             request.route === '/oauth2/token' ? { status: 401, json: { error: 'invalid_client' } } : {}
         );
 
-        await expect(endpoint.refresh('refresh-0')).rejects.toMatchObject({ status: 401, code: 'invalid_client' });
+        await expect(endpoint.refresh('refresh-0')).rejects.toMatchObject({
+            code: SeedcordErrorCode.PluginOAuthSecretRefused
+        });
 
         await rest.get('/applications/@me');
         expect(requests[1]?.headers.authorization).toBe('Bot bot-token');

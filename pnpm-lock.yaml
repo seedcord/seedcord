@@ -642,6 +642,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../../packages/errors
+      '@seedcord/plugin-oauth':
+        specifier: workspace:^
+        version: link:../../plugins/oauth
       '@seedcord/ui':
         specifier: workspace:^
         version: link:../../tooling/ui
@@ -1950,6 +1953,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../../packages/errors
+      '@seedcord/types':
+        specifier: workspace:^
+        version: link:../../packages/types
       '@seedcord/utils':
         specifier: workspace:^
         version: link:../../packages/utils

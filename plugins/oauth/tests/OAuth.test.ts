@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/t
 
 import { OAuth } from '#src/OAuth';
 
-import { fakeDiscord } from './fakeDiscord';
+import { fakeDiscord, WEEK_SECONDS } from './fakeDiscord';
 import { SERVER_URL_UNSET, TestHost } from './host';
 
 import type { CompletedLogin, FailedLogin } from '#src/LoginOutcome';
@@ -36,7 +36,7 @@ async function botWith(
                     token_type: 'Bearer',
                     access_token: 'a',
                     refresh_token: 'r',
-                    expires_in: 604_800,
+                    expires_in: WEEK_SECONDS,
                     scope: 'identify'
                 }
             };
@@ -173,7 +173,16 @@ describe('OAuth routes', () => {
         const response = await oauth.fetch(new Request(`${CALLBACK}?code=c&state=s&iss=https://discord.com`));
 
         expect(response?.status).toBe(400);
-        expect(await response?.text()).toContain('expired');
+        expect(await response?.text()).toContain('start again');
+    });
+
+    it('shows a plain page with a 400 for a link with a scope outside extraScopes', async () => {
+        const { oauth } = await botWith();
+
+        const response = await oauth.fetch(new Request(`${oauth.loginUrl()}?scopes=guilds.join`));
+
+        expect(response?.status).toBe(400);
+        expect(await response?.text()).toContain("doesn't allow");
     });
 
     it('hands a login that did not finish to onFailure', async () => {
@@ -260,6 +269,23 @@ describe('OAuth redirect check', () => {
         const { oauth } = new TestHost({ api: discord.api }).attach('oauth', OAuth.with());
         bindSecretForThisTest();
         oauth.init();
+
+        await expect(oauth.ready()).resolves.toBeUndefined();
+        expect(warn).toHaveBeenCalledOnce();
+    });
+
+    it("logs and lets startup go on when the bot's kv can't be read", async () => {
+        const warn = vi.spyOn(Logger.prototype, 'warn').mockReturnValue();
+        const kv = {
+            get: (): never => {
+                throw new Error('kv is down');
+            },
+            set: (): void => undefined,
+            delete: (): void => undefined,
+            entries: (): [] => [],
+            [Symbol.dispose]: (): void => undefined
+        };
+        const { oauth } = await botWith({}, { host: { kv } });
 
         await expect(oauth.ready()).resolves.toBeUndefined();
         expect(warn).toHaveBeenCalledOnce();

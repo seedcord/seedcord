@@ -4,19 +4,21 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import { OAuthClient } from '#src/OAuthClient';
 
-import { CommonJsREST, fakeDiscord } from './fakeDiscord';
+import { fakeDiscord, WEEK_SECONDS } from './fakeDiscord';
 
 import type { TokenStore } from '#src/TokenVault';
 import type { SeenRequest } from './fakeDiscord';
 
 const APP_ID = '1564002376115949650';
 const USER = { id: '111', username: 'dhruv' };
-const WEEK_SECONDS = 7 * 24 * 60 * 60;
 
 interface Discord {
     requests: SeenRequest[];
     acceptedRefreshes: number;
     deadAccessTokens: Set<string>;
+    // what a refresh with an old refresh token gets. real Discord answers invalid_request while the
+    // refresh that used the token is still running, and invalid_grant after it
+    usedRefreshTokenAnswer: 'invalid_grant' | 'invalid_request';
     // client() keeps its tokens here unless it gets another store
     store: Map<string, string>;
     api: string;
@@ -25,11 +27,7 @@ interface Discord {
 
 // acts like Discord for one user. every refresh token works once, each token it grants lasts `expiresIn`,
 // and the tokens are numbered in the order it granted them: access-0 and refresh-0, then access-1
-async function discordGranting(
-    expiresIn: number,
-    scope = 'identify guilds',
-    Rest: typeof REST = REST
-): Promise<Discord> {
+async function discordGranting(expiresIn: number, scope = 'identify guilds'): Promise<Discord> {
     const live = { refreshToken: '', granted: 0 };
     const grant = (): object => {
         const number = live.granted++;
@@ -51,7 +49,7 @@ async function discordGranting(
         if (route === '/oauth2/token' && form.get('grant_type') === 'authorization_code') return { json: grant() };
         if (route === '/oauth2/token') {
             if (form.get('refresh_token') !== live.refreshToken)
-                return { status: 400, json: { error: 'invalid_grant' } };
+                return { status: 400, json: { error: discord.usedRefreshTokenAnswer } };
             discord.acceptedRefreshes++;
             return { json: grant() };
         }
@@ -65,10 +63,11 @@ async function discordGranting(
         api: server.api,
         acceptedRefreshes: 0,
         deadAccessTokens: new Set(),
+        usedRefreshTokenAnswer: 'invalid_grant',
         store: new Map(),
         client: (store = discord.store) =>
             new OAuthClient({
-                rest: new Rest({ api: server.api }).setToken('bot-token'),
+                rest: new REST({ api: server.api }).setToken('bot-token'),
                 store,
                 clientId: APP_ID,
                 clientSecret: 'client-secret',
@@ -171,34 +170,49 @@ describe('OAuthClient', () => {
         expect(bearerOf(discord.requests, '/users/@me/guilds')).toEqual(['Bearer access-1']);
     });
 
-    it.each([
-        ['', REST],
-        [', on the CommonJS build of @discordjs/rest', CommonJsREST]
-    ])('uses the tokens another process saved when it loses a refresh race%s', async (_build, Rest) => {
-        const discord = await discordGranting(60, undefined, Rest);
-        const [first, second] = [discord.client(), discord.client()];
-        await first.exchange('the-code');
+    it.each(['invalid_grant', 'invalid_request'] as const)(
+        'uses the tokens another process saved when it loses a refresh race and Discord answers %s',
+        async (answer) => {
+            const discord = await discordGranting(60);
+            discord.usedRefreshTokenAnswer = answer;
+            const [first, second] = [discord.client(), discord.client()];
+            await first.exchange('the-code');
 
-        await Promise.all([first.as(USER.id).get('/users/@me/guilds'), second.as(USER.id).get('/users/@me/guilds')]);
+            await Promise.all([
+                first.as(USER.id).get('/users/@me/guilds'),
+                second.as(USER.id).get('/users/@me/guilds')
+            ]);
 
-        // one refresh won, and the loser read the winner's record
-        expect(discord.acceptedRefreshes).toBe(1);
-        expect(bearerOf(discord.requests, '/users/@me/guilds')).toEqual(['Bearer access-1', 'Bearer access-1']);
-    });
+            // one refresh won, and the loser read the winner's record
+            expect(discord.acceptedRefreshes).toBe(1);
+            expect(bearerOf(discord.requests, '/users/@me/guilds')).toEqual(['Bearer access-1', 'Bearer access-1']);
+        }
+    );
 
-    it('deletes the tokens and throws once the grant has ended', async () => {
+    // the user logged in again somewhere else on another store, which used up this store's refresh token
+    async function clientWithAUsedRefreshToken(): Promise<{ discord: Discord; oauth: ReturnType<Discord['client']> }> {
         const discord = await discordGranting(60);
         const oauth = discord.client();
         await oauth.exchange('the-code');
-        // the user logs in somewhere else on another store, which uses up this store's refresh token
         await discord.client(new Map()).exchange('another-code');
+        return { discord, oauth };
+    }
 
-        const loginNeeded = { code: SeedcordErrorCode.PluginOAuthLoginNeeded };
-        await expect(oauth.as(USER.id).get('/users/@me/guilds')).rejects.toMatchObject(loginNeeded);
+    it('throws when Discord answers invalid_grant to a refresh, and keeps the record', async () => {
+        const { discord, oauth } = await clientWithAUsedRefreshToken();
 
-        const tokenCalls = discord.requests.filter((request) => request.route === '/oauth2/token').length;
-        await expect(oauth.as(USER.id).get('/users/@me/guilds')).rejects.toMatchObject(loginNeeded);
-        expect(discord.requests.filter((request) => request.route === '/oauth2/token')).toHaveLength(tokenCalls);
+        await expect(oauth.as(USER.id).get('/users/@me/guilds')).rejects.toMatchObject({
+            code: SeedcordErrorCode.PluginOAuthLoginNeeded
+        });
+        expect(discord.store.size).toBe(1);
+    });
+
+    it("passes on Discord's invalid_request for a refresh when nothing newer was saved", async () => {
+        const { discord, oauth } = await clientWithAUsedRefreshToken();
+        discord.usedRefreshTokenAnswer = 'invalid_request';
+
+        await expect(oauth.as(USER.id).get('/users/@me/guilds')).rejects.toMatchObject({ code: 'invalid_request' });
+        expect(discord.store.size).toBe(1);
     });
 
     it('throws for a user who never logged in', async () => {
@@ -305,17 +319,14 @@ describe('OAuthClient scopes', () => {
         await expect(oauth.as(USER.id).guilds()).rejects.toMatchObject(LOGIN_NEEDED);
     });
 
-    it.each([
-        ['', REST],
-        [', on the CommonJS build of @discordjs/rest', CommonJsREST]
-    ])('deletes the tokens and throws when a typed call gets a 401%s', async (_build, Rest) => {
-        const discord = await discordGranting(WEEK_SECONDS, undefined, Rest);
+    it('throws when a typed call gets a 401, and keeps the record', async () => {
+        const discord = await discordGranting(WEEK_SECONDS);
         const oauth = discord.client();
         await oauth.exchange('the-code');
         discord.deadAccessTokens.add('access-0');
 
         await expect(oauth.as(USER.id).guilds()).rejects.toMatchObject(LOGIN_NEEDED);
-        expect(discord.store.size).toBe(0);
+        expect(discord.store.size).toBe(1);
     });
 
     // a client that's one refresh behind. another process refreshed the tokens, and this client's first
@@ -385,6 +396,9 @@ describe('OAuthClient calls that write', () => {
             if (route === `/guilds/forbidden/members/${USER.id}`) {
                 return { status: 403, json: { message: 'Missing Permissions', code: 50_013 } };
             }
+            if (route === `/guilds/after-removal/members/${USER.id}`) {
+                return { status: 403, json: { message: 'Invalid OAuth2 access token', code: 50_025 } };
+            }
             if (route.startsWith('/guilds/')) return { status: 201, json: MEMBER };
             return { json: JSON.parse(body) as unknown };
         });
@@ -423,6 +437,14 @@ describe('OAuthClient calls that write', () => {
 
         await expect(calls.joinGuild('forbidden')).rejects.toMatchObject({ status: 403, code: 50_013 });
         expect(store.size).toBe(1);
+    });
+
+    it("throws that the user has to log in again when Discord refuses their token in a join's body", async () => {
+        const { calls } = await loggedIn();
+
+        await expect(calls.joinGuild('after-removal')).rejects.toMatchObject({
+            code: SeedcordErrorCode.PluginOAuthLoginNeeded
+        });
     });
 
     it("writes the user's role connection for this application with their token", async () => {

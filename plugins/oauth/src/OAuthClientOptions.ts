@@ -21,27 +21,27 @@ export interface OAuthRoutes {
  */
 export interface OAuthClientOptions<TScopes extends OAuthScope = never, TExtra extends OAuthScope = never> {
     /**
-     * A `@discordjs/rest` client, like `bot.rest`. Every call is made through it and waits in its rate
-     * limit queue. The bot's token isn't sent with them.
+     * A `@discordjs/rest` client. The client makes every call through it, and each one waits in its
+     * rate limit queue. Only `joinGuild()` sends its bot token.
      */
     rest: REST;
-    /** Where the tokens are kept, encrypted. In a seedcord bot, pass `bot.kv.collection<string>('oauth-tokens')`. */
+    /** Where the tokens are kept, encrypted. */
     store: TokenStore;
-    /** The application's id, like `bot.applicationId`. */
+    /** The application's id. */
     clientId: string;
     /**
-     * The client secret from the application's OAuth2 page. The client also derives the key that encrypts
-     * the tokens from it. After you rotate it, every user has to log in again.
+     * The client secret from the application's OAuth2 page. The client also derives the token encryption
+     * key from it. After you rotate it, every user has to log in again.
      */
     clientSecret: string;
     /**
-     * The public address of your server, like `bot.url`. It can have a path, like
-     * `https://example.com/bot`. The login routes are under it.
+     * The public address of your server. It can have a path, like `https://example.com/bot`. The login
+     * routes are under it.
      */
     baseUrl: string | URL;
     /** Set these when your site already has its own paths for a Discord login. */
     routes?: OAuthRoutes | undefined;
-    /** The scopes to request on every login. `identify` is always added. */
+    /** The scopes to request on every login. The client always adds `identify`. */
     scopes?: readonly TScopes[] | undefined;
     /**
      * Scopes that only some of your features need. A login requests one only when its link lists it, and

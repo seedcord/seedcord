@@ -1,11 +1,11 @@
 import { PRODUCTION_SITES } from '@seedcord/brand';
 
 import { SeedcordErrorCode } from './ErrorCodes';
-import { deployFix, listedFolderProblems, placeText, token, vitePluginFix } from './messageParts';
+import { deployFix, listedFolderProblems, loginNeededBecause, placeText, token, vitePluginFix } from './messageParts';
 import { allOf, capitalized, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
 import { paint } from './palette';
 
-import type { VitePluginPlace } from './messageParts';
+import type { LoginNeededReason, VitePluginPlace } from './messageParts';
 
 /** @internal */
 const messages = {
@@ -311,12 +311,14 @@ const messages = {
     [SeedcordErrorCode.PluginI18nBaseMissing]: (dir: string, baseFile: string) =>
         `${paint.path(dir)} doesn't have ${paint.path(baseFile)}, the file that lists every message. Add it, or set ${paint.bold('base')} to a locale that has a file.`,
 
-    [SeedcordErrorCode.PluginOAuthLoginNeeded]: (userId: string) =>
-        `The user ${paint.sky(userId)} doesn't have Discord tokens saved that still work. They never logged in, they removed the app, or the client secret changed. Send them through the login again.`,
+    [SeedcordErrorCode.PluginOAuthLoginNeeded]: (userId: string, why: LoginNeededReason) =>
+        `The user ${paint.sky(userId)} has to log in with Discord again. ${loginNeededBecause(why)} Send them to the login link.`,
     [SeedcordErrorCode.PluginOAuthIdentifyMissing]: () =>
-        `Discord didn't say who logged in because the login's scopes don't include ${paint.bold('identify')}. Add ${paint.bold('identify')} to the scopes. The tokens are saved under the user's id.`,
+        `Discord didn't return the user who logged in because the authorize link didn't request the ${paint.bold('identify')} scope. Build the link with ${paint.bold('authorizeUrl()')}, which always adds it.`,
     [SeedcordErrorCode.PluginOAuthTokensInMemory]: (plugin: string) =>
-        `${paint.sky(plugin)} saves each user's tokens in ${paint.bold('kv')}, and this bot's ${paint.bold('kv')} is the default one that keeps everything in memory. A restart would delete the tokens, and on Workers each isolate would have its own. Set ${paint.bold('kv')} in your bot's config to a driver that saves to a file or a database, like ${paint.bold("new KeyvDriver(new Keyv(new KeyvSqlite('sqlite://./kv.sqlite')))")}.`,
+        `${paint.sky(plugin)} saves each user's tokens in ${paint.bold('kv')}, and this bot's ${paint.bold('kv')} keeps everything in memory. A restart would delete the tokens. Set ${paint.bold('kv')} in your bot's config to a driver that saves to a file or a database.`,
+    [SeedcordErrorCode.PluginOAuthSecretRefused]: () =>
+        `Discord refused the client secret. Copy it again from your application's OAuth2 page in the Developer Portal. The OAuth plugin reads it from ${paint.bold('DISCORD_CLIENT_SECRET')}.`,
 
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 

@@ -56,6 +56,11 @@ function admitsUndefinedForAnExtraScope(): void {
     void oauth.authorizeUrl({ state: 's', scopes: ['connections'] });
     // @ts-expect-error a link can only add a scope from extraScopes
     void oauth.authorizeUrl({ state: 's', scopes: ['guilds.join'] });
+
+    const inBothLists = new OAuthClient({ ...base, scopes: ['guilds'], extraScopes: ['guilds', 'connections'] });
+    void inBothLists.loginUrl({ scopes: ['connections'] });
+    // @ts-expect-error every login already requests a scope that's also in scopes
+    void inBothLists.loginUrl({ scopes: ['guilds'] });
 }
 
 function typesOnlyUserWithoutScopes(): void {

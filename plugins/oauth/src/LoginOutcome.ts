@@ -4,7 +4,7 @@ import type { APIGuild, APIUser, APIWebhook } from 'discord-api-types/v10';
 /** What `exchange()` resolves to: who logged in, and what Discord gave back with the tokens. */
 export interface OAuthLogin {
     user: APIUser;
-    /** The scopes Discord granted. Discord adds scopes that the user approved for the application earlier. */
+    /** The scopes Discord granted. It includes scopes that the user approved in an earlier login. */
     scopes: OAuthScope[];
     /** The server that the bot was added to when the login had the `bot` scope. */
     guild: APIGuild | undefined;
@@ -30,8 +30,13 @@ export interface CompletedLogin extends OAuthLogin {
  *   `error` is Discord's reason, like `access_denied`.
  * - `invalid`: the login link expired, the page was reloaded, or the visit didn't come from a login that
  *   this browser started.
+ * - `unlisted`: the login link requested `scopes` that aren't in the client's `extraScopes`. The visitor
+ *   never reached Discord.
  */
-export type FailedLogin = { kind: 'denied'; error: string } | { kind: 'invalid' };
+export type FailedLogin =
+    | { kind: 'denied'; error: string }
+    | { kind: 'invalid' }
+    | { kind: 'unlisted'; scopes: string[] };
 
-/** How a visit to the callback route ended. */
+/** How a visit to the login route or the callback route ended. */
 export type LoginOutcome = { kind: 'login'; login: CompletedLogin } | FailedLogin;

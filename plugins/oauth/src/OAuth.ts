@@ -2,7 +2,7 @@ import { MemoryDriver } from '@seedcord/core';
 import { currentApplication } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { Converters, Envapter } from 'envapt';
 import { memoize } from 'es-toolkit';
 
@@ -10,6 +10,7 @@ import { OAuthClient } from './OAuthClient';
 
 import type { LoginLink } from './AuthorizeUrlOptions';
 import type { CompletedLogin, FailedLogin, LoginOutcome } from './LoginOutcome';
+import type { OAuthClientOptions } from './OAuthClientOptions';
 import type { OAuthScope, UserCalls } from './UserCalls';
 import type { CoreBase } from '@seedcord/core';
 import type { Promisable, Simplify } from 'type-fest';
@@ -20,18 +21,13 @@ import type { Promisable, Simplify } from 'type-fest';
  * @typeParam TScopes - The `scopes` you pass.
  * @typeParam TExtra - The `extraScopes` you pass.
  */
-export interface OAuthOptions<TScopes extends OAuthScope = never, TExtra extends OAuthScope = never> {
-    /** The scopes to request on every login. `identify` is always added. */
-    scopes?: readonly TScopes[] | undefined;
+export interface OAuthOptions<TScopes extends OAuthScope = never, TExtra extends OAuthScope = never> extends Pick<
+    OAuthClientOptions<TScopes, TExtra>,
+    'scopes' | 'extraScopes'
+> {
     /**
-     * Scopes that only some of your features need. A login requests one only when its link lists it, and
-     * the typed calls for it resolve to `undefined` for a user who hasn't granted it yet.
-     */
-    extraScopes?: readonly TExtra[] | undefined;
-    /**
-     * Runs after a login. The user's tokens are saved by then. Set your own session here and return what
-     * the visitor's browser gets, usually a redirect. Without it, the visitor gets a plain page that says
-     * the login worked.
+     * Runs after the plugin saves the user's tokens. Return the visitor's response, usually a redirect
+     * that sets your session. Without it, the visitor gets a plain page that says the login worked.
      */
     onLogin?: ((login: Simplify<CompletedLogin>, request: Request) => Promisable<Response>) | undefined;
     /** Runs when a login didn't finish. Without it, the visitor gets a plain page that says so. */
@@ -45,7 +41,8 @@ const RECHECK_REDIRECT_MS = 24 * 60 * 60 * 1000;
 
 const FAILURE_PAGES = {
     denied: 'The login was cancelled. You can close this tab.',
-    invalid: 'This login link expired. Go back and start again.'
+    invalid: "This login didn't finish. Go back and start again.",
+    unlisted: "This login link requests something that the bot doesn't allow."
 } satisfies Record<FailedLogin['kind'], string>;
 
 /**
@@ -55,8 +52,8 @@ const FAILURE_PAGES = {
  * under Redirects on your application's OAuth2 page. The plugin logs the exact address at startup when it
  * isn't there yet.
  *
- * It reads the client secret from `DISCORD_CLIENT_SECRET`, and it needs `kv` in your bot's config to be a
- * driver that saves somewhere since each user's tokens are kept there.
+ * It reads the client secret from `DISCORD_CLIENT_SECRET`. It saves each user's tokens in your bot's `kv`,
+ * so `kv` needs a driver that saves to a file or a database.
  *
  * @typeParam TScopes - The `scopes` from the options. Leave it out.
  * @typeParam TExtra - The `extraScopes` from the options. Leave it out.
@@ -84,8 +81,7 @@ const FAILURE_PAGES = {
 export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends OAuthScope = never> extends Plugin {
     protected abstract readonly options: OAuthOptions<TScopes, TExtra>;
 
-    // built on first use because a gateway bot doesn't have its application id in init() yet. it logs in
-    // after that.
+    // built on first use since a gateway bot only has its application id after it logs in.
     // don't swap this for once(). if the first call throws, once() still counts it as done and every
     // call after that returns undefined
     readonly #client = memoize(
@@ -102,8 +98,8 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
     );
 
     /**
-     * Returns the plugin class to attach, with your options in it. `OAuth` itself doesn't attach because
-     * a plain `attach('oauth', OAuth, options)` loses your scopes in the types.
+     * Returns the plugin class to attach, with your options in it. Attaching `OAuth` directly would lose
+     * your scopes in the types.
      *
      * @example
      * ```ts
@@ -116,33 +112,32 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
         const Attached = class extends OAuth<TScopes, TExtra> {
             protected readonly options = options;
         };
-        // the logger prints `constructor.name`. bun sets it to '' for `{ OAuth: class {} }.OAuth`, and the build
-        // turns a class in an object property into exactly that
+        // the logger prints `constructor.name`
         Object.defineProperty(Attached, 'name', { value: 'OAuth' });
         return Attached;
     }
 
     /**
      * @throws A **SeedcordError** when `server.url` or `DISCORD_CLIENT_SECRET` isn't set.
-     * @throws A **SeedcordError** when the bot's `kv` is the default one in memory.
+     * @throws A **SeedcordTypeError** when the bot's `kv` keeps everything in memory.
      */
     public init(): void {
         // read here only to fail at startup when one is missing. otherwise the first visitor finds out
         void this.core.url;
         void this.#clientSecret();
         if (this.kv.driver instanceof MemoryDriver) {
-            throw new SeedcordError(SeedcordErrorCode.PluginOAuthTokensInMemory, [this.constructor.name]);
+            throw new SeedcordTypeError(SeedcordErrorCode.PluginOAuthTokensInMemory, [this.constructor.name]);
         }
     }
 
     public override async ready(): Promise<void> {
-        const callback = this.#client().redirectUri;
         // an edge bot runs ready() every time an isolate starts. saving the confirmed address in kv means
         // we only call discord for it once a day
         const confirmed = this.kv.collection<string>('portal');
-        if ((await confirmed.get('redirect')) === callback) return;
-
         try {
+            const callback = this.#client().redirectUri;
+            if ((await confirmed.get('redirect')) === callback) return;
+
             const application = await currentApplication(this.core.rest);
             if (application.redirect_uris?.includes(callback)) {
                 await confirmed.set('redirect', callback, RECHECK_REDIRECT_MS);
@@ -179,19 +174,21 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
     }
 
     /**
-     * Revokes a user's grant on Discord and deletes their saved tokens. Discord ends every grant that the
-     * user gave your application, including the tokens another plugin saved for them.
+     * Revokes a user's grant on Discord and deletes their saved tokens.
+     *
+     * Discord ends every grant that the user gave your application, so tokens that another `OAuthClient`
+     * saved for them stop working too. Use {@link OAuth.forget} to log someone out of one place.
      */
     public async revoke(userId: string): Promise<void> {
         await this.#client().revoke(userId);
     }
 
     /**
-     * The address that starts a login. Send a browser there, or put it in a message.
+     * The address of the login route. Send a browser there, or put it in a message.
      *
      * @example
      * ```ts
-     * // asks for one more scope, and comes back to the page that needed it
+     * // requests one more scope, and ends on the page that needed it
      * bot.oauth.loginUrl({ scopes: ['connections'], returnTo: '/dashboard/accounts' });
      * ```
      */
