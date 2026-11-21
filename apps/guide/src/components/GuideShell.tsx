@@ -10,6 +10,7 @@ import { GithubLink, GuideNavbar } from './GuideNavbar';
 import { MobileNav } from './MobileNav';
 import { idOf } from './TableOfContents';
 import { useScrollMemory } from './useScrollMemory';
+import { useTabMemory } from './useTabMemory';
 
 import type { GuideTab, SidebarsByTab } from '#lib/nav';
 import type { PageNeighbours } from '#lib/neighbours';
@@ -52,14 +53,15 @@ export function GuideShell({ tabs, sidebars, children }: GuideShellProps): React
             tabs.map((tab) => tab.href)
         ) ?? '';
     const sections = sidebars[activeHref] ?? [];
+    const lastPageOf = useTabMemory(activeHref, pathname);
 
     return (
         <ShownPageContext value={setShown}>
             <AnchorProvider toc={shown.toc}>
                 <GuideNavbar
                     targets={{
-                        tabs,
-                        activeHref,
+                        tabs: tabs.map((tab) => ({ label: tab.label, href: lastPageOf(tab.href) })),
+                        activeHref: lastPageOf(activeHref),
                         neighbours: shown.neighbours,
                         headingIds: shown.toc.map((item) => idOf(item.url))
                     }}
