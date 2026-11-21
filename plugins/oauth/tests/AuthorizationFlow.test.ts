@@ -87,7 +87,7 @@ async function start(flow: Flow, loginUrl: string): Promise<Started> {
 
 // the cookie a visitor could send after editing what theirs holds
 function editedCookie(state: string, holds: Record<string, unknown>): string {
-    return `seedcord_oauth_${state}=${Buffer.from(JSON.stringify(holds)).toString('base64url')}`;
+    return `__Host-seedcord_oauth_${state}=${Buffer.from(JSON.stringify(holds)).toString('base64url')}`;
 }
 
 function callbackUrl(base: string, query: Record<string, string>): string {
@@ -106,8 +106,9 @@ describe('AuthorizationFlow login route', () => {
         expect(response.headers.get('cache-control')).toBe('no-store');
         expect(authorize.get('redirect_uri')).toBe('https://bot.test/oauth/callback');
         expect(authorize.get('code_challenge_method')).toBe('S256');
-        expect(cookie.startsWith(`seedcord_oauth_${authorize.get('state') ?? ''}=`)).toBe(true);
-        expect(cookieAttributes).toEqual(['HttpOnly', 'SameSite=Lax', 'Path=/oauth/', 'Max-Age=600', 'Secure']);
+        // only bot.test itself can set a __Host- cookie, and a browser takes one only with Path=/ and Secure
+        expect(cookie.startsWith(`__Host-seedcord_oauth_${authorize.get('state') ?? ''}=`)).toBe(true);
+        expect(cookieAttributes).toEqual(['HttpOnly', 'SameSite=Lax', 'Max-Age=600', 'Path=/', 'Secure']);
     });
 
     it('gives every visitor a different state', async () => {
@@ -358,7 +359,8 @@ describe('AuthorizationFlow under a path', () => {
         expect(prefixed.authorize.get('redirect_uri')).toBe('http://localhost:3000/app/oauth/callback');
         expect(stripped.authorize.get('redirect_uri')).toBe('http://localhost:3000/app/oauth/callback');
         // a browser ignores a Secure cookie that arrives over plain http
-        expect(prefixed.cookieAttributes).toEqual(['HttpOnly', 'SameSite=Lax', 'Path=/app/oauth/', 'Max-Age=600']);
+        expect(prefixed.cookie.startsWith('seedcord_oauth_')).toBe(true);
+        expect(prefixed.cookieAttributes).toEqual(['HttpOnly', 'SameSite=Lax', 'Max-Age=600', 'Path=/app/oauth/']);
     });
 
     it('reads a base without its last slash and a route with a first slash the same way', async () => {
@@ -375,7 +377,7 @@ describe('AuthorizationFlow on other routes', () => {
 
     it('serves the login and the callback at the paths in routes', async () => {
         const flow = await flowAt(BASE, [], ROUTES);
-        const { cookie, cookieAttributes, authorize } = await start(flow, flow.loginUrl());
+        const { cookie, authorize } = await start(flow, flow.loginUrl());
         const state = authorize.get('state') ?? '';
 
         const query = new URLSearchParams({ code: 'c', state, iss: ISSUER }).toString();
@@ -383,7 +385,6 @@ describe('AuthorizationFlow on other routes', () => {
 
         expect(flow.loginUrl()).toBe('https://bot.test/linked-roles/verify');
         expect(authorize.get('redirect_uri')).toBe('https://bot.test/linked-roles/callback');
-        expect(cookieAttributes).toContain('Path=/linked-roles/');
         expect(flow.outcomes).toMatchObject([{ kind: 'login' }]);
     });
 

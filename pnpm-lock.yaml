@@ -1289,6 +1289,9 @@ importers:
       '@seedcord/plugin-kysely':
         specifier: workspace:^
         version: link:../../plugins/kysely
+      '@seedcord/plugin-oauth':
+        specifier: workspace:^
+        version: link:../../plugins/oauth
       better-sqlite3:
         specifier: catalog:deps
         version: 13.2.0
@@ -1304,6 +1307,9 @@ importers:
       typescript:
         specifier: catalog:peer
         version: 6.0.3
+      unstorage:
+        specifier: catalog:deps
+        version: 2.0.0-beta.0
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:^

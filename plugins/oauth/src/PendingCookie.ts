@@ -26,7 +26,16 @@ function ownPath(returnTo: string): string | undefined {
 // what the login route leaves in the visitor's browser for the callback. each login has its own cookie,
 // under its `state` because a second tab's login would replace a shared one
 export class PendingCookie {
-    constructor(private readonly callback: URL) {}
+    private readonly name: string;
+    private readonly scope: string;
+
+    constructor(callback: URL) {
+        // only this exact host can set a `__Host-` cookie, and a browser takes one only over https with
+        // Path=/. over http the path comes from the public url since that's the only one the browser has
+        const https = callback.protocol === 'https:';
+        this.name = https ? `__Host-${NAME}` : NAME;
+        this.scope = https ? 'Path=/; Secure' : `Path=${new URL('.', callback).pathname}`;
+    }
 
     public save(state: string, pending: PendingLogin): string {
         return this.header(state, Buffer.from(JSON.stringify(pending)).toString('base64url'), LIFETIME_SECONDS);
@@ -61,14 +70,12 @@ export class PendingCookie {
     }
 
     private nameFor(state: string): string {
-        return `${NAME}_${state}`;
+        return `${this.name}_${state}`;
     }
 
     // HttpOnly so page scripts can't read it. it has to be Lax because Strict wouldn't send it when
-    // discord redirects back. the path comes from the public url since that's the only one the browser has
+    // discord redirects back
     private header(state: string, value: string, maxAge: number): string {
-        const secure = this.callback.protocol === 'https:' ? '; Secure' : '';
-        const path = new URL('.', this.callback).pathname;
-        return `${this.nameFor(state)}=${value}; HttpOnly; SameSite=Lax; Path=${path}; Max-Age=${maxAge}${secure}`;
+        return `${this.nameFor(state)}=${value}; HttpOnly; SameSite=Lax; Max-Age=${maxAge}; ${this.scope}`;
     }
 }
