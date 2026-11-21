@@ -12,7 +12,7 @@ import { Routes } from 'discord-api-types/v10';
 import { applicationOf } from '#core/discord/applicationOf';
 import { readBotGuilds } from '#core/discord/readBotGuilds';
 
-import type { DiscordRest } from './runnerDeps';
+import type { DiscordRest } from '#core/discord/runnerDeps';
 import type { GuildScope, GuildTargets, Scope, ScopedCommands } from './scope';
 import type { CommandScopes, DeployResult, GuildSummary, ScopeId } from '@seedcord/core/internal';
 import type { ILogger } from '@seedcord/types';

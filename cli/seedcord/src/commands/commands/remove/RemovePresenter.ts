@@ -1,15 +1,16 @@
 import { paint } from '@seedcord/errors';
 
-import { labelRows, printSections } from '#commands/commands/commandRows';
+import { labelRows } from '#commands/commands/commandRows';
 import { scopeTitle } from '#commands/commands/scope';
-import { StepsPresenter } from '#commands/commands/StepsPresenter';
 import { plural } from '#core/format';
+import { printSections } from '#core/output/printSections';
+import { StepsPresenter } from '#core/output/StepsPresenter';
 
-import type { CommandSection } from '#commands/commands/commandRows';
-import type { Confirm } from '#commands/commands/confirm';
 import type { RemoveFailure, RemoveResult } from '#commands/commands/DiscordSession';
 import type { ScopedCommands } from '#commands/commands/scope';
-import type { PresenterOutput } from '#commands/commands/StepsPresenter';
+import type { Confirm } from '#core/output/confirm';
+import type { Section } from '#core/output/printSections';
+import type { PresenterOutput } from '#core/output/StepsPresenter';
 import type { EmptyMessage } from './RemoveMode';
 import type { RemoveStep } from './removeSteps';
 
@@ -57,7 +58,7 @@ export class RemovePresenter extends StepsPresenter<RemoveStep> {
         this.output.line(paint.mute(`Dry run. Re-run with ${paint.bold('--yes')} to delete these.`));
     }
 
-    private section({ scope, commands }: ScopedCommands, itemName: string): CommandSection {
+    private section({ scope, commands }: ScopedCommands, itemName: string): Section {
         return {
             title: scopeTitle(scope),
             note: plural(commands.length, itemName),

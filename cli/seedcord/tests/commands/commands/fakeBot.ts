@@ -2,7 +2,6 @@ import { EventEmitter } from 'node:events';
 import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { stripVTControlCharacters } from 'node:util';
 
 import { REST } from '@discordjs/rest';
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
@@ -19,10 +18,9 @@ import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { silentLogger } from '#tests/silentLogger';
 
 import type { RemoveDeps } from '#commands/commands/remove/RemoveRunner';
-import type { DiscordRest } from '#commands/commands/runnerDeps';
 import type { ProjectOpener } from '#core/config/openProjectWithSteps';
+import type { DiscordRest } from '#core/discord/runnerDeps';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
-import type { Terminal } from '#core/output/terminal';
 import type { CommandBody } from '@seedcord/core/internal';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
@@ -207,18 +205,4 @@ export function botGuilds(count: number): Record<string, unknown> {
     };
     const commandRoutes = guilds.map(({ id }): [string, unknown] => [Routes.applicationGuildCommands(APP_ID, id), []]);
     return { [Routes.userGuilds()]: page, ...Object.fromEntries(commandRoutes) };
-}
-
-// a piped terminal, read back without colors and with plain spaces
-export function pipedTerminal(): Terminal & { text: () => string } {
-    let written = '';
-    return {
-        isTTY: false,
-        columns: 0,
-        write: (chunk: string | Uint8Array) => {
-            written += String(chunk);
-            return true;
-        },
-        text: () => stripVTControlCharacters(written).replaceAll(' ', ' ')
-    };
 }

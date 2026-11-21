@@ -1,15 +1,16 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { loadInstance } from '#commands/commands/codeScopes';
 import { DiscordSession } from '#commands/commands/DiscordSession';
-import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
 import { commandCount } from '#commands/commands/scope';
+import { defaultRunnerDeps } from '#core/discord/runnerDeps';
+import { loadBot } from '#core/modules/loadBot';
+import { quietSteps } from '#core/output/quietSteps';
 
 import { deletedNote, scanNote } from './removeSteps';
 
-import type { RunnerDeps } from '#commands/commands/runnerDeps';
 import type { GuildTargets } from '#commands/commands/scope';
+import type { RunnerDeps } from '#core/discord/runnerDeps';
 import type { RemoveMode } from './RemoveMode';
 import type { RemovePresenter } from './RemovePresenter';
 import type { Selection } from './removeSteps';
@@ -33,10 +34,10 @@ export class RemoveRunner {
     constructor(private readonly deps: RemoveDeps) {}
 
     public static create(): RemoveRunner {
-        const deps = defaultRunnerDeps();
+        const { openDiscord, projectLoader } = defaultRunnerDeps();
         return new RemoveRunner({
-            openDiscord: deps.openDiscord,
-            loadInstance: () => loadInstance(deps, process.cwd())
+            openDiscord,
+            loadInstance: () => loadBot(quietSteps, projectLoader, process.cwd()).then(({ instance }) => instance)
         });
     }
 

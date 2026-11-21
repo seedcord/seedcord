@@ -3,13 +3,14 @@ import { GLOBAL_ID, skippedNote } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { sumBy } from 'es-toolkit';
 
-import { commandLabel, printSections } from '#commands/commands/commandRows';
-import { StepsPresenter } from '#commands/commands/StepsPresenter';
+import { commandLabel } from '#commands/commands/commandRows';
 import { plural } from '#core/format';
+import { printSections } from '#core/output/printSections';
+import { StepsPresenter } from '#core/output/StepsPresenter';
 
-import type { CommandRow, CommandSection } from '#commands/commands/commandRows';
-import type { Confirm } from '#commands/commands/confirm';
-import type { PresenterOutput } from '#commands/commands/StepsPresenter';
+import type { Confirm } from '#core/output/confirm';
+import type { Section, SectionRow } from '#core/output/printSections';
+import type { PresenterOutput } from '#core/output/StepsPresenter';
 import type { DeployStep } from './DeployRunner';
 import type { ScopeDiff } from './diffScope';
 import type { CommandBody, CommandScopes, ScopeId } from '@seedcord/core/internal';
@@ -85,8 +86,8 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
         return yes === true;
     }
 
-    private section({ title, inCode, diff }: ScopePlan): CommandSection {
-        const rows: CommandRow[] = [];
+    private section({ title, inCode, diff }: ScopePlan): Section {
+        const rows: SectionRow[] = [];
         if (diff.added.length > 0) {
             rows.push({
                 marker: paint.mint.bold('+'),
@@ -107,7 +108,7 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
         return { title, note: changed ? count : `${count}, none added or removed`, rows };
     }
 
-    private keptRow(kept: readonly CommandBody[]): CommandRow {
+    private keptRow(kept: readonly CommandBody[]): SectionRow {
         if (this.verbose) return { items: kept.map((command) => commandLabel(command)) };
         return { items: [paint.mute(`${kept.length} kept`)] };
     }

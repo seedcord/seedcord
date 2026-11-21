@@ -4,16 +4,18 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { LOAD_STEPS, loadCodeScopes } from '#commands/commands/codeScopes';
 import { DiscordSession } from '#commands/commands/DiscordSession';
-import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
+import { cliLogger } from '#core/cliLogger';
+import { defaultRunnerDeps } from '#core/discord/runnerDeps';
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
 import { StateFolder } from '#core/state/StateFolder';
 
 import { diffScope } from './diffScope';
 
 import type { DeployTargets } from '#commands/commands/DiscordSession';
-import type { RunnerDeps } from '#commands/commands/runnerDeps';
+import type { RunnerDeps } from '#core/discord/runnerDeps';
 import type { DeployPresenter, ScopePlan } from './DeployPresenter';
 import type { CommandScopes, ScopeId } from '@seedcord/core/internal';
+import type { ILogger } from '@seedcord/types';
 
 export const DEPLOY_STEPS = [...LOAD_STEPS, 'read discord', 'deploy'] as const;
 export type DeployStep = (typeof DEPLOY_STEPS)[number];
@@ -23,14 +25,14 @@ export interface DeployOptions {
     readonly yes?: boolean | undefined;
 }
 
-type DeployDeps = RunnerDeps & { readonly state: StateFolder };
+type DeployDeps = RunnerDeps & { readonly logger: ILogger; readonly state: StateFolder };
 
 export class DeployRunner {
     constructor(private readonly deps: DeployDeps) {}
 
     public static create(): DeployRunner {
-        const deps = defaultRunnerDeps();
-        return new DeployRunner({ ...deps, state: new StateFolder(process.cwd(), deps.logger) });
+        const logger = cliLogger('Commands');
+        return new DeployRunner({ ...defaultRunnerDeps(), logger, state: new StateFolder(process.cwd(), logger) });
     }
 
     public async run(presenter: DeployPresenter, { force = false, yes = false }: DeployOptions = {}): Promise<void> {

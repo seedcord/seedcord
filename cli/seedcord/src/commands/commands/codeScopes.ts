@@ -5,18 +5,16 @@ import { HostPlugins } from '@seedcord/types/internal';
 import { openProjectWithSteps } from '#core/config/openProjectWithSteps';
 import { plural } from '#core/format';
 import { CommandScanner } from '#core/modules/CommandScanner';
-import { importInstance } from '#core/modules/importInstance';
-import { printResolvedConfig } from '#core/output/printResolvedConfig';
-import { quietSteps } from '#core/output/quietSteps';
+import { BOT_STEPS, importBot } from '#core/modules/loadBot';
 
-import type { RunnerDeps } from '#commands/commands/runnerDeps';
 import type { ResolvedTarget } from '#core/config/schema';
+import type { RunnerDeps } from '#core/discord/runnerDeps';
 import type { FoundCommand } from '#core/modules/CommandScanner';
 import type { Steps } from '#core/output/Steps';
 import type { CommandBody, CommandScopes, ScopeId } from '@seedcord/core/internal';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
-export const LOAD_STEPS = ['read config', 'load plugins', 'load bot', 'scan'] as const;
+export const LOAD_STEPS = [...BOT_STEPS, 'scan'] as const;
 type LoadStep = (typeof LOAD_STEPS)[number];
 
 interface CodeScopes {
@@ -41,11 +39,6 @@ export function scopesInCode(found: readonly FoundCommand[], configuredGuilds: r
     return scopes;
 }
 
-export async function loadInstance({ projectLoader }: LoadDeps, projectDir: string): Promise<SeedcordInstance> {
-    await using project = await openProjectWithSteps(quietSteps, projectLoader, { projectDir });
-    return await importInstance(project.modules, project.config.instance);
-}
-
 export async function loadCodeScopes(
     steps: Steps<LoadStep>,
     { projectLoader }: LoadDeps,
@@ -53,8 +46,7 @@ export async function loadCodeScopes(
 ): Promise<CodeScopes> {
     await using project = await openProjectWithSteps(steps, projectLoader, { projectDir });
     const { config, modules } = project;
-    printResolvedConfig(steps, config);
-    const instance = await steps.step('load bot', () => importInstance(modules, config.instance));
+    const instance = await importBot(steps, project);
     const loaded = { target: config.target.kind, instancePath: config.instance, instance };
     const { commands } = instance.config.bot;
     if (commands.path === null) return { ...loaded, scopes: undefined };

@@ -5,15 +5,16 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Routes } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { PROCEED } from '#commands/commands/confirm';
 import { DeployPresenter } from '#commands/commands/deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from '#commands/commands/deploy/DeployRunner';
+import { PROCEED } from '#core/output/confirm';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { lastDeployOf } from '#core/state/deployedCommands';
-import { APP_ID, Config, fakeDiscord, fakeProject, Ping, pipedTerminal, slash } from '#tests/commands/commands/fakeBot';
+import { APP_ID, Config, fakeDiscord, fakeProject, Ping, slash } from '#tests/commands/commands/fakeBot';
+import { fakeTerminal } from '#tests/fakeTerminal';
 import { silentLogger } from '#tests/silentLogger';
 
-import type { Confirm } from '#commands/commands/confirm';
+import type { Confirm } from '#core/output/confirm';
 import type { FakeProject } from '#tests/commands/commands/fakeBot';
 import type { REST } from '@discordjs/rest';
 
@@ -29,7 +30,7 @@ async function deploy(
     rest: REST,
     { verbose = false, answer = true, confirm = () => Promise.resolve(answer), yes = false }: DeployOptions = {}
 ): Promise<string> {
-    const stdout = pipedTerminal();
+    const stdout = fakeTerminal();
     const printer = new StepPrinter({ command: 'commands', labels: DEPLOY_STEPS, verbose, stdout, stderr: stdout });
     const presenter = new DeployPresenter(printer, yes ? PROCEED : confirm, verbose);
     const runner = new DeployRunner({
@@ -240,7 +241,7 @@ describe('DeployRunner', () => {
     });
 
     it('fails the read discord step when the token is missing', async () => {
-        const stdout = pipedTerminal();
+        const stdout = fakeTerminal();
         const printer = new StepPrinter({
             command: 'commands',
             labels: DEPLOY_STEPS,

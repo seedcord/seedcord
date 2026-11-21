@@ -5,11 +5,11 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { isInteractive } from '@seedcord/utils/internal';
 
 import { BaseCommand } from '#core/BaseCommand';
+import { PROCEED } from '#core/output/confirm';
 import { stderrSteps } from '#core/output/stderrSteps';
 import { isVerbose } from '#core/verbose';
 
 import { askClean, CleanMode } from './clean/CleanMode';
-import { PROCEED } from './confirm';
 import { DeployPresenter } from './deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from './deploy/DeployRunner';
 import { listingJson } from './list/listingJson';
@@ -22,8 +22,8 @@ import { REMOVE_STEPS } from './remove/removeSteps';
 import { RemoveWizard, WIZARD_STEPS } from './remove/RemoveWizard';
 import { guildTargetsOf } from './scope';
 
+import type { Confirm } from '#core/output/confirm';
 import type { StepPrinter } from '#core/output/StepPrinter';
-import type { Confirm } from './confirm';
 import type { DeployOptions, DeployStep } from './deploy/DeployRunner';
 import type { ListScope, ListStep } from './list/ListRunner';
 import type { RemoveMode } from './remove/RemoveMode';

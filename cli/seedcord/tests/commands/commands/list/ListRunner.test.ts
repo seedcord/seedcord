@@ -6,14 +6,14 @@ import { describe, expect, it } from 'vite-plus/test';
 import { listingJson } from '#commands/commands/list/listingJson';
 import { ListPresenter } from '#commands/commands/list/ListPresenter';
 import { LIST_STEPS, ListRunner } from '#commands/commands/list/ListRunner';
-import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
+import { defaultRunnerDeps } from '#core/discord/runnerDeps';
 import { quietSteps } from '#core/output/quietSteps';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { bindEnv } from '#tests/bindEnv';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
-import { APP_ID, fakeDiscord, fakeProject, pipedTerminal, slash } from '#tests/commands/commands/fakeBot';
+import { APP_ID, fakeDiscord, fakeProject, slash } from '#tests/commands/commands/fakeBot';
 import { fakeDiscordApi } from '#tests/fakeDiscordApi';
-import { silentLogger } from '#tests/silentLogger';
+import { fakeTerminal } from '#tests/fakeTerminal';
 
 import type { ListScope } from '#commands/commands/list/ListRunner';
 import type { ProjectOpener } from '#core/config/openProjectWithSteps';
@@ -24,11 +24,11 @@ interface ListOptions {
 }
 
 function runnerFor(project: ProjectOpener, rest: REST): ListRunner {
-    return new ListRunner({ projectLoader: project, openDiscord: () => rest, logger: silentLogger });
+    return new ListRunner({ projectLoader: project, openDiscord: () => rest });
 }
 
 async function list(project: ProjectOpener, rest: REST, { verbose = false, scope }: ListOptions = {}): Promise<string> {
-    const stdout = pipedTerminal();
+    const stdout = fakeTerminal();
     const printer = new StepPrinter({ command: 'commands', labels: LIST_STEPS, verbose, stdout, stderr: stdout });
     await runnerFor(project, rest).run(new ListPresenter(printer, verbose), scope);
     return stdout.text();
