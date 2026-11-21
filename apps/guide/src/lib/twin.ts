@@ -5,7 +5,7 @@ import { defaultHandlers } from 'mdast-util-to-markdown';
 import { CALLOUT_LABELS, TRANSPORT_LABELS } from '#lib/callout';
 import { cleanFence } from '#lib/fence';
 import { jsxAttribute } from '#lib/jsxAttribute';
-import { commandLines, getServerManager, isVerb } from '#lib/packageManager';
+import { DEFAULT_MANAGER, commandLines, isVerb } from '#lib/packageManager';
 import { FENCE_MODES } from '#lib/rehypeFenceMeta';
 import { canonicalUrl } from '#lib/site';
 
@@ -30,7 +30,6 @@ function quoted(body: string): string {
 }
 
 function shellCommand(node: JsxNode): string {
-    const manager = getServerManager();
     const before = jsxAttribute(node, 'before');
     const lead = before === undefined ? '' : `${before}\n`;
 
@@ -39,7 +38,7 @@ function shellCommand(node: JsxNode): string {
             ? [[attr.name, attr.value] as const]
             : []
     );
-    return verbs.length === 0 ? lead.trimEnd() : `${lead}${commandLines(verbs, manager)}`;
+    return verbs.length === 0 ? lead.trimEnd() : `${lead}${commandLines(verbs, DEFAULT_MANAGER)}`;
 }
 
 function isJsx(node: Nodes): node is JsxNode {
