@@ -1,5 +1,8 @@
 import { paint } from '@seedcord/errors';
 import { formatFilePath } from '@seedcord/utils';
+import chalk from 'chalk';
+
+import { LEVEL_COLOR } from './palette';
 
 import type { LogLevel, ILogger } from '@seedcord/types';
 
@@ -23,14 +26,6 @@ function wrapChips(chips: readonly { plain: string; styled: string }[], maxWidth
     if (current.length > 0) lines.push(current.join(CHIP_SEPARATOR));
     return lines;
 }
-
-const HEADING_TONES = {
-    error: 'coral',
-    warn: 'amber',
-    info: 'mint',
-    debug: 'mint',
-    trace: 'mint'
-} as const satisfies Record<LogLevel, keyof typeof paint>;
 
 /** Logging helpers for lists, summaries, registration lines, and blocks. */
 export class LoggerUtilities {
@@ -80,14 +75,14 @@ export class LoggerUtilities {
 
     /**
      * Logs a heading and its lines as one record so the TUI renders them as a single block. The heading
-     * is amber for `warn`, coral for `error`, and mint for the other levels. `styleHeading` replaces
-     * that color. Pass an identity function for a heading that styles its own spans.
+     * is bold, in the color of its level. `styleHeading` replaces that style, bold included. Pass an
+     * identity function for a heading that styles its own spans.
      */
     public block(
         heading: string,
         lines: readonly string[],
         level: LogLevel = 'trace',
-        styleHeading: (heading: string) => string = paint[HEADING_TONES[level]].bold
+        styleHeading: (heading: string) => string = chalk.hex(LEVEL_COLOR[level]).bold
     ): void {
         this.logger[level]([styleHeading(heading), ...lines].join('\n'));
     }
