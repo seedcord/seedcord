@@ -1,6 +1,7 @@
 import type { Cron } from 'croner';
 
-// croner's resume() runs a match that it missed while paused. Pausing calls stop() instead, and resuming builds a new croner job
+// a job paused with croner's pause() keeps its timer, which keeps the process alive. Pausing calls stop() instead.
+// start() builds a new croner job after a stop because a stopped one can't start again
 export class CronJob {
     private cron: Cron;
     private scheduled = false;
