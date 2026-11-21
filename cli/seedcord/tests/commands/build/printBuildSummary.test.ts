@@ -1,27 +1,18 @@
-import { stripVTControlCharacters } from 'node:util';
-
 import { describe, expect, it } from 'vite-plus/test';
 
 import { BUILD_STEPS } from '#commands/build/BuildRunner';
 import { printBuildSummary } from '#commands/build/printBuildSummary';
 import { StepPrinter } from '#core/output/StepPrinter';
+import { fakeTerminal } from '#tests/fakeTerminal';
 
 import type { BuildResult } from '#commands/build/BuildRunner';
 
 function summaryFor(result: BuildResult): string {
-    let written = '';
-    const stdout = {
-        isTTY: false,
-        columns: 80,
-        write: (chunk: string | Uint8Array) => {
-            written += String(chunk);
-            return true;
-        }
-    };
+    const stdout = fakeTerminal();
     const printer = new StepPrinter({ command: 'build', labels: BUILD_STEPS, verbose: false, stdout, stderr: stdout });
 
     printBuildSummary(printer, result);
-    return stripVTControlCharacters(written);
+    return stdout.text();
 }
 
 const bundle = { modules: 7, listedFiles: 4, bytes: 186_400, entry: '/bot/dist/index.mjs' };
