@@ -95,7 +95,7 @@
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
         "discord-api-types": "catalog:deps",
-        "preact": "^11.0.0",
+        "preact": "^11.2.0",
         "react": "catalog:react",
         "react-dom": "catalog:react"
     },

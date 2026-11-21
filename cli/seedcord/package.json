@@ -63,9 +63,9 @@
         "coverage": "vp test run --coverage"
     },
     "dependencies": {
-        "@cloudflare/build-output-utils": "1.0.0-rc.0",
-        "@cloudflare/config": "1.0.0-rc.0",
-        "@commander-js/extra-typings": "^15.0.0",
+        "@cloudflare/build-output-utils": "1.0.0-rc.1",
+        "@cloudflare/config": "1.0.0-rc.1",
+        "@commander-js/extra-typings": "^15.1.0",
         "@discordjs/rest": "catalog:deps",
         "@leeoniya/ufuzzy": "catalog:deps",
         "@seedcord/core": "workspace:^",
@@ -76,7 +76,7 @@
         "@seedcord/utils": "workspace:^",
         "chalk": "catalog:deps",
         "cli-spinners": "catalog:deps",
-        "commander": "^15.0.0",
+        "commander": "^15.1.0",
         "discord-api-types": "catalog:deps",
         "es-toolkit": "catalog:deps",
         "handlebars": "catalog:deps",
@@ -84,10 +84,10 @@
         "minimatch": "^10.2.6",
         "react": "catalog:react",
         "reflect-metadata": "catalog:deps",
-        "rolldown": "~1.2.12",
-        "rolldown-plugin-dts": "0.28.8",
+        "rolldown": "~1.3.3",
+        "rolldown-plugin-dts": "0.30.2",
         "verkit": "catalog:deps",
-        "wrap-ansi": "^10.0.0"
+        "wrap-ansi": "^10.0.2"
     },
     "devDependencies": {
         "@cloudflare/vite-plugin": "catalog:peer",
