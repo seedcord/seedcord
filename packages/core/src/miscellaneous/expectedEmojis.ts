@@ -6,7 +6,7 @@ import type { EmojiConfig } from '@seedcord/types';
 
 export type ExpectedEmoji =
     | { kind: 'folder'; key: string; name: string }
-    // a name in bot.emojis. the application has both this kind and the folder kind
+    // from bot.emojis. also on the application, like the folder ones
     | { kind: 'application'; key: string; name: string }
     | { kind: 'guild'; key: string; name: string; guildId: string };
 
@@ -46,7 +46,7 @@ export async function expectedEmojis(configured: EmojiConfig = {}): Promise<Expe
     const folderKeys = new Set(inFolder.map(({ key }) => key));
     const problems: SeedcordTypeError[] = [];
 
-    // a bot.emojis value is unknown here because nothing checked the config yet
+    // bot.emojis hasn't been validated before this
     for (const [key, value] of Object.entries<unknown>(configured)) {
         const emoji = configuredEmoji(key, value);
         if (!emoji) {

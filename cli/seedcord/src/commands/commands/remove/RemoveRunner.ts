@@ -81,7 +81,9 @@ export class RemoveRunner {
             result,
             selected.some(({ scope }) => scope.kind === 'global')
         );
-        if (result.failed.length > 0) throw new SeedcordError(SeedcordErrorCode.CliCommandsNotDeleted);
+        if (result.failed.length > 0) {
+            throw new SeedcordError(SeedcordErrorCode.CliSomeFailed, ['commands', 'deleted']);
+        }
     }
 
     // the wizard's guild list and the run share one session

@@ -54,7 +54,7 @@ interface BotOptions {
 }
 
 // a test that reuses a project reuses its last deploy
-export type FakeProject = ProjectOpener & { readonly state: StateFolder };
+export type FakeProject = ProjectOpener & { readonly state: StateFolder; readonly dir: string };
 
 interface FakeDiscord {
     rest: REST;
@@ -126,7 +126,8 @@ export async function fakeProject({
     return {
         readConfig: () => Promise.resolve(loadedConfig(config)),
         openProject: (loaded) => Promise.resolve(new Project(loaded.config, loaded.files, moduleLoader(byPath))),
-        state: new StateFolder(root, silentLogger)
+        state: new StateFolder(root, silentLogger),
+        dir: root
     };
 }
 

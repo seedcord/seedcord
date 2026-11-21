@@ -10,7 +10,6 @@ import { expectedEmojis } from '#src/miscellaneous/expectedEmojis';
 
 import type { EmojiConfig } from '@seedcord/types';
 
-// a project under seedcord dev whose emojis folder holds these files
 function projectWithEmojis(...files: string[]): Disposable {
     const project = mkdtempDisposableSync(join(tmpdir(), 'seedcord-emojis-'));
     onTestFinished(() => project.remove());

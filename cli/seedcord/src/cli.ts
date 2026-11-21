@@ -7,6 +7,7 @@ import { BuildCommand } from '#commands/build/BuildCommand';
 import { CodegenCommand } from '#commands/codegen/CodegenCommand';
 import { CommandsCommand } from '#commands/commands/CommandsCommand';
 import { DevCommand } from '#commands/dev/DevCommand';
+import { EmojisCommand } from '#commands/emojis/EmojisCommand';
 import { MakeCommand } from '#commands/make/MakeCommand';
 import { cliLogger } from '#core/cliLogger';
 import { renderError } from '#core/output/renderError';
@@ -26,6 +27,7 @@ async function main(): Promise<void> {
         new BuildCommand(),
         new CodegenCommand(),
         new CommandsCommand(),
+        new EmojisCommand(),
         new MakeCommand()
     ];
 

@@ -5,6 +5,7 @@ import { sumBy } from 'es-toolkit';
 
 import { commandLabel } from '#commands/commands/commandRows';
 import { plural } from '#core/format';
+import { printEdgeHint } from '#core/output/printEdgeHint';
 import { printSections } from '#core/output/printSections';
 import { StepsPresenter } from '#core/output/StepsPresenter';
 
@@ -73,11 +74,7 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
     }
 
     public edgeHint(): void {
-        this.output.line();
-        this.output.line(paint.mute("Your edge worker doesn't have ids for the commands this deploy added."));
-        this.output.line(
-            paint.mute(`Run ${paint.bold('seedcord build')} and deploy the worker again to pick them up.`)
-        );
+        printEdgeHint(this.output, 'the commands this deploy added');
     }
 
     private async ask(message: string): Promise<boolean> {

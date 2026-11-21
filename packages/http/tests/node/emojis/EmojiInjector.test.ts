@@ -49,7 +49,6 @@ describe('EmojiInjector', () => {
     });
 
     it('resolves an emoji that only the emojis folder has', async () => {
-        // a built bot whose build found confirm.png in the emojis folder
         using _built = setBuiltFiles({
             root: process.cwd(),
             listed: [],

@@ -78,7 +78,7 @@ With flags, both subcommands list what they would delete and stop with "Dry run.
 
 <Shell exec="seedcord commands purge --global --yes" />
 
-If a delete fails, the command warns about each one that failed, then throws `CliCommandsNotDeleted` and exits `1`.
+If a delete fails, the command warns about each one that failed, then throws `CliSomeFailed` and exits `1`.
 
 ## The pickers
 
@@ -111,7 +111,7 @@ No subcommand changes anything on Discord without `--yes` or a confirmed prompt.
 | run | in a terminal | without a terminal, or `CI` set |
 | --- | --- | --- |
 | `seedcord commands` | opens the menu | prints the help |
-| `deploy` | previews, then asks | throws `CliDeployNeedsYes` unless you pass `--yes` |
+| `deploy` | previews, then asks | throws `CliNeedsYes` unless you pass `--yes` |
 | `list` | prints | prints |
 | `clean` or `purge` without flags | opens the pickers | throws `CliNoScopeGiven` |
 | `clean` or `purge` with flags | lists, and deletes with `--yes` | lists, and deletes with `--yes` |

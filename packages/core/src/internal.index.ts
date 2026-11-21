@@ -44,7 +44,7 @@ export { lazyLogger } from '#src/miscellaneous/lazyLogger';
 export { currentApplication } from '#src/miscellaneous/currentApplication';
 export { readBotToken } from '#src/miscellaneous/readBotToken';
 export { bindEnv } from '#src/miscellaneous/bindViteEnv';
-export { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
+export { emojisAt, resolveEmojis } from '#src/miscellaneous/resolveEmojis';
 export { emojiNotFound, emojiUnreadable, expectedEmojis } from '#src/miscellaneous/expectedEmojis';
 export type { ExpectedEmoji } from '#src/miscellaneous/expectedEmojis';
 

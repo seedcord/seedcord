@@ -347,12 +347,12 @@ export enum SeedcordErrorCode {
     CliDevRuntimeNotRunning = 3131,
     /** `seedcord commands deploy` ran on a bot whose `commands.path` is `null`. */
     CliDeployNoCommandsFolder = 3132,
-    /** `seedcord commands deploy` ran without `--yes` where it cannot ask first. */
-    CliDeployNeedsYes = 3133,
+    /** A command that asks first ran without `--yes` outside a terminal. */
+    CliNeedsYes = 3133,
     /** A class carrying `@RegisterCommand` builds a component that is not a command or a context menu. */
     CliCommandNotACommand = 3134,
-    /** `seedcord commands clean` or `purge` could not delete some of the commands it picked. */
-    CliCommandsNotDeleted = 3135,
+    /** Some of the things a command tried to change on Discord failed. It warned about each one. */
+    CliSomeFailed = 3135,
     /** The CLI ran on Bun for an edge bot. */
     CliEdgeOnBun = 3136,
     /** An edge bot's `cloudflare.config.ts` doesn't set `worker`. */
@@ -383,6 +383,10 @@ export enum SeedcordErrorCode {
     CliAskFailed = 3149,
     /** The bot comes from a version of `@seedcord/gateway` or `@seedcord/http` that this CLI can't load. */
     CliHostContractMismatch = 3150,
+    /** `seedcord emojis` got a name that isn't a file in the emojis folder. */
+    CliEmojiNotInFolder = 3151,
+    /** A flag that opens a picker ran outside a terminal. */
+    CliPickerNeedsTerminal = 3152,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

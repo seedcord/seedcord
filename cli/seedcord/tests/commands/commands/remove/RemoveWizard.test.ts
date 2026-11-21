@@ -145,14 +145,14 @@ describe('RemoveWizard with the clean questions', () => {
         expect(await terminal.screen()).toContain(line);
     });
 
-    it('warns about a command it could not delete, then throws CliCommandsNotDeleted', async () => {
+    it('warns about a command it could not delete, then throws CliSomeFailed', async () => {
         using terminal = new PromptTerminal();
         const { done } = wizard(terminal, {
             '/applications/app-1/guilds/g1/commands/11': new Error('Unknown Command')
         });
 
         await terminal.press(KEY.enter, KEY.tab, KEY.down, KEY.tab, KEY.enter, 'y', KEY.enter);
-        await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsNotDeleted });
+        await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliSomeFailed });
 
         const screen = await terminal.screen();
         const warning = stripVTControlCharacters(levelMark('warn'));

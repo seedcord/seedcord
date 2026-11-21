@@ -7,7 +7,6 @@ import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 import { setBuiltFiles, setDevFiles } from '#src/files/slots';
 import { folderEmojis } from '#src/files/sources';
 
-// a project with its code in src and an emojis folder beside it
 function projectWithEmojis(...files: string[]): string {
     const project = mkdtempDisposableSync(path.join(tmpdir(), 'seedcord-emojis-'));
     onTestFinished(() => project.remove());

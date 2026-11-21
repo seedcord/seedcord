@@ -16,13 +16,13 @@ export interface EmojiFile extends FolderEmoji {
     file: string;
 }
 
-// the scan checks the extension because it never opens a file. discord reads the format from the bytes
+// only the extension gets checked since nothing opens the file. discord reads the real format from the bytes
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.apng', '.webp', '.avif']);
 // discord answers 400 for a name outside this
 const DISCORD_NAME = /^\w{2,32}$/;
 const STARTS_WITH_LETTER = /^[A-Za-z]/;
 
-// a file's error reports the first check that it fails
+// a file only reports the first check it fails
 const FILE_CHECKS = [
     ['format', ({ file }: EmojiFile) => IMAGE_EXTENSIONS.has(parse(file).ext.toLowerCase())],
     ['name', ({ name }: EmojiFile) => DISCORD_NAME.test(name)],

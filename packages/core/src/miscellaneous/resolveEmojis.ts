@@ -21,6 +21,13 @@ function byName(list: readonly APIEmoji[]): EmojisByName {
     return map;
 }
 
+// app emojis come back as { items }, guild emojis as a plain array
+export async function emojisAt(rest: EmojiRest, route: `/${string}`): Promise<APIEmoji[]> {
+    // justified: the discord api contract for the two emoji list routes
+    const listed = (await rest.get(route)) as RESTGetAPIApplicationEmojisResult | RESTGetAPIGuildEmojisResult;
+    return Array.isArray(listed) ? listed : listed.items;
+}
+
 class EmojiResolver {
     private readonly resolved = accessorStore<ResolvedEmoji>();
     private readonly problems: Error[] = [];
@@ -70,11 +77,7 @@ class EmojiResolver {
 
     private async read(route: `/${string}`): Promise<EmojisByName | Error> {
         try {
-            // justified: the discord api contract for the two emoji list routes
-            const listed = (await this.rest.get(route)) as
-                | RESTGetAPIApplicationEmojisResult
-                | RESTGetAPIGuildEmojisResult;
-            return byName(Array.isArray(listed) ? listed : listed.items);
+            return byName(await emojisAt(this.rest, route));
         } catch (error) {
             return asError(error);
         }

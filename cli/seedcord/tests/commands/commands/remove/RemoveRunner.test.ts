@@ -87,7 +87,7 @@ describe('RemoveRunner.run', () => {
         expect(discord.deletes).toEqual([]);
     });
 
-    it('warns about each command it could not delete, then throws CliCommandsNotDeleted', async () => {
+    it('warns about each command it could not delete, then throws CliSomeFailed', async () => {
         const discord = fakeDiscord({
             ...ON_DISCORD,
             [Routes.applicationGuildCommands(APP_ID, '222')]: [slash('ban')],
@@ -102,7 +102,7 @@ describe('RemoveRunner.run', () => {
             apply: true
         });
 
-        await expect(removal).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsNotDeleted });
+        await expect(removal).rejects.toMatchObject({ code: SeedcordErrorCode.CliSomeFailed });
         expect(lines).toContain('Could not delete ban in Alpha (Unknown Command).');
         expect(discord.deletes).toEqual([Routes.applicationGuildCommand(APP_ID, '222', 'ban-id')]);
     });

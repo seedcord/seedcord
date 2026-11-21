@@ -52,7 +52,6 @@ function stubCore(opts: StubOptions): Core {
     } as unknown as Core;
 }
 
-// a built bot whose build found dot.png in the emojis folder
 function builtWithDot(): Disposable {
     return setBuiltFiles({
         root: process.cwd(),

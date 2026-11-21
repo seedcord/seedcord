@@ -11,6 +11,7 @@ import { DeployRunner } from '#commands/commands/deploy/DeployRunner';
 import { ListRunner } from '#commands/commands/list/ListRunner';
 import { RemoveRunner } from '#commands/commands/remove/RemoveRunner';
 import { bindEnv } from '#tests/bindEnv';
+import { captureOutput } from '#tests/captureOutput';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { APP_ID, botGuilds, fakeDiscord, fakeProject, removeDeps, slash } from '#tests/commands/commands/fakeBot';
 import { silentLogger } from '#tests/silentLogger';
@@ -25,34 +26,6 @@ const ON_DISCORD = {
     [Routes.applicationCommands(APP_ID)]: [slash('ban')],
     [Routes.applicationGuildCommands(APP_ID, '111')]: [slash('ban'), slash('setup')]
 };
-
-interface CapturedOutput extends Disposable {
-    stdout(): string;
-    stderr(): string;
-}
-
-function captureOutput(): CapturedOutput {
-    const capture = (stream: NodeJS.WriteStream): { text: () => string; restore: () => void } => {
-        const chunks: string[] = [];
-        const spy = vi.spyOn(stream, 'write').mockImplementation((chunk: string | Uint8Array) => {
-            chunks.push(String(chunk));
-            return true;
-        });
-        return { text: () => stripVTControlCharacters(chunks.join('')), restore: () => spy.mockRestore() };
-    };
-    const stdout = capture(process.stdout);
-    const stderr = capture(process.stderr);
-
-    return {
-        stdout: stdout.text,
-        stderr: stderr.text,
-        [Symbol.dispose]: () => {
-            stdout.restore();
-            stderr.restore();
-            process.exitCode = undefined;
-        }
-    };
-}
 
 async function runCommands(deps: ConstructorParameters<typeof CommandsCommand>[0], ...args: string[]): Promise<void> {
     const program = new Command().exitOverride();
@@ -297,12 +270,12 @@ describe('seedcord commands deploy, off a terminal', () => {
         process.stdin.isTTY = stdinIsTTY;
     });
 
-    it('throws CliDeployNeedsYes before it reads anything', async () => {
+    it('throws CliNeedsYes before it reads anything', async () => {
         using output = captureOutput();
 
         const { gets, puts } = await run(['deploy'], { onDiscord: EMPTY_DISCORD });
 
-        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliDeployNeedsYes}]`);
+        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliNeedsYes}]`);
         expect(process.exitCode).toBe(1);
         expect(gets).toEqual([]);
         expect(puts).toEqual([]);
@@ -342,12 +315,11 @@ describe('seedcord commands list --json', () => {
         using output = captureOutput();
         const inner = await fakeProject();
         const project: FakeProject = {
-            state: inner.state,
+            ...inner,
             readConfig: (dir) => {
                 process.stdout.write('loading the bot\n');
                 return inner.readConfig(dir);
-            },
-            openProject: (config) => inner.openProject(config)
+            }
         };
 
         await run(['list', '--json'], { project });
