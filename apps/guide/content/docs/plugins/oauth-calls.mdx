@@ -1,0 +1,239 @@
+---
+title: Scopes and calls
+description: Call Discord as a user who logged in, with typed calls for each scope you request and extra scopes that only some of your features need.
+---
+
+A user's tokens only work for the scopes that they approved. With a plain HTTP client, you'd find out that a call needs a scope you never requested when Discord refuses it.
+
+[`@seedcord/plugin-oauth`](/plugins/oauth) types each call by the scopes you list. You get a call for every scope you request, and a call for a scope you didn't list doesn't compile.
+
+## The calls for your scopes
+
+```ts twoslash title="src/handlers/Servers.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+import type { OAuth } from '@seedcord/plugin-oauth';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        servers: { options: {}; cache: 'cached' };
+    }
+    interface Core {
+        oauth: OAuth<'guilds'>;
+    }
+}
+// ---cut-end---
+
+@SlashRoute('servers')
+export class Servers extends SlashHandler<'servers'> {
+    public async execute(): Promise<void> {
+        const calls = this.core.oauth.as(this.user.id);
+        const guilds = await calls.guilds({ with_counts: true });
+        //    ^?
+
+        await this.reply(`You're in ${guilds.length} servers.`);
+    }
+}
+```
+
+This bot attaches the plugin with `scopes: ['guilds']`, so `calls.guilds()` compiles. The type under `guilds` is the one that `discord-api-types` has for Discord's list of servers. Every login requests your `scopes`, plus `identify`, which the plugin always adds.
+
+{/* prettier-ignore-start */}
+
+| call | scope it needs | what it returns |
+| --- | --- | --- |
+| [`user()`](ref:plugin-oauth/UserCalls.user) | `identify` | the user's own account |
+| [`guilds()`](ref:plugin-oauth/UserCalls.guilds) | `guilds` | the servers that the user is in |
+| [`guildMember(guildId)`](ref:plugin-oauth/UserCalls.guildMember) | `guilds.members.read` | the user's member object in one server |
+| [`connections()`](ref:plugin-oauth/UserCalls.connections) | `connections` | the accounts that the user connected on Discord, like GitHub |
+| [`joinGuild(guildId)`](ref:plugin-oauth/UserCalls.joinGuild) | `guilds.join` | `{ added: true, member }`, or `{ added: false }` for a user who was already in the server. Your bot has to be in that server |
+| [`roleConnection()`](ref:plugin-oauth/UserCalls.roleConnection) | `role_connections.write` | what your application stored for the user's Linked Roles |
+| [`setRoleConnection(connection)`](ref:plugin-oauth/UserCalls.setRoleConnection) | `role_connections.write` | the role connection that Discord stored |
+
+{/* prettier-ignore-end */}
+
+A call for a scope that you didn't list fails to compile.
+
+```ts twoslash
+// @errors: 2345
+import type { OAuth } from '@seedcord/plugin-oauth';
+
+declare const oauth: OAuth<'guilds'>;
+// ---cut---
+await oauth
+    .as('287135364127129601')
+    .guildMember('1519022362824147075');
+```
+
+This bot only lists `guilds`, and `guildMember()` needs `guilds.members.read`. The error has the scope to add in it.
+
+The last two calls in the table are for Linked Roles, Discord's feature that lets a server role require a value from your application. A login that requests `role_connections.write` skips PKCE, because Discord answers `invalid_scope` when a login has both. The cookie check still ties that login to the browser that started it.
+
+For a route without a typed call, [`UserCalls`](ref:plugin-oauth/UserCalls) also has `get`, `post`, `put`, `patch`, and `delete`. They take what the same methods on `this.core.rest` take, and send the request with the user's token. These five don't check scopes, because the plugin can't tell which scope a route needs. When Discord refuses the user's token on one of them, you get Discord's own error.
+
+```ts twoslash
+import type { OAuth } from '@seedcord/plugin-oauth';
+
+declare const oauth: OAuth<'guilds'>;
+// ---cut---
+const authorization = await oauth
+    .as('287135364127129601')
+    .get('/oauth2/@me');
+```
+
+## Scopes for one feature
+
+When a login link lists a scope from [`extraScopes`](ref:plugin-oauth/OAuthClientOptions.extraScopes), that login requests it too. Other logins don't. Use it for a scope that one feature needs, like `connections` for a page of connected accounts. In `scopes`, Discord would ask every user for it at their first login.
+
+```ts twoslash
+import { OAuth } from '@seedcord/plugin-oauth';
+// ---cut---
+export const WithConnections = OAuth.with({
+    scopes: ['guilds'],
+    extraScopes: ['connections']
+});
+```
+
+The call for an extra scope returns `undefined` for a user who hasn't granted it yet. Send that user to a login link that lists the scope.
+
+```ts twoslash title="src/handlers/Accounts.ts"
+// ---cut-start---
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+import type { OAuth } from '@seedcord/plugin-oauth';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        accounts: { options: {}; cache: 'cached' };
+    }
+    interface Core {
+        oauth: OAuth<'guilds', 'connections'>;
+    }
+}
+// ---cut-end---
+@SlashRoute('accounts')
+export class Accounts extends SlashHandler<'accounts'> {
+    public async execute(): Promise<void> {
+        const { oauth } = this.core;
+        const connections = await oauth
+            .as(this.user.id)
+            .connections();
+
+        if (!connections) {
+            const link = oauth.loginUrl({
+                scopes: ['connections'],
+                returnTo: '/accounts'
+            });
+            await this.reply(
+                `Connect your accounts first: ${link}`
+            );
+            return;
+        }
+
+        await this.reply(
+            `You connected ${connections.length} accounts.`
+        );
+    }
+}
+```
+
+`loginUrl({ scopes: ['connections'] })` builds a link that requests `connections` in addition to your `scopes`. After that login, `connections()` returns their accounts. A link can only list scopes from `extraScopes`. Anything else fails to compile.
+
+## Adding your bot to a server
+
+A login with the `bot` scope also adds your bot to a server that the visitor picks. With `bot` in either list, `loginUrl()` takes the permissions to request and the server to start on. The bot will join with zero perms without `permissions`.
+
+```ts twoslash
+// ---cut-start---
+import type { OAuth } from '@seedcord/plugin-oauth';
+
+declare const oauth: OAuth<'guilds', 'bot'>;
+// ---cut-end---
+import { PermissionFlagsBits } from 'discord.js';
+
+const link = oauth.loginUrl({
+    scopes: ['bot'],
+    permissions:
+        PermissionFlagsBits.ViewChannel |
+        PermissionFlagsBits.SendMessages,
+    guildId: '1519022362824147075'
+});
+```
+
+`permissions` is a bitfield, and `PermissionFlagsBits` has one flag per permission. Join the ones that your bot needs with `|`.
+
+<Callout type="transport">
+
+`PermissionFlagsBits` comes from `discord.js` on gateway and from `discord-api-types/v10` on http. Both have the same flags.
+
+</Callout>
+
+After that login, the plugin passes `onLogin` the [`guild`](ref:plugin-oauth/OAuthLogin.guild) that your bot joined and the [`permissions`](ref:plugin-oauth/CompletedLogin.permissions) that the visitor approved. The visitor can clear permissions on Discord's screen, so read `permissions` before you rely on one. It arrives as a string. To check a flag, turn it into a `bigint` first, as in `BigInt(permissions) & PermissionFlagsBits.SendMessages`.
+
+## When a user has to log in again
+
+A user can remove your application in their Discord settings at any time. After that, Discord refuses their tokens, and every typed call as them throws a [`SeedcordError`](ref:errors/SeedcordError) with the code `PluginOAuthLoginNeeded`.
+
+```ts twoslash title="src/handlers/Servers.ts"
+import {
+    isSeedcordError,
+    SeedcordErrorCode
+} from '@seedcord/errors';
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+import type { OAuth } from '@seedcord/plugin-oauth';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        servers: { options: {}; cache: 'cached' };
+    }
+    interface Core {
+        oauth: OAuth<'guilds'>;
+    }
+}
+// ---cut-end---
+
+@SlashRoute('servers')
+export class Servers extends SlashHandler<'servers'> {
+    public async execute(): Promise<void> {
+        const { oauth } = this.core;
+        try {
+            const guilds = await oauth.as(this.user.id).guilds();
+            await this.reply(`You're in ${guilds.length} servers.`);
+        } catch (error) {
+            if (!this.needsLogin(error)) throw error;
+            await this.reply(`Log in first: ${oauth.loginUrl()}`);
+        }
+    }
+
+    private needsLogin(error: unknown): boolean {
+        return isSeedcordError(
+            error,
+            'SeedcordError',
+            SeedcordErrorCode.PluginOAuthLoginNeeded
+        );
+    }
+}
+```
+
+`needsLogin()` checks for that one code, and `execute()` rethrows every other error.
+
+That one error code covers these cases, and the error's message has the reason:
+
+- The user never logged in, or you changed your client secret since the user logged in. The plugin derives its encryption key from the secret, so the old records can't be read anymore.
+- Discord refused the user's tokens, which happens after they remove your application.
+- The user logged in before you added a scope to `scopes`. Their tokens still work, but they don't cover the new scope until the next login.
+
+The plugin keeps a user's record when Discord refuses their tokens. The next login replaces it.
+
+## Logging a user out
+
+[`forget()`](ref:plugin-oauth/OAuth.forget) deletes a user's saved tokens without calling Discord. Their grant keeps working there.
+
+[`revoke()`](ref:plugin-oauth/OAuth.revoke) ends the grant on Discord and then deletes the tokens. Use `forget()` when a user logs out of your site, and `revoke()` when they ask you to disconnect their Discord account.
+
+<Callout type="warning">
+
+When you revoke one token, Discord [revokes every token of that authorization](https://docs.discord.com/developers/topics/oauth2#authorization-code-grant-token-revocation-example). If two bots or two services share one application, a `revoke()` in one logs the user out of both.
+
+</Callout>
+
+## Reading what a user granted
+
+[`scopesOf()`](ref:plugin-oauth/OAuth.scopesOf) returns the scopes that a user granted, or `undefined` for a user without saved tokens. It reads the saved record without calling Discord.

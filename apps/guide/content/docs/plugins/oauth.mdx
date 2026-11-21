@@ -1,0 +1,266 @@
+---
+title: OAuth
+description: Log people in with Discord from your bot, with the login routes served for you and each user's tokens kept encrypted and refreshed.
+---
+
+[`@seedcord/plugin-oauth`](ref:plugin-oauth) lets people log in with Discord through your bot. After that, you can call Discord as any of them through `this.core.oauth.as(userId)`.
+
+By hand, you'd serve a login route and a callback route, and tie each login to the browser that started it. Then you'd trade the code for tokens, encrypt them before you save them, and refresh them before they expire. The plugin does all of that.
+
+<Shell add="@seedcord/plugin-oauth" />
+
+## Attaching the plugin
+
+```ts twoslash title="src/bot.ts"
+import { Seedcord, UnstorageDriver } from '@seedcord/gateway';
+import { OAuth } from '@seedcord/plugin-oauth';
+import { GatewayIntentBits } from 'discord.js';
+import { createStorage } from 'unstorage';
+import fsDriver from 'unstorage/drivers/fs';
+
+export const seedcord = new Seedcord({
+    // the address people reach your bot at
+    server: { url: 'https://bot.example.com' },
+    kv: new UnstorageDriver(
+        createStorage({ driver: fsDriver({ base: './.kv' }) })
+    ),
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+}).attach('oauth', OAuth.with({ scopes: ['guilds'] }));
+
+export default seedcord;
+```
+
+[`OAuth.with()`](ref:plugin-oauth/OAuth.with) returns the class to attach, with your options in it. The `scopes` you pass there set which calls `this.core.oauth` has. Most plugins take their options as an argument to `attach` after the class. Passed that way, your scopes wouldn't reach the types, so `OAuth` takes its options in `with()`. The plugin authoring guide [shows how to write a `with()`](/writing-plugins/typing#taking-the-type-from-an-option).
+
+[`OAuth`](ref:plugin-oauth/OAuth) works on gateway, on http, and on [Cloudflare Workers](/build/workers). It needs these, and your bot doesn't start without them:
+
+{/* prettier-ignore-start */}
+
+| it needs | where it comes from | without it |
+| --- | --- | --- |
+| your bot's public address | `server.url` in the config, as in the sample. You can leave it out under `seedcord dev`, which uses your local or tunnel address | `CoreServerUrlUnset` |
+| a place to save tokens | a [kv driver](/built-ins/drivers) that saves to a file or a database | `PluginOAuthTokensInMemory` |
+| your application's client secret | `DISCORD_CLIENT_SECRET` in the environment | `ConfigMissingEnv` |
+
+{/* prettier-ignore-end */}
+
+The default kv driver keeps everything in memory, so a restart deletes every user's tokens. That's why the plugin refuses to start on it.
+
+<Callout type="transport" only="edge">
+
+The `fs` driver in the sample needs a disk, which a worker doesn't have. Use [D1 through unstorage](/built-ins/drivers#on-cloudflare-workers) there.
+
+</Callout>
+
+Copy the client secret from your application's **OAuth2** page in the [Developer Portal](https://discord.com/developers/applications). If you change it later, [every user has to log in again](/plugins/oauth-calls#when-a-user-has-to-log-in-again).
+
+<Callout type="warning">
+
+Discord [only redirects to an address on your application's list](https://docs.discord.com/developers/topics/oauth2#authorization-code-grant), and a bot can't add one for you. On the same **OAuth2** page, add your callback address under **Redirects**. It's `server.url` followed by `oauth/callback`. For the sample, that's `https://bot.example.com/oauth/callback`.
+
+</Callout>
+
+If the address is missing when your bot starts, the plugin logs a warning with the exact address to paste. The local address your bot gets under `seedcord dev` needs its own entry in the list.
+
+```txt output
+Discord will refuse logins until this address is under Redirects on your OAuth2 page
+https://bot.example.com/oauth/callback
+```
+
+## Sending someone to the login
+
+[`loginUrl()`](ref:plugin-oauth/OAuth.loginUrl) returns the address of your bot's login route. Send a browser there, or reply with it.
+
+```ts twoslash title="src/handlers/Login.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+import type { OAuth } from '@seedcord/plugin-oauth';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        login: { options: {}; cache: 'cached' };
+    }
+    interface Core {
+        oauth: OAuth<'guilds'>;
+    }
+}
+// ---cut-end---
+
+@SlashRoute('login')
+export class Login extends SlashHandler<'login'> {
+    public async execute(): Promise<void> {
+        const link = this.core.oauth.loginUrl({
+            returnTo: '/servers'
+        });
+
+        await this.reply(`Log in with Discord: ${link}`);
+    }
+}
+```
+
+`this.core.oauth` is typed because [`seedcord codegen`](/plugins/typing) copies each attached plugin onto `Core`.
+
+The link is your `server.url` followed by `oauth/login?returnTo=%2Fservers`. When a visitor opens it, your bot redirects them to Discord's consent screen. Discord then sends them back to `oauth/callback`. The plugin serves both routes.
+
+`returnTo` is where the visitor should end up afterwards, as a path on your own site. The plugin returns it to you after the login, and it discards a value that points at another site.
+
+The callback only finishes a login that the same browser started. The login route sets a cookie in the visitor's browser, and the callback rejects a request without it. Without that check, anyone could send your users a callback link that logs them in as somebody else.
+
+## After the login
+
+When a login finishes, the plugin has already saved the user's tokens. To choose what the visitor's browser gets next, pass [`onLogin`](ref:plugin-oauth/OAuthOptions.onLogin). It usually returns a redirect that sets your own session.
+
+```ts twoslash title="src/bot.ts"
+// ---cut-start---
+// @filename: sessions.ts
+export declare const sessions: {
+    cookieFor(userId: string): string;
+};
+
+// @filename: bot.ts
+// ---cut-end---
+import { OAuth } from '@seedcord/plugin-oauth';
+
+import { sessions } from './sessions';
+
+export const WithSession = OAuth.with({
+    scopes: ['guilds'],
+    onLogin: ({ user, returnTo }) =>
+        new Response(null, {
+            status: 302,
+            headers: {
+                location: returnTo ?? '/',
+                'set-cookie': sessions.cookieFor(user.id)
+            }
+        })
+});
+```
+
+The plugin calls `onLogin` with the finished login and the callback's `Request`, and sends the visitor the `Response` that `onLogin` returns. A browser resolves the `returnTo` path against your bot's address. If your site is at another address, build the full one from `returnTo` yourself.
+
+The plugin doesn't keep a session for you. `sessions` in the sample is a file of your own that makes the cookie. It saves tokens under `user.id`, and your own cookie is what tells you later which user a browser belongs to. Without `onLogin`, the visitor gets a plain page that says the login worked, which is enough for a bot that only uses the tokens from its commands.
+
+{/* prettier-ignore-start */}
+
+| on the login | what it holds |
+| --- | --- |
+| [`user`](ref:plugin-oauth/OAuthLogin.user) | the Discord user who logged in |
+| [`scopes`](ref:plugin-oauth/OAuthLogin.scopes) | the scopes that the user has granted, earlier logins included |
+| [`returnTo`](ref:plugin-oauth/CompletedLogin.returnTo) | the path from `loginUrl({ returnTo })`, or `undefined` |
+| [`guild`](ref:plugin-oauth/OAuthLogin.guild) | the server that your bot joined, for a login that [added the bot](/plugins/oauth-calls#adding-your-bot-to-a-server) |
+| [`permissions`](ref:plugin-oauth/CompletedLogin.permissions) | the permissions that the visitor approved for the bot, as a bitfield in a string, for the same kind of login |
+| [`webhook`](ref:plugin-oauth/OAuthLogin.webhook) | the webhook that Discord created, for a login with the `webhook.incoming` scope |
+
+{/* prettier-ignore-end */}
+
+### When a login doesn't finish
+
+A visitor can press **Cancel** on Discord's screen, or open a callback link that their browser never started. Without [`onFailure`](ref:plugin-oauth/OAuthOptions.onFailure), they get a plain page with a 400. To show your own page or send them somewhere else, return a `Response` from `onFailure`.
+
+```ts twoslash
+import { OAuth } from '@seedcord/plugin-oauth';
+// ---cut---
+export const WithFailurePage = OAuth.with({
+    scopes: ['guilds'],
+    onFailure: (failure) =>
+        failure.kind === 'denied'
+            ? Response.redirect('https://bot.example.com/')
+            : new Response('Start the login again.', {
+                  status: 400
+              })
+});
+```
+
+{/* prettier-ignore-start */}
+
+| `failure.kind` | what happened |
+| --- | --- |
+| `denied` | the visitor pressed **Cancel**, or Discord refused the request. `failure.error` has Discord's reason, like `access_denied` |
+| `invalid` | the login link expired, the page was reloaded, or this browser didn't start the login |
+| `unlisted` | the login link requested a scope that isn't in your [`extraScopes`](/plugins/oauth-calls#scopes-for-one-feature). `failure.scopes` lists them |
+
+{/* prettier-ignore-end */}
+
+## Calling Discord as a user
+
+[`as()`](ref:plugin-oauth/OAuth.as) takes a user's id and returns the calls you can make as them. Each call reads their saved tokens and refreshes them first if they're about to expire.
+
+```ts twoslash hovers title="src/handlers/Servers.ts"
+// ---cut-start---
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+import type { OAuth } from '@seedcord/plugin-oauth';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        servers: { options: {}; cache: 'cached' };
+    }
+    interface Core {
+        oauth: OAuth<'guilds'>;
+    }
+}
+// ---cut-end---
+@SlashRoute('servers')
+export class Servers extends SlashHandler<'servers'> {
+    public async execute(): Promise<void> {
+        const guilds = await this.core.oauth
+            .as(this.user.id)
+            .guilds();
+
+        await this.reply(`You're in ${guilds.length} servers.`);
+    }
+}
+```
+
+`guilds()` returns the servers that the user is in. The call compiles because the `attach` call at the top of this page lists `guilds` in `scopes`.
+
+### From your own routes
+
+You can make the same calls from a plugin's [`fetch()`](/writing-plugins/web-requests), to serve your own routes. `Account` here serves `/api/me`, which returns the user who's logged in.
+
+```ts twoslash title="src/plugins/Account.ts"
+// ---cut-start---
+// @filename: sessions.ts
+export declare const sessions: {
+    userOf(request: Request): string | undefined;
+};
+
+// @filename: plugins/Account.ts
+import type { OAuth } from '@seedcord/plugin-oauth';
+declare module '@seedcord/gateway' {
+    interface Core {
+        oauth: OAuth<'guilds'>;
+    }
+}
+// ---cut-end---
+import { Plugin } from '@seedcord/gateway';
+
+import { sessions } from '../sessions';
+
+const ME = new URLPattern({ pathname: '/api/me' });
+
+export class Account extends Plugin {
+    public async init(): Promise<void> {}
+
+    public override async fetch(
+        request: Request
+    ): Promise<Response | undefined> {
+        if (!ME.test(request.url)) return undefined;
+
+        const userId = sessions.userOf(request);
+        if (!userId) return new Response(null, { status: 401 });
+
+        const user = await this.core.oauth.as(userId).user();
+        return Response.json(user);
+    }
+}
+```
+
+`this.core.oauth` is the same plugin that a handler reads. As an example, we have `sessions`, which reads the cookie that your `onLogin` set and returns the user's id.
+
+Attach `Account` like any plugin, with `.attach('account', Account)`.
+
+[Scopes and calls](/plugins/oauth-calls) covers every typed call, the scopes that only some features need, and what happens when a user has to log in again.

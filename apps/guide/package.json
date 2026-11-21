@@ -23,6 +23,7 @@
         "@seedcord/docs-engine": "workspace:^",
         "@seedcord/docs-search": "workspace:^",
         "@seedcord/errors": "workspace:^",
+        "@seedcord/plugin-oauth": "workspace:^",
         "@seedcord/ui": "workspace:^",
         "@shikijs/twoslash": "^4.5.0",
         "discord-component-embed": "workspace:^",

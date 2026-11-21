@@ -58,6 +58,7 @@ export default {
                 '@seedcord/plugin-i18n',
                 '@seedcord/plugin-kysely',
                 '@seedcord/plugin-mongoose',
+                '@seedcord/plugin-oauth',
                 '@seedcord/plugin-tasks',
                 '@types/better-sqlite3',
                 '@types/pg',

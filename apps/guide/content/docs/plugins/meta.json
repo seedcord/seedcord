@@ -20,6 +20,9 @@
         "tasks-control",
         "---i18n---",
         "i18n",
-        "i18n-commands"
+        "i18n-commands",
+        "---OAuth---",
+        "oauth",
+        "oauth-calls"
     ]
 }
