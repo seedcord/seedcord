@@ -43,7 +43,7 @@ function expiresSoon(tokens: SavedTokens): boolean {
 // accepted saves newer tokens, and a store can take a while to show a write. a delete could remove
 // those newer tokens. forget() and revoke() delete, and a new login writes over the old record.
 //
-// every change to one user's record runs through `changes`, after the change before it. a forget()
+// every change to one user's record runs through `changes` after the change before it. a forget()
 // can't run in the middle of a refresh then, and two calls can't refresh the same token. `changes`
 // only orders this process. another process, or another workers isolate, can still do both.
 export class UserTokens {
@@ -77,8 +77,14 @@ export class UserTokens {
         return this.vault.read(userId);
     }
 
-    public async fresh(userId: string): Promise<SavedTokens> {
-        const saved = await this.loggedIn(userId);
+    public async loggedIn(userId: string): Promise<SavedTokens> {
+        const saved = await this.vault.read(userId);
+        if (!saved) throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId, 'never']);
+        return saved;
+    }
+
+    // `saved` itself, or the tokens from a refresh when it's about to expire
+    public async unexpired(userId: string, saved: SavedTokens): Promise<SavedTokens> {
         return expiresSoon(saved) ? this.changes.run(userId, () => this.refreshed(userId)) : saved;
     }
 
@@ -98,12 +104,6 @@ export class UserTokens {
             await this.endpoint.revoke(saved.refreshToken);
             await this.vault.delete(userId);
         });
-    }
-
-    private async loggedIn(userId: string): Promise<SavedTokens> {
-        const saved = await this.vault.read(userId);
-        if (!saved) throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId, 'never']);
-        return saved;
     }
 
     // reads the record again because the change that ran before this one may have refreshed or deleted it

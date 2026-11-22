@@ -182,9 +182,9 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
         const unscoped =
             (method: keyof UserRest) =>
             async (route: `/${string}`, options?: RequestData): Promise<unknown> =>
-                this.#send(userId, await this.#tokens.fresh(userId), this.#restCall({ method, route, options }));
+                this.#call(userId, undefined, this.#restCall({ method, route, options }));
         const scoped = async <TResult>(scope: OAuthScope, request: UserRequest): Promise<TResult | undefined> =>
-            this.#scoped(userId, scope, this.#restCall<TResult>(request));
+            this.#call(userId, scope, this.#restCall<TResult>(request));
         const roleConnection = Routes.userApplicationRoleConnection(this.#clientId);
 
         // typed as if every scope was an extra one, where every typed call can give undefined
@@ -194,16 +194,8 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
             put: unscoped('put'),
             patch: unscoped('patch'),
             delete: unscoped('delete'),
-            // user() skips scoped() on purpose. every login requests identify, and a login without it never
-            // gets saved, which makes the scope check pointless here. putting it through scoped() would
-            // also make this return `| undefined`, like an extra scope does. the other way is a second
-            // helper just for this one call, and that was felt like a bit too much for this
             user: async () =>
-                this.#sendGranted(
-                    userId,
-                    await this.#tokens.fresh(userId),
-                    this.#restCall({ method: 'get', route: Routes.user('@me') })
-                ),
+                this.#call(userId, 'identify', this.#restCall({ method: 'get', route: Routes.user('@me') })),
             guilds: async (query) =>
                 scoped('guilds', {
                     method: 'get',
@@ -214,7 +206,7 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
                 scoped('guilds.members.read', { method: 'get', route: Routes.userGuildMember(guildId) }),
             connections: async () => scoped('connections', { method: 'get', route: Routes.userConnections() }),
             joinGuild: async (guildId, options) =>
-                this.#scoped(userId, 'guilds.join', this.#guildJoin(userId, guildId, options)),
+                this.#call(userId, 'guilds.join', this.#guildJoin(userId, guildId, options)),
             roleConnection: async () => scoped('role_connections.write', { method: 'get', route: roleConnection }),
             setRoleConnection: async (connection) =>
                 scoped('role_connections.write', {
@@ -278,33 +270,44 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
         };
     }
 
-    async #scoped<TResult>(userId: string, scope: OAuthScope, call: TokenCall<TResult>): Promise<TResult | undefined> {
-        const saved = await this.#tokens.fresh(userId);
-        if (saved.scopes.includes(scope)) return this.#sendGranted(userId, saved, call);
-        if (this.#extraScopes.has(scope)) return undefined;
-        throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId, { missingScope: scope }]);
-    }
-
-    // only call this once the user granted the scope. discord also answers 401 for a scope that they never
-    // granted, and their tokens still work then
-    async #sendGranted<TResult>(userId: string, saved: SavedTokens, call: TokenCall<TResult>): Promise<TResult> {
+    // every call as a user comes through here. `scope` is undefined for the raw REST calls.
+    // identify is in every login and a raw call doesn't check a scope, which is why those two overloads
+    // never give undefined
+    #call<TResult>(userId: string, scope: 'identify' | undefined, call: TokenCall<TResult>): Promise<TResult>;
+    #call<TResult>(userId: string, scope: OAuthScope, call: TokenCall<TResult>): Promise<TResult | undefined>;
+    async #call<TResult>(
+        userId: string,
+        scope: OAuthScope | undefined,
+        call: TokenCall<TResult>
+    ): Promise<TResult | undefined> {
+        const saved = await this.#tokens.loggedIn(userId);
+        if (!this.#granted(userId, saved, scope)) return undefined;
+        const tokens = await this.#tokens.unexpired(userId, saved);
         try {
-            return await this.#send(userId, saved, call);
-        } catch (error) {
-            if (!call.refused(error)) throw error;
-            throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId, 'refused'], { cause: error });
-        }
-    }
-
-    async #send<TResult>(userId: string, saved: SavedTokens, call: TokenCall<TResult>): Promise<TResult> {
-        try {
-            return await call.send(saved.accessToken);
+            return await call.send(tokens.accessToken);
         } catch (error) {
             if (!call.refused(error)) throw error;
             // discord ends the old access token as soon as another process refreshes it
-            const newer = await this.#tokens.newerThan(userId, saved);
-            if (!newer) throw error;
-            return call.send(newer.accessToken);
+            const newer = await this.#tokens.newerThan(userId, tokens);
+            if (!newer) throw this.#refusal(userId, scope, error);
+            if (!this.#granted(userId, newer, scope)) return undefined;
+            return call.send(newer.accessToken).catch((again: unknown) => {
+                throw call.refused(again) ? this.#refusal(userId, scope, again) : again;
+            });
         }
+    }
+
+    // false for an extra scope that the user hasn't granted yet
+    #granted(userId: string, tokens: SavedTokens, scope: OAuthScope | undefined): boolean {
+        if (scope === undefined || tokens.scopes.includes(scope)) return true;
+        if (this.#extraScopes.has(scope)) return false;
+        throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId, { missingScope: scope }]);
+    }
+
+    // discord also answers 401 for a scope that the user never granted, and their tokens still work then.
+    // a raw call could be either one, and its caller gets discord's error
+    #refusal(userId: string, scope: OAuthScope | undefined, error: unknown): unknown {
+        if (scope === undefined) return error;
+        return new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId, 'refused'], { cause: error });
     }
 }

@@ -6,14 +6,13 @@ import { describe, expect, it, vi } from 'vite-plus/test';
 import { OAuthClient } from '#src/OAuthClient';
 
 import { APP_ID, discordGranting, USER } from './discordGranting';
-import { fakeDiscord, WEEK_SECONDS } from './fakeDiscord';
+import { ABOUT_TO_EXPIRE_SECONDS, fakeDiscord, WEEK_SECONDS } from './fakeDiscord';
 
 import type { TokenStore } from '#src/TokenVault';
 import type { Discord } from './discordGranting';
 import type { SeenRequest } from './fakeDiscord';
 
-// longer than one gap between the reads of a client that discord refused a refresh
-const SLOW_SAVE_MS = 300;
+const SAVE_SLOWER_THAN_ONE_REREAD_MS = 300;
 
 async function clientGranting(expiresIn: number, scope?: string): Promise<ReturnType<Discord['client']>> {
     const discord = await discordGranting(expiresIn, scope);
@@ -62,7 +61,7 @@ describe('OAuthClient', () => {
     });
 
     it('refreshes a token that is about to expire before the call', async () => {
-        const discord = await discordGranting(60);
+        const discord = await discordGranting(ABOUT_TO_EXPIRE_SECONDS);
         const oauth = discord.client();
         await oauth.exchange('the-code');
 
@@ -75,7 +74,7 @@ describe('OAuthClient', () => {
     it.each(['invalid_grant', 'invalid_request'] as const)(
         'uses the tokens another process saved when it loses a refresh race and Discord answers %s',
         async (answer) => {
-            const discord = await discordGranting(60);
+            const discord = await discordGranting(ABOUT_TO_EXPIRE_SECONDS);
             discord.usedRefreshTokenAnswer = answer;
             const [first, second] = [discord.client(), discord.client()];
             await first.exchange('the-code');
@@ -85,18 +84,17 @@ describe('OAuthClient', () => {
                 second.as(USER.id).get('/users/@me/guilds')
             ]);
 
-            // discord accepted one refresh, and the client it refused read the record that the other saved
             expect(discord.acceptedRefreshes).toBe(1);
             expect(bearerOf(discord.requests, '/users/@me/guilds')).toEqual(['Bearer access-1', 'Bearer access-1']);
         }
     );
 
     it('keeps reading a slow store until it has the tokens another process saved', async () => {
-        const discord = await discordGranting(60);
+        const discord = await discordGranting(ABOUT_TO_EXPIRE_SECONDS);
         const slow: TokenStore = {
             get: (userId) => discord.store.get(userId),
             set: async (userId, sealed) => {
-                await delay(SLOW_SAVE_MS);
+                await delay(SAVE_SLOWER_THAN_ONE_REREAD_MS);
                 discord.store.set(userId, sealed);
             },
             delete: (userId) => discord.store.delete(userId)
@@ -110,51 +108,51 @@ describe('OAuthClient', () => {
     });
 
     it('refreshes once for two calls from one client', async () => {
-        const discord = await discordGranting(60);
+        const discord = await discordGranting(ABOUT_TO_EXPIRE_SECONDS);
         const oauth = discord.client();
         await oauth.exchange('the-code');
-        discord.expiresIn = WEEK_SECONDS;
+        discord.nextGrantLastsSeconds = WEEK_SECONDS;
 
         await Promise.all([oauth.as(USER.id).get('/users/@me/guilds'), oauth.as(USER.id).get('/users/@me/guilds')]);
 
         expect(discord.requests.filter((request) => request.body.includes('grant_type=refresh_token'))).toHaveLength(1);
     });
 
-    // a call whose refresh is at Discord, waiting for its answer
-    async function callDuringARefresh(): Promise<{
+    async function callWaitingOnItsRefresh(): Promise<{
         discord: Discord;
         oauth: ReturnType<Discord['client']>;
         call: Promise<unknown>;
-        answer: () => void;
+        answerTheRefresh: () => void;
     }> {
-        const discord = await discordGranting(60);
+        const discord = await discordGranting(ABOUT_TO_EXPIRE_SECONDS);
         const oauth = discord.client();
         await oauth.exchange('the-code');
         const held = Promise.withResolvers<undefined>();
-        discord.refreshesWaitFor = held.promise;
+        discord.answersRefreshesAfter = held.promise;
 
         const call = oauth.as(USER.id).get('/users/@me/guilds');
         await vi.waitFor(() => {
             expect(discord.requests.at(-1)?.body).toContain('grant_type=refresh_token');
         });
-        return { discord, oauth, call, answer: () => held.resolve(undefined) };
+        return { discord, oauth, call, answerTheRefresh: () => held.resolve(undefined) };
     }
 
     it('deletes the tokens when forget() is called during a refresh', async () => {
-        const { discord, oauth, call, answer } = await callDuringARefresh();
+        const { discord, oauth, call, answerTheRefresh } = await callWaitingOnItsRefresh();
 
         const forgotten = oauth.forget(USER.id);
-        answer();
+        answerTheRefresh();
         await Promise.all([call, forgotten]);
 
         expect(discord.store.size).toBe(0);
     });
 
     it("doesn't save a refresh after another process logged the user out", async () => {
-        const { discord, call, answer } = await callDuringARefresh();
+        const { discord, call, answerTheRefresh } = await callWaitingOnItsRefresh();
+        const anotherProcess = discord.client();
 
-        await discord.client().forget(USER.id);
-        answer();
+        await anotherProcess.forget(USER.id);
+        answerTheRefresh();
 
         await expect(call).rejects.toMatchObject({ code: SeedcordErrorCode.PluginOAuthLoginNeeded });
         expect(discord.store.size).toBe(0);
@@ -238,7 +236,7 @@ describe('OAuthClient scopes', () => {
     });
 
     it('resolves to undefined for an extra scope the user has not granted, without calling Discord', async () => {
-        const discord = await discordGranting(WEEK_SECONDS);
+        const discord = await discordGranting(ABOUT_TO_EXPIRE_SECONDS);
         const oauth = discord.client();
         await oauth.exchange('the-code');
         const before = discord.requests.length;
@@ -256,8 +254,8 @@ describe('OAuthClient scopes', () => {
         expect(discord.requests.at(-1)?.route).toBe('/users/@me/connections');
     });
 
-    it('throws for a user whose login is older than a scope in scopes', async () => {
-        const discord = await discordGranting(WEEK_SECONDS, 'identify');
+    it('throws for a user whose login is older than a scope in scopes, without calling Discord', async () => {
+        const discord = await discordGranting(ABOUT_TO_EXPIRE_SECONDS, 'identify');
         const oauth = discord.client();
         await oauth.exchange('the-code');
         const before = discord.requests.length;
@@ -294,10 +292,13 @@ describe('OAuthClient scopes', () => {
 
     // a client that's one refresh behind. another process refreshed the tokens, and this client's first
     // read still gets the old record with the access token that Discord already ended
-    async function clientBehindARefresh(): Promise<{ discord: Discord; oauth: ReturnType<Discord['client']> }> {
-        const discord = await discordGranting(WEEK_SECONDS);
+    async function clientBehindARefresh(
+        scopes = { stale: 'identify guilds', saved: 'identify guilds' }
+    ): Promise<{ discord: Discord; oauth: ReturnType<Discord['client']> }> {
+        const discord = await discordGranting(WEEK_SECONDS, scopes.stale);
         await discord.client().exchange('the-code');
         const stale = discord.store.get(USER.id);
+        discord.nextGrantScope = scopes.saved;
         await discord.client().exchange('another-code');
         discord.deadAccessTokens.add('access-0');
 
@@ -319,6 +320,16 @@ describe('OAuthClient scopes', () => {
         expect(await call(oauth)).toEqual([]);
         expect(bearerOf(discord.requests, '/users/@me/guilds')).toEqual(['Bearer access-0', 'Bearer access-1']);
         expect(discord.store.size).toBe(1);
+    });
+
+    it("doesn't retry a 401 when the user logged in again without the extra scope", async () => {
+        const { discord, oauth } = await clientBehindARefresh({
+            stale: 'identify guilds connections',
+            saved: 'identify guilds'
+        });
+
+        expect(await oauth.as(USER.id).connections()).toBeUndefined();
+        expect(bearerOf(discord.requests, '/users/@me/connections')).toEqual(['Bearer access-0']);
     });
 
     it("passes on a plain get()'s 401 and keeps the tokens when nothing newer was saved", async () => {

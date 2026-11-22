@@ -13,15 +13,14 @@ export const USER = { id: '111', username: 'dhruv' };
 
 export interface Discord {
     requests: SeenRequest[];
-    // how many seconds the next tokens it grants last
-    expiresIn: number;
+    nextGrantLastsSeconds: number;
+    nextGrantScope: string;
     acceptedRefreshes: number;
     deadAccessTokens: Set<string>;
     // what a refresh with an old refresh token gets. real Discord answers invalid_request while the
     // refresh that used the token is still running, and invalid_grant after it
     usedRefreshTokenAnswer: 'invalid_grant' | 'invalid_request';
-    // a refresh gets its answer once this settles
-    refreshesWaitFor: Promise<unknown>;
+    answersRefreshesAfter: Promise<unknown>;
     // client() keeps its tokens here unless it gets another store
     store: Map<string, string>;
     api: string;
@@ -40,8 +39,8 @@ export async function discordGranting(expiresIn: number, scope = 'identify guild
             token_type: 'Bearer',
             access_token: `access-${number}`,
             refresh_token: live.refreshToken,
-            expires_in: discord.expiresIn,
-            scope
+            expires_in: discord.nextGrantLastsSeconds,
+            scope: discord.nextGrantScope
         };
     };
 
@@ -52,25 +51,28 @@ export async function discordGranting(expiresIn: number, scope = 'identify guild
         const form = new URLSearchParams(body);
         if (route === '/oauth2/token' && form.get('grant_type') === 'authorization_code') return { json: grant() };
         if (route === '/oauth2/token') {
-            await discord.refreshesWaitFor;
+            await discord.answersRefreshesAfter;
             if (form.get('refresh_token') !== live.refreshToken)
                 return { status: 400, json: { error: discord.usedRefreshTokenAnswer } };
             discord.acceptedRefreshes++;
             return { json: grant() };
         }
-        if (route === '/oauth2/@me')
-            return { json: { user: scope.includes('identify') ? USER : undefined, scopes: scope.split(' ') } };
+        if (route === '/oauth2/@me') {
+            const scopes = discord.nextGrantScope.split(' ');
+            return { json: { user: scopes.includes('identify') ? USER : undefined, scopes } };
+        }
         return { json: [] };
     });
 
     const discord: Discord = {
         requests: server.requests,
         api: server.api,
-        expiresIn,
+        nextGrantLastsSeconds: expiresIn,
+        nextGrantScope: scope,
         acceptedRefreshes: 0,
         deadAccessTokens: new Set(),
         usedRefreshTokenAnswer: 'invalid_grant',
-        refreshesWaitFor: Promise.resolve(),
+        answersRefreshesAfter: Promise.resolve(),
         store: new Map(),
         rest: () => new REST({ api: server.api }).setToken('bot-token'),
         client: (store = discord.store) =>

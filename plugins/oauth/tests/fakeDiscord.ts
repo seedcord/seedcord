@@ -9,6 +9,8 @@ import type { Promisable } from 'type-fest';
 
 // how long discord's access tokens last
 export const WEEK_SECONDS = 7 * 24 * 60 * 60;
+// the client refreshes a token that has under 5 minutes left
+export const ABOUT_TO_EXPIRE_SECONDS = 60;
 
 export interface SeenRequest {
     method: string;
