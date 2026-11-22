@@ -17,8 +17,8 @@ import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { Seedcord } from '#src/edge/Seedcord';
 import { Emojis } from '#src/emojis/EmojiInjector';
-import { clearBakedIds, registerBakedIds } from '#tests/helpers/bakedIds';
-import { BUILT_ROOT, clearBuiltFiles, registerBuiltFiles } from '#tests/helpers/builtFiles';
+import { registerBakedIds } from '#tests/helpers/bakedIds';
+import { BUILT_ROOT, registerBuiltFiles } from '#tests/helpers/builtFiles';
 import { createSigner, signedRequest } from '#tests/helpers/ed25519';
 import { APP_ID, VALID_TOKEN } from '#tests/helpers/fixtures';
 import { capturingCtx, slashPayload } from '#tests/helpers/interactions';
@@ -70,30 +70,30 @@ function settledWithin(ctx: CapturedCtx): Promise<string> {
     return Promise.race([ctx.settled().then(() => 'finished'), stillWaiting]);
 }
 
-async function signedEnv(ids: Partial<BakedIds> = {}): Promise<Signer> {
+async function signedEnv(ids: Partial<BakedIds> = {}): Promise<Signer & Disposable> {
     const signer = await createSigner();
     Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN }));
-    registerBakedIds({ ...ids, publicKey: signer.publicKeyHex });
-    return signer;
+    return { ...signer, ...registerBakedIds({ ...ids, publicKey: signer.publicKeyHex }) };
+}
+
+// only a subclass can call the protected `reset()`
+class EdgeBot extends Seedcord implements Disposable {
+    public [Symbol.dispose](): void {
+        Seedcord.reset();
+        LoggerChannelRegistry.instance.reset();
+    }
 }
 
 describe('the edge Seedcord', () => {
-    afterEach(() => {
-        // @ts-expect-error singleton reset between tests
-        Seedcord.reset();
-        clearBuiltFiles();
-        clearBakedIds();
-        LoggerChannelRegistry.instance.reset();
-    });
-
     it('fills Commands, ContextMenus, and Emojis from the ids seedcord build wrote', async () => {
-        const signer = await signedEnv({
+        using signer = await signedEnv({
             commands: { ping: { mention: '</ping:7>', id: '7', route: 'ping', description: 'Replies with pong' } },
             contextMenus: { user: { Profile: { id: '8', name: 'Profile', kind: 2 } }, message: {} },
             emojis: { Wave: { name: 'wave', id: '55', animated: false } }
         });
 
-        await new Seedcord(config()).fetch(await signedRequest(signer, ping), undefined, capturingCtx());
+        using seedcord = new EdgeBot(config());
+        await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
 
         expect(commands.ping?.mention).toBe('</ping:7>');
         expect(userMenus.Profile?.id).toBe('8');
@@ -109,11 +109,11 @@ describe('the edge Seedcord', () => {
             }
         }
         storeInteractionRoute(InteractionKind.Slash, 'ping', Ping);
-        registerBuiltFiles({ '/handlers/Ping.ts': { Ping } });
-        const signer = await signedEnv();
+        using _files = registerBuiltFiles({ '/handlers/Ping.ts': { Ping } });
+        using signer = await signedEnv();
         const ctx = capturingCtx();
 
-        const seedcord = new Seedcord(config({ handlers: `${BUILT_ROOT}/handlers` }));
+        using seedcord = new EdgeBot(config({ handlers: `${BUILT_ROOT}/handlers` }));
         const response = await seedcord.fetch(
             await signedRequest(signer, JSON.stringify(slashPayload('ping'))),
             undefined,
@@ -134,7 +134,7 @@ describe('the edge Seedcord', () => {
             }
         }
         Envapter.useSource(new PortableSource({}));
-        const seedcord = new Seedcord(config()).attach('recorder', Recorder);
+        using seedcord = new EdgeBot(config()).attach('recorder', Recorder);
 
         const response = await seedcord.fetch(new Request('https://bot.example.com/'), undefined, capturingCtx());
 
@@ -143,14 +143,14 @@ describe('the edge Seedcord', () => {
     });
 
     it("applies config.logger when it starts, and doesn't change the process's logger before that", async () => {
-        const signer = await signedEnv();
+        using signer = await signedEnv();
         const written: string[] = [];
         // what seedcord dev's codegen copy shares with the CLI
         LoggerChannelRegistry.instance.configure({
             level: 'info',
             sinks: [{ kind: 'file', onLog: (record) => written.push(record.message) }]
         });
-        const seedcord = new Seedcord({ ...config(), logger: { level: 'warn' } });
+        using seedcord = new EdgeBot({ ...config(), logger: { level: 'warn' } });
 
         new Logger('Cli').info('after construction');
         await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
@@ -161,8 +161,8 @@ describe('the edge Seedcord', () => {
     });
 
     it('answers a signed PING with a PONG', async () => {
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config());
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot(config());
 
         const response = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
 
@@ -182,8 +182,8 @@ describe('the edge Seedcord', () => {
                 return Promise.resolve();
             }
         }
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config()).attach('counter', Counter);
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot(config()).attach('counter', Counter);
 
         await Promise.all([
             seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx()),
@@ -204,8 +204,8 @@ describe('the edge Seedcord', () => {
                 return Promise.resolve();
             }
         }
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config()).attach('warm', Warm);
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot(config()).attach('warm', Warm);
         seedcord.startup.addTask(StartupPhase.Configuration, 'warm-cache', () => {
             calls.push('startup task');
             return Promise.resolve();
@@ -238,8 +238,8 @@ describe('the edge Seedcord', () => {
                 return Promise.reject(new Error('cache is down'));
             }
         }
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config()).attach('database', Database).attach('cache', Cache);
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot(config()).attach('database', Database).attach('cache', Cache);
 
         await expect(seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx())).rejects.toThrow();
         const retried = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
@@ -257,10 +257,10 @@ describe('the edge Seedcord', () => {
                 return Promise.resolve();
             }
         }
-        registerBuiltFiles({ '/subscribers/Seen.ts': { Seen } });
-        const signer = await signedEnv();
+        using _files = registerBuiltFiles({ '/subscribers/Seen.ts': { Seen } });
+        using signer = await signedEnv();
 
-        const seedcord = new Seedcord(config({ subscribers: `${BUILT_ROOT}/subscribers` }));
+        using seedcord = new EdgeBot(config({ subscribers: `${BUILT_ROOT}/subscribers` }));
         await seedcord.fetch(await signedRequest(signer, unrouted), undefined, capturingCtx());
 
         await vi.waitFor(() => {
@@ -278,9 +278,9 @@ describe('the edge Seedcord', () => {
                 if (runs === 1) await release.promise;
             }
         }
-        registerBuiltFiles({ '/subscribers/FirstRunStuck.ts': { FirstRunStuck } });
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config({ subscribers: `${BUILT_ROOT}/subscribers` }));
+        using _files = registerBuiltFiles({ '/subscribers/FirstRunStuck.ts': { FirstRunStuck } });
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot(config({ subscribers: `${BUILT_ROOT}/subscribers` }));
         const stuck = capturingCtx();
         const free = capturingCtx();
 
@@ -296,8 +296,8 @@ describe('the edge Seedcord', () => {
 
     it('holds waitUntil open for an async bus.on listener', async () => {
         const release = Promise.withResolvers<undefined>();
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config());
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot(config());
         seedcord.bus.on('anyInteraction', () => release.promise);
         const ctx = capturingCtx();
 
@@ -310,8 +310,8 @@ describe('the edge Seedcord', () => {
 
     it('holds waitUntil open for an async log sink', async () => {
         const release = Promise.withResolvers<undefined>();
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config());
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot(config());
         using _sink = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: () => release.promise });
         seedcord.bus.on('anyInteraction', () => new Logger('Spike').info('logged'));
         const ctx = capturingCtx();
@@ -325,8 +325,8 @@ describe('the edge Seedcord', () => {
 
     it('holds the first request open while startup runs', async () => {
         const release = Promise.withResolvers<undefined>();
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config());
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot(config());
         seedcord.startup.addTask(StartupPhase.Configuration, 'slow', () => release.promise);
         const ctx = capturingCtx();
 
@@ -346,9 +346,9 @@ describe('the edge Seedcord', () => {
                 if (this.data.interaction.id === 'startup') await release.promise;
             }
         }
-        registerBuiltFiles({ '/subscribers/StuckAtStartup.ts': { StuckAtStartup } });
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config({ subscribers: `${BUILT_ROOT}/subscribers` }));
+        using _files = registerBuiltFiles({ '/subscribers/StuckAtStartup.ts': { StuckAtStartup } });
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot(config({ subscribers: `${BUILT_ROOT}/subscribers` }));
         seedcord.startup.addTask(StartupPhase.Configuration, 'publishes', () => {
             // justified: the subscriber reads only the id
             seedcord.bus[PublishDefault]('anyInteraction', { interaction: { id: 'startup' } as never });
@@ -364,8 +364,8 @@ describe('the edge Seedcord', () => {
     });
 
     it('refuses a plugin attached after the first request started it', async () => {
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config());
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot(config());
         await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
 
         expect(() => seedcord.attach('late', Late)).toThrow(
@@ -374,7 +374,7 @@ describe('the edge Seedcord', () => {
     });
 
     it('reads core.url from server.url, and throws without one', () => {
-        const seedcord = new Seedcord(config());
+        using seedcord = new EdgeBot(config());
 
         expect(() => seedcord.url).toThrow(expect.objectContaining({ code: SeedcordErrorCode.CoreServerUrlUnset }));
 
@@ -383,7 +383,7 @@ describe('the edge Seedcord', () => {
     });
 
     it('rejects a server-only plugin', () => {
-        const seedcord = new Seedcord(config());
+        using seedcord = new EdgeBot(config());
 
         // @ts-expect-error ServerOnly declares runtime 'server'
         expect(() => seedcord.attach('serverOnly', ServerOnly)).toThrow(
@@ -393,14 +393,14 @@ describe('the edge Seedcord', () => {
 
     it('backs core.kv with config.kv', () => {
         const driver = new MemoryDriver();
-        const seedcord = new Seedcord({ ...config(), kv: driver });
+        using seedcord = new EdgeBot({ ...config(), kv: driver });
 
         expect(seedcord.kv.driver).toBe(driver);
     });
 
     it('resolves the application id from the token on the first request', async () => {
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config());
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot(config());
 
         expect(() => seedcord.applicationId).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CoreApplicationUnavailable })
@@ -411,7 +411,8 @@ describe('the edge Seedcord', () => {
     });
 
     it('allows one Seedcord per isolate', () => {
-        expect(() => new Seedcord(config())).not.toThrow();
+        using _first = new EdgeBot(config());
+
         expect(() => new Seedcord(config())).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CoreSingletonViolation })
         );
@@ -445,8 +446,8 @@ describe('the edge Seedcord', () => {
         });
 
         it('waits for the old init to finish and dispose before it retries', async () => {
-            const signer = await signedEnv();
-            const seedcord = new Seedcord(config()).attach('slow', Slow);
+            using signer = await signedEnv();
+            using seedcord = new EdgeBot(config()).attach('slow', Slow);
             const failed = capturingCtx();
 
             await expect(seedcord.fetch(await signedRequest(signer, ping), undefined, failed)).rejects.toThrow();
@@ -462,8 +463,8 @@ describe('the edge Seedcord', () => {
         });
 
         it('retries 25s after the timeout when the old init never settles', async () => {
-            const signer = await signedEnv();
-            const seedcord = new Seedcord(config()).attach('slow', Slow);
+            using signer = await signedEnv();
+            using seedcord = new EdgeBot(config()).attach('slow', Slow);
             const failed = capturingCtx();
             const firstRequest = await signedRequest(signer, ping);
             vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
@@ -482,8 +483,8 @@ describe('the edge Seedcord', () => {
     });
 
     it('refuses a plugin attached while startup runs', async () => {
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config());
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot(config());
         let caught: unknown;
         seedcord.startup.addTask(StartupPhase.Configuration, 'attach-late', () => {
             try {
@@ -501,9 +502,9 @@ describe('the edge Seedcord', () => {
 
     it("doesn't read env until the first request", async () => {
         Envapter.useSource(new PortableSource({}));
-        registerBakedIds({ publicKey: 'ab'.repeat(32) });
+        using _ids = registerBakedIds({ publicKey: 'ab'.repeat(32) });
 
-        const seedcord = new Seedcord(config());
+        using seedcord = new EdgeBot(config());
 
         await expect(
             seedcord.fetch(new Request('https://bot.example', { method: 'POST' }), undefined, capturingCtx())
@@ -512,12 +513,12 @@ describe('the edge Seedcord', () => {
 
     it('rethrows a failed first request on every later one', async () => {
         Envapter.useSource(new PortableSource({}));
-        const seedcord = new Seedcord(config());
+        using seedcord = new EdgeBot(config());
         const first = await seedcord
             .fetch(new Request('https://bot.example', { method: 'POST' }), undefined, capturingCtx())
             .catch((caught: unknown) => caught);
 
-        const signer = await signedEnv();
+        using signer = await signedEnv();
         const second = await seedcord
             .fetch(await signedRequest(signer, ping), undefined, capturingCtx())
             .catch((caught: unknown) => caught);
