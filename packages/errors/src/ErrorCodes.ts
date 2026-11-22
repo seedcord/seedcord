@@ -358,11 +358,11 @@ export enum SeedcordErrorCode {
     CliDevRuntimeNotRunning = 3131,
     /** `seedcord commands deploy` ran on a bot whose `commands.path` is `null`. */
     CliDeployNoCommandsFolder = 3132,
-    /** A command that asks first ran without `--yes` outside a terminal. */
+    /** A command that asks first ran without `--yes`, outside a terminal or with `CI` set. */
     CliNeedsYes = 3133,
     /** A class carrying `@RegisterCommand` builds a component that is not a command or a context menu. */
     CliCommandNotACommand = 3134,
-    /** Some of the items a command worked through failed. It warned about each one. */
+    /** A command failed on some of its items and warned about each one. */
     CliSomeFailed = 3135,
     /** The CLI ran on Bun for an edge bot. */
     CliEdgeOnBun = 3136,
@@ -396,10 +396,12 @@ export enum SeedcordErrorCode {
     CliHostContractMismatch = 3150,
     /** `seedcord emojis` got a name that the emojis folder or Discord doesn't have. */
     CliEmojiNameUnknown = 3151,
-    /** A flag that opens a picker ran outside a terminal. */
+    /** A flag or command that opens a picker ran without a terminal, or with `CI` set. */
     CliPickerNeedsTerminal = 3152,
     /** Discord's CDN didn't send an emoji's image to `seedcord emojis pull`. */
     CliEmojiDownloadFailed = 3153,
+    /** A replace in `seedcord emojis push` failed, and putting the old emoji back failed too. */
+    CliEmojiRollbackFailed = 3154,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

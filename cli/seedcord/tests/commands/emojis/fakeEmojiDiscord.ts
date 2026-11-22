@@ -21,7 +21,7 @@ interface StoredEmoji {
 interface EmojiDiscordOptions {
     // the application starts with an emoji for each name
     emojis?: readonly string[];
-    // uploading or deleting one of these names rejects with its error
+    // a request whose line in `requests` is a key here rejects with its error, like 'POST wave'
     rejects?: Record<string, Error>;
     // what guild 111 has
     guildEmojis?: readonly string[];
@@ -66,6 +66,12 @@ export function fakeEmojiDiscord({
     const assertFree = (name: string): void => {
         if ([...stored.values()].some((emoji) => emoji.name === name)) throw new Error(`${name} is taken`);
     };
+    // records the request, then rejects if the test asked for that
+    const send = (request: string, answer: () => unknown): Promise<unknown> => {
+        requests.push(request);
+        const rejection = rejects[request];
+        return rejection ? Promise.reject(rejection) : Promise.resolve(answer());
+    };
 
     const rest = {
         get: (route: string) => {
@@ -77,31 +83,25 @@ export function fakeEmojiDiscord({
             }
             return Promise.resolve({ items: [...stored.values()].map(({ id, name }) => ({ id, name })) });
         },
-        post: (_route: string, { body }: { body: { name: string; image: string } }) => {
-            requests.push(`POST ${body.name}`);
-            const rejection = rejects[body.name];
-            if (rejection) return Promise.reject(rejection);
-            assertFree(body.name);
-            const emoji = { id: `new-${++created}`, ...body };
-            stored.set(emoji.id, emoji);
-            return Promise.resolve({ id: emoji.id, name: emoji.name });
-        },
+        post: (_route: string, { body }: { body: { name: string; image: string } }) =>
+            send(`POST ${body.name}`, () => {
+                assertFree(body.name);
+                const emoji = { id: `new-${++created}`, ...body };
+                stored.set(emoji.id, emoji);
+                return { id: emoji.id, name: emoji.name };
+            }),
         patch: (route: string, { body }: { body: { name: string } }) => {
             const emoji = stored.get(idIn(route));
             if (!emoji) return Promise.reject(new Error('Unknown Emoji'));
-            requests.push(`PATCH ${emoji.name} to ${body.name}`);
-            assertFree(body.name);
-            emoji.name = body.name;
-            return Promise.resolve({ id: emoji.id, name: emoji.name });
+            return send(`PATCH ${emoji.name} to ${body.name}`, () => {
+                assertFree(body.name);
+                emoji.name = body.name;
+                return { id: emoji.id, name: emoji.name };
+            });
         },
         delete: (route: string) => {
             const id = idIn(route);
-            const name = stored.get(id)?.name ?? id;
-            requests.push(`DELETE ${name}`);
-            const rejection = rejects[name];
-            if (rejection) return Promise.reject(rejection);
-            stored.delete(id);
-            return Promise.resolve();
+            return send(`DELETE ${stored.get(id)?.name ?? id}`, () => stored.delete(id));
         },
         cdn: { emoji: (id: string) => `https://cdn.test/emojis/${id}.webp` }
     };

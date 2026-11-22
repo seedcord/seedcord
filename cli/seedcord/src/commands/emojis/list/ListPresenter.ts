@@ -1,17 +1,19 @@
 import { paint } from '@seedcord/errors';
 
+import { renderKey } from '#commands/codegen/renderAugmentation';
 import { plural } from '#core/format';
 import { itemRows, printSections } from '#core/output/printSections';
 import { StepsPresenter } from '#core/output/StepsPresenter';
 
 import type { EmojiState, EmojiStep } from '#commands/emojis/readEmojis';
-import type { Section } from '#core/output/printSections';
+import type { Mark, RowItem, Section } from '#core/output/printSections';
 import type { PresenterOutput } from '#core/output/StepsPresenter';
 
-type Rows = [listed: Parameters<typeof itemRows>[0], mark?: Parameters<typeof itemRows>[2]];
-
-// a key that starts with a digit can't follow a dot
-const accessOf = (key: string): string => (/^\d/u.test(key) ? `Emojis['${key}']` : `Emojis.${key}`);
+// the same quoting that codegen writes into EmojiMap
+function accessOf(key: string): string {
+    const rendered = renderKey(key);
+    return rendered === key ? `Emojis.${key}` : `Emojis[${rendered}]`;
+}
 
 export class ListPresenter extends StepsPresenter<EmojiStep> {
     constructor(
@@ -49,7 +51,7 @@ export class ListPresenter extends StepsPresenter<EmojiStep> {
         this.output.line(paint.mute(`Run ${push} to upload the ${missing.length} that are missing.`));
     }
 
-    private section(title: string, ...[listed, mark]: Rows): Section {
+    private section(title: string, listed: readonly RowItem[], mark?: Mark): Section {
         return { title, note: plural(listed.length, 'emoji'), rows: itemRows(listed, this.verbose, mark) };
     }
 }

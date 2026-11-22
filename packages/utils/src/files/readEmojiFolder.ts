@@ -49,18 +49,22 @@ function checked(found: NamedFile): EmojiFile | SeedcordTypeError {
     return DISCORD_NAME.test(found.name) ? { ...found, mime } : unusable('name');
 }
 
-function clashes(kind: string, sharedBy: ReadonlyMap<string, readonly EmojiFile[]>): SeedcordTypeError[] {
+// one error per value that more than one item shares
+export function clashesIn<Item>(
+    kind: string,
+    sharedBy: ReadonlyMap<string, readonly Item[]>,
+    labelOf: (item: Item) => string,
+    note?: string
+): SeedcordTypeError[] {
     return [...sharedBy]
         .filter(([, sharing]) => sharing.length > 1)
         .map(
             ([value, sharing]) =>
-                new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
-                    kind,
-                    value,
-                    sharing.map(({ file }) => paint.path(file))
-                ])
+                new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [kind, value, sharing.map(labelOf), note])
         );
 }
+
+const pathOf = ({ file }: EmojiFile): string => paint.path(file);
 
 async function filesIn(folder: string): Promise<NamedFile[]> {
     if (!existsSync(folder)) return [];
@@ -71,8 +75,7 @@ async function filesIn(folder: string): Promise<NamedFile[]> {
         .map(emojiFileAt);
 }
 
-// throws one error that lists every file that can't be an emoji
-export function usableEmojiFiles(found: readonly NamedFile[]): EmojiFile[] {
+function usableEmojiFiles(found: readonly NamedFile[]): EmojiFile[] {
     const [unusable, usable] = partition(found.map(checked), (result) => result instanceof SeedcordTypeError);
     const byName = Map.groupBy(usable, ({ name }) => name);
     // same name always means same key. those two only get the name error
@@ -80,14 +83,19 @@ export function usableEmojiFiles(found: readonly NamedFile[]): EmojiFile[] {
     const byKey = Map.groupBy(onePerName, ({ key }) => key);
 
     throwSingleOrAggregate(
-        [...unusable, ...clashes('emoji', byName), ...clashes(`${paint.bold('Emojis')} key`, byKey)],
+        [
+            ...unusable,
+            ...clashesIn('emoji', byName, pathOf),
+            ...clashesIn(`${paint.bold('Emojis')} key`, byKey, pathOf)
+        ],
         SeedcordErrorCode.ConfigEmojiFolderInvalid
     );
     return usable;
 }
 
-// the built bot is handed this list, and the file paths don't exist there
-export async function folderEmojisIn(folder: string): Promise<FolderEmoji[]> {
+// the built bot is handed this list, and the file paths don't exist there. `folder` is undefined without a config
+export async function folderEmojisIn(folder: string | undefined): Promise<FolderEmoji[]> {
+    if (folder === undefined) return [];
     const files = await readEmojiFolder(folder);
     return files.map(({ key, name }) => ({ key, name }));
 }

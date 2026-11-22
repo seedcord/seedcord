@@ -21,19 +21,21 @@ function byName(list: readonly APIEmoji[]): EmojisByName {
     return map;
 }
 
-// a guild's emojis when it gets a guild id. app emojis come back as { items }, guild emojis as a plain array
 export async function emojisOf(rest: EmojiRest, applicationId: string, guildId?: string): Promise<APIEmoji[]> {
     const route = guildId === undefined ? Routes.applicationEmojis(applicationId) : Routes.guildEmojis(guildId);
     // justified: the discord api contract for these two routes
     const listed = (await rest.get(route)) as RESTGetAPIApplicationEmojisResult | RESTGetAPIGuildEmojisResult;
+    // discord wraps an application's list in { items } and sends a guild's list bare
     return Array.isArray(listed) ? listed : listed.items;
 }
+
+// can't collide with a guild id because a snowflake is all digits
+const APPLICATION = 'application';
 
 class EmojiResolver {
     private readonly resolved = accessorStore<ResolvedEmoji>();
     private readonly problems: Error[] = [];
-    // the application's list is under the key undefined
-    private readonly listsByGuild = new Map<string | undefined, EmojisByName | Error>();
+    private readonly lists = new Map<string, EmojisByName | Error>();
 
     constructor(
         private readonly rest: EmojiRest,
@@ -68,10 +70,10 @@ class EmojiResolver {
 
     private async listFor(emoji: ExpectedEmoji): Promise<EmojisByName | Error> {
         const guildId = emoji.kind === 'guild' ? emoji.guildId : undefined;
-        let list = this.listsByGuild.get(guildId);
+        let list = this.lists.get(guildId ?? APPLICATION);
         if (!list) {
             list = await this.read(guildId);
-            this.listsByGuild.set(guildId, list);
+            this.lists.set(guildId ?? APPLICATION, list);
         }
         return list;
     }

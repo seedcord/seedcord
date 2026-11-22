@@ -9,7 +9,7 @@ import { printEdgeHint } from '#core/output/printEdgeHint';
 import { markedRows, printSections } from '#core/output/printSections';
 import { StepsPresenter } from '#core/output/StepsPresenter';
 
-import type { UploadedFile } from '#commands/emojis/emojiDiff';
+import type { UploadedFile } from '#commands/emojis/EmojiDiff';
 import type { Outcome } from '#commands/emojis/outcome';
 import type { EmojiPrompts } from '#commands/emojis/prompts';
 import type { Section, SectionRow } from '#core/output/printSections';
@@ -18,7 +18,6 @@ import type { PushPlan, PushStep, Upload } from './PushRunner';
 
 const emojis = (count: number): string => plural(count, 'emoji');
 
-// changed image still counts as uploaded because push only matches by name
 function replaceHint(): string {
     const command = paint.bold('seedcord emojis push --replace <name>');
     return paint.mute(`Changed an image? ${command} uploads it again.`);
@@ -52,9 +51,7 @@ export class PushPresenter extends StepsPresenter<PushStep> {
             this.output.line(`Nothing to upload. ${paint.path(folder)} doesn't have any emojis in it.`);
             return;
         }
-        this.output.line(
-            `Nothing to upload. ${paint.bold(source)} has all ${emojis(keep.length)} from ${paint.path(folder)}.`
-        );
+        this.output.line(`Nothing to upload. ${paint.bold(source)} has every emoji in ${paint.path(folder)}.`);
         this.output.line(replaceHint());
     }
 
@@ -96,7 +93,7 @@ export class PushPresenter extends StepsPresenter<PushStep> {
 
     public upload(
         uploads: readonly Upload[],
-        run: (upload: Upload) => Promise<void>,
+        run: (upload: Upload) => Promise<unknown>,
         reasonOf: (error: unknown) => string
     ): Promise<Outcome<Upload>> {
         return settleStep(this.output, 'upload', {

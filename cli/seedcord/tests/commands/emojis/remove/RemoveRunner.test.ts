@@ -180,7 +180,10 @@ describe('emojis RemoveRunner', () => {
 
     it('keeps the file of an emoji that discord refused to delete, then throws CliSomeFailed', async () => {
         const project = await projectWith({ 'seed.png': 's' });
-        const discord = fakeEmojiDiscord({ emojis: ['seed', 'test'], rejects: { seed: new Error('Missing Access') } });
+        const discord = fakeEmojiDiscord({
+            emojis: ['seed', 'test'],
+            rejects: { 'DELETE seed': new Error('Missing Access') }
+        });
 
         const { printed, done } = remove(project, discord.rest, { names: ['seed', 'test'], deleteFile: true });
 

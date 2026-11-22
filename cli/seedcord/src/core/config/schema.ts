@@ -102,7 +102,8 @@ export interface SeedcordMakeConfig {
 interface SeedcordEmojisConfig {
     /**
      * The folder that holds your emoji images, subfolders included. `seedcord emojis push` uploads each
-     * file under its file name, without the extension. Your code can then read `confirmation_check.png` as `Emojis.ConfirmationCheck`.
+     * file under its file name, without the extension. Your code can then read `confirmation_check.png`
+     * as `Emojis.ConfirmationCheck`.
      *
      * @defaultValue `./emojis` beside the config file
      */

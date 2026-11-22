@@ -2,12 +2,11 @@ import { rm } from 'node:fs/promises';
 
 import { compact } from 'es-toolkit';
 
-import { namedOnDiscord, onDiscord } from '#commands/emojis/emojiDiff';
 import { assertNoneFailed } from '#commands/emojis/outcome';
 import { EMOJI_STEPS, readEmojis } from '#commands/emojis/readEmojis';
 import { defaultRunnerDeps } from '#core/discord/runnerDeps';
 
-import type { OnDiscord } from '#commands/emojis/emojiDiff';
+import type { OnDiscord } from '#commands/emojis/EmojiDiff';
 import type { RunnerDeps } from '#core/discord/runnerDeps';
 import type { RemovePresenter } from './RemovePresenter';
 
@@ -40,9 +39,9 @@ export class RemoveRunner {
     public async run(presenter: RemovePresenter, { names, deleteFile = false }: RemoveOptions): Promise<void> {
         const { folder, session, source, diff } = await readEmojis(presenter, this.deps, process.cwd());
 
-        const picked = names.length > 0 ? names : await presenter.pick(onDiscord(diff));
+        const picked = names.length > 0 ? names : await presenter.pick(diff.onDiscord());
         if (picked === undefined) return;
-        const removals = namedOnDiscord(diff, picked, source);
+        const removals = diff.named(picked);
         if (removals.length === 0) {
             presenter.nothingToDelete();
             return;

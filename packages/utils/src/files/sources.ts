@@ -103,9 +103,8 @@ abstract class FileSource {
 }
 
 class DiskFiles extends FileSource {
-    public async emojis(): Promise<FolderEmoji[]> {
-        const folder = this.access.emojiFolder();
-        return folder === undefined ? [] : folderEmojisIn(folder);
+    public emojis(): Promise<FolderEmoji[]> {
+        return folderEmojisIn(this.access.emojiFolder());
     }
 
     protected async modulesIn(folder: string, layout: BotLayout): Promise<Loaders<ModuleLoader>> {

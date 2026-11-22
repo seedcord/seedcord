@@ -2,8 +2,8 @@
  * Your emoji keys, written by `seedcord codegen` from your emojis folder and `config.bot.emojis`. Each key
  * maps to a tag, `'application'` for a file or a plain name and `'guild'` for a `[name, guildId]` tuple.
  * Gateway reads that tag to type each emoji as the precise `ApplicationEmoji` or `GuildEmoji`. http resolves
- * both tags to one `ResolvedEmoji`. Do not augment it by hand, run `seedcord codegen` after you add a file to
- * the folder or change `config.bot.emojis`.
+ * both tags to one `ResolvedEmoji`. Do not augment it by hand, run `seedcord codegen` after you change the
+ * folder or `config.bot.emojis`.
  *
  * @example
  * ```ts

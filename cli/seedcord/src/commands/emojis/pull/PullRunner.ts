@@ -1,18 +1,17 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
-import { emojiFileAt, usableEmojiFiles } from '@seedcord/utils/internal';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
+import { clashesIn, emojiFileAt } from '@seedcord/utils/internal';
 import { partition } from 'es-toolkit';
 
-import { namedOnDiscord, onDiscord } from '#commands/emojis/emojiDiff';
 import { assertNoneFailed } from '#commands/emojis/outcome';
 import { EMOJI_STEPS, readEmojisOnDiscord, readFolder } from '#commands/emojis/readEmojis';
 import { readBotGuilds } from '#core/discord/readBotGuilds';
 import { defaultRunnerDeps } from '#core/discord/runnerDeps';
 
-import type { UploadedEmoji } from '#commands/emojis/emojiDiff';
+import type { UploadedEmoji } from '#commands/emojis/EmojiDiff';
 import type { EmojiSession } from '#commands/emojis/EmojiSession';
 import type { RunnerDeps } from '#core/discord/runnerDeps';
 import type { PullPresenter } from './PullPresenter';
@@ -50,6 +49,30 @@ export interface PullPlan {
     alreadyInFolder: number;
 }
 
+interface Planned {
+    path: string;
+    key: string;
+    label: string;
+}
+
+// discord's names are case sensitive, and discord allows party_parrot and PartyParrot together
+function assertNoClashes(planned: readonly Planned[]): void {
+    const byPath = Map.groupBy(planned, ({ path }) => path.toLowerCase());
+    const onePerPath = [...byPath.values()].flatMap((sharing) => sharing.slice(0, 1));
+    const labelOf = ({ label }: Planned): string => label;
+    throwSingleOrAggregate(
+        [
+            ...clashesIn('file', byPath, labelOf, 'macOS and Windows save them as one file.'),
+            ...clashesIn(
+                `${paint.bold('Emojis')} key`,
+                Map.groupBy(onePerPath, ({ key }) => key),
+                labelOf
+            )
+        ],
+        SeedcordErrorCode.CliProblems
+    );
+}
+
 type PullDeps = RunnerDeps & { readonly fetch: (url: string) => Promise<Response> };
 
 export class PullRunner {
@@ -65,7 +88,7 @@ export class PullRunner {
         if (guild === true && guildId === undefined) return;
         const { folder, files, session, source, diff } = await readEmojisOnDiscord(presenter, read, guildId);
 
-        const wanted = names.length > 0 ? namedOnDiscord(diff, names, source) : onDiscord(diff);
+        const wanted = names.length > 0 ? diff.named(names) : diff.onDiscord();
         const inFolder = wanted.filter(({ file }) => file !== undefined).length;
         const overwrite = force || (inFolder > 0 && (await presenter.offerOverwrite(inFolder)));
         if (overwrite === undefined) return;
@@ -75,11 +98,16 @@ export class PullRunner {
             if (!file) return [{ emoji, to: join(folder, name) }];
             return overwrite ? [{ emoji, to: join(dirname(file.file), name), replaces: file.file }] : [];
         });
-        // discord allows party_parrot and PartyParrot together, and both would be Emojis.PartyParrot
         const replaced = new Set(saves.map(({ replaces }) => replaces));
-        usableEmojiFiles([
-            ...files.filter(({ file }) => !replaced.has(file)),
-            ...saves.map(({ to }) => emojiFileAt(to))
+        assertNoClashes([
+            ...files.flatMap(({ file, key }) =>
+                replaced.has(file) ? [] : [{ path: file, key, label: paint.path(file) }]
+            ),
+            ...saves.map(({ emoji, to }) => ({
+                path: to,
+                key: emojiFileAt(to).key,
+                label: `${paint.bold(emoji.name)} on ${paint.bold(source)}`
+            }))
         ]);
 
         const [overwrites, fresh] = partition(saves, (save) => save.replaces !== undefined);

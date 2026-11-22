@@ -1,4 +1,4 @@
-import type { UploadedEmoji } from '#commands/emojis/emojiDiff';
+import type { UploadedEmoji } from '#commands/emojis/EmojiDiff';
 import type { EmojiSession } from '#commands/emojis/EmojiSession';
 import type { EmojiState } from '#commands/emojis/readEmojis';
 import type { EmojiFile } from '@seedcord/utils/internal';

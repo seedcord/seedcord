@@ -9,9 +9,9 @@ import { Routes } from 'discord-api-types/v10';
 import { applicationOf } from '#core/discord/applicationOf';
 
 import type { DiscordRest } from '#core/discord/runnerDeps';
-import type { UploadedEmoji, UploadedFile } from './emojiDiff';
+import type { UploadedEmoji, UploadedFile } from './EmojiDiff';
 import type { EmojiFile } from '@seedcord/utils/internal';
-import type { RESTGetCurrentApplicationResult } from 'discord-api-types/v10';
+import type { RESTGetCurrentApplicationResult, RESTPostAPIApplicationEmojiResult } from 'discord-api-types/v10';
 
 type Application = Pick<RESTGetCurrentApplicationResult, 'id' | 'name'>;
 
@@ -41,21 +41,30 @@ export class EmojiSession {
         }
     }
 
-    public async upload({ name, file, mime }: EmojiFile): Promise<void> {
+    public async upload({ name, file, mime }: EmojiFile): Promise<UploadedEmoji> {
         const image = `data:${mime};base64,${await readFile(file, 'base64')}`;
-        await this.rest.post(Routes.applicationEmojis(this.app.id), { body: { name, image } });
+        // justified: discord's documented reply to creating an emoji
+        const { id } = (await this.rest.post(Routes.applicationEmojis(this.app.id), {
+            body: { name, image }
+        })) as RESTPostAPIApplicationEmojiResult;
+        return { id, name };
     }
 
     // the old one is renamed first because names are unique and discord can't swap an image
     public async replace({ file, emoji }: UploadedFile): Promise<void> {
-        await this.rename(emoji, `sc_${emoji.id}`);
-        try {
-            await this.upload(file);
-        } catch (error: unknown) {
-            await this.rename(emoji, emoji.name);
-            throw error;
-        }
-        await this.delete(emoji);
+        const parked = `sc_${emoji.id}`;
+        await this.rename(emoji, parked);
+        const putBack = (): Promise<void> => this.rename(emoji, emoji.name);
+
+        const uploaded = await this.undoing(parked, putBack, () => this.upload(file));
+        await this.undoing(
+            parked,
+            async () => {
+                await this.delete(uploaded);
+                await putBack();
+            },
+            () => this.delete(emoji)
+        );
     }
 
     public async delete({ id }: UploadedEmoji): Promise<void> {
@@ -65,6 +74,26 @@ export class EmojiSession {
     // .webp with these params works for static and animated ones. .gif 415s on a static emoji
     public imageUrl({ id }: UploadedEmoji): string {
         return `${this.rest.cdn.emoji(id, { extension: 'webp' })}?animated=true&quality=lossless`;
+    }
+
+    // runs `undo` if `step` throws, then rethrows. if `undo` throws too, the error gives the old emoji's new name
+    private async undoing<Result>(
+        parked: string,
+        undo: () => Promise<void>,
+        step: () => Promise<Result>
+    ): Promise<Result> {
+        try {
+            return await step();
+        } catch (error: unknown) {
+            try {
+                await undo();
+            } catch (undoError: unknown) {
+                throw new SeedcordError(SeedcordErrorCode.CliEmojiRollbackFailed, [errorReason(error), parked], {
+                    cause: undoError
+                });
+            }
+            throw error;
+        }
     }
 
     private async rename({ id }: UploadedEmoji, name: string): Promise<void> {

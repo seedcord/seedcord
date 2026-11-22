@@ -1,18 +1,18 @@
 import { stat } from 'node:fs/promises';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
+import { SeedcordRangeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { discordErrorOf, errorReason } from '@seedcord/utils/internal';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
 import { partition } from 'es-toolkit';
 
-import { unknownName } from '#commands/emojis/emojiDiff';
 import { assertNoneFailed } from '#commands/emojis/outcome';
 import { EMOJI_STEPS, readEmojis } from '#commands/emojis/readEmojis';
 import { defaultRunnerDeps } from '#core/discord/runnerDeps';
+import { unknownName } from '#src/commands/emojis/EmojiDiff';
 
-import type { UploadedEmoji, UploadedFile } from '#commands/emojis/emojiDiff';
 import type { RunnerDeps } from '#core/discord/runnerDeps';
+import type { UploadedEmoji, UploadedFile } from '#src/commands/emojis/EmojiDiff';
 import type { PushPresenter } from './PushPresenter';
 import type { DiscordErrorFields, EmojiFile } from '@seedcord/utils/internal';
 
@@ -60,7 +60,7 @@ async function assertUploadable(files: readonly EmojiFile[]): Promise<void> {
     throwSingleOrAggregate(
         sized
             .filter(({ size }) => size > MAX_UPLOAD_BYTES)
-            .map(({ file }) => new SeedcordTypeError(SeedcordErrorCode.ConfigEmojiFileUnusable, [file, 'size'])),
+            .map(({ file }) => new SeedcordRangeError(SeedcordErrorCode.ConfigEmojiFileUnusable, [file, 'size'])),
         SeedcordErrorCode.ConfigEmojiFolderInvalid
     );
 }

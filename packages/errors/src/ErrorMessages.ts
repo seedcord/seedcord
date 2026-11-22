@@ -409,6 +409,8 @@ const messages = {
     [SeedcordErrorCode.CliEmojiNameUnknown]: (name: string, where: string, fix: string) =>
         `${where} doesn't have an emoji with the name ${paint.bold(name)}. ${fix}`,
     [SeedcordErrorCode.CliEmojiDownloadFailed]: (status: number) => `Discord's CDN answered ${status}`,
+    [SeedcordErrorCode.CliEmojiRollbackFailed]: (reason: string, parked: string) =>
+        `${reason}, and the old emoji is still on Discord as ${paint.bold(parked)}`,
     [SeedcordErrorCode.CliPickerNeedsTerminal]: (opener: string, skipWith: string, example: string) =>
         `${paint.bold(opener)} without ${skipWith} opens a picker, but a picker only opens in a terminal with ${paint.bold('CI')} unset. Pass ${skipWith}, as in ${paint.bold(example)}.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>

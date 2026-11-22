@@ -4,13 +4,12 @@ import { readEmojiFolder } from '@seedcord/utils/internal';
 import { plural } from '#core/format';
 import { BOT_STEPS, loadBot } from '#core/modules/loadBot';
 
-import { diffEmojis } from './emojiDiff';
+import { EmojiDiff } from './EmojiDiff';
 import { EmojiSession } from './EmojiSession';
 
 import type { ResolvedTarget } from '#core/config/schema';
 import type { DiscordRest, RunnerDeps } from '#core/discord/runnerDeps';
 import type { Steps } from '#core/output/Steps';
-import type { EmojiDiff } from './emojiDiff';
 import type { EmojiFile } from '@seedcord/utils/internal';
 
 export const EMOJI_STEPS = [...BOT_STEPS, 'read folder', 'read discord'] as const;
@@ -25,7 +24,6 @@ export interface EmojiFolder {
 
 export interface EmojiState extends EmojiFolder {
     session: EmojiSession;
-    // the app's name, or "guild <id>"
     source: string;
     diff: EmojiDiff;
 }
@@ -61,7 +59,7 @@ export async function readEmojisOnDiscord(
     );
     steps.detail('app', paint.mute(session.app.id));
 
-    return { ...read, session, source, diff: diffEmojis(read.files, onDiscord) };
+    return { ...read, session, source, diff: new EmojiDiff(read.files, onDiscord, source) };
 }
 
 export async function readEmojis(steps: Steps<EmojiStep>, deps: RunnerDeps, projectDir: string): Promise<EmojiState> {

@@ -27,6 +27,7 @@ import type { PushOptions, PushStep } from './push/PushRunner';
 import type { EmojiStep } from './readEmojis';
 import type { RemoveOptions, RemoveStep } from './remove/RemoveRunner';
 import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
+import type { ExcludeStrict } from 'type-fest';
 
 interface EmojisDeps {
     pushRunner: PushRunner;
@@ -41,13 +42,13 @@ interface Yes {
 }
 
 const DESCRIPTIONS = {
-    push: "Upload the files in your folder that Discord doesn't have",
+    push: "Upload the files in your emojis folder that Discord doesn't have",
     list: 'Compare your emojis folder with the emojis on Discord',
     pull: 'Download the emojis on Discord that your folder is missing',
     remove: 'Delete emojis from Discord'
 } satisfies Record<string, string>;
 
-// menu order. replace and guild aren't subcommands, they're `push --replace` and `pull --guild`
+// menu order. replace and guild run `push --replace` and `pull --guild`
 const MENU = ['push', 'replace', 'list', 'pull', 'guild', 'remove'] as const;
 type MenuAction = (typeof MENU)[number];
 
@@ -130,7 +131,7 @@ export class EmojisCommand extends BaseCommand {
         emojis
             .command('list')
             .description(DESCRIPTIONS.list)
-            .option('--check', "Exit with an error if Discord doesn't have a file from the folder")
+            .option('--check', "Exit with an error if a file in the folder isn't on Discord")
             .option('--json', 'Print the listing as JSON for scripts')
             .action((flags, command) => {
                 if (flags.json) return this.runJson(command, () => this.listRunner.json(stderrSteps(), flags));
@@ -222,7 +223,7 @@ export class EmojisCommand extends BaseCommand {
         return confirmOrYes(this.prompter, { yes, ...ASKS[asking] });
     }
 
-    private picker(picking: 'replace' | 'remove'): EmojiPrompts['pick'] {
+    private picker(picking: ExcludeStrict<keyof typeof PICKERS, 'guild'>): EmojiPrompts['pick'] {
         return (choices) => this.prompter.pickMany({ message: PICKERS[picking].question, choices });
     }
 

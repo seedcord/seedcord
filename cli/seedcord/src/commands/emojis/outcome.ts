@@ -21,7 +21,7 @@ type Count = readonly [count: number, did: string];
 
 interface Settle<Item> {
     items: readonly Item[];
-    run: (item: Item) => Promise<void>;
+    run: (item: Item) => Promise<unknown>;
     labelOf: (item: Item) => string;
     // splits the count in the step row, like "2 uploaded, 1 replaced". skip it if you want one number
     counts?: (done: readonly Item[]) => readonly Count[];

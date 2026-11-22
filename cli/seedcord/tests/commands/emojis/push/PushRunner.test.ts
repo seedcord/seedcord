@@ -92,24 +92,20 @@ describe('PushRunner', () => {
         const { printed, done } = push(project, discord.rest, { confirm });
         await done;
 
-        expect(printed()).toContain(
-            `Nothing to upload. seed beta has all 1 emoji from ${join(project.dir, 'emojis')}.`
-        );
+        expect(printed()).toContain(`Nothing to upload. seed beta has every emoji in ${join(project.dir, 'emojis')}.`);
         expect(printed()).toContain('Changed an image? seedcord emojis push --replace <name> uploads it again.');
         expect(discord.requests.filter((request) => !request.startsWith('GET'))).toEqual([]);
     });
 
-    it('prints the replace hint under a preview only when nothing is being replaced', async () => {
+    it("doesn't print the replace hint during a replace", async () => {
         const project = await projectWith({ 'wave.png': 'wave', 'seed.png': 's' });
-        const hint = 'Changed an image?';
 
-        const added = push(project, fakeEmojiDiscord({ emojis: ['seed'] }).rest);
-        await added.done;
-        const replaced = push(project, fakeEmojiDiscord({ emojis: ['seed', 'wave'] }).rest, { replace: ['wave'] });
-        await replaced.done;
+        const { printed, done } = push(project, fakeEmojiDiscord({ emojis: ['seed', 'wave'] }).rest, {
+            replace: ['wave']
+        });
+        await done;
 
-        expect(added.printed()).toContain(hint);
-        expect(replaced.printed()).not.toContain(hint);
+        expect(printed()).not.toContain('Changed an image?');
     });
 
     it("doesn't upload when the answer is no", async () => {
@@ -151,7 +147,7 @@ describe('PushRunner', () => {
         const project = await projectWith({ 'wave.png': 'new wave' });
         const discord = fakeEmojiDiscord({
             emojis: ['wave'],
-            rejects: { wave: discordError(RESTJSONErrorCodes.InvalidFileUploaded, 'Invalid Asset') }
+            rejects: { 'POST wave': discordError(RESTJSONErrorCodes.InvalidFileUploaded, 'Invalid Asset') }
         });
 
         const { printed, done } = push(project, discord.rest, { replace: ['wave'] });
@@ -163,11 +159,38 @@ describe('PushRunner', () => {
         );
     });
 
+    it('puts the old emoji back when discord refuses to delete it after the upload', async () => {
+        const project = await projectWith({ 'wave.png': 'new wave' });
+        const discord = fakeEmojiDiscord({
+            emojis: ['wave'],
+            rejects: { 'DELETE sc_wave-id': new Error('Missing Access') }
+        });
+
+        const { printed, done } = push(project, discord.rest, { replace: ['wave'] });
+
+        await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliSomeFailed });
+        expect(discord.emojis().map(({ id, name }) => `${name} ${id}`)).toEqual(['wave wave-id']);
+        expect(printed()).toContain(`Could not upload ${join(project.dir, 'emojis/wave.png')} (Missing Access).`);
+    });
+
+    it("warns with the old emoji's new name when putting it back fails too", async () => {
+        const project = await projectWith({ 'wave.png': 'new wave' });
+        const discord = fakeEmojiDiscord({
+            emojis: ['wave'],
+            rejects: { 'DELETE sc_wave-id': new Error('Missing Access'), 'DELETE wave': new Error('Missing Access') }
+        });
+
+        const { printed, done } = push(project, discord.rest, { replace: ['wave'] });
+
+        await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliSomeFailed });
+        expect(printed()).toContain('Missing Access, and the old emoji is still on Discord as sc_wave-id');
+    });
+
     it('uploads the other files when discord rejects one, then throws CliSomeFailed', async () => {
         const project = await projectWith({ 'boom.gif': 'boom', 'wave.png': 'wave' });
         const discord = fakeEmojiDiscord({
             rejects: {
-                boom: discordError(
+                'POST boom': discordError(
                     RESTJSONErrorCodes.FailedToResizeAssetBelowTheMaximumSize,
                     'Failed to resize asset below the maximum size: 262144'
                 )

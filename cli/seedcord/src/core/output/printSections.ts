@@ -7,15 +7,28 @@ export interface SectionRow {
     items: string[];
 }
 
-const MARKS = { '+': paint.mint, '~': paint.iris, '-': paint.coral } satisfies Record<string, typeof paint.mint>;
-type Mark = keyof typeof MARKS;
+type Tone = typeof paint.mint;
 
-export function markedRows(mark: Mark, items: readonly string[]): SectionRow[] {
+const MARKS = { '+': paint.mint, '~': paint.iris, '-': paint.coral } satisfies Record<string, Tone>;
+export type Mark = keyof typeof MARKS;
+
+// pass `labelOf` for a label that paints part of itself in another tone
+export function markedRows(mark: Mark, labels: readonly string[]): SectionRow[];
+export function markedRows<Item>(
+    mark: Mark,
+    items: readonly Item[],
+    labelOf: (item: Item, tone: Tone) => string
+): SectionRow[];
+export function markedRows(
+    mark: Mark,
+    items: readonly unknown[],
+    labelOf = (label: unknown, tone: Tone): string => tone(String(label))
+): SectionRow[] {
     const tone = MARKS[mark];
-    return items.length === 0 ? [] : [{ marker: tone.bold(mark), items: items.map((item) => tone(item)) }];
+    return items.length === 0 ? [] : [{ marker: tone.bold(mark), items: items.map((item) => labelOf(item, tone)) }];
 }
 
-interface RowItem {
+export interface RowItem {
     label: string;
     detail: string;
 }

@@ -96,10 +96,9 @@ export interface BotConfig {
     commands: CommandsConfig;
 
     /**
-     * Optional emoji map, for the emojis that don't have a file in your emojis folder. Each value is an
-     * emoji name loaded from your application emojis, or a
-     * `[name, guildId]` tuple loaded from that guild (the guild needs the Guilds intent). Run
-     * `seedcord codegen` after changing this to type the `Emojis` accessor.
+     * Emojis that don't have a file in your emojis folder. Each value is an emoji name loaded from your
+     * application emojis, or a `[name, guildId]` tuple loaded from that guild (the guild needs the Guilds
+     * intent). Run `seedcord codegen` after changing this to type the `Emojis` accessor.
      *
      * @see {@link EmojiConfig}
      * @see {@link Emojis}

@@ -30,11 +30,9 @@ function layoutOf({ root, configFile, files, target, emojis }: ProjectPaths): Bo
 
 export class ProjectFiles {
     public readonly layout: BotLayout;
-    private readonly emojiFolder: string;
 
     constructor(paths: ProjectPaths) {
         this.layout = layoutOf(paths);
-        this.emojiFolder = paths.emojis.dir;
     }
 
     public async modulePaths(folder = this.layout.root): Promise<string[]> {
@@ -43,7 +41,7 @@ export class ProjectFiles {
     }
 
     public async builtLists(): Promise<BuiltLists> {
-        const [entries, emojis] = await Promise.all([this.entries(), folderEmojisIn(this.emojiFolder)]);
+        const [entries, emojis] = await Promise.all([this.entries(), folderEmojisIn(this.layout.emojiFolder)]);
         const folders = entries.flatMap(({ isFolder, path }) => (isFolder ? [this.layout.keyOf(path)] : [])).toSorted();
         return { folders, emojis };
     }

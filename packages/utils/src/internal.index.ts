@@ -14,7 +14,7 @@ export {
     setCliFiles,
     setDevFiles
 } from './files/slots';
-export { emojiFileAt, folderEmojisIn, readEmojiFolder, usableEmojiFiles } from './files/readEmojiFolder';
+export { clashesIn, emojiFileAt, folderEmojisIn, readEmojiFolder } from './files/readEmojiFolder';
 export type { EmojiFile, FolderEmoji } from './files/readEmojiFolder';
 export { botFolder, folderEmojis, matchesBotGlobs } from './files/sources';
 export { withoutQuery } from './files/withoutQuery';

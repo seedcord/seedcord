@@ -121,12 +121,6 @@ describe('ProjectFiles', () => {
         expect(emojis).toEqual([{ key: 'ConfirmationCheck', name: 'confirmation_check' }]);
     });
 
-    it('gives the layout the emojis folder from the config', async () => {
-        const root = await projectRoot();
-
-        expect(filesUnder(root).layout.emojiFolder).toBe(join(root, 'emojis'));
-    });
-
     it('lists only files as modules when a folder is named like one', async () => {
         const root = await projectRoot();
         await mkdir(join(root, 'handlers', 'group.ts'), { recursive: true });

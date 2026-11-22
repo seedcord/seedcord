@@ -182,18 +182,41 @@ describe('emojis PullRunner', () => {
         expect(await saved(project, '1up.webp')).toBe('1up-id');
     });
 
-    it.for<{ why: string; files: Record<string, string>; emojis: string[] }>([
-        { why: 'two downloads', files: {}, emojis: ['party_parrot', 'PartyParrot'] },
-        { why: 'a download and a file', files: { 'party_parrot.png': 'p' }, emojis: ['PartyParrot'] }
-    ])('stops before any download when $why would share a key', async ({ files, emojis }) => {
+    it.for<{ why: string; files: Record<string, string>; emojis: string[]; shown: string[] }>([
+        {
+            why: 'two downloads would share a key',
+            files: {},
+            emojis: ['party_parrot', 'PartyParrot'],
+            shown: ['party_parrot on seed beta', 'PartyParrot on seed beta', 'PartyParrot']
+        },
+        {
+            why: 'a download would share a key with a file',
+            files: { 'party_parrot.png': 'p' },
+            emojis: ['PartyParrot'],
+            shown: ['party_parrot.png', 'PartyParrot on seed beta', 'PartyParrot']
+        },
+        {
+            why: 'two downloads differ only in case',
+            files: {},
+            emojis: ['wave', 'WaVe'],
+            shown: ['wave on seed beta', 'WaVe on seed beta', 'macOS and Windows']
+        },
+        {
+            why: 'a download differs from a file only in case',
+            files: { 'wave.webp': 'mine' },
+            emojis: ['WAVE'],
+            shown: ['wave.webp', 'WAVE on seed beta', 'macOS and Windows']
+        }
+    ])('stops before any download when $why', async ({ files, emojis, shown }) => {
         const project = await projectWith(files);
         const { rest } = fakeEmojiDiscord({ emojis: [...emojis, 'seed'] });
 
         const { done } = pull(project, rest, { names: [] });
 
+        const inOrder = new RegExp(shown.map((part) => RegExp.escape(part)).join('.*'), 's');
         await expect(done).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreDuplicateName,
-            message: expect.stringContaining('PartyParrot') as string
+            message: expect.stringMatching(inOrder) as string
         });
         expect(existsSync(join(project.dir, 'emojis/seed.webp'))).toBe(false);
     });

@@ -9,7 +9,7 @@ import { plural } from '#core/format';
 import { markedRows, printSections } from '#core/output/printSections';
 import { StepsPresenter } from '#core/output/StepsPresenter';
 
-import type { OnDiscord } from '#commands/emojis/emojiDiff';
+import type { OnDiscord } from '#commands/emojis/EmojiDiff';
 import type { Outcome } from '#commands/emojis/outcome';
 import type { EmojiPrompts } from '#commands/emojis/prompts';
 import type { Section } from '#core/output/printSections';

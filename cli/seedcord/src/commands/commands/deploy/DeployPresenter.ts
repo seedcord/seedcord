@@ -6,7 +6,7 @@ import { sumBy } from 'es-toolkit';
 import { commandLabel } from '#commands/commands/commandRows';
 import { plural } from '#core/format';
 import { printEdgeHint } from '#core/output/printEdgeHint';
-import { printSections } from '#core/output/printSections';
+import { markedRows, printSections } from '#core/output/printSections';
 import { StepsPresenter } from '#core/output/StepsPresenter';
 
 import type { Confirm } from '#core/output/confirm';
@@ -84,19 +84,7 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
     }
 
     private section({ title, inCode, diff }: ScopePlan): Section {
-        const rows: SectionRow[] = [];
-        if (diff.added.length > 0) {
-            rows.push({
-                marker: paint.mint.bold('+'),
-                items: diff.added.map((command) => commandLabel(command, paint.mint))
-            });
-        }
-        if (diff.removed.length > 0) {
-            rows.push({
-                marker: paint.coral.bold('-'),
-                items: diff.removed.map((command) => commandLabel(command, paint.coral))
-            });
-        }
+        const rows = [...markedRows('+', diff.added, commandLabel), ...markedRows('-', diff.removed, commandLabel)];
 
         const changed = rows.length > 0;
         if (diff.kept.length > 0 && (changed || this.verbose)) rows.push(this.keptRow(diff.kept));
