@@ -1,5 +1,18 @@
 # @seedcord/plugin-mongoose
 
+## 0.8.0-next.1
+
+### 🩹 Patch
+
+- Fixed a bot with an unreachable MongoDB failing startup with `LifecycleTaskTimeout` before the driver could report why. The plugin now gives up on finding a server after 10 seconds, so `init()` throws `PluginConnectionFailed` with the driver's reason, and `connectionOptions.serverSelectionTimeoutMS` still overrides it. ([`0520bdc`](https://github.com/seedcord/seedcord/commit/0520bdc85dab46972c95068a9068b4ba9ed80248))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
+- `@seedcord/types` 0.17.0-next.0 → 0.17.0-next.1
+- `@seedcord/utils` 0.10.0-next.0 → 0.10.0-next.1
+- `@seedcord/logger` 0.6.2-next.0 → 0.7.0-next.1
+
 ## 0.8.0-next.0
 
 ### 💥 Breaking

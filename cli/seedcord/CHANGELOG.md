@@ -1,5 +1,28 @@
 # seedcord
 
+## 0.24.0-next.1
+
+### 💥 Breaking
+
+- An edge bot now needs `@cloudflare/vite-plugin@2.0.0-rc.0` and `cf@1.0.0-rc.0`. Run `pnpm add -D @cloudflare/vite-plugin@2.0.0-rc.0 cf@1.0.0-rc.0` in an existing edge bot. ([#468](https://github.com/seedcord/seedcord/pull/468))
+- `tunnel`, `hmr`, `idleAnimation`, and an edge bot's `port` moved under `dev` in `seedcord.config.ts`, like `dev: { tunnel: false, hmr: { typecheck: true } }`. ([#472](https://github.com/seedcord/seedcord/pull/472))
+
+### ✨ Minor
+
+- Added `seedcord emojis` to upload the images in an `emojis` folder beside `seedcord.config.ts` to your application, and to list, download and delete the emojis already there. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else. ([#474](https://github.com/seedcord/seedcord/pull/474))
+
+### 🩹 Patch
+
+- Fixed `create-seedcord`, `seedcord make`, and `seedcord commands` waiting for Enter before they exit on Windows. ([#466](https://github.com/seedcord/seedcord/pull/466), thanks [@camdzic](https://github.com/camdzic))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.14.0-next.0 → 0.14.0-next.1
+- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
+- `@seedcord/types` 0.17.0-next.0 → 0.17.0-next.1
+- `@seedcord/utils` 0.10.0-next.0 → 0.10.0-next.1
+- `@seedcord/logger` 0.6.2-next.0 → 0.7.0-next.1
+
 ## 0.24.0-next.0
 
 ### ✨ Minor

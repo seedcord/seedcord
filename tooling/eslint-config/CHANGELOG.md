@@ -1,5 +1,17 @@
 # @seedcord/eslint-config
 
+## 3.0.2-next.1
+
+### 🩹 Patch
+
+- `no-magic-numbers` no longer reports the numbers that dates and durations are made of, like `24 * 60 * 60 * 1000` for a day or `7` for a week. It now allows 7, 12, 24, 28, 30, 31, 52, 60, 365, and 366. ([#473](https://github.com/seedcord/seedcord/pull/473))
+- Fixed parsing errors and unresolved imports in a workspace with one root `eslint.config.ts` and a `tsconfig.json` in each package. Each file now uses its nearest `tsconfig.json`, where it always used the one in `tsconfigRootDir` before. ([`163fa91`](https://github.com/seedcord/seedcord/commit/163fa913b59aad815ff76470f175db89bb479de2))
+- Fixed `--fix` turning a static method call like `Logger.Error('x')` into `new Logger.Error('x')`. The config no longer turns on `unicorn/throw-new-error`, since `unicorn/new-for-builtins` already covers `Error()`. ([`ae491a2`](https://github.com/seedcord/seedcord/commit/ae491a2d09c56dda5f2e0bf07a6889d409dca598))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/eslint-plugin` 0.5.2-next.0 → 0.5.2-next.1
+
 ## 3.0.2-next.0
 
 ### 🩹 Patch

@@ -1,5 +1,18 @@
 # @seedcord/utils
 
+## 0.10.0-next.1
+
+### 🩹 Patch
+
+- Added `seedcord emojis` to upload the images in an `emojis` folder beside `seedcord.config.ts` to your application, and to list, download and delete the emojis already there. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else. ([#474](https://github.com/seedcord/seedcord/pull/474))
+- Fixed three checks on a gateway bot that missed Discord's errors because discord.js loads a different build of `@discordjs/rest` than seedcord does. A deleted log webhook now stops startup with `ConfigWebhookNotFound`, a refused command deploy points at the token or the command fields, and error reports show the interaction's timestamps. ([`9c7fb58`](https://github.com/seedcord/seedcord/commit/9c7fb583b077c0e7bddaabd07969597b250b3517))
+- Fixed `seedcord dev` on Windows not restarting when you save `package.json`, a lockfile, or a `tsconfig` file. ([#469](https://github.com/seedcord/seedcord/pull/469))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
+- `@seedcord/types` 0.17.0-next.0 → 0.17.0-next.1
+
 ## 0.10.0-next.0
 
 ### 💥 Breaking

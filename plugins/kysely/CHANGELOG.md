@@ -1,5 +1,16 @@
 # @seedcord/plugin-kysely-postgres
 
+## 0.9.0-next.1
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
+- `@seedcord/types` 0.17.0-next.0 → 0.17.0-next.1
+- `@seedcord/utils` 0.10.0-next.0 → 0.10.0-next.1
+- `@seedcord/logger` 0.6.2-next.0 → 0.7.0-next.1
+
 ## 0.9.0-next.0
 
 ### 💥 Breaking

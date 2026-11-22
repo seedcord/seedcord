@@ -1,5 +1,21 @@
 # @seedcord/logger
 
+## 0.7.0-next.1
+
+### 💥 Breaking
+
+- seedcord doesn't log on a `health` channel anymore. The bot's web server logs on a new `server` channel, so rename any plugin attached under the key `server`. ([#472](https://github.com/seedcord/seedcord/pull/472))
+
+### 🩹 Patch
+
+- Fixed `logger.utils.block()` showing every heading in green. A heading now has the color of its level, like amber for a warning and red for an error. ([#473](https://github.com/seedcord/seedcord/pull/473))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
+- `@seedcord/types` 0.17.0-next.0 → 0.17.0-next.1
+- `@seedcord/utils` 0.10.0-next.0 → 0.10.0-next.1
+
 ## 0.6.2-next.0
 
 ### 🩹 Patch

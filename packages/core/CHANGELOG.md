@@ -1,5 +1,37 @@
 # @seedcord/core
 
+## 0.14.0-next.1
+
+### 💥 Breaking
+
+- Your bot now reads the `emojis` folder beside `seedcord.config.ts` when it starts, and stops if a file in it isn't uploaded to your application. If you already keep other files in a folder with that name, move them, or point `emojis.dir` in `seedcord.config.ts` at an empty folder. ([#474](https://github.com/seedcord/seedcord/pull/474))
+- A gateway bot now has the `port` and `fetch()` members that an http bot already had, and every bot has the new `url`. Rename any plugin attached under one of those keys. ([#472](https://github.com/seedcord/seedcord/pull/472))
+- `port` and `healthCheck` are now one `server` block on gateway and node http bots, like `server: { port: 8080, health: '/healthz' }`. `healthCheck: false` becomes `server: { health: false }`, and `port: false` becomes `server: { port: false }`. A gateway bot's server now listens on port 3000 by default, where it used 6967. ([#472](https://github.com/seedcord/seedcord/pull/472))
+
+### ✨ Minor
+
+- Added `core.url`, which gives a plugin the address people reach the bot at, from the new `server.url` config key. Under `seedcord dev`, a bot without `server.url` gets its localhost address, and an http bot whose `dev.tunnel` is a URL gets that URL. ([#472](https://github.com/seedcord/seedcord/pull/472))
+- Added `seedcord emojis` to upload the images in an `emojis` folder beside `seedcord.config.ts` to your application, and to list, download and delete the emojis already there. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else. ([#474](https://github.com/seedcord/seedcord/pull/474))
+- Added `interactionDispatching`, which the bus publishes when an interaction dispatch starts. `unhandledInteractionError` now includes the `interactionId`, and `unhandledEventError` now includes the event `name`. ([#469](https://github.com/seedcord/seedcord/pull/469))
+- Plugins can now answer web requests with a `fetch(request)` method, like a webhook from another service. seedcord calls each plugin's `fetch` in attach order before the interactions engine. A gateway bot serves those routes on the same server as its health path. ([#472](https://github.com/seedcord/seedcord/pull/472))
+- `responseAttempted` now includes a `body` with what the write sent, like the components of a reply or the modal from `showModal`, so a subscriber can log what Discord rejected. ([#469](https://github.com/seedcord/seedcord/pull/469))
+- In development, seedcord now logs a warning if an interaction still hasn't been answered 2.5 seconds after Discord created it. Discord fails the interaction at 3 seconds. ([#469](https://github.com/seedcord/seedcord/pull/469))
+- `@WebhookUrl` now also takes a function that returns the url, like `@WebhookUrl(() => settings.banLogWebhook)`, for a url you keep outside the environment. ([#468](https://github.com/seedcord/seedcord/pull/468))
+
+### 🩹 Patch
+
+- The bot now reads its token from `BOT_TOKEN` when `DISCORD_BOT_TOKEN` is unset, so a bot moving to seedcord can keep its old variable name. ([`fa309a1`](https://github.com/seedcord/seedcord/commit/fa309a101b75c102a50fd189ad05e9cda52b934c))
+- Fixed three checks on a gateway bot that missed Discord's errors because discord.js loads a different build of `@discordjs/rest` than seedcord does. A deleted log webhook now stops startup with `ConfigWebhookNotFound`, a refused command deploy points at the token or the command fields, and error reports show the interaction's timestamps. ([`9c7fb58`](https://github.com/seedcord/seedcord/commit/9c7fb583b077c0e7bddaabd07969597b250b3517))
+- Fixed `kv.update()` hanging on Cloudflare Workers when a handler started it without awaiting it. Because Workers freezes that update once the request ends, every later update to the same key waited on it forever in that isolate. ([`0342967`](https://github.com/seedcord/seedcord/commit/03429678c73b800a01e59904b64102e7ccce86e3))
+- Fixed `WebhookLog` logging discord.js's raw validation error when a card has a broken component. It now logs which component failed and why, the same as a reply does. ([#469](https://github.com/seedcord/seedcord/pull/469))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
+- `@seedcord/types` 0.17.0-next.0 → 0.17.0-next.1
+- `@seedcord/utils` 0.10.0-next.0 → 0.10.0-next.1
+- `@seedcord/logger` 0.6.2-next.0 → 0.7.0-next.1
+
 ## 0.14.0-next.0
 
 ### 💥 Breaking

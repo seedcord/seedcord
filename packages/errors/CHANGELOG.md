@@ -1,5 +1,21 @@
 # @seedcord/errors
 
+## 0.16.0-next.1
+
+### 💥 Breaking
+
+- `SeedcordErrorCode.CliDeployNeedsYes` is now `CliNeedsYes` and `CliCommandsNotDeleted` is now `CliSomeFailed`, because `seedcord emojis` throws both too. Their numbers are still 3133 and 3135. ([#474](https://github.com/seedcord/seedcord/pull/474))
+
+### ✨ Minor
+
+- Added `seedcord emojis` to upload the images in an `emojis` folder beside `seedcord.config.ts` to your application, and to list, download and delete the emojis already there. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else. ([#474](https://github.com/seedcord/seedcord/pull/474))
+
+### 🩹 Patch
+
+- The bot now reads its token from `BOT_TOKEN` when `DISCORD_BOT_TOKEN` is unset, so a bot moving to seedcord can keep its old variable name. ([`fa309a1`](https://github.com/seedcord/seedcord/commit/fa309a101b75c102a50fd189ad05e9cda52b934c))
+- Added the error codes that `@seedcord/plugin-oauth` throws. ([#473](https://github.com/seedcord/seedcord/pull/473))
+- `@WebhookUrl` now also takes a function that returns the url, like `@WebhookUrl(() => settings.banLogWebhook)`, for a url you keep outside the environment. ([#468](https://github.com/seedcord/seedcord/pull/468))
+
 ## 0.16.0-next.0
 
 ### 💥 Breaking

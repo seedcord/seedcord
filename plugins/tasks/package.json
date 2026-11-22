@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/plugin-tasks",
-    "version": "0.1.0-next.0",
+    "version": "0.1.0-next.1",
     "description": "Run cron and scheduled tasks in a seedcord bot",
     "keywords": [
         "cron",

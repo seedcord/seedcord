@@ -1,5 +1,21 @@
 # @seedcord/types
 
+## 0.17.0-next.1
+
+### 💥 Breaking
+
+- seedcord doesn't log on a `health` channel anymore. The bot's web server logs on a new `server` channel, so rename any plugin attached under the key `server`. ([#472](https://github.com/seedcord/seedcord/pull/472))
+- `port` and `healthCheck` are now one `server` block on gateway and node http bots, like `server: { port: 8080, health: '/healthz' }`. `healthCheck: false` becomes `server: { health: false }`, and `port: false` becomes `server: { port: false }`. A gateway bot's server now listens on port 3000 by default, where it used 6967. ([#472](https://github.com/seedcord/seedcord/pull/472))
+
+### ✨ Minor
+
+- Added `core.url`, which gives a plugin the address people reach the bot at, from the new `server.url` config key. Under `seedcord dev`, a bot without `server.url` gets its localhost address, and an http bot whose `dev.tunnel` is a URL gets that URL. ([#472](https://github.com/seedcord/seedcord/pull/472))
+
+### 🩹 Patch
+
+- Added `seedcord emojis` to upload the images in an `emojis` folder beside `seedcord.config.ts` to your application, and to list, download and delete the emojis already there. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else. ([#474](https://github.com/seedcord/seedcord/pull/474))
+- `InteractionsConfig` now has an `unhandled` field, typed by each transport as its own handler class. ([`26be090`](https://github.com/seedcord/seedcord/commit/26be0906bb63c31635b98b6dc231df94bb35a900))
+
 ## 0.17.0-next.0
 
 ### 💥 Breaking
