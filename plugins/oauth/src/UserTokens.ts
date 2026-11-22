@@ -51,8 +51,8 @@ export class UserTokens {
     private readonly vault: TokenVault;
     private readonly changes: KeyedQueue;
     private readonly wait: (ms: number) => Promise<void>;
-    // the refresh token that discord last refused for each user. a call that reads the same one again
-    // throws without asking discord or waiting
+    // the refresh token that discord last answered `invalid_grant` to for each user. a call that reads
+    // the same one again throws without asking discord or waiting
     private readonly refused = new Map<string, string>();
     private readonly clientId: string;
 
@@ -129,7 +129,8 @@ export class UserTokens {
 
         const newer = await this.newerWithinTheWait(userId, saved);
         if (newer) return newer;
-        this.refused.set(userId, saved.refreshToken);
+        // `invalid_request` only means another refresh was running. this token may still work
+        if (answer.invalidGrant) this.refused.set(userId, saved.refreshToken);
         throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId, 'refused'], {
             cause: answer.error
         });

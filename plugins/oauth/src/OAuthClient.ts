@@ -226,7 +226,12 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
         return saved?.scopes;
     }
 
-    /** Deletes a user's saved tokens. It doesn't call Discord, and the user's grant there keeps working. */
+    /**
+     * Deletes a user's saved tokens. It doesn't call Discord, and the user's grant there keeps working.
+     *
+     * When several processes share one store, a refresh that's running in another one can save the tokens
+     * back. Call {@link OAuthClient.revoke} when the login has to end for certain.
+     */
     public async forget(userId: string): Promise<void> {
         await this.#tokens.forget(userId);
     }

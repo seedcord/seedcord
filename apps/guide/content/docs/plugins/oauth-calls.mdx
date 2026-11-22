@@ -237,4 +237,4 @@ When you revoke one token, Discord [revokes every token of that authorization](h
 
 ## Reading what a user granted
 
-[`scopesOf()`](ref:plugin-oauth/OAuth.scopesOf) returns the scopes that a user granted, or `undefined` for a user without saved tokens. It reads the saved record without calling Discord. `bot` is never in the list because Discord doesn't include it in the scopes it grants a user. To learn that a login added your bot, check its `guild`.
+[`scopesOf()`](ref:plugin-oauth/OAuth.scopesOf) returns the scopes that a user granted, or `undefined` for a user without saved tokens. It reads the saved record without calling Discord. To learn that a login added your bot, check its `guild`.

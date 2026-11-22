@@ -28,23 +28,28 @@ async function useUpTheRefreshToken(discord: Discord): Promise<void> {
     await tokensOn(discord, anotherStore).claim({ code: 'another-code', redirectUri: REDIRECT_URI });
 }
 
+async function refreshRequestsFromTwoCalls(answer: Discord['usedRefreshTokenAnswer']): Promise<number> {
+    const discord = await discordGranting(ABOUT_TO_EXPIRE_SECONDS);
+    discord.usedRefreshTokenAnswer = answer;
+    const tokens = tokensOn(discord);
+    await tokens.claim({ code: 'the-code', redirectUri: REDIRECT_URI });
+    await useUpTheRefreshToken(discord);
+    const beforeTheRefreshes = discord.requests.length;
+
+    const saved = await tokens.loggedIn(USER.id);
+    await expect(tokens.unexpired(USER.id, saved)).rejects.toMatchObject(LOGIN_NEEDED);
+    await expect(tokens.unexpired(USER.id, saved)).rejects.toMatchObject(LOGIN_NEEDED);
+
+    expect(discord.store.size).toBe(1);
+    return discord.requests.length - beforeTheRefreshes;
+}
+
 describe('UserTokens', () => {
-    it.each(['invalid_grant', 'invalid_request'] as const)(
-        'throws once when Discord answers %s to a refresh, then without asking Discord again',
-        async (answer) => {
-            const discord = await discordGranting(ABOUT_TO_EXPIRE_SECONDS);
-            discord.usedRefreshTokenAnswer = answer;
-            const tokens = tokensOn(discord);
-            await tokens.claim({ code: 'the-code', redirectUri: REDIRECT_URI });
-            await useUpTheRefreshToken(discord);
+    it("doesn't send a refresh token again after Discord answered invalid_grant to it", async () => {
+        expect(await refreshRequestsFromTwoCalls('invalid_grant')).toBe(1);
+    });
 
-            const saved = await tokens.loggedIn(USER.id);
-            await expect(tokens.unexpired(USER.id, saved)).rejects.toMatchObject(LOGIN_NEEDED);
-            const afterFirst = discord.requests.length;
-            await expect(tokens.unexpired(USER.id, saved)).rejects.toMatchObject(LOGIN_NEEDED);
-
-            expect(discord.requests).toHaveLength(afterFirst);
-            expect(discord.store.size).toBe(1);
-        }
-    );
+    it('sends a refresh token again after invalid_request, which Discord answers while another refresh runs', async () => {
+        expect(await refreshRequestsFromTwoCalls('invalid_request')).toBe(2);
+    });
 });
