@@ -85,7 +85,8 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
         baseUrl,
         routes = {},
         scopes = [],
-        extraScopes = []
+        extraScopes = [],
+        keepOpen
     }: OAuthClientOptions<TScopes, TExtra>) {
         this.#rest = rest;
         this.#clientId = clientId;
@@ -93,7 +94,7 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
         const everyLogin = union<OAuthScope>(['identify'], scopes);
         // a scope that's in both lists counts as a normal scope. the types treat it that way too
         this.#extraScopes = new Set(difference<OAuthScope>(extraScopes, everyLogin));
-        this.#tokens = new UserTokens({ rest, store, clientId, clientSecret });
+        this.#tokens = new UserTokens({ rest, store, clientId, clientSecret, keepOpen });
 
         const callback = new MountedPath(baseUrl, routes.callback ?? 'oauth/callback');
         this.redirectUri = callback.url.href;

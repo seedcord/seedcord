@@ -1,83 +1,19 @@
 import { REST } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vite-plus/test';
+import { delay } from 'es-toolkit';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { OAuthClient } from '#src/OAuthClient';
 
+import { APP_ID, discordGranting, USER } from './discordGranting';
 import { fakeDiscord, WEEK_SECONDS } from './fakeDiscord';
 
 import type { TokenStore } from '#src/TokenVault';
+import type { Discord } from './discordGranting';
 import type { SeenRequest } from './fakeDiscord';
 
-const APP_ID = '1564002376115949650';
-const USER = { id: '111', username: 'dhruv' };
-
-interface Discord {
-    requests: SeenRequest[];
-    acceptedRefreshes: number;
-    deadAccessTokens: Set<string>;
-    // what a refresh with an old refresh token gets. real Discord answers invalid_request while the
-    // refresh that used the token is still running, and invalid_grant after it
-    usedRefreshTokenAnswer: 'invalid_grant' | 'invalid_request';
-    // client() keeps its tokens here unless it gets another store
-    store: Map<string, string>;
-    api: string;
-    client(store?: TokenStore): OAuthClient<'guilds', 'connections'>;
-}
-
-// acts like Discord for one user. every refresh token works once, each token it grants lasts `expiresIn`,
-// and the tokens are numbered in the order it granted them: access-0 and refresh-0, then access-1
-async function discordGranting(expiresIn: number, scope = 'identify guilds'): Promise<Discord> {
-    const live = { refreshToken: '', granted: 0 };
-    const grant = (): object => {
-        const number = live.granted++;
-        live.refreshToken = `refresh-${number}`;
-        return {
-            token_type: 'Bearer',
-            access_token: `access-${number}`,
-            refresh_token: live.refreshToken,
-            expires_in: expiresIn,
-            scope
-        };
-    };
-
-    const server = await fakeDiscord(({ route, body, headers }) => {
-        if (discord.deadAccessTokens.has(headers.authorization?.replace('Bearer ', '') ?? '')) {
-            return { status: 401, json: { message: '401: Unauthorized', code: 0 } };
-        }
-        const form = new URLSearchParams(body);
-        if (route === '/oauth2/token' && form.get('grant_type') === 'authorization_code') return { json: grant() };
-        if (route === '/oauth2/token') {
-            if (form.get('refresh_token') !== live.refreshToken)
-                return { status: 400, json: { error: discord.usedRefreshTokenAnswer } };
-            discord.acceptedRefreshes++;
-            return { json: grant() };
-        }
-        if (route === '/oauth2/@me')
-            return { json: { user: scope.includes('identify') ? USER : undefined, scopes: scope.split(' ') } };
-        return { json: [] };
-    });
-
-    const discord: Discord = {
-        requests: server.requests,
-        api: server.api,
-        acceptedRefreshes: 0,
-        deadAccessTokens: new Set(),
-        usedRefreshTokenAnswer: 'invalid_grant',
-        store: new Map(),
-        client: (store = discord.store) =>
-            new OAuthClient({
-                rest: new REST({ api: server.api }).setToken('bot-token'),
-                store,
-                clientId: APP_ID,
-                clientSecret: 'client-secret',
-                baseUrl: 'https://bot.test/',
-                scopes: ['guilds'],
-                extraScopes: ['connections']
-            })
-    };
-    return discord;
-}
+// longer than one gap between the reads of a client that discord refused a refresh
+const SLOW_SAVE_MS = 300;
 
 async function clientGranting(expiresIn: number, scope?: string): Promise<ReturnType<Discord['client']>> {
     const discord = await discordGranting(expiresIn, scope);
@@ -149,36 +85,79 @@ describe('OAuthClient', () => {
                 second.as(USER.id).get('/users/@me/guilds')
             ]);
 
-            // one refresh won, and the loser read the winner's record
+            // discord accepted one refresh, and the client it refused read the record that the other saved
             expect(discord.acceptedRefreshes).toBe(1);
             expect(bearerOf(discord.requests, '/users/@me/guilds')).toEqual(['Bearer access-1', 'Bearer access-1']);
         }
     );
 
-    // the user logged in again somewhere else on another store, which used up this store's refresh token
-    async function clientWithAUsedRefreshToken(): Promise<{ discord: Discord; oauth: ReturnType<Discord['client']> }> {
+    it('keeps reading a slow store until it has the tokens another process saved', async () => {
+        const discord = await discordGranting(60);
+        const slow: TokenStore = {
+            get: (userId) => discord.store.get(userId),
+            set: async (userId, sealed) => {
+                await delay(SLOW_SAVE_MS);
+                discord.store.set(userId, sealed);
+            },
+            delete: (userId) => discord.store.delete(userId)
+        };
+        const [first, second] = [discord.client(slow), discord.client(slow)];
+        await first.exchange('the-code');
+
+        await Promise.all([first.as(USER.id).get('/users/@me/guilds'), second.as(USER.id).get('/users/@me/guilds')]);
+
+        expect(bearerOf(discord.requests, '/users/@me/guilds')).toEqual(['Bearer access-1', 'Bearer access-1']);
+    });
+
+    it('refreshes once for two calls from one client', async () => {
         const discord = await discordGranting(60);
         const oauth = discord.client();
         await oauth.exchange('the-code');
-        await discord.client(new Map()).exchange('another-code');
-        return { discord, oauth };
-    }
+        discord.expiresIn = WEEK_SECONDS;
 
-    it('throws when Discord answers invalid_grant to a refresh, and keeps the record', async () => {
-        const { discord, oauth } = await clientWithAUsedRefreshToken();
+        await Promise.all([oauth.as(USER.id).get('/users/@me/guilds'), oauth.as(USER.id).get('/users/@me/guilds')]);
 
-        await expect(oauth.as(USER.id).get('/users/@me/guilds')).rejects.toMatchObject({
-            code: SeedcordErrorCode.PluginOAuthLoginNeeded
-        });
-        expect(discord.store.size).toBe(1);
+        expect(discord.requests.filter((request) => request.body.includes('grant_type=refresh_token'))).toHaveLength(1);
     });
 
-    it("passes on Discord's invalid_request for a refresh when nothing newer was saved", async () => {
-        const { discord, oauth } = await clientWithAUsedRefreshToken();
-        discord.usedRefreshTokenAnswer = 'invalid_request';
+    // a call whose refresh is at Discord, waiting for its answer
+    async function callDuringARefresh(): Promise<{
+        discord: Discord;
+        oauth: ReturnType<Discord['client']>;
+        call: Promise<unknown>;
+        answer: () => void;
+    }> {
+        const discord = await discordGranting(60);
+        const oauth = discord.client();
+        await oauth.exchange('the-code');
+        const held = Promise.withResolvers<undefined>();
+        discord.refreshesWaitFor = held.promise;
 
-        await expect(oauth.as(USER.id).get('/users/@me/guilds')).rejects.toMatchObject({ code: 'invalid_request' });
-        expect(discord.store.size).toBe(1);
+        const call = oauth.as(USER.id).get('/users/@me/guilds');
+        await vi.waitFor(() => {
+            expect(discord.requests.at(-1)?.body).toContain('grant_type=refresh_token');
+        });
+        return { discord, oauth, call, answer: () => held.resolve(undefined) };
+    }
+
+    it('deletes the tokens when forget() is called during a refresh', async () => {
+        const { discord, oauth, call, answer } = await callDuringARefresh();
+
+        const forgotten = oauth.forget(USER.id);
+        answer();
+        await Promise.all([call, forgotten]);
+
+        expect(discord.store.size).toBe(0);
+    });
+
+    it("doesn't save a refresh after another process logged the user out", async () => {
+        const { discord, call, answer } = await callDuringARefresh();
+
+        await discord.client().forget(USER.id);
+        answer();
+
+        await expect(call).rejects.toMatchObject({ code: SeedcordErrorCode.PluginOAuthLoginNeeded });
+        expect(discord.store.size).toBe(0);
     });
 
     it('throws for a user who never logged in', async () => {

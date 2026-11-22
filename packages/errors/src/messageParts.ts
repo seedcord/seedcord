@@ -28,7 +28,9 @@ export const listedFolderProblems = {
 export type LoginNeededReason = 'never' | 'refused' | { missingScope: string };
 
 export function loginNeededBecause(why: LoginNeededReason): string {
-    if (why === 'never') return 'They never logged in here, or the client secret changed since they did.';
+    if (why === 'never') {
+        return "They don't have saved tokens here. They never logged in, they were logged out, or the client secret changed since they logged in.";
+    }
     if (why === 'refused') return 'Discord refused their saved tokens, which happens after they remove the app.';
     return `Their login is from before ${paint.bold(why.missingScope)} was in ${paint.bold('scopes')}.`;
 }

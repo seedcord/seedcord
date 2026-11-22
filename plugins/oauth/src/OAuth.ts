@@ -1,5 +1,5 @@
 import { MemoryDriver } from '@seedcord/core';
-import { currentApplication } from '@seedcord/core/internal';
+import { currentApplication, keepRequestOpenFor } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
@@ -191,7 +191,8 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
             clientSecret: this.#clientSecret(),
             baseUrl: this.core.url,
             scopes: this.options.scopes,
-            extraScopes: this.options.extraScopes
+            extraScopes: this.options.extraScopes,
+            keepOpen: keepRequestOpenFor
         });
         return this.#built;
     }

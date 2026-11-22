@@ -48,4 +48,10 @@ export interface OAuthClientOptions<TScopes extends OAuthScope = never, TExtra e
      * the typed calls for it resolve to `undefined` for a user who hasn't granted it yet.
      */
     extraScopes?: readonly TExtra[] | undefined;
+    /**
+     * Only for Cloudflare Workers, where you pass `waitUntil` from `cloudflare:workers`. The client hands
+     * it every change to a user's tokens. Workers freezes a change once its request ends, and that user's
+     * later calls would wait on it forever. The `OAuth` plugin sets this for you.
+     */
+    keepOpen?: ((work: Promise<void>) => void) | undefined;
 }

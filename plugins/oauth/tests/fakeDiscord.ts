@@ -5,6 +5,7 @@ import { onTestFinished } from 'vite-plus/test';
 
 import type { IncomingHttpHeaders } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import type { Promisable } from 'type-fest';
 
 // how long discord's access tokens last
 export const WEEK_SECONDS = 7 * 24 * 60 * 60;
@@ -32,8 +33,10 @@ interface FakeDiscord {
 
 const OK = 200;
 const NO_CONTENT = 204;
+// listen() without a host also takes connections from other machines on the network
+const LOOPBACK = '127.0.0.1';
 
-export async function fakeDiscord(reply: (request: SeenRequest) => Reply): Promise<FakeDiscord> {
+export async function fakeDiscord(reply: (request: SeenRequest) => Promisable<Reply>): Promise<FakeDiscord> {
     const requests: SeenRequest[] = [];
     const server = createServer((request, response) => {
         const chunks: Buffer[] = [];
@@ -48,18 +51,19 @@ export async function fakeDiscord(reply: (request: SeenRequest) => Reply): Promi
                 body: Buffer.concat(chunks).toString()
             };
             requests.push(seen);
-            const { status = OK, json = {} } = reply(seen);
-            if (status === NO_CONTENT) {
-                response.writeHead(status).end();
-                return;
-            }
-            response.writeHead(status, { 'content-type': 'application/json' });
-            response.end(JSON.stringify(json));
+            void Promise.resolve(reply(seen)).then(({ status = OK, json = {} }) => {
+                if (status === NO_CONTENT) {
+                    response.writeHead(status).end();
+                    return;
+                }
+                response.writeHead(status, { 'content-type': 'application/json' });
+                response.end(JSON.stringify(json));
+            });
         });
-    }).listen(0);
+    }).listen(0, LOOPBACK);
     await once(server, 'listening');
     onTestFinished(() => void server.close());
     // justified: address() is AddressInfo once a TCP server is listening
     const { port } = server.address() as AddressInfo;
-    return { api: `http://localhost:${port}/api`, requests };
+    return { api: `http://${LOOPBACK}:${port}/api`, requests };
 }

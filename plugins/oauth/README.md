@@ -129,4 +129,6 @@ Bun.serve({
 const link = oauth.loginUrl();
 ```
 
+On Cloudflare Workers, also pass `keepOpen: waitUntil`, with `waitUntil` imported from `cloudflare:workers`.
+
 Check out the [OAuth guide](https://seedcord.org/guide/plugins/oauth) for more details on how to use the plugin.
