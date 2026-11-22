@@ -2,9 +2,10 @@
 
 import { cn } from 'cn';
 import { ChevronDown } from 'lucide-react';
-import { createContext, use, useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { createContext, use, useCallback, useId, useMemo, useState } from 'react';
 
 import { tw } from './lib/tw';
+import { localItems, useStoredItem } from './lib/useStoredItem';
 
 import type {
     ButtonHTMLAttributes,
@@ -58,6 +59,7 @@ export interface DisclosureProps {
     onOpenChange?: (open: boolean) => void;
     /**
      * If provided, the open/close state is persisted to localStorage under this key.
+     * Every Disclosure with the same key opens and closes together.
      * Only effective when the Disclosure is uncontrolled (no `open` prop).
      */
     storageKey?: string;
@@ -76,29 +78,16 @@ export function Disclosure({
     const panelId = useId();
     const isControlled = controlledOpen !== undefined;
     const [internalOpen, setInternalOpen] = useState(defaultOpen);
-    const open = isControlled ? controlledOpen : internalOpen;
-
-    useEffect(() => {
-        if (!storageKey || isControlled) return;
-        try {
-            const saved = globalThis.localStorage.getItem(storageKey);
-            if (saved !== null) setInternalOpen(saved === 'true');
-        } catch {
-            // localStorage throws in private-mode browsers and during SSR
-        }
-    }, [storageKey, isControlled]);
+    const saved = useStoredItem(localItems, storageKey);
+    const open = isControlled ? controlledOpen : saved === null ? internalOpen : saved === 'true';
 
     const setOpen = useCallback(
         (next: boolean): void => {
-            if (!isControlled) setInternalOpen(next);
-            onOpenChange?.(next);
-            if (storageKey && !isControlled) {
-                try {
-                    globalThis.localStorage.setItem(storageKey, String(next));
-                } catch {
-                    // same reason as above
-                }
+            if (!isControlled) {
+                setInternalOpen(next);
+                if (storageKey !== undefined) localItems.write(storageKey, String(next));
             }
+            onOpenChange?.(next);
         },
         [isControlled, onOpenChange, storageKey]
     );
@@ -171,7 +160,7 @@ export function DisclosurePanel({ children, className, ...props }: DisclosurePan
         <div
             {...props}
             id={panelId}
-            aria-hidden={!open}
+            inert={!open}
             data-state={open ? 'open' : 'closed'}
             className={cn(disclosurePanelBaseClassName, className)}
         >

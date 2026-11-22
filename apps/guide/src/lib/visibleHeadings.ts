@@ -28,7 +28,7 @@ export function useVisibleHeadingIds(items: readonly TOCItemType[]): ReadonlySet
                 .filter((entry): entry is [string, HTMLElement] => entry[1] !== null)
         );
 
-        // GuideShell only mounts this hook's callers once the page has a non-empty toc
+        // GuidePage only mounts this hook's callers once the page has a non-empty toc
         if (elements.size === 0) return;
 
         const intersecting = new Set<string>();

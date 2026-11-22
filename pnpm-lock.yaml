@@ -292,6 +292,9 @@ catalogs:
     yaml:
       specifier: ^2.9.1
       version: 2.9.1
+    zod:
+      specifier: ^4.6.7
+      version: 4.6.7
   eslint:
     '@eslint-react/eslint-plugin':
       specifier: ^5.18.1
@@ -684,6 +687,9 @@ importers:
       type-fest:
         specifier: catalog:deps
         version: 5.10.0
+      zod:
+        specifier: catalog:deps
+        version: 4.6.7
     devDependencies:
       '@discordjs/builders':
         specifier: catalog:peer
@@ -908,7 +914,7 @@ importers:
         specifier: catalog:deps
         version: 5.2.0
       zod:
-        specifier: ^4.6.7
+        specifier: catalog:deps
         version: 4.6.7
     devDependencies:
       '@mdx-js/mdx':

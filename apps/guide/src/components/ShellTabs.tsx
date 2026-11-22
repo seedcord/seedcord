@@ -1,9 +1,8 @@
 'use client';
 
-import { CodeBlock, SegmentedControl, cn } from '@seedcord/ui';
-import { useSyncExternalStore } from 'react';
+import { CodeBlock, SegmentedControl, cn, localItems, useStoredItem } from '@seedcord/ui';
 
-import { MANAGERS, getManager, getServerManager, setManager, subscribe } from '#lib/packageManager';
+import { MANAGERS, MANAGER_STORAGE_KEY, managerFrom } from '#lib/packageManager';
 
 import type { Manager } from '#lib/packageManager';
 import type { ReactElement } from 'react';
@@ -16,7 +15,7 @@ export interface ShellTabsProps {
 }
 
 export function ShellTabs({ commands, html }: ShellTabsProps): ReactElement {
-    const manager = useSyncExternalStore(subscribe, getManager, getServerManager);
+    const manager = managerFrom(useStoredItem(localItems, MANAGER_STORAGE_KEY));
 
     return (
         <CodeBlock
@@ -25,7 +24,7 @@ export function ShellTabs({ commands, html }: ShellTabsProps): ReactElement {
                 <SegmentedControl
                     options={OPTIONS}
                     value={manager}
-                    onChange={setManager}
+                    onChange={(next) => localItems.write(MANAGER_STORAGE_KEY, next)}
                     size="sm"
                     aria-label="Package manager"
                     className={cn('border-0 bg-transparent')}

@@ -52,6 +52,7 @@ export * from './lib/useIsMac';
 export * from './lib/useNavigateAndClose';
 export * from './lib/useRovingList';
 export * from './lib/useSiteHotkeys';
+export * from './lib/useStoredItem';
 export * from './lib/useTimedToggle';
 export type { CodeRepresentation } from './types/CodeRepresentation';
 

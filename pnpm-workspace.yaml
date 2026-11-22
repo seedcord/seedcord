@@ -87,6 +87,7 @@ catalogs:
     es-toolkit: ^1.53.2
     vite: npm:@voidzero-dev/vite-plus-core@1.6.0
     vite-plus: 1.6.0
+    zod: ^4.6.7
   eslint:
     '@eslint-react/eslint-plugin': ^5.18.1
     '@typescript-eslint/rule-tester': ^8.65.0

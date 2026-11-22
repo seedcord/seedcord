@@ -24,6 +24,7 @@ export * from './misc/errorReason';
 export * from './misc/hasErrorCode';
 export * from './misc/isInteractive';
 export * from './misc/isPortInUse';
+export * from './misc/KeyedQueue';
 export * from './misc/unlessAborted';
 export type { IsDigits, StripZeros } from './numbers/IsDigits';
 export * from './objects/isPlainObject';

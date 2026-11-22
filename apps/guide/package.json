@@ -37,7 +37,8 @@
         "takumi-js": "catalog:deps",
         "twoslash": "0.3.9",
         "twoslash-protocol": "0.3.9",
-        "type-fest": "catalog:deps"
+        "type-fest": "catalog:deps",
+        "zod": "catalog:deps"
     },
     "devDependencies": {
         "@discordjs/builders": "catalog:peer",
