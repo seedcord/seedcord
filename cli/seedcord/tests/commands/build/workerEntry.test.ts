@@ -11,7 +11,7 @@ import type { BakedIds } from '@seedcord/core/internal';
 function bakedIdsRun(ids: BakedIds): BakedIds {
     const [plugin] = workerEntry({
         layout: BotLayout.openAt('/bot'),
-        folders: [],
+        lists: { folders: [], emojis: [] },
         instanceKey: '/bot.ts',
         functionExports: () => Promise.resolve([]),
         rootKey: '/',

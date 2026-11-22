@@ -1,5 +1,6 @@
 import {
     commandRefOf,
+    expectedEmojis,
     GLOBAL_ID,
     linkCommands,
     readCommands,
@@ -16,6 +17,7 @@ import { applicationOf } from '#core/discord/applicationOf';
 import type { FoundCommand } from '#core/modules/CommandScanner';
 import type { REST } from '@discordjs/rest';
 import type { BakedIds, DeployResult, LinkedCommands } from '@seedcord/core/internal';
+import type { EmojiConfig } from '@seedcord/types';
 
 export interface CommandsInCode {
     found: readonly FoundCommand[];
@@ -33,7 +35,7 @@ interface DiscordReadOptions {
     rest: Pick<REST, 'get'>;
     // undefined when the bot config's commands.path is null
     commands: CommandsInCode | undefined;
-    emojis: Readonly<Record<string, unknown>> | undefined;
+    emojis: EmojiConfig | undefined;
 }
 
 interface DiscordRead extends Pick<LinkedCommands, 'notInCode' | 'multiGuild'> {
@@ -85,7 +87,7 @@ export async function readDiscord({ rest, commands, emojis }: DiscordReadOptions
     const application = await applicationOf(rest);
     const [linked, resolvedEmojis] = await Promise.all([
         commands ? linkDeployed(rest, application.id, commands) : NO_COMMANDS,
-        emojis ? resolveEmojis(rest, application.id, emojis) : {}
+        expectedEmojis(emojis).then((expected) => resolveEmojis(rest, application.id, expected))
     ]);
 
     return {

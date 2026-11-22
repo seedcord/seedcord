@@ -40,12 +40,13 @@ export {
 
 export { runHandlerGates } from '#gates/runGates';
 export { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
-export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
 export { lazyLogger } from '#src/miscellaneous/lazyLogger';
 export { currentApplication } from '#src/miscellaneous/currentApplication';
 export { readBotToken } from '#src/miscellaneous/readBotToken';
 export { bindEnv } from '#src/miscellaneous/bindViteEnv';
-export { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
+export { emojisOf, resolveEmojis } from '#src/miscellaneous/resolveEmojis';
+export { emojiNotFound, emojiUnreadable, expectedEmojis, folderEmoji } from '#src/miscellaneous/expectedEmojis';
+export type { ExpectedEmoji } from '#src/miscellaneous/expectedEmojis';
 
 export { BAKED_IDS_KEY, type BakedIds } from '#src/bakedIds';
 export { installLinks, warnLinks } from '#src/commands/CommandInjector';

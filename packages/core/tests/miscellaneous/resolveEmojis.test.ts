@@ -2,8 +2,10 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
 import { assert, describe, expect, it, vi } from 'vite-plus/test';
 
+import { folderEmoji } from '#src/miscellaneous/expectedEmojis';
 import { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
 
+import type { ExpectedEmoji } from '#src/miscellaneous/expectedEmojis';
 import type { REST } from '@discordjs/rest';
 import type { APIEmoji } from 'discord-api-types/v10';
 import type { Mock } from 'vite-plus/test';
@@ -12,6 +14,14 @@ const APP = 'app-1';
 
 function apiEmoji(name: string, id: string, animated = false): APIEmoji {
     return { name, id, animated };
+}
+
+function inApp(key: string, name: string): ExpectedEmoji {
+    return { kind: 'application', key, name, inFolder: false };
+}
+
+function inGuild(key: string, name: string, guildId = 'g1'): ExpectedEmoji {
+    return { kind: 'guild', key, name, guildId };
 }
 
 interface Fixture {
@@ -35,13 +45,15 @@ function restWith(
     return { rest: { get }, get };
 }
 
-function failureOf(configured: Record<string, unknown>, fixture = restWith()): Promise<unknown> {
-    return resolveEmojis(fixture.rest, APP, configured).catch((error: unknown) => error);
+function failureOf(expected: readonly ExpectedEmoji[], fixture = restWith()): Promise<unknown> {
+    return resolveEmojis(fixture.rest, APP, expected).catch((error: unknown) => error);
 }
 
 describe('resolveEmojis', () => {
     it('resolves an application emoji by name, animated flag included', async () => {
-        const resolved = await resolveEmojis(restWith().rest, APP, { Confirm: 'confirm', Spin: 'spin' });
+        const expected = [inApp('Confirm', 'confirm'), inApp('Spin', 'spin')];
+
+        const resolved = await resolveEmojis(restWith().rest, APP, expected);
 
         expect(`${resolved.Confirm}`).toBe('<:confirm:111>');
         expect(`${resolved.Spin}`).toBe('<a:spin:222>');
@@ -50,7 +62,7 @@ describe('resolveEmojis', () => {
     it('resolves a guild emoji from a name and guild id', async () => {
         const fixture = restWith({ g1: [apiEmoji('wave', '333')] });
 
-        const resolved = await resolveEmojis(fixture.rest, APP, { Wave: ['wave', 'g1'] });
+        const resolved = await resolveEmojis(fixture.rest, APP, [inGuild('Wave', 'wave')]);
 
         expect(resolved.Wave?.id).toBe('333');
     });
@@ -58,13 +70,13 @@ describe('resolveEmojis', () => {
     it('reads the guild route only once for two emojis from one guild', async () => {
         const { rest, get } = restWith({ g1: [apiEmoji('wave', '333'), apiEmoji('nod', '444')] });
 
-        await resolveEmojis(rest, APP, { Wave: ['wave', 'g1'], Nod: ['nod', 'g1'] });
+        await resolveEmojis(rest, APP, [inGuild('Wave', 'wave'), inGuild('Nod', 'nod')]);
 
         expect(get.mock.calls.map((call) => call[0])).toEqual([Routes.guildEmojis('g1')]);
     });
 
     it('throws one aggregate holding every emoji it could not resolve', async () => {
-        const caught = await failureOf({ Missing: 'nope', Gone: 'gone', Confirm: 'confirm' });
+        const caught = await failureOf([inApp('Missing', 'nope'), inApp('Gone', 'gone'), inApp('Confirm', 'confirm')]);
 
         assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.ConfigEmojiUnresolved));
         expect(caught.errors).toMatchObject([
@@ -76,7 +88,7 @@ describe('resolveEmojis', () => {
     it('reads the app emoji list once and reports each emoji when that read fails', async () => {
         const fixture = restWith({}, (route) => route === Routes.applicationEmojis(APP));
 
-        const caught = await failureOf({ Confirm: 'confirm', Spin: 'spin' }, fixture);
+        const caught = await failureOf([inApp('Confirm', 'confirm'), inApp('Spin', 'spin')], fixture);
 
         assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.ConfigEmojiUnresolved));
         expect(caught.errors).toMatchObject([
@@ -92,7 +104,7 @@ describe('resolveEmojis', () => {
     it('reads a guild once and reports each of its emojis when that read fails', async () => {
         const fixture = restWith({}, (route) => route === Routes.guildEmojis('g1'));
 
-        const caught = await failureOf({ Wave: ['wave', 'g1'], Nod: ['nod', 'g1'] }, fixture);
+        const caught = await failureOf([inGuild('Wave', 'wave'), inGuild('Nod', 'nod')], fixture);
 
         assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.ConfigEmojiUnresolved));
         expect(caught.errors).toMatchObject([
@@ -105,24 +117,22 @@ describe('resolveEmojis', () => {
         expect(fixture.get).toHaveBeenCalledOnce();
     });
 
-    it('throws a type error for a configured value that is neither a name nor a tuple', async () => {
-        const caught = await failureOf({ Bad: 42 });
-
-        expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.ConfigEmojiInvalid)).toBe(true);
-    });
-
-    it('reports a tuple with an empty slot as an invalid value', async () => {
-        const caught = await failureOf({ Hole: ['wave', ,] });
-
-        expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.ConfigEmojiInvalid)).toBe(true);
-    });
-
     it('reports an emoji whose payload has an empty id as not found', async () => {
-        const caught = await failureOf({ Wave: ['wave', 'g1'] }, restWith({ g1: [apiEmoji('wave', '')] }));
+        const caught = await failureOf([inGuild('Wave', 'wave')], restWith({ g1: [apiEmoji('wave', '')] }));
 
         expect(caught).toMatchObject({
             code: SeedcordErrorCode.ConfigEmojiNotFound,
             message: expect.stringContaining('guild g1') as string
+        });
+    });
+
+    it.for<{ from: string; emoji: ExpectedEmoji; fix: string }>([
+        { from: 'the emojis folder', emoji: folderEmoji({ key: 'Dot', name: 'dot' }), fix: 'seedcord emojis push' },
+        { from: 'bot.emojis', emoji: inApp('Dot', 'dot'), fix: 'Check the spelling' }
+    ])('gives the fix for a missing emoji that comes from $from', async ({ emoji, fix }) => {
+        expect(await failureOf([emoji])).toMatchObject({
+            code: SeedcordErrorCode.ConfigEmojiNotFound,
+            message: expect.stringContaining(fix) as string
         });
     });
 });

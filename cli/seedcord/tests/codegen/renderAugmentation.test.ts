@@ -567,12 +567,12 @@ export {};
 });
 
 describe('renderAugmentation emoji rows', () => {
-    it('renders emoji keys into EmojiMap, application for a string config and guild for a tuple config', () => {
+    it('renders each emoji key into EmojiMap with its tag, sorted by key', () => {
         const output = renderSlashWith({
             slash: {},
             userContextMenus: {},
             messageContextMenus: {},
-            emojis: { Confirm: 'string', Lol: 'tuple', Cancel: 'string' }
+            emojis: { Confirm: 'application', Lol: 'guild', Cancel: 'application' }
         });
 
         expect(output).toContain(
@@ -585,7 +585,7 @@ describe('renderAugmentation emoji rows', () => {
             slash: {},
             userContextMenus: {},
             messageContextMenus: {},
-            emojis: { 'thumbs-up': 'string' }
+            emojis: { 'thumbs-up': 'application' }
         });
 
         expect(output).toContain("        'thumbs-up': 'application';");
@@ -596,7 +596,7 @@ describe('renderAugmentation emoji rows', () => {
             slash: {},
             userContextMenus: {},
             messageContextMenus: {},
-            emojis: { "Tony's": 'string' }
+            emojis: { "Tony's": 'application' }
         });
 
         expect(output).toContain(String.raw`        'Tony\'s': 'application';`);
@@ -607,13 +607,13 @@ describe('renderAugmentation emoji rows', () => {
             slash: {},
             userContextMenus: {},
             messageContextMenus: {},
-            emojis: { Confirm: 'string', Lol: 'tuple' }
+            emojis: { Confirm: 'application', Lol: 'guild' }
         });
         const second = renderSlashWith({
             slash: {},
             userContextMenus: {},
             messageContextMenus: {},
-            emojis: { Lol: 'tuple', Confirm: 'string' }
+            emojis: { Lol: 'guild', Confirm: 'application' }
         });
 
         expect(first).toBe(second);

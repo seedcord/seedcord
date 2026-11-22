@@ -79,9 +79,12 @@ const REGISTRIES = `
         'Report Message': { cache: 'cached' };
     }
     interface EmojiMap {
+        '1Up': 'application';
         Confirm: 'application';
         Cancel: 'application';
+        PartyParrot: 'application';
         Streak: 'guild';
+        Yes: 'application';
     }
 `;
 

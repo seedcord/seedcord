@@ -1,0 +1,192 @@
+---
+title: The emojis CLI
+description: Upload the images in your emojis folder to your Discord application with seedcord emojis, and list, download, or delete them from a terminal or a CI job.
+---
+
+An application's emojis [belong to that one application](https://discord.com/developers/docs/resources/emoji#emoji-object-applicationowned-emoji). By hand, you'd upload each image in the developer portal, then do it all again for the second application you test on.
+
+`seedcord emojis` reads the images in your `emojis` folder and uploads the ones that your application doesn't have. Commit the folder so everyone on your team pushes the same images to their own test application. [Components](/components#emojis-by-name) shows how your code reads them back through [`Emojis`](ref:gateway/Emojis).
+
+<Shell exec="seedcord emojis" />
+
+In a terminal that opens a menu. Without a terminal it prints the help text.
+
+## Before you run it
+
+A scaffolded project has an `emojis` script. [Your first bot](/first-bot#scripts) explains why the CLI runs through scripts.
+
+Every subcommand reads `DISCORD_BOT_TOKEN` from your environment or a [`.env` file](/build/env#the-env-files). Each one also reads [`seedcord.config.ts`](/build/config), runs its [Vite plugins](/build/vite-plugins), and imports the module `instance` points at. That import [constructs your bot](/tooling/codegen#codegen-constructs-your-bot) and never starts it.
+
+The folder is `./emojis` beside `seedcord.config.ts`. Set `emojis.dir` to keep it somewhere else.
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    emojis: { dir: './assets/emojis' }
+});
+```
+
+{/* prettier-ignore-start */}
+
+| subcommand | what it does | flags |
+| --- | --- | --- |
+| `push` | uploads the files that Discord is missing | `--replace`, `--yes` |
+| `list` | compares the folder with the emojis on Discord | `--check`, `--json` |
+| `pull` | downloads the emojis that the folder is missing | `--guild`, `--force` |
+| `remove` | deletes emojis from Discord | `--delete-file`, `--yes` |
+
+{/* prettier-ignore-end */}
+
+`pull` and `remove` take emoji names after the subcommand, as in `seedcord emojis remove wave old_logo`, and `--replace` takes them after the flag. The global `--verbose` flag prints the resolved config and full stack traces on a failure. It also lists the already uploaded emojis by name in a `push` preview. In `list`, it puts each emoji on its own line with its key, plus its id once it's on Discord.
+
+## Upload your folder
+
+<Shell exec="seedcord emojis push" />
+
+`push` matches a file to an emoji by name. `wave.png` is the emoji `wave`, in any subfolder. It prints what it found, then asks before it uploads.
+
+```txt output
+emojis  4 emojis
+  + party_parrot wave
+    2 already uploaded
+    Changed an image? seedcord emojis push --replace <name> uploads it again.
+
+only on Discord  1 emoji, kept
+    old_logo
+```
+
+The `+` row holds the files Discord doesn't have yet. `push` never deletes an emoji that doesn't have a file, so `old_logo` is still there afterwards. The prompt that follows defaults to no.
+
+Every command that reads the folder checks each file first. If a check fails, the command stops and lists every file that failed.
+
+{/* prettier-ignore-start */}
+
+| check | what passes |
+| --- | --- |
+| the format | a `.png`, `.jpg`, `.jpeg`, `.gif`, `.apng`, `.webp`, or `.avif` file |
+| the name | 2 to 32 letters, digits, and underscores, which is what Discord takes for an emoji name |
+| one file per name | `wave.png` and `reactions/wave.gif` would both be the emoji `wave` |
+| one file per key | `party_parrot.png` and `PartyParrot.png` would both be `Emojis.PartyParrot` |
+
+{/* prettier-ignore-end */}
+
+`push` also stops before it sends anything if a file it's about to upload is over 2048 KiB. [Discord shrinks an upload](https://discord.com/developers/docs/resources/emoji#create-application-emoji) to 128 pixels and rejects it with [error 50138](https://discord.com/developers/docs/topics/opcodes-and-status-codes#json-json-error-codes) when the result is still over 256 KiB. When Discord rejects a file, `push` uploads the rest, warns about each file that failed with Discord's reason, then throws `CliSomeFailed` and exits `1`.
+
+<Callout type="tip">
+
+Discord resizes most uploads to 128 pixels. A lossy AVIF or an animated GIF of 256 KiB or less keeps its full size. Use one of those for an emoji that has to look sharp when it's shown large. It's a cool little trick Discord's docs don't mention.
+
+</Callout>
+
+While `seedcord dev` runs, a file you add to the folder [needs a restart](/tooling/hot-reload#saves-that-need-a-restart). Run `push` first. Your bot stops at startup if the folder has a file that Discord doesn't have, and the error tells you to run `seedcord emojis push`. An edge bot's `seedcord build` fails the same way.
+
+On an edge bot, if `push` uploads anything, it also prints a reminder to run `seedcord build` again because the Worker holds the ids it read at build time. [Workers](/build/workers) has the order.
+
+### Replace an image
+
+Since `push` only compares names, it counts a file you edited as already uploaded. Pass its name to `--replace` to send it again.
+
+<Shell exec="seedcord emojis push --replace wave" />
+
+Discord can't swap the image on an emoji, so `push` uploads a new one under the same name and deletes the old one. The emoji gets a new id. `Emojis` has the new id on the next start, or after the next `seedcord build` on an edge bot. A message your bot already sent still holds the old one.
+
+`--replace` without names opens a picker with every uploaded file in it.
+
+## Compare the folder with Discord
+
+<Shell exec="seedcord emojis list" />
+
+`list` only reads. It sorts every emoji into one of three groups.
+
+```txt output
+uploaded  2 emojis
+    cancel confirm
+
+not uploaded  2 emojis
+  + party_parrot wave
+
+only on Discord  1 emoji
+    old_logo
+
+Run seedcord emojis push to upload the 2 that are missing.
+```
+
+If the "not uploaded" group isn't empty, `--check` throws the error that your bot throws at startup and exits `1`. Use it in CI before a deploy.
+
+`--json` prints the same three groups as JSON on stdout, under `uploaded`, `notUploaded`, and `onlyOnDiscord`, along with `application` and `folder`. The step lines go to stderr, so `seedcord emojis list --json > emojis.json` writes a file a script can parse.
+
+## Download what's on Discord
+
+<Shell exec="seedcord emojis pull" />
+
+`pull` is for the emojis that only exist on Discord, like the ones you uploaded in the developer portal before you had a folder. It downloads every emoji that the folder doesn't have a file for. Pass names to download only those.
+
+```txt output
+emojis  2 downloads
+  + old_logo.webp
+  ~ wave.webp
+```
+
+Every download is a `.webp` file, animated ones included. The `~` row holds downloads that overwrite a file you have, and it only shows up when you allow that.
+
+If the folder already has some of the emojis, `pull` asks in a terminal whether to overwrite them, and the answer defaults to no. If you answer no, it downloads only the new ones. `--force` answers yes without asking. An overwrite deletes your `wave.png` and writes `wave.webp`.
+
+`--guild` downloads a guild's emojis in place of the application's. Give it an id, or leave the id out to pick from the guilds the bot is in. Put any names before the flag. `pull --guild wave` reads `wave` as the guild's id.
+
+<Shell exec="seedcord emojis pull --guild" />
+
+The downloads go into the same folder, so the next `push` uploads them to your application.
+
+## Delete emojis from Discord
+
+<Shell exec="seedcord emojis remove wave" />
+
+`remove` deletes the emojis you list. Without names, it opens a picker with every emoji on the application, and each one with a file shows its path.
+
+```txt output
+seed beta  1 emoji
+  - wave
+    Keeping 1 file in emojis, so the next seedcord emojis push uploads it again.
+```
+
+When an emoji you picked still has a file, `remove` asks in a terminal "Delete 1 file from emojis too?". Answer no to keep the file, which the next `push` uploads again. Answer yes, or pass `--delete-file`, to delete both. `remove` then asks once more before it deletes anything, and that prompt defaults to no. If you keep the file, `Emojis` still has its key, and your bot stops at startup until that emoji is back on Discord.
+
+## A second application
+
+Every subcommand works on the application that its token belongs to. The CLI [picks the mode](/build/env#picking-the-mode) from your shell. With a production token in `.env.production`, this uploads to your production application.
+
+<Shell exec="seedcord emojis push" before="export ENV=production" />
+
+The same emoji has a different id on each application. Your code doesn't change, since each bot looks up its ids by name when it starts. An edge bot does that when you build it.
+
+## The pickers
+
+The picker in `remove` and `--replace` filters as you type. `Tab` selects the row under the cursor, `Enter` finishes, and `Esc` cancels with nothing changed. [The commands CLI](/tooling/commands#the-pickers) lists every key.
+
+## Without a terminal, or with CI set
+
+Nothing gets uploaded or deleted without `--yes` or a confirmed prompt. `pull` doesn't overwrite a file without `--force`, and `remove` keeps your files without `--delete-file`. Neither one stops a script to ask.
+
+{/* prettier-ignore-start */}
+
+| run | in a terminal | without a terminal, or `CI` set |
+| --- | --- | --- |
+| `seedcord emojis` | opens the menu | prints the help |
+| `push` | previews, then asks | throws `CliNeedsYes` unless you pass `--yes` |
+| `push --replace` without names | opens the picker | throws `CliPickerNeedsTerminal` |
+| `list` | prints | prints |
+| `pull` | asks before it overwrites a file | skips the files you have unless you pass `--force` |
+| `pull --guild` without an id | lists the bot's guilds | throws `CliPickerNeedsTerminal` |
+| `remove` without names | opens the picker | throws `CliPickerNeedsTerminal` |
+| `remove` with names | asks about the files, then confirms | throws `CliNeedsYes` unless you pass `--yes`, and keeps the files unless you pass `--delete-file` |
+
+{/* prettier-ignore-end */}
+
+A non-empty `CI` counts as no terminal even when stdin and stdout are real. [The commands CLI](/tooling/commands#without-a-terminal-or-with-ci-set) explains when to set it yourself.
+
+<Shell exec="seedcord emojis push --yes" />
+
+With `DISCORD_BOT_TOKEN` set, that line is a complete CI step. On an edge bot, run it before `seedcord build` because the build reads the emoji ids from Discord.

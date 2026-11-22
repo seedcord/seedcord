@@ -5,7 +5,7 @@ import { ApplicationCommandOptionType, ApplicationCommandType, InteractionContex
 
 import type { FoundCommand } from '#core/modules/CommandScanner';
 import type { OptionKind, RouteCache, SlashOption, SlashRouteEntry } from '@seedcord/core/internal';
-import type { EmojiConfig, ILogger } from '@seedcord/types';
+import type { ILogger } from '@seedcord/types';
 import type {
     APIApplicationCommandBasicOption,
     RESTPostAPIApplicationCommandsJSONBody,
@@ -22,13 +22,10 @@ export type SlashTables = Record<string, SlashRouteEntry>;
 // keyed by the command name discord shows in the menu
 export type ContextMenuTables = Record<string, { cache: RouteCache }>;
 
-export type EmojiKinds = Record<string, 'string' | 'tuple'>;
-
-export interface Augmentation {
+export interface CommandTables {
     slash: SlashTables;
     userContextMenus: ContextMenuTables;
     messageContextMenus: ContextMenuTables;
-    emojis: EmojiKinds;
 }
 
 export type ScannedCommand = Pick<FoundCommand, 'sourceFile' | 'json'>;
@@ -58,19 +55,11 @@ function cacheStateOf(contexts: RESTPostAPIApplicationCommandsJSONBody['contexts
     return contexts.every((context) => context === InteractionContextType.Guild) ? 'cached' : undefined;
 }
 
-function mapEmojis(emojiConfig: EmojiConfig): EmojiKinds {
-    const emojis: EmojiKinds = {};
-    for (const [key, value] of Object.entries(emojiConfig)) {
-        emojis[key] = Array.isArray(value) ? 'tuple' : 'string';
-    }
-    return emojis;
-}
-
 // reads each builder back through toJSON() because djs erases option names at the type level
 export class AugmentationBuilder {
     constructor(private readonly logger: ILogger) {}
 
-    public generate(commands: readonly ScannedCommand[], emojiConfig: EmojiConfig): Augmentation {
+    public generate(commands: readonly ScannedCommand[]): CommandTables {
         const slash: SlashTables = {};
         const sourceByRoute = new Map<string, string>();
         const sourceByUserName = new Map<string, string>();
@@ -100,11 +89,10 @@ export class AugmentationBuilder {
 
         const userContextMenus = Object.fromEntries(userMenus);
         const messageContextMenus = Object.fromEntries(messageMenus);
-        const emojis = mapEmojis(emojiConfig);
         this.logger.debug(
-            `Generated ${Object.keys(slash).length} slash route(s), ${Object.keys(userContextMenus).length} user and ${Object.keys(messageContextMenus).length} message context-menu command(s), ${Object.keys(emojis).length} emoji(s)`
+            `Generated ${Object.keys(slash).length} slash route(s), ${Object.keys(userContextMenus).length} user and ${Object.keys(messageContextMenus).length} message context-menu command(s)`
         );
-        return { slash, userContextMenus, messageContextMenus, emojis };
+        return { slash, userContextMenus, messageContextMenus };
     }
 
     private collectSlash(

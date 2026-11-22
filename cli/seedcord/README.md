@@ -23,7 +23,7 @@
 
 ## About
 
-`seedcord` is the CLI a bot project runs during development and at build time. It reads `seedcord.config.ts` and gives you a dev server with hot reload, a production build, the codegen that types your commands, a way to deploy those commands to Discord, and new files written from your own templates.
+`seedcord` is the CLI a bot project runs during development and at build time. It reads `seedcord.config.ts` and gives you a dev server with hot reload, a production build, and the codegen that types your commands. It also deploys those commands to Discord, uploads your emojis from a folder of images, and writes new files from your own templates.
 
 It loads your bot through Vite every time, with any Vite plugin you add. Those plugins, your `.env` modes, and bundled data files you set up in dev work the same way in the build. One `seedcord build` makes a Node or Bun server, a single Bun binary, a Cloudflare Worker, or a package another app installs and starts.
 
@@ -49,6 +49,7 @@ Run it through your project's scripts, like `pnpm dev`. A global `seedcord` thro
 | `seedcord build` | type checks the bot and bundles it into `outDir` with Vite. An edge bot builds into a Cloudflare worker |
 | `seedcord codegen` | writes the typed augmentations for your commands and config |
 | `seedcord commands` | deploys, lists and cleans up your commands on Discord |
+| `seedcord emojis` | uploads the images in your `emojis` folder to your application, and lists, downloads or deletes its emojis |
 | `seedcord make` | writes new files from one of your Handlebars templates, or one an installed plugin ships |
 | `seedcord ask` | searches the guide for a question, a pasted error, or an error code, and works outside a project |
 
@@ -74,6 +75,19 @@ seedcord commands clean --all-guilds --yes  # delete them
 seedcord commands purge                     # pick where, then delete every command there
 seedcord commands purge --guilds 111 222    # list every command in those guilds
 seedcord commands purge --global --yes      # delete every global command
+```
+
+`emojis` works on the images in `./emojis`, beside your config. `wave.png` uploads as the emoji `wave`, and your code reads it as `Emojis.Wave`:
+
+```sh
+seedcord emojis                        # pick what to do from a menu
+seedcord emojis push                   # show what's missing on Discord, then ask before uploading
+seedcord emojis push --replace wave    # upload wave again after you changed its image
+seedcord emojis list                   # compare the folder with Discord
+seedcord emojis list --check           # fail when a file isn't uploaded, for CI
+seedcord emojis pull                   # download the emojis your folder doesn't have
+seedcord emojis pull --guild           # pick a guild and download its emojis
+seedcord emojis remove wave            # delete wave from Discord, and ask about its file
 ```
 
 In CI, or anywhere without a terminal, nothing changes on Discord unless you pass `--yes`.

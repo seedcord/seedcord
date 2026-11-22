@@ -9,6 +9,7 @@ import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 
 import type { RealPath } from '#core/project/realPath';
 
@@ -19,12 +20,7 @@ async function projectRoot(): Promise<RealPath> {
 }
 
 function filesUnder(root: RealPath): ProjectFiles {
-    return new ProjectFiles({
-        root,
-        configFile: realPath(join(root, 'seedcord.config.ts')),
-        files: [],
-        target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'dist')) }
-    });
+    return new ProjectFiles(resolvedConfigOf(root, { root }));
 }
 
 // import.meta.glob's output lists each match as a "./key": entry, relative to base
@@ -70,12 +66,12 @@ describe('the build globs', () => {
             await mkdir(join(projectDir, file, '..'), { recursive: true });
             await writeFile(join(projectDir, file), '{}\n');
         }
-        const files = new ProjectFiles({
-            root: realPath(join(projectDir, rootDir)),
-            configFile: realPath(join(projectDir, 'seedcord.config.ts')),
-            files: [realPath(join(projectDir, listedDir))],
-            target: { kind: 'server', start: undefined, outDir: realPath(join(projectDir, 'dist')) }
-        });
+        const files = new ProjectFiles(
+            resolvedConfigOf(projectDir, {
+                root: realPath(join(projectDir, rootDir)),
+                files: [realPath(join(projectDir, listedDir))]
+            })
+        );
         const { layout } = files;
         const keyOf = (file: string): string => BotLayout.keyUnder(projectDir, file);
         const listed = tree.map((file) => join(projectDir, file)).filter((file) => layout.isListedFile(file));
@@ -93,12 +89,9 @@ describe('the build globs', () => {
             const root = await projectRoot();
             await mkdir(join(root, folder));
             await writeFile(join(root, folder, 'hi.json'), '{}\n');
-            const { layout } = new ProjectFiles({
-                root,
-                configFile: realPath(join(root, 'seedcord.config.ts')),
-                files: [realPath(join(root, folder))],
-                target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'dist')) }
-            });
+            const { layout } = new ProjectFiles(
+                resolvedConfigOf(root, { root, files: [realPath(join(root, folder))] })
+            );
 
             await expect(globKeys(root, layout.listedFileGlobs())).resolves.toEqual([`/${folder}/hi.json`]);
         }
@@ -113,8 +106,19 @@ describe('ProjectFiles', () => {
 
         await files.pathsWithHash();
         await mkdir(join(root, 'made-on-load'));
+        const { folders } = await files.builtLists();
 
-        await expect(files.foldersIncludingEmpty()).resolves.toContain('/made-on-load');
+        expect(folders).toContain('/made-on-load');
+    });
+
+    it('lists the emojis folder for a built bot without the file paths', async () => {
+        const root = await projectRoot();
+        await mkdir(join(root, 'emojis'));
+        await writeFile(join(root, 'emojis', 'confirmation_check.png'), '');
+
+        const { emojis } = await filesUnder(root).builtLists();
+
+        expect(emojis).toEqual([{ key: 'ConfirmationCheck', name: 'confirmation_check' }]);
     });
 
     it('lists only files as modules when a folder is named like one', async () => {

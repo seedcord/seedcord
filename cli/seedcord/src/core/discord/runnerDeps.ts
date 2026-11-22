@@ -7,7 +7,7 @@ import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 import type { REST } from '@discordjs/rest';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
-export type DiscordRest = Pick<REST, 'get' | 'put' | 'delete' | 'on' | 'off'>;
+export type DiscordRest = Pick<REST, 'get' | 'put' | 'post' | 'patch' | 'delete' | 'on' | 'off' | 'cdn'>;
 
 export interface RunnerDeps {
     readonly projectLoader: ProjectOpener;

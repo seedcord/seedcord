@@ -3,6 +3,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
+import { isInside } from '@seedcord/utils/internal';
 
 import { viteEnvFiles } from '#core/modules/viteEnvFiles';
 
@@ -12,7 +13,7 @@ import type { FSWatcher } from 'node:fs';
 
 const logger = new Logger('HMR', { channel: 'hmr' });
 
-type RestartConfig = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'instance' | 'viteMode' | 'hmr'>;
+type RestartConfig = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'instance' | 'viteMode' | 'hmr' | 'emojis'>;
 
 // every file whose save triggers a dev restart
 export class RestartFiles {
@@ -42,6 +43,8 @@ export class RestartFiles {
 
     public needsRestart(file: string): boolean {
         if (this.hiddenFromVite(file) || this.layout.isProjectFile(file) || file === this.config.instance) return true;
+        // the bot only reads the emojis folder at startup
+        if (isInside(this.config.emojis.dir, file)) return true;
         return this.patternGroups.some((patterns) => this.layout.matchesFiles(file, patterns));
     }
 

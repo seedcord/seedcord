@@ -10,18 +10,14 @@ import { CommandScanner } from '#core/modules/CommandScanner';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 import { emptyModuleGraph } from '#tests/emptyModuleGraph';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { RealPath } from '#core/project/realPath';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 function filesAt(root: RealPath): ProjectFiles {
-    return new ProjectFiles({
-        root,
-        configFile: realPath(join(root, 'seedcord.config.ts')),
-        files: [],
-        target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'dist')) }
-    });
+    return new ProjectFiles(resolvedConfigOf(root, { root }));
 }
 
 const UNCHANGED = { prepareCommands: () => Promise.resolve() };

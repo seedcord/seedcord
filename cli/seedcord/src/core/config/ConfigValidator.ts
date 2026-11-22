@@ -70,6 +70,15 @@ function* makeProblems(value: unknown): Generator<SeedcordTypeError> {
     }
 }
 
+function* emojisProblems(value: unknown): Generator<SeedcordTypeError> {
+    if (value === undefined) return;
+    if (!isPlainObject(value)) {
+        yield invalidField('emojis', `an object, like ${paint.bold("{ dir: './assets/emojis' }")}`);
+        return;
+    }
+    if (value.dir !== undefined && !isNonEmptyString(value.dir)) yield invalidField('emojis.dir', 'a folder path');
+}
+
 function* tunnelProblems(value: unknown): Generator<SeedcordTypeError> {
     if (value === undefined || typeof value === 'boolean') return;
     // discord only accepts an https interactions endpoint
@@ -136,6 +145,7 @@ export class ConfigValidator {
         yield* this.buildProblems(raw.build);
         yield* devProblems(raw.dev);
         yield* makeProblems(raw.make);
+        yield* emojisProblems(raw.emojis);
         if (raw.vitePlugins !== undefined && typeof raw.vitePlugins !== 'function') {
             yield invalidField(
                 'vitePlugins',

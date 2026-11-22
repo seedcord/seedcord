@@ -9,6 +9,7 @@ import { WorkerEnv } from '#core/modules/workerEnv';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 import { edgeFolder } from '#tests/edgeFolder';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 
 import type { LogRecord } from '@seedcord/types';
 
@@ -18,14 +19,8 @@ async function configFiles(mode = 'development'): Promise<{ files: RestartFiles;
     const cloudflareConfig = realPath(folder.cloudflareConfig);
     const dir = realPath(dirname(cloudflareConfig));
     const { files } = await WorkerEnv.load(cloudflareConfig, mode);
-    const paths = {
-        root: dir,
-        configFile: realPath(join(dir, 'seedcord.config.ts')),
-        files: [],
-        target: { kind: 'server', start: undefined, outDir: realPath(join(dir, 'dist')) }
-    } as const;
-    const config = { ...paths, instance: realPath(join(dir, 'bot.ts')), viteMode: mode };
-    const { layout } = new ProjectFiles({ ...paths, files: [] });
+    const config = resolvedConfigOf(dir, { root: dir, instance: realPath(join(dir, 'bot.ts')), viteMode: mode });
+    const { layout } = new ProjectFiles(config);
     return {
         files: new RestartFiles(config, layout, [basename(cloudflareConfig), ...files]),
         config: cloudflareConfig
@@ -66,7 +61,10 @@ describe('RestartFiles', () => {
         ['pnpm-lock.yaml', true],
         ['tsconfig.build.json', true],
         ['src/package.json', false],
-        ['src/tsconfig.json', false]
+        ['src/tsconfig.json', false],
+        ['emojis/wave.png', true],
+        ['emojis/reactions/party.gif', true],
+        ['src/emojis/wave.png', false]
     ])('asks for a restart when %s is saved: %s', async (file, expected) => {
         const { files, config } = await configFiles();
 

@@ -275,6 +275,33 @@ describe('ProjectLoader make', () => {
     });
 });
 
+describe('ProjectLoader emojis', () => {
+    it.each([
+        ['./emojis by default', undefined, 'emojis'],
+        ['emojis.dir', { dir: './assets/emojis' }, 'assets/emojis']
+    ])('reads the emoji folder from %s, beside the config', async (_from, emojis, folder) => {
+        const { projectDir, load } = projectWith({ ...MINIMAL, root: './src', emojis });
+
+        const resolved = await load();
+
+        expect(resolved.emojis).toEqual({ dir: resolve(projectDir, folder) });
+    });
+
+    it.each([
+        ['emojis', './emojis'],
+        ['emojis.dir', { dir: 3 }],
+        // an empty path would resolve to the config's own folder
+        ['emojis.dir', { dir: '' }]
+    ])('throws CliConfigInvalidField naming %s for a malformed emojis', async (field, emojis) => {
+        const { load } = projectWith({ ...MINIMAL, emojis });
+
+        await expect(load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigInvalidField,
+            message: expect.stringContaining(field) as string
+        });
+    });
+});
+
 describe('ProjectLoader paths with a #', () => {
     it('throws CliPathHasHash for a file under root whose name contains a #', async () => {
         const { projectDir, load } = projectWith(MINIMAL);

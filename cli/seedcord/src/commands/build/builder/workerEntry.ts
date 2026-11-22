@@ -6,6 +6,7 @@ import { envBootstrapSource } from '#core/modules/envBootstrap';
 
 import { builtFilesSource, loadListedFiles, PLACEHOLDER_ROOT } from './builtFiles';
 
+import type { BuiltLists } from '#core/project/ProjectFiles';
 import type { EntryPlugins } from './builtFiles';
 import type { PluginConfig } from '@cloudflare/vite-plugin';
 import type { BakedIds } from '@seedcord/core/internal';
@@ -38,7 +39,7 @@ type EntryMode = { kind: 'build'; ids: BakedIds } | { kind: 'dev'; root: string;
 
 interface WorkerEntryOptions {
     layout: BotLayout;
-    folders: string[];
+    lists: BuiltLists;
     instanceKey: string;
     rootKey: string;
     functionExports: () => Promise<string[]>;
@@ -78,7 +79,7 @@ function modeSetup(mode: EntryMode): ModeSetup {
 }
 
 // the entry imports these in order before the instance file
-function setupSources({ layout, folders, rootKey, mode }: WorkerEntryOptions): Map<string, string> {
+function setupSources({ layout, lists, rootKey, mode }: WorkerEntryOptions): Map<string, string> {
     const { root, cwd, sourcePaths, modules } = modeSetup(mode);
     const rootExpression = JSON.stringify(root);
     return new Map([
@@ -86,7 +87,7 @@ function setupSources({ layout, folders, rootKey, mode }: WorkerEntryOptions): M
         ...modules,
         // the instance file may read env while it loads
         [BIND_ENV_ID, envBootstrapSource({ runtime: 'worker' })],
-        [BUILT_FILES_ID, builtFilesSource({ layout, folders, rootExpression, rootKey, sourcePaths })]
+        [BUILT_FILES_ID, builtFilesSource({ layout, lists, rootExpression, rootKey, sourcePaths })]
     ]);
 }
 

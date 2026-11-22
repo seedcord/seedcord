@@ -1,5 +1,7 @@
 import { BOT_FILES_KEY, setBuiltFiles } from '@seedcord/utils/internal';
 
+import type { FolderEmoji } from '@seedcord/utils/internal';
+
 // every edge worker gets this root from the seedcord build
 export const BUILT_ROOT = '/bot';
 
@@ -15,13 +17,15 @@ function foldersOf(keys: readonly string[]): string[] {
 // writes the object that seedcord build writes onto the slot. keys look like '/handlers/Ping.ts'
 export function registerBuiltFiles(
     modules: Record<string, Record<string, unknown>>,
-    emptyFolders: readonly string[] = []
+    emptyFolders: readonly string[] = [],
+    emojis: FolderEmoji[] = []
 ): Disposable {
     return setBuiltFiles({
         root: BUILT_ROOT,
         listed: [],
         skippedFolders: [],
         folders: [...new Set([...foldersOf(Object.keys(modules)), ...emptyFolders])],
+        emojis,
         modules: Object.fromEntries(
             Object.entries(modules).map(([key, exported]) => [key, () => Promise.resolve(exported)])
         ),

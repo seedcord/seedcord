@@ -6,7 +6,7 @@ ignorecase: true
 # third person only. "you want" and "its own" are fine
 tokens:
   # a message, a prompt, or a page really does say or ask something
-  - '(?<!\b(?:message|messages|error|errors|prompt|terminal|page|pages|changelog|section|guide|docs?|readme|comment|heading|line|note|callout|output|hint|warning|label|title|question|text)(?: that| which)? )(?:says|asks)'
+  - '(?<!\b(?:message|messages|error|errors|prompt|terminal|page|pages|changelog|section|guide|docs?|readme|comment|heading|line|note|callout|output|hint|warning|label|title|question|text)(?: that| which)? )(?:says)'
   - 'knows'
   - 'wants'
   - 'sees'

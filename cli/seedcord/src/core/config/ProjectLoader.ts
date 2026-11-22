@@ -126,7 +126,8 @@ export class ProjectLoader {
             make: {
                 templates: realPathUnder(configDir, config.make?.templates ?? 'templates'),
                 helpers: config.make?.helpers ?? {}
-            }
+            },
+            emojis: { dir: realPathUnder(configDir, config.emojis?.dir ?? 'emojis') }
         } satisfies ResolvedSeedcordConfig;
     }
 

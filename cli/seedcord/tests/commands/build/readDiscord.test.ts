@@ -1,7 +1,12 @@
+import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { BuilderComponent } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { setCliFiles } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vite-plus/test';
+import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { readDiscord } from '#commands/build/builder/readDiscord';
 
@@ -53,6 +58,19 @@ describe('readDiscord', () => {
         const read = await readDiscord({ rest, commands: undefined, emojis: { Wave: 'wave' } });
 
         expect(read.ids.emojis.Wave?.id).toBe('55');
+    });
+
+    it('resolves the emojis folder without a bot.emojis', async () => {
+        const project = await mkdtempDisposable(join(tmpdir(), 'seedcord-emojis-'));
+        onTestFinished(() => project.remove());
+        await mkdir(join(project.path, 'emojis'));
+        await writeFile(join(project.path, 'emojis', 'dot.png'), '');
+        using _cli = setCliFiles({ root: project.path, listed: [], skippedFolders: [], emojiFolder: '/emojis' });
+        const rest = restWith({ [Routes.applicationEmojis(APP_ID)]: { items: [{ name: 'dot', id: '66' }] } });
+
+        const read = await readDiscord({ rest, commands: undefined, emojis: undefined });
+
+        expect(read.ids.emojis.Dot?.id).toBe('66');
     });
 
     it('links a global command to its deployed id', async () => {

@@ -9,19 +9,15 @@ import { edgeViteConfig, serverViteConfig } from '#commands/dev/runtime/devServe
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { holdViteHmrPort } from '#tests/viteHmrPort';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { BotLayout } from '@seedcord/utils/internal';
 import type { InlineConfig } from 'vite';
 
-function configAt(root: string): Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target'> {
-    return {
-        root: realPath(root),
-        configFile: realPath(join(root, 'x.ts')),
-        files: [],
-        target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'dist')) }
-    };
+function configAt(root: string): ResolvedSeedcordConfig {
+    return resolvedConfigOf(root, { root: realPath(root), configFile: realPath(join(root, 'x.ts')) });
 }
 
 function layoutAt(root: string): BotLayout {

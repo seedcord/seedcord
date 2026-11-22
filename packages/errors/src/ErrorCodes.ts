@@ -26,6 +26,10 @@ export enum SeedcordErrorCode {
     ConfigEdgeRestSweeper = 1010,
     /** Another process already listens on the port seedcord tries to listen on. */
     PortInUse = 1011,
+    /** A file in the emojis folder can't become an emoji. */
+    ConfigEmojiFileUnusable = 1012,
+    /** The emojis folder has two or more problems, like a file that can't become an emoji or two files with one name. */
+    ConfigEmojiFolderInvalid = 1013,
 
     /** A startup task was added or removed while startup ran, or added after it finished. */
     LifecycleTaskChangeRejected = 1101,
@@ -354,12 +358,12 @@ export enum SeedcordErrorCode {
     CliDevRuntimeNotRunning = 3131,
     /** `seedcord commands deploy` ran on a bot whose `commands.path` is `null`. */
     CliDeployNoCommandsFolder = 3132,
-    /** `seedcord commands deploy` ran without `--yes` where it cannot ask first. */
-    CliDeployNeedsYes = 3133,
+    /** A command that asks first ran without `--yes`, outside a terminal or with `CI` set. */
+    CliNeedsYes = 3133,
     /** A class carrying `@RegisterCommand` builds a component that is not a command or a context menu. */
     CliCommandNotACommand = 3134,
-    /** `seedcord commands clean` or `purge` could not delete some of the commands it picked. */
-    CliCommandsNotDeleted = 3135,
+    /** A command failed on some of its items and warned about each one. */
+    CliSomeFailed = 3135,
     /** The CLI ran on Bun for an edge bot. */
     CliEdgeOnBun = 3136,
     /** An edge bot's `cloudflare.config.ts` doesn't set `worker`. */
@@ -390,6 +394,14 @@ export enum SeedcordErrorCode {
     CliAskFailed = 3149,
     /** The bot comes from a version of `@seedcord/gateway` or `@seedcord/http` that this CLI can't load. */
     CliHostContractMismatch = 3150,
+    /** `seedcord emojis` got a name that the emojis folder or Discord doesn't have. */
+    CliEmojiNameUnknown = 3151,
+    /** A flag or command that opens a picker ran without a terminal, or with `CI` set. */
+    CliPickerNeedsTerminal = 3152,
+    /** Discord's CDN didn't send an emoji's image to `seedcord emojis pull`. */
+    CliEmojiDownloadFailed = 3153,
+    /** A replace in `seedcord emojis push` failed, and putting the old emoji back failed too. */
+    CliEmojiRollbackFailed = 3154,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

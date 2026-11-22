@@ -103,6 +103,7 @@ function asBuiltBot({ root, configFile }: { root: string; configFile: string }):
         listed: [],
         skippedFolders: [],
         folders: [],
+        emojis: [],
         modules: {},
         listedFiles: {}
     });

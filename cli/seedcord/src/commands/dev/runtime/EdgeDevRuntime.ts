@@ -77,8 +77,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         // ServerHost installs these for a server bot. the edge Seedcord does not
         installNodeDefaults();
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
-        const [folders, cloudflare, workerEnv] = await Promise.all([
-            files.foldersIncludingEmpty(),
+        const [lists, cloudflare, workerEnv] = await Promise.all([
+            files.builtLists(),
             CloudflareWorker.load(this.target),
             WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
@@ -100,7 +100,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                 plugins: [
                     workerEntry({
                         layout: files.layout,
-                        folders,
+                        lists,
                         instanceKey: BotLayout.keyUnder(viteRoot, config.instance),
                         rootKey: BotLayout.keyUnder(viteRoot, config.root),
                         functionExports: () => (functionExports ??= this.readFunctionExports(context, nodeCopy)),

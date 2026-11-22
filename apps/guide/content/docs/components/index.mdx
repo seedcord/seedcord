@@ -197,7 +197,20 @@ Discord takes a custom emoji in a message as `<:streak_flame:1872389747982323426
 
 A re-upload gives the emoji a new id, so every copy of the old one points at nothing. A rename leaves the name in your code out of step with the one in Discord. Some emojis come from your app and some from one guild, and each of those is its own lookup.
 
-seedcord does those lookups for you once while the bot starts. Give each custom emoji a name in your config, then read it back by that name.
+seedcord does those lookups for you once while the bot starts. Put your images in an `emojis` folder beside `seedcord.config.ts`. Once they're uploaded, you read each one by its file name.
+
+```txt
+emojis/
+├── confirm.png
+├── cancel.png
+└── reactions/
+    ├── 1up.png
+    └── party_parrot.gif
+```
+
+Run [`seedcord emojis push`](/tooling/emojis) to upload them to your application. A file's name is the emoji's name on Discord. Its key in your code is that name in PascalCase, so `confirm.png` gets `Emojis.Confirm` and `party_parrot.gif` gets `Emojis.PartyParrot`. A key that starts with a digit needs brackets, like `Emojis['1Up']` for `1up.png`. A subfolder's name isn't part of either one. The folder is `./emojis` unless [`emojis.dir`](/tooling/emojis#before-you-run-it) moves it.
+
+Some emojis can't come from a file, like one that belongs to a guild. Give those a key in `bot.emojis`. `seedcord emojis` doesn't upload these since it only reads the folder.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -218,17 +231,19 @@ export const seedcord = new Seedcord({
         ...shared,
         events: { path: null },
         emojis: {
-            Confirm: 'confirmation_check',
-            Cancel: 'confirmation_cross',
-            // or look up an emoji in a guild your bot is in
-            Streak: ['streak_flame', '1872389747982323426']
+            // an emoji in a guild your bot is in
+            Streak: ['streak_flame', '1872389747982323426'],
+            // a second key for the emoji that confirm.png uploads
+            Yes: 'confirm'
         }
     },
     subscribers: { path: null }
 });
 ```
 
-A plain string is the name of an application emoji, one you upload to your app in the developer portal. Run `seedcord codegen` after you change that block. It writes the key names into [`EmojiMap`](ref:types/EmojiMap), which types the [`Emojis`](ref:gateway/Emojis) accessor.
+With a `[name, guildId]` pair, seedcord looks the emoji up in that guild. A plain string is the name of an application emoji, under whatever key you like. One key can't come from both places, though. If the folder and this block both define `Confirm`, startup throws and shows you the key.
+
+Run `seedcord codegen` after you add a file or change that block. It writes the key names into [`EmojiMap`](ref:types/EmojiMap), which types the [`Emojis`](ref:gateway/Emojis) accessor.
 
 Your editor then offers those keys the moment you type the dot.
 
@@ -277,7 +292,7 @@ class ConfirmRow extends RowComponent<'button'> {
 }
 ```
 
-seedcord stops startup when a name won't resolve, and the error lists every failure at once. `Emojis` throws when you read a key before startup fills it.
+seedcord stops startup when a name won't resolve, and the error lists every failure at once. For a file you haven't uploaded yet, it tells you to run `seedcord emojis push`. An edge bot gets its ids at build time, so there `seedcord build` fails with the same error. [Workers](/build/workers) has the order. `Emojis` throws when you read a key before startup fills it.
 
 <Callout type="transport" only="gateway">
 

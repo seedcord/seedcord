@@ -27,6 +27,7 @@ import type { EdgeTarget } from '#core/config/detectTarget';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ImportCloudflare } from '#core/modules/cloudflarePlugin';
 import type { Project } from '#core/project/Project';
+import type { BuiltLists } from '#core/project/ProjectFiles';
 import type { BundleStats } from './output';
 import type { CommandsInCode } from './readDiscord';
 import type { NextCommand } from './TargetBuild';
@@ -108,9 +109,9 @@ export class EdgeBuild extends TargetBuild {
 
     public async bundle(ids: BakedIds): Promise<BundleStats> {
         const { files } = this.project;
-        const [folders, cloudflare] = await Promise.all([files.foldersIncludingEmpty(), this.worker()]);
+        const [lists, cloudflare] = await Promise.all([files.builtLists(), this.worker()]);
 
-        const captured = await this.bundleWorker(ids, folders, cloudflare).catch(bundleFailed);
+        const captured = await this.bundleWorker(ids, lists, cloudflare).catch(bundleFailed);
         const chunks =
             captured ??
             bundleFailed(
@@ -124,7 +125,7 @@ export class EdgeBuild extends TargetBuild {
 
     private async bundleWorker(
         ids: BakedIds,
-        folders: string[],
+        lists: BuiltLists,
         cloudflare: CloudflareWorker
     ): Promise<Rolldown.OutputChunk[] | undefined> {
         const { config, files, modules } = this.project;
@@ -141,7 +142,7 @@ export class EdgeBuild extends TargetBuild {
             plugins: [
                 workerEntry({
                     layout: files.layout,
-                    folders,
+                    lists,
                     instanceKey: BotLayout.keyUnder(viteRoot, config.instance),
                     functionExports: () => functionExportsOf(modules, config.instance),
                     rootKey: BotLayout.keyUnder(viteRoot, config.root),

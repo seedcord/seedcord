@@ -26,13 +26,14 @@ function at(relative: string): string {
 function register({
     root = ROOT,
     folders = [],
+    emojis = [],
     listed = [],
     skippedFolders = [],
     modules = {},
     listedFiles = {},
     ...rest
 }: Partial<Except<BuiltSlot, 'kind'>>): Disposable {
-    return setBuiltFiles({ root, folders, listed, skippedFolders, modules, listedFiles, ...rest });
+    return setBuiltFiles({ root, folders, emojis, listed, skippedFolders, modules, listedFiles, ...rest });
 }
 
 // a text file the way the build stores it

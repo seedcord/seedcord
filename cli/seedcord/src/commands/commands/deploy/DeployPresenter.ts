@@ -5,7 +5,8 @@ import { sumBy } from 'es-toolkit';
 
 import { commandLabel } from '#commands/commands/commandRows';
 import { plural } from '#core/format';
-import { printSections } from '#core/output/printSections';
+import { printEdgeHint } from '#core/output/printEdgeHint';
+import { markedRowsOf, printSections } from '#core/output/printSections';
 import { StepsPresenter } from '#core/output/StepsPresenter';
 
 import type { Confirm } from '#core/output/confirm';
@@ -73,11 +74,7 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
     }
 
     public edgeHint(): void {
-        this.output.line();
-        this.output.line(paint.mute("Your edge worker doesn't have ids for the commands this deploy added."));
-        this.output.line(
-            paint.mute(`Run ${paint.bold('seedcord build')} and deploy the worker again to pick them up.`)
-        );
+        printEdgeHint(this.output, 'the commands that this deploy added');
     }
 
     private async ask(message: string): Promise<boolean> {
@@ -87,19 +84,7 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
     }
 
     private section({ title, inCode, diff }: ScopePlan): Section {
-        const rows: SectionRow[] = [];
-        if (diff.added.length > 0) {
-            rows.push({
-                marker: paint.mint.bold('+'),
-                items: diff.added.map((command) => commandLabel(command, paint.mint))
-            });
-        }
-        if (diff.removed.length > 0) {
-            rows.push({
-                marker: paint.coral.bold('-'),
-                items: diff.removed.map((command) => commandLabel(command, paint.coral))
-            });
-        }
+        const rows = [...markedRowsOf('+', diff.added, commandLabel), ...markedRowsOf('-', diff.removed, commandLabel)];
 
         const changed = rows.length > 0;
         if (diff.kept.length > 0 && (changed || this.verbose)) rows.push(this.keptRow(diff.kept));

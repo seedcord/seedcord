@@ -1,7 +1,15 @@
 import { PRODUCTION_SITES } from '@seedcord/brand';
 
 import { SeedcordErrorCode } from './ErrorCodes';
-import { deployFix, listedFolderProblems, loginNeededBecause, placeText, token, vitePluginFix } from './messageParts';
+import {
+    deployFix,
+    emojiFileProblems,
+    listedFolderProblems,
+    loginNeededBecause,
+    placeText,
+    token,
+    vitePluginFix
+} from './messageParts';
 import { allOf, capitalized, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
 import { paint } from './palette';
 
@@ -13,8 +21,8 @@ const messages = {
         `${paint.iris(count)} configured emojis could not be resolved. Each one is listed below.`,
     [SeedcordErrorCode.ConfigEmojiInvalid]: (key: string) =>
         `The emoji ${paint.sky(key)} in ${paint.bold('bot.emojis')} has a value seedcord cannot read. Set it to the emoji's name, or to a ${paint.bold('[name, guildId]')} pair for a guild emoji.`,
-    [SeedcordErrorCode.ConfigEmojiNotFound]: (key: string, name: string, where: string) =>
-        `The emoji ${paint.sky(key)} points at ${paint.bold(name)}, but ${where} doesn't have an emoji with that name. Check the spelling, or upload the emoji there.`,
+    [SeedcordErrorCode.ConfigEmojiNotFound]: (key: string, name: string, where: string, fix: string) =>
+        `The emoji ${paint.sky(key)} points at ${paint.bold(name)}, but ${where} doesn't have an emoji with that name. ${fix}`,
     [SeedcordErrorCode.ConfigEmojiSourceUnreadable]: (
         key: string,
         name: string,
@@ -37,6 +45,10 @@ const messages = {
         `Remove ${paint.sky(`bot.restOptions.${key}`)} from your edge config. A sweeper interval starts a timer at the worker's global scope, where workerd throws.`,
     [SeedcordErrorCode.PortInUse]: (port: number, setting: string, configFile?: string) =>
         `Another process already listens on port ${port}. Stop it, or set ${paint.bold(setting)} in ${configFile ? paint.path(configFile) : 'your Seedcord config'} to a free port.`,
+    [SeedcordErrorCode.ConfigEmojiFileUnusable]: (file: string, problem: keyof typeof emojiFileProblems) =>
+        `${paint.path(file)} can't be an emoji. ${emojiFileProblems[problem]}`,
+    [SeedcordErrorCode.ConfigEmojiFolderInvalid]: (count: number) =>
+        `Your emojis folder has ${paint.iris(count)} problems. Each one is listed below.`,
 
     [SeedcordErrorCode.LifecycleTaskChangeRejected]: (action: 'add' | 'remove', startup: 'running' | 'finished') =>
         `${startup === 'running' ? 'Startup is running, so its tasks cannot change.' : 'Startup already finished, so this task would never run.'} ${action === 'add' ? 'Add' : 'Remove'} startup tasks before you call ${paint.bold('start()')}.`,
@@ -354,16 +366,16 @@ const messages = {
         `${paint.bold('seedcord dev')} called ${paint.bold(method)} while the dev runtime was not running. This is a bug in seedcord.`,
     [SeedcordErrorCode.CliDeployNoCommandsFolder]: (instance: string) =>
         `${paint.path(instance)} sets ${paint.bold('bot.commands.path')} to ${paint.bold('null')}. Point it at the folder that holds your commands to deploy them.`,
-    [SeedcordErrorCode.CliDeployNeedsYes]: () =>
-        `${paint.bold('seedcord commands deploy')} asks before it deploys, but it can only ask in a terminal with ${paint.bold('CI')} unset. Pass ${paint.bold('--yes')} to deploy without asking.`,
+    [SeedcordErrorCode.CliNeedsYes]: (command: string, action: string) =>
+        `${paint.bold(command)} asks before it ${action}, but it can only ask in a terminal with ${paint.bold('CI')} unset. Pass ${paint.bold('--yes')} to skip the question.`,
     [SeedcordErrorCode.CliNoScopeGiven]: (flags: readonly string[], note?: string) =>
         `No scope given. Pass ${oneOf.format(flags.map((flag) => paint.bold(flag)))}.${note ? ` ${note}` : ''}`,
     [SeedcordErrorCode.CliCommandConstructorThrew]: (name: string, file: string, reason: string) =>
         `${paint.sky(name)} threw while seedcord constructed it. Fix its constructor in ${paint.path(file)}. ${reason}`,
     [SeedcordErrorCode.CliCommandNotACommand]: (name: string, file: string) =>
         `${paint.bold(name)} in ${paint.path(file)} carries ${paint.bold('@RegisterCommand')}, but its component is not a slash command or a context menu. Extend ${paint.bold("BuilderComponent<'command'>")} or ${paint.bold("BuilderComponent<'context_menu'>")}.`,
-    [SeedcordErrorCode.CliCommandsNotDeleted]: () =>
-        'Some commands could not be deleted. The warnings above give the reason for each one.',
+    [SeedcordErrorCode.CliSomeFailed]: (things: string, action: string) =>
+        `Some ${things} could not be ${action}. The warnings above give the reason for each one.`,
     [SeedcordErrorCode.CliEdgeOnBun]: () =>
         `seedcord loads ${paint.path('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node without ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
     [SeedcordErrorCode.CliEdgeNoWorker]: (cloudflareConfig: string) =>
@@ -394,6 +406,13 @@ const messages = {
         `The guide search failed. ${reason}. Try again, or read the guide at ${paint.sky(guide)}.`,
     [SeedcordErrorCode.CliHostContractMismatch]: (transport: string) =>
         `This version of ${paint.bold('seedcord')} can't load a bot built with your version of ${paint.bold(transport)}. Update ${paint.bold('seedcord')} and ${paint.bold(transport)} together to their latest versions.`,
+    [SeedcordErrorCode.CliEmojiNameUnknown]: (name: string, where: string, fix: string) =>
+        `${where} doesn't have an emoji with the name ${paint.bold(name)}. ${fix}`,
+    [SeedcordErrorCode.CliEmojiDownloadFailed]: (status: number) => `Discord's CDN answered ${status}`,
+    [SeedcordErrorCode.CliEmojiRollbackFailed]: (reason: string, parked: string) =>
+        `${reason}, and the old emoji is still on Discord as ${paint.bold(parked)}. Delete it with ${paint.bold(`seedcord emojis remove ${parked}`)}, then push again`,
+    [SeedcordErrorCode.CliPickerNeedsTerminal]: (opener: string, skipWith: string, example: string) =>
+        `${paint.bold(opener)} without ${skipWith} opens a picker, but a picker only opens in a terminal with ${paint.bold('CI')} unset. Pass ${skipWith}, as in ${paint.bold(example)}.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>

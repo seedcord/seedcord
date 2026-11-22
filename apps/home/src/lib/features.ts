@@ -34,6 +34,7 @@ export const FEATURES = [
     'project scaffolding',
     'seedcord codegen',
     'deploy commands from the CLI',
+    'upload emojis from a folder',
     'Node, Bun & single binary builds',
     'Cloudflare Workers',
     'your bot as an npm package',

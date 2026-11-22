@@ -55,6 +55,7 @@ seedcord asks for a full restart when you save one of these since the CLI or the
 - on an edge bot, `cloudflare.config.ts`, `.dev.vars`, and `.dev.vars.<mode>`
 - the file `instance` points at
 - a file `instance` imports, directly or through another file, like a plugin your bot file attaches
+- an image in your [emojis folder](/components#emojis-by-name), added, changed, or deleted
 
 These sit beside the config, so they count even when `root` is `./src`. A `package.json` deeper in the project reloads like any other file. The `build.start` file isn't one of them because `seedcord dev` never loads it.
 

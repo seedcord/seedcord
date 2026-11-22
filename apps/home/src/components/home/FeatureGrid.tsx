@@ -19,6 +19,7 @@ import {
     HardDrive,
     HeartPulse,
     Hourglass,
+    ImageUp,
     KeyRound,
     Languages,
     Layers,
@@ -90,7 +91,7 @@ const GROUPS: Group[] = [
                 gloss: 'a handler per option, and a missing one fails to compile'
             },
             { icon: AtSign, label: 'command mentions', gloss: 'renders </route:id> once Discord assigns the id' },
-            { icon: Smile, label: 'emojis', gloss: 'resolved at startup, reached by name' }
+            { icon: Smile, label: 'emojis', gloss: 'typed from your emojis folder, resolved at startup' }
         ]
     },
     {
@@ -187,6 +188,11 @@ const GROUPS: Group[] = [
                 icon: WandSparkles,
                 label: 'seedcord commands',
                 gloss: 'deploy, list and clean up your commands on Discord'
+            },
+            {
+                icon: ImageUp,
+                label: 'seedcord emojis',
+                gloss: "upload, list, download and delete your app's emojis from the terminal"
             },
             { icon: SpellCheck, label: 'eslint rules', gloss: 'flags payloads Discord rejects before you send them' }
         ]
