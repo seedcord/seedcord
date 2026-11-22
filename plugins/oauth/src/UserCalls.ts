@@ -17,13 +17,10 @@ import type { Except } from 'type-fest';
 /**
  * One of the Discord OAuth2 scopes that a login can grant, like `'identify'` or `'guilds'`.
  *
- * `applications.commands.update` and `applications.commands.permissions.update` aren't in it. Discord
- * only grants those two through the client credentials grant, which doesn't involve a user.
+ * `applications.commands.update` isn't in it. Discord only grants that one through the client
+ * credentials grant, which doesn't involve a user.
  */
-export type OAuthScope = Exclude<
-    `${OAuth2Scopes}`,
-    'applications.commands.update' | 'applications.commands.permissions.update'
->;
+export type OAuthScope = Exclude<`${OAuth2Scopes}`, 'applications.commands.update'>;
 
 /** What {@link UserCalls.joinGuild} did. `added` is `false` when the user was already in the server. */
 export type GuildJoin = { added: true; member: APIGuildMember } | { added: false };

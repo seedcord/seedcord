@@ -5,7 +5,7 @@ description: Call Discord as a user who logged in, with typed calls for each sco
 
 A user's tokens only work for the scopes that they approved. With a plain HTTP client, you'd find out that a call needs a scope you never requested when Discord refuses it.
 
-[`@seedcord/plugin-oauth`](/plugins/oauth) types each call by the scopes you list. You get a call for every scope you request.
+[`@seedcord/plugin-oauth`](/plugins/oauth) types each call by the scopes you list. Scopes that you haven't listed there won't compile by the way.
 
 ## The calls for your scopes
 
@@ -26,11 +26,12 @@ declare module '@seedcord/gateway' {
 @SlashRoute('servers')
 export class Servers extends SlashHandler<'servers'> {
     public async execute(): Promise<void> {
+        await this.defer();
         const calls = this.core.oauth.as(this.user.id);
         const guilds = await calls.guilds({ with_counts: true });
         //    ^?
 
-        await this.reply(`You're in ${guilds.length} servers.`);
+        await this.edit(`You're in ${guilds.length} servers.`);
     }
 }
 ```
@@ -66,7 +67,7 @@ await oauth
 
 This bot only lists `guilds`, and `guildMember()` needs `guilds.members.read`. The error has the scope to add in it.
 
-The last two calls in the table are for Linked Roles, Discord's feature that lets a server role require a value from your application. A login that requests `role_connections.write` skips PKCE, because Discord answers `invalid_scope` when a login has both. The cookie check still ties that login to the browser that started it.
+The last two calls in the table are for Linked Roles, Discord's feature that lets a server role require a value from your application. A login that requests `role_connections.write` skips PKCE, because [Discord answers `invalid_scope`](https://github.com/discord/discord-api-docs/issues/5751) when a login has both. The cookie check still ties that login to the browser that started it.
 
 For a route without a typed call, [`UserCalls`](ref:plugin-oauth/UserCalls) also has `get`, `post`, `put`, `patch`, and `delete`. They take what the same methods on `this.core.rest` take, and send the request with the user's token. These five don't check scopes, because the plugin can't tell which scope a route needs. When Discord refuses the user's token on one of them, you get Discord's own error.
 
@@ -112,6 +113,7 @@ declare module '@seedcord/gateway' {
 export class Accounts extends SlashHandler<'accounts'> {
     public async execute(): Promise<void> {
         const { oauth } = this.core;
+        await this.defer();
         const connections = await oauth
             .as(this.user.id)
             .connections();
@@ -121,13 +123,11 @@ export class Accounts extends SlashHandler<'accounts'> {
                 scopes: ['connections'],
                 returnTo: '/accounts'
             });
-            await this.reply(
-                `Connect your accounts first: ${link}`
-            );
+            await this.edit(`Connect your accounts first: ${link}`);
             return;
         }
 
-        await this.reply(
+        await this.edit(
             `You connected ${connections.length} accounts.`
         );
     }
@@ -193,12 +193,13 @@ declare module '@seedcord/gateway' {
 export class Servers extends SlashHandler<'servers'> {
     public async execute(): Promise<void> {
         const { oauth } = this.core;
+        await this.defer();
         try {
             const guilds = await oauth.as(this.user.id).guilds();
-            await this.reply(`You're in ${guilds.length} servers.`);
+            await this.edit(`You're in ${guilds.length} servers.`);
         } catch (error) {
             if (!this.needsLogin(error)) throw error;
-            await this.reply(`Log in first: ${oauth.loginUrl()}`);
+            await this.edit(`Log in first: ${oauth.loginUrl()}`);
         }
     }
 
@@ -236,4 +237,4 @@ When you revoke one token, Discord [revokes every token of that authorization](h
 
 ## Reading what a user granted
 
-[`scopesOf()`](ref:plugin-oauth/OAuth.scopesOf) returns the scopes that a user granted, or `undefined` for a user without saved tokens. It reads the saved record without calling Discord.
+[`scopesOf()`](ref:plugin-oauth/OAuth.scopesOf) returns the scopes that a user granted, or `undefined` for a user without saved tokens. It reads the saved record without calling Discord. `bot` is never in the list because Discord doesn't include it in the scopes it grants a user. To learn that a login added your bot, check its `guild`.

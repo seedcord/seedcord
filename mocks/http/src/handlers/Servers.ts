@@ -4,12 +4,13 @@ import { isSeedcordError, SeedcordErrorCode, SlashHandler, SlashRoute } from '@s
 export class Servers extends SlashHandler<'servers'> {
     public async execute(): Promise<void> {
         const { oauth } = this.core;
+        await this.defer();
         try {
             const guilds = await oauth.as(this.user.id).guilds();
-            await this.reply(`You're in ${guilds.length} servers.`);
+            await this.edit(`You're in ${guilds.length} servers.`);
         } catch (error) {
             if (!this.needsLogin(error)) throw error;
-            await this.reply(`Log in first: ${oauth.loginUrl()}`);
+            await this.edit(`Log in first: ${oauth.loginUrl()}`);
         }
     }
 

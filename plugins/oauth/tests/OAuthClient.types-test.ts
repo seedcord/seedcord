@@ -87,6 +87,7 @@ function rejectsAScopeThatALoginCannotGrant(): void {
     void new OAuthClient({ ...base, scopes: ['guild'] });
     // @ts-expect-error Discord only grants this one through client credentials
     void new OAuthClient({ ...base, scopes: ['applications.commands.update'] });
+    void new OAuthClient({ ...base, scopes: ['applications.commands.permissions.update'] });
 }
 
 function offersTheBotOptionsOnlyWithTheBotScope(): void {

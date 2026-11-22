@@ -5,9 +5,9 @@ description: Log people in with Discord from your bot with the login routes serv
 
 [`@seedcord/plugin-oauth`](ref:plugin-oauth) lets people log in with Discord through your bot. After that, you can call Discord as any of them through `this.core.oauth.as(userId)`.
 
-By hand, you'd serve a login route and a callback route, and tie each login to the browser that started it. Then you'd trade the code for tokens, encrypt them before you save them, and refresh them before they expire. The plugin does all of that.
+By hand, you'd serve a login route and a callback route, and tie each login to the browser that started it. Then you'd trade the code for tokens, encrypt them before you save them, and refresh them before they expire. The plugin does all of that. Here's an example with the `unstorage` driver for saving tokens. You can also use `keyv`.
 
-<Shell add="@seedcord/plugin-oauth" />
+<Shell add="@seedcord/plugin-oauth unstorage" />
 
 ## Attaching the plugin
 
@@ -207,11 +207,12 @@ declare module '@seedcord/gateway' {
 @SlashRoute('servers')
 export class Servers extends SlashHandler<'servers'> {
     public async execute(): Promise<void> {
+        await this.defer();
         const guilds = await this.core.oauth
             .as(this.user.id)
             .guilds();
 
-        await this.reply(`You're in ${guilds.length} servers.`);
+        await this.edit(`You're in ${guilds.length} servers.`);
     }
 }
 ```

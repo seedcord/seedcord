@@ -299,12 +299,13 @@ describe('AuthorizationFlow callback route', () => {
 
 describe('AuthorizationFlow adding the bot', () => {
     it("passes the link's permissions and server on to Discord", async () => {
-        const flow = await flowAt(BASE);
+        const flow = await flowAt(BASE, ['bot']);
 
         const link = flow.loginUrl({ permissions: 8n, guildId: '42', disableGuildSelect: true, integrationType: 0 });
         const { authorize } = await start(flow, link);
 
         expect(Object.fromEntries(authorize)).toMatchObject({
+            scope: 'identify bot',
             permissions: '8',
             guild_id: '42',
             disable_guild_select: 'true',
