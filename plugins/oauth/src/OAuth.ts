@@ -29,21 +29,28 @@ export interface OAuthOptions<TScopes extends OAuthScope = never, TExtra extends
      * that sets your session. Without it, the visitor gets a plain page that says the login worked.
      */
     onLogin?: ((login: Simplify<CompletedLogin>, request: Request) => Promisable<Response>) | undefined;
-    /** Runs when a login didn't finish. Without it, the visitor gets a plain page that says so. */
+    /**
+     * Runs when a login didn't finish, for every `kind` of {@link FailedLogin}. Without it, the visitor
+     * gets a plain page that says so. The plugin logs a `failed` login's error before it calls this.
+     */
     onFailure?: ((failure: Simplify<FailedLogin>, request: Request) => Promisable<Response>) | undefined;
 }
 
 const BAD_REQUEST = 400;
+const SERVER_ERROR = 500;
 const CLIENT_SECRET_KEY = 'DISCORD_CLIENT_SECRET';
-// someone can remove the redirect in the portal later, and the warning should come back then. once a day
-// is a guess
+// someone can remove the redirect in the portal later, and the warning should come back then
 const RECHECK_REDIRECT_MS = 24 * 60 * 60 * 1000;
 
 const FAILURE_PAGES = {
-    denied: 'The login was cancelled. You can close this tab.',
-    invalid: "This login didn't finish. Go back and start again.",
-    unlisted: "This login link requests a scope that this bot doesn't allow."
-} satisfies Record<FailedLogin['kind'], string>;
+    denied: { status: BAD_REQUEST, text: 'The login was cancelled. You can close this tab.' },
+    invalid: { status: BAD_REQUEST, text: "This login didn't finish. Go back and start again." },
+    unlisted: { status: BAD_REQUEST, text: "This login link requests a scope that this bot doesn't allow." },
+    failed: {
+        status: SERVER_ERROR,
+        text: "The login couldn't finish because of a problem on our side. Try again in a bit."
+    }
+} satisfies Record<FailedLogin['kind'], { status: number; text: string }>;
 
 /**
  * Logs people in with Discord and calls the API as them. Attach what {@link OAuth.with} returns.
@@ -199,8 +206,10 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
 
     async #respond(outcome: LoginOutcome, request: Request): Promise<Response> {
         const { onLogin, onFailure } = this.options;
+        if (outcome.kind === 'failed') this.logger.error("Couldn't finish a login", outcome.error);
         if (outcome.kind !== 'login') {
-            return onFailure?.(outcome, request) ?? new Response(FAILURE_PAGES[outcome.kind], { status: BAD_REQUEST });
+            const { status, text } = FAILURE_PAGES[outcome.kind];
+            return onFailure?.(outcome, request) ?? new Response(text, { status });
         }
         return onLogin?.(outcome.login, request) ?? new Response('You are logged in. You can close this tab.');
     }

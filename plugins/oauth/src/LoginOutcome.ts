@@ -8,6 +8,11 @@ export interface OAuthLogin {
     scopes: OAuthScope[];
     /** The server that the bot was added to when the login had the `bot` scope. */
     guild: APIGuild | undefined;
+    /**
+     * The permissions of the bot's own role in `guild` after the login. The visitor can untick permissions
+     * on Discord's screen, so check this before you rely on one.
+     */
+    permissions: bigint | undefined;
     /** The webhook that Discord created when the login had the `webhook.incoming` scope. */
     webhook: APIWebhook | undefined;
 }
@@ -16,11 +21,6 @@ export interface OAuthLogin {
 export interface CompletedLogin extends OAuthLogin {
     /** The path that the login link asked to end on, from `loginUrl({ returnTo })`. It always starts with one `/`. */
     returnTo: string | undefined;
-    /**
-     * The permission bitfield that the visitor approved for the bot, for a login with the `bot` scope. They
-     * can untick permissions on Discord's screen.
-     */
-    permissions: string | undefined;
 }
 
 /**
@@ -32,11 +32,14 @@ export interface CompletedLogin extends OAuthLogin {
  *   this browser started.
  * - `unlisted`: the login link requested `scopes` that aren't in the client's `extraScopes`. The visitor
  *   never reached Discord.
+ * - `failed`: trading the code for the user's tokens threw. Discord was down, it refused the client
+ *   secret, or the store didn't take the tokens. `error` is what was thrown.
  */
 export type FailedLogin =
     | { kind: 'denied'; error: string }
     | { kind: 'invalid' }
-    | { kind: 'unlisted'; scopes: string[] };
+    | { kind: 'unlisted'; scopes: string[] }
+    | { kind: 'failed'; error: unknown };
 
 /** How a visit to the login route or the callback route ended. */
 export type LoginOutcome = { kind: 'login'; login: CompletedLogin } | FailedLogin;

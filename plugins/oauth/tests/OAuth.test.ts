@@ -1,7 +1,7 @@
 import { MemoryDriver } from '@seedcord/core';
 import { bindEnv } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
+import { captureLogs } from '@seedcord/logger/internal';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
@@ -16,6 +16,7 @@ import type { SeenRequest } from './fakeDiscord';
 
 const USER = { id: '111', username: 'dhruv' };
 const CALLBACK = 'https://bot.test/oauth/callback';
+const WRONG_SECRET_CODE = 'wrong-secret';
 
 interface Bot {
     oauth: OAuth;
@@ -29,8 +30,11 @@ async function botWith(
         host = {}
     }: { redirects?: string[]; host?: Partial<ConstructorParameters<typeof TestHost>[0]> } = {}
 ): Promise<Bot> {
-    const discord = await fakeDiscord(({ route }) => {
+    const discord = await fakeDiscord(({ route, body }) => {
         if (route === '/oauth2/token') {
+            if (new URLSearchParams(body).get('code') === WRONG_SECRET_CODE) {
+                return { status: 401, json: { error: 'invalid_client' } };
+            }
             return {
                 json: {
                     token_type: 'Bearer',
@@ -59,18 +63,17 @@ function bindSecretForThisTest(): void {
     });
 }
 
-async function logIn(oauth: OAuth, loginUrl = oauth.loginUrl()): Promise<Response> {
+async function logIn(oauth: OAuth, loginUrl = oauth.loginUrl(), code = 'the-code'): Promise<Response> {
     const redirect = await oauth.fetch(new Request(loginUrl));
     const [cookie = ''] = (redirect?.headers.get('set-cookie') ?? '').split('; ');
     const state = new URL(redirect?.headers.get('location') ?? '').searchParams.get('state') ?? '';
-    const callback = `${CALLBACK}?${new URLSearchParams({ code: 'the-code', state, iss: 'https://discord.com' }).toString()}`;
+    const callback = `${CALLBACK}?${new URLSearchParams({ code, state, iss: 'https://discord.com' }).toString()}`;
     const response = await oauth.fetch(new Request(callback, { headers: { cookie } }));
     if (!response) throw new Error('the callback route passed the request on');
     return response;
 }
 
 afterEach(() => {
-    vi.restoreAllMocks();
     vi.useRealTimers();
 });
 
@@ -185,6 +188,35 @@ describe('OAuth routes', () => {
         expect(await response?.text()).toContain("doesn't allow");
     });
 
+    it('logs the error of a login whose exchange threw, and shows a plain page with a 500', async () => {
+        using logs = captureLogs();
+        const { oauth } = await botWith();
+
+        const response = await logIn(oauth, oauth.loginUrl(), WRONG_SECRET_CODE);
+
+        expect(response.status).toBe(500);
+        expect(await response.text()).toContain('Try again');
+        expect(logs.argsAt('error')).toEqual([
+            expect.objectContaining({ code: SeedcordErrorCode.PluginOAuthSecretRefused })
+        ]);
+    });
+
+    it('hands a login whose exchange threw to onFailure', async () => {
+        using _logs = captureLogs();
+        const failures: FailedLogin[] = [];
+        const { oauth } = await botWith({
+            onFailure: (failure) => {
+                failures.push(failure);
+                return new Response('down', { status: 503 });
+            }
+        });
+
+        const response = await logIn(oauth, oauth.loginUrl(), WRONG_SECRET_CODE);
+
+        expect(failures).toMatchObject([{ kind: 'failed' }]);
+        expect(response.status).toBe(503);
+    });
+
     it('hands a login that did not finish to onFailure', async () => {
         const failures: FailedLogin[] = [];
         const { oauth } = await botWith({
@@ -222,17 +254,16 @@ describe('OAuth redirect check', () => {
     }
 
     it('logs the callback address when the application does not list it, and lets startup go on', async () => {
-        const warn = vi.spyOn(Logger.prototype, 'warn').mockReturnValue();
+        using logs = captureLogs();
         const { oauth } = await botWith({}, { redirects: ['https://other.test/callback'] });
 
         await oauth.ready();
 
-        expect(warn).toHaveBeenCalledOnce();
-        expect(warn.mock.calls[0]?.[0]).toContain(CALLBACK);
+        expect(logs.at('warn')).toEqual([expect.stringContaining(CALLBACK)]);
     });
 
     it('checks again on the next start until the address is listed', async () => {
-        vi.spyOn(Logger.prototype, 'warn').mockReturnValue();
+        using _logs = captureLogs();
         const { oauth, requests } = await botWith({}, { redirects: [] });
 
         await oauth.ready();
@@ -242,13 +273,13 @@ describe('OAuth redirect check', () => {
     });
 
     it("doesn't log or check with Discord again once the address is listed", async () => {
-        const warn = vi.spyOn(Logger.prototype, 'warn').mockReturnValue();
+        using logs = captureLogs();
         const { oauth, requests } = await botWith();
 
         await oauth.ready();
         await oauth.ready();
 
-        expect(warn).not.toHaveBeenCalled();
+        expect(logs.at('warn')).toEqual([]);
         expect(redirectChecks(requests)).toBe(1);
     });
 
@@ -264,18 +295,18 @@ describe('OAuth redirect check', () => {
     });
 
     it('logs and lets startup go on when Discord refuses the check', async () => {
-        const warn = vi.spyOn(Logger.prototype, 'warn').mockReturnValue();
+        using logs = captureLogs();
         const discord = await fakeDiscord(() => ({ status: 403, json: { message: 'Missing Access', code: 50_001 } }));
         const { oauth } = new TestHost({ api: discord.api }).attach('oauth', OAuth.with());
         bindSecretForThisTest();
         oauth.init();
 
         await expect(oauth.ready()).resolves.toBeUndefined();
-        expect(warn).toHaveBeenCalledOnce();
+        expect(logs.at('warn')).toHaveLength(1);
     });
 
     it("logs and lets startup go on when the bot's kv can't be read", async () => {
-        const warn = vi.spyOn(Logger.prototype, 'warn').mockReturnValue();
+        using logs = captureLogs();
         const kv = {
             get: (): never => {
                 throw new Error('kv is down');
@@ -288,6 +319,6 @@ describe('OAuth redirect check', () => {
         const { oauth } = await botWith({}, { host: { kv } });
 
         await expect(oauth.ready()).resolves.toBeUndefined();
-        expect(warn).toHaveBeenCalledOnce();
+        expect(logs.at('warn')).toHaveLength(1);
     });
 });

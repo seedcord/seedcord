@@ -436,7 +436,7 @@ describe('OAuthClient calls that write', () => {
 });
 
 describe('OAuthClient with the bot and webhook scopes', () => {
-    const GUILD = { id: '42', name: 'seedcord' };
+    const GUILD = { id: '42', name: 'seedcord', roles: [{ permissions: '8', tags: { bot_id: APP_ID } }] };
     const WEBHOOK = { id: '7', url: 'https://discord.com/api/webhooks/7/token' };
 
     async function installer(): Promise<OAuthClient<'bot' | 'webhook.incoming'>> {
@@ -495,6 +495,7 @@ describe('OAuthClient with the bot and webhook scopes', () => {
             user: USER,
             scopes: ['identify', 'bot', 'webhook.incoming'],
             guild: GUILD,
+            permissions: 8n,
             webhook: WEBHOOK
         });
     });

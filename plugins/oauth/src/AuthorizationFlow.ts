@@ -168,10 +168,14 @@ export class AuthorizationFlow {
         if (error !== null) return { kind: 'denied', error };
 
         const code = query.get('code');
-        const login = code === null ? undefined : await this.exchange(code, pending.verifier);
-        if (!login) return { kind: 'invalid' };
-        const permissions = query.get('permissions') ?? undefined;
-        return { kind: 'login', login: { ...login, returnTo: pending.returnTo, permissions } };
+        if (code === null) return { kind: 'invalid' };
+        try {
+            const login = await this.exchange(code, pending.verifier);
+            if (!login) return { kind: 'invalid' };
+            return { kind: 'login', login: { ...login, returnTo: pending.returnTo } };
+        } catch (error) {
+            return { kind: 'failed', error };
+        }
     }
 
     // these urls have the code and the state in them, and a cache shouldn't keep either

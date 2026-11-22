@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 
 import { REST } from '@discordjs/rest';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { OAuthClient } from '#src/OAuthClient';
@@ -14,6 +15,16 @@ import type { SeenRequest } from './fakeDiscord';
 
 const USER = { id: '111', username: 'dhruv' };
 const ISSUER = 'https://discord.com';
+const APP_ID = '1564002376115949650';
+// Discord sends every role in the server with the bot's own among them
+const GUILD_WITH_THE_BOT = {
+    id: '42',
+    roles: [
+        { name: '@everyone', permissions: '1024' },
+        { name: 'another bot', permissions: '8', tags: { bot_id: '999' } },
+        { name: 'this bot', permissions: '2048', tags: { bot_id: APP_ID } }
+    ]
+};
 
 // every scope except the one that the clients here list in extraScopes
 type EveryLoginScope = Exclude<OAuthScope, 'connections'>;
@@ -25,7 +36,7 @@ interface Flow {
     tokenRequests(): SeenRequest[];
 }
 
-// a client at `base`, against a discord that grants every code except 'refused'
+// a client at `base`, against a discord that grants every code except 'refused' and 'wrong-secret'
 async function flowAt(
     base: string,
     scopes: EveryLoginScope[] = [],
@@ -33,22 +44,24 @@ async function flowAt(
 ): Promise<Flow> {
     const discord = await fakeDiscord(({ route, body }) => {
         if (route !== '/oauth2/token') return { json: { user: USER, scopes: ['identify'] } };
-        if (new URLSearchParams(body).get('code') === 'refused')
-            return { status: 400, json: { error: 'invalid_grant' } };
+        const code = new URLSearchParams(body).get('code');
+        if (code === 'refused') return { status: 400, json: { error: 'invalid_grant' } };
+        if (code === 'wrong-secret') return { status: 401, json: { error: 'invalid_client' } };
         return {
             json: {
                 token_type: 'Bearer',
                 access_token: 'a',
                 refresh_token: 'r',
                 expires_in: WEEK_SECONDS,
-                scope: 'identify'
+                scope: 'identify',
+                guild: code === 'added-the-bot' ? GUILD_WITH_THE_BOT : undefined
             }
         };
     });
     const flow = new OAuthClient({
         rest: new REST({ api: discord.api }),
         store: new Map(),
-        clientId: '1564002376115949650',
+        clientId: APP_ID,
         clientSecret: 'client-secret',
         baseUrl: base,
         routes,
@@ -233,6 +246,18 @@ describe('AuthorizationFlow callback route', () => {
         expect(flow.outcomes).toEqual([{ kind: 'invalid' }]);
     });
 
+    it('reports an exchange that throws as failed, with the error', async () => {
+        const flow = await flowAt(BASE);
+        const { cookie, authorize } = await start(flow, `${BASE}oauth/login`);
+        const state = authorize.get('state') ?? '';
+
+        await flow.fetch(callbackUrl(BASE, { code: 'wrong-secret', state, iss: ISSUER }), { headers: { cookie } });
+
+        expect(flow.outcomes).toMatchObject([
+            { kind: 'failed', error: { code: SeedcordErrorCode.PluginOAuthSecretRefused } }
+        ]);
+    });
+
     it('finishes a login that started before another tab started a second one', async () => {
         const flow = await flowAt(BASE);
         const first = await start(flow, `${BASE}oauth/login`);
@@ -296,16 +321,30 @@ describe('AuthorizationFlow adding the bot', () => {
         expect(authorize.has('guild_id')).toBe(false);
     });
 
-    it('reports the permissions that the visitor approved', async () => {
+    it("reports the permissions of the bot's role, and ignores the ones in the callback url", async () => {
+        const flow = await flowAt(BASE);
+        const { cookie, authorize } = await start(flow, `${BASE}oauth/login`);
+        const state = authorize.get('state') ?? '';
+        const editedByTheVisitor = { permissions: '8' };
+
+        await flow.fetch(
+            callbackUrl(BASE, { code: 'added-the-bot', state, iss: ISSUER, guild_id: '42', ...editedByTheVisitor }),
+            { headers: { cookie } }
+        );
+
+        expect(flow.outcomes[0]).toMatchObject({ kind: 'login', login: { permissions: 2048n } });
+    });
+
+    it("doesn't report permissions for a login that didn't add the bot", async () => {
         const flow = await flowAt(BASE);
         const { cookie, authorize } = await start(flow, `${BASE}oauth/login`);
         const state = authorize.get('state') ?? '';
 
-        await flow.fetch(callbackUrl(BASE, { code: 'c', state, iss: ISSUER, guild_id: '42', permissions: '8' }), {
+        await flow.fetch(callbackUrl(BASE, { code: 'c', state, iss: ISSUER, permissions: '8' }), {
             headers: { cookie }
         });
 
-        expect(flow.outcomes[0]).toMatchObject({ kind: 'login', login: { permissions: '8' } });
+        expect(flow.outcomes[0]).toMatchObject({ kind: 'login', login: { permissions: undefined } });
     });
 });
 

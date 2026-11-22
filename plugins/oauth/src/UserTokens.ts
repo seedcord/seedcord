@@ -54,8 +54,10 @@ export class UserTokens {
     // the refresh token that discord last refused for each user. a call that reads the same one again
     // throws without asking discord or waiting
     private readonly refused = new Map<string, string>();
+    private readonly clientId: string;
 
     constructor({ rest, store, clientId, clientSecret, keepOpen, wait = delay }: UserTokensOptions) {
+        this.clientId = clientId;
         this.endpoint = new TokenEndpoint(rest, clientId, clientSecret);
         this.vault = new TokenVault(store, clientId, clientSecret);
         this.changes = new KeyedQueue(keepOpen);
@@ -70,7 +72,15 @@ export class UserTokens {
         if (!user) throw new SeedcordError(SeedcordErrorCode.PluginOAuthIdentifyMissing);
 
         const { scopes } = await this.changes.run(user.id, () => this.save(user.id, granted));
-        return { user, scopes, guild: granted.guild, webhook: granted.webhook };
+        // discord sends every role in the server, and the bot's own has its application id in the tags
+        const botRole = granted.guild?.roles.find((role) => role.tags?.bot_id === this.clientId);
+        return {
+            user,
+            scopes,
+            guild: granted.guild,
+            permissions: botRole && BigInt(botRole.permissions),
+            webhook: granted.webhook
+        };
     }
 
     public async saved(userId: string): Promise<SavedTokens | undefined> {

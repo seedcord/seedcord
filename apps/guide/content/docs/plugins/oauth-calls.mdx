@@ -165,7 +165,7 @@ const link = oauth.loginUrl({
 
 </Callout>
 
-After that login, the plugin passes `onLogin` the [`guild`](ref:plugin-oauth/OAuthLogin.guild) that your bot joined and the [`permissions`](ref:plugin-oauth/CompletedLogin.permissions) that the visitor approved. The visitor can clear permissions on Discord's screen, so read `permissions` before you rely on one. It arrives as a string. To check a flag, turn it into a `bigint` first, as in `BigInt(permissions) & PermissionFlagsBits.SendMessages`.
+After that login, the plugin passes `onLogin` the [`guild`](ref:plugin-oauth/OAuthLogin.guild) that your bot joined and the [`permissions`](ref:plugin-oauth/OAuthLogin.permissions) of its role there. The visitor can clear permissions on Discord's screen, so read `permissions` before you rely on one. It's a `bigint`, and `permissions & PermissionFlagsBits.SendMessages` checks a flag.
 
 ## When a user has to log in again
 

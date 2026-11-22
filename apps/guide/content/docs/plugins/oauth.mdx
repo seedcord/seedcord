@@ -153,14 +153,14 @@ The plugin doesn't keep a session for you. `sessions` in the sample is a file of
 | [`scopes`](ref:plugin-oauth/OAuthLogin.scopes) | the scopes that the user has granted, earlier logins included |
 | [`returnTo`](ref:plugin-oauth/CompletedLogin.returnTo) | the path from `loginUrl({ returnTo })`, or `undefined` |
 | [`guild`](ref:plugin-oauth/OAuthLogin.guild) | the server that your bot joined, for a login that [added the bot](/plugins/oauth-calls#adding-your-bot-to-a-server) |
-| [`permissions`](ref:plugin-oauth/CompletedLogin.permissions) | the permissions that the visitor approved for the bot, as a bitfield in a string, for the same kind of login |
+| [`permissions`](ref:plugin-oauth/OAuthLogin.permissions) | the permissions of your bot's role in that server, as a `bigint`, for the same kind of login |
 | [`webhook`](ref:plugin-oauth/OAuthLogin.webhook) | the webhook that Discord created, for a login with the `webhook.incoming` scope |
 
 {/* prettier-ignore-end */}
 
 ### When a login doesn't finish
 
-A visitor can press **Cancel** on Discord's screen, or open a callback link that their browser never started. Without [`onFailure`](ref:plugin-oauth/OAuthOptions.onFailure), they get a plain page with a 400. To show your own page or send them somewhere else, return a `Response` from `onFailure`.
+A visitor can press **Cancel** on Discord's screen, or open a callback link that their browser never started. Without [`onFailure`](ref:plugin-oauth/OAuthOptions.onFailure), they get a plain page with a 400, or a 500 for a `failed` login. To show your own page or send them somewhere else, return a `Response` from `onFailure`.
 
 ```ts twoslash
 import { OAuth } from '@seedcord/plugin-oauth';
@@ -183,6 +183,7 @@ export const WithFailurePage = OAuth.with({
 | `denied` | the visitor pressed **Cancel**, or Discord refused the request. `failure.error` has Discord's reason, like `access_denied` |
 | `invalid` | the login link expired, the page was reloaded, or this browser didn't start the login |
 | `unlisted` | the login link requested a scope that isn't in your [`extraScopes`](/plugins/oauth-calls#scopes-for-one-feature). `failure.scopes` lists them |
+| `failed` | Discord was down, it refused your client secret, or your `kv` didn't save the tokens. The plugin logs `failure.error` before it calls `onFailure` |
 
 {/* prettier-ignore-end */}
 
