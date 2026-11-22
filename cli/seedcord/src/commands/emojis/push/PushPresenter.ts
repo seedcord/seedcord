@@ -40,16 +40,19 @@ export class PushPresenter extends StepsPresenter<PushStep> {
         return picked(this.output, this.prompts.pick, choices);
     }
 
-    public nothingToUpload({ folder, source, keep }: PushPlan): void {
+    public nothingToUpload(plan: PushPlan): void {
+        const { folder, source, keep } = plan;
         this.output.line();
         this.output.line(
             keep.length === 0
                 ? `Nothing to upload. ${paint.path(folder)} doesn't have any emojis in it.`
                 : `Nothing to upload. ${paint.bold(source)} has all ${emojis(keep.length)} from ${paint.path(folder)}.`
         );
+        this.replaceHint(plan);
     }
 
-    public preview({ folder, add, replace, keep, onlyOnDiscord }: PushPlan): void {
+    public preview(plan: PushPlan): void {
+        const { folder, add, replace, keep, onlyOnDiscord } = plan;
         const rows: SectionRow[] = [
             ...markedRows(
                 '+',
@@ -78,6 +81,7 @@ export class PushPresenter extends StepsPresenter<PushStep> {
             });
         }
         printSections(this.output, sections);
+        this.replaceHint(plan);
     }
 
     public approve(plan: PushPlan): Promise<boolean> {
@@ -105,6 +109,13 @@ export class PushPresenter extends StepsPresenter<PushStep> {
     }
 
     public edgeHint(): void {
-        printEdgeHint(this.output, 'the emojis this push uploaded');
+        printEdgeHint(this.output, 'the emojis that this push uploaded');
+    }
+
+    // a changed image still counts as uploaded because push only matches by name
+    private replaceHint({ keep, replace }: PushPlan): void {
+        if (keep.length === 0 || replace.length > 0) return;
+        const command = paint.bold('seedcord emojis push --replace <name>');
+        this.output.line(paint.mute(`Changed an image? ${command} uploads it again.`));
     }
 }

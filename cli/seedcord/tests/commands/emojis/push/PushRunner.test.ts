@@ -93,7 +93,21 @@ describe('PushRunner', () => {
         expect(printed()).toContain(
             `Nothing to upload. seed beta has all 1 emoji from ${join(project.dir, 'emojis')}.`
         );
+        expect(printed()).toContain('Changed an image? seedcord emojis push --replace <name> uploads it again.');
         expect(discord.requests.filter((request) => !request.startsWith('GET'))).toEqual([]);
+    });
+
+    it('prints the replace hint under a preview only when nothing is being replaced', async () => {
+        const project = await projectWith({ 'wave.png': 'wave', 'seed.png': 's' });
+        const hint = 'Changed an image?';
+
+        const added = push(project, fakeEmojiDiscord({ emojis: ['seed'] }).rest);
+        await added.done;
+        const replaced = push(project, fakeEmojiDiscord({ emojis: ['seed', 'wave'] }).rest, { replace: ['wave'] });
+        await replaced.done;
+
+        expect(added.printed()).toContain(hint);
+        expect(replaced.printed()).not.toContain(hint);
     });
 
     it("doesn't upload when the answer is no", async () => {
@@ -220,6 +234,6 @@ describe('PushRunner', () => {
         const { printed, done } = push(project, fakeEmojiDiscord().rest);
         await done;
 
-        expect(printed()).toContain("Your edge worker doesn't have ids for the emojis this push uploaded.");
+        expect(printed()).toContain("Your edge worker doesn't have ids for the emojis that this push uploaded.");
     });
 });

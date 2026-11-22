@@ -74,7 +74,7 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
     }
 
     public edgeHint(): void {
-        printEdgeHint(this.output, 'the commands this deploy added');
+        printEdgeHint(this.output, 'the commands that this deploy added');
     }
 
     private async ask(message: string): Promise<boolean> {

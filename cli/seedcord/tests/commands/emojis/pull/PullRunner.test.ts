@@ -138,7 +138,7 @@ describe('emojis PullRunner', () => {
         expect(await saved(project, 'seed.webp')).toBe('seed-id');
     });
 
-    it('lists the guilds the bot is in for a bare --guild and pulls from the picked one', async () => {
+    it('lists the guilds that the bot is in for a bare --guild and pulls from the picked one', async () => {
         const project = await projectWith({});
         const { rest } = fakeEmojiDiscord({ emojis: ['seed'], guildEmojis: ['blob'] });
         const offered: unknown[] = [];

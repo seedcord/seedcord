@@ -24,7 +24,7 @@ export interface PullOptions {
     readonly names: readonly string[];
     // if it's not set, pull asks in a terminal and skips the existing files everywhere else
     readonly force?: boolean | undefined;
-    // true means pick one from the guilds the bot is in
+    // true means pick one from the guilds that the bot is in
     readonly guild?: string | true | undefined;
 }
 
