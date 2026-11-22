@@ -2,8 +2,8 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
-import type { KeyedQueue } from './KeyedQueue';
 import type { KvDriver } from '@seedcord/types';
+import type { KeyedQueue } from '@seedcord/utils/internal';
 import type { Jsonify, Simplify } from 'type-fest';
 
 /**

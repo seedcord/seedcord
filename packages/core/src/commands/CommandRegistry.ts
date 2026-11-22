@@ -4,7 +4,7 @@ import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { HostPlugins } from '@seedcord/types/internal';
 import { formatFilePath } from '@seedcord/utils';
-import { botFolder } from '@seedcord/utils/internal';
+import { botFolder, KeyedQueue } from '@seedcord/utils/internal';
 
 import { getDevChannel } from '#hmr/devChannel';
 import { FolderExports } from '#hmr/FolderExports';
@@ -18,7 +18,6 @@ import { planDeploy } from '#src/commands/planDeploy';
 import { putCommands } from '#src/commands/putCommands';
 import { readCommands } from '#src/commands/readCommands';
 import { GLOBAL_ID, scopeIdsOf } from '#src/commands/scopes';
-import { KeyedQueue } from '#src/kv/KeyedQueue';
 import { CommandMetadataKey } from '#src/metadataKeys';
 import { PublishDefault } from '#subscribers/publishDefault';
 

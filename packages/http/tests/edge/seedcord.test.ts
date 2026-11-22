@@ -28,6 +28,7 @@ import type { Signer } from '#tests/helpers/ed25519';
 import type { CapturedCtx } from '#tests/helpers/interactions';
 import type { CommandInfo, ContextMenuInfo, CoreBase, ResolvedEmoji } from '@seedcord/core';
 import type { BakedIds } from '@seedcord/core/internal';
+import type { KvDriver } from '@seedcord/types';
 
 // justified: the generated registries are empty in tests
 const commands = Commands as Record<string, CommandInfo>;
@@ -524,5 +525,36 @@ describe('the edge Seedcord', () => {
             .catch((caught: unknown) => caught);
 
         expect(second).toBe(first);
+    });
+});
+
+describe('the edge Seedcord kv', () => {
+    it('holds waitUntil open for an update that nothing awaited', async () => {
+        const release = Promise.withResolvers<undefined>();
+        using stored = new MemoryDriver();
+        const slow: KvDriver & Disposable = {
+            get: async (key) => {
+                await release.promise;
+                return stored.get(key);
+            },
+            set: (key, value) => stored.set(key, value),
+            delete: (key) => stored.delete(key),
+            entries: (prefix) => stored.entries(prefix),
+            [Symbol.dispose]: () => undefined
+        };
+        using signer = await signedEnv();
+        using seedcord = new EdgeBot({ ...config(), kv: slow });
+        const runs = seedcord.kv.collection<number>('runs');
+        seedcord.bus.on('anyInteraction', () => void runs.update('unrouted', (count) => (count ?? 0) + 1));
+        const ctx = capturingCtx();
+
+        await seedcord.fetch(await signedRequest(signer, unrouted), undefined, ctx);
+
+        // workers freezes a task once its request has ended, and the next update to that key would wait
+        // on it forever
+        expect(await settledWithin(ctx)).toBe('still waiting');
+        release.resolve(undefined);
+        await ctx.settled();
+        expect(await runs.get('unrouted')).toBe(1);
     });
 });
