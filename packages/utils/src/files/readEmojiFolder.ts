@@ -76,14 +76,14 @@ async function filesIn(folder: string): Promise<NamedFile[]> {
 }
 
 interface ClashCheck<Item> {
-    // the value two items can't share before their keys are compared, like the emoji name
+    // what two items can't share, like the emoji name
     by: (item: Item) => string;
     kind: string;
     note?: string;
     labelOf: (item: Item) => string;
 }
 
-// items that share the first value only get that error. one clash shows up once
+// two items that share `by` get one error for it and none for their key
 export function emojiClashes<Item extends Pick<FolderEmoji, 'key'>>(
     items: readonly Item[],
     { by, kind, note, labelOf }: ClashCheck<Item>

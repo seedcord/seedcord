@@ -59,7 +59,7 @@ export async function readEmojisOnDiscord(
     );
     steps.detail('app', paint.mute(session.app.id));
 
-    // the guild form gets a capital because it opens the unknown-name error. an app's name is printed as is on Discord
+    // capitalized because it starts the unknown-name error. an app's name is left as Discord has it
     const errorSource = guildId === undefined ? source : `Guild ${guildId}`;
     return { ...read, session, source, diff: new EmojiDiff(read.files, onDiscord, paint.bold(errorSource)) };
 }

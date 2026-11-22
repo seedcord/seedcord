@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { PullPresenter } from '#commands/emojis/pull/PullPresenter';
 import { PULL_STEPS, PullRunner } from '#commands/emojis/pull/PullRunner';
 import { StepPrinter } from '#core/output/StepPrinter';
-import { fakeEmojiDiscord, GUILD_ID, projectWith } from '#tests/commands/emojis/fakeEmojiDiscord';
+import { fakeEmojiDiscord, GUILD_ID, printedPath, projectWith } from '#tests/commands/emojis/fakeEmojiDiscord';
 import { fakeTerminal } from '#tests/fakeTerminal';
 
 import type { EmojiPrompts } from '#commands/emojis/prompts';
@@ -67,7 +67,7 @@ describe('emojis PullRunner', () => {
         expect(await saved(project, 'seed.png')).toBe('s');
         expect(printed()).toContain(
             [
-                `  ${join(project.dir, 'emojis')}  2 downloads`,
+                `  ${printedPath(project)}  2 downloads`,
                 '    + old_logo.webp test.webp',
                 '      1 already in the folder'
             ].join('\n')
@@ -136,6 +136,18 @@ describe('emojis PullRunner', () => {
         await pull(project, rest, { names: [], force: true }).done;
 
         expect(await saved(project, 'wave.webp')).toBe('wave-id');
+    });
+
+    it('keeps the old file when the new one fails to write', async () => {
+        const project = await projectWith({ 'seed.png': 'mine' });
+        // pull can't write seed.webp while a folder has that name
+        await mkdir(join(project.dir, 'emojis/seed.webp'));
+        const { rest } = fakeEmojiDiscord({ emojis: ['seed'] });
+
+        const { done } = pull(project, rest, { names: [], force: true });
+
+        await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliSomeFailed });
+        expect(await saved(project, 'seed.png')).toBe('mine');
     });
 
     it('overwrites without asking with --force', async () => {

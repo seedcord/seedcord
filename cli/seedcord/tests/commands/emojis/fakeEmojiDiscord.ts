@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { DiscordAPIError } from '@discordjs/rest';
+import { toPosixPath } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
 
 import { APP_ID, fakeProject } from '#tests/commands/commands/fakeBot';
@@ -39,6 +40,11 @@ const BAD_REQUEST = 400;
 
 export function discordError(code: RESTJSONErrorCodes, message: string): DiscordAPIError {
     return new DiscordAPIError({ code, message }, code, BAD_REQUEST, 'POST', Routes.applicationEmojis(APP_ID), {});
+}
+
+// the commands print paths with forward slashes, Windows included
+export function printedPath(project: FakeProject, path = ''): string {
+    return toPosixPath(join(project.dir, 'emojis', path));
 }
 
 // a fake bot whose emojis folder has these files

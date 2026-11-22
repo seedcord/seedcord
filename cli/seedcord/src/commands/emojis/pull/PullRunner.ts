@@ -1,5 +1,5 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { mkdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
@@ -68,6 +68,12 @@ function assertNoClashes(planned: readonly Planned[]): void {
     );
 }
 
+// wave.WEBP and wave.webp are one file on macOS and Windows
+async function sameFile(first: string, second: string): Promise<boolean> {
+    const [a, b] = await Promise.all([stat(first), stat(second)]);
+    return a.dev === b.dev && a.ino === b.ino;
+}
+
 type PullDeps = RunnerDeps & { readonly fetch: (url: string) => Promise<Response> };
 
 export class PullRunner {
@@ -121,10 +127,17 @@ export class PullRunner {
         const response = await this.deps.fetch(session.imageUrl(emoji));
         if (!response.ok) throw new SeedcordError(SeedcordErrorCode.CliEmojiDownloadFailed, [response.status]);
 
-        const image = await response.bytes();
-        // removed before the write because wave.WEBP and wave.webp are one file on macOS and Windows
-        if (replaces !== undefined) await rm(replaces);
         await mkdir(dirname(to), { recursive: true });
-        await writeFile(to, image);
+        // starts with a dot because the folder read skips dotfiles
+        const temp = join(dirname(to), `.${basename(to)}.download`);
+        const image = await response.bytes();
+        try {
+            await writeFile(temp, image);
+            await rename(temp, to);
+        } catch (error: unknown) {
+            await rm(temp, { force: true });
+            throw error;
+        }
+        if (replaces !== undefined && !(await sameFile(replaces, to))) await rm(replaces);
     }
 }

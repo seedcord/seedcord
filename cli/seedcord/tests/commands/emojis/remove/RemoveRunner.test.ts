@@ -8,7 +8,7 @@ import { RemovePresenter } from '#commands/emojis/remove/RemovePresenter';
 import { REMOVE_STEPS, RemoveRunner } from '#commands/emojis/remove/RemoveRunner';
 import { PROCEED } from '#core/output/confirm';
 import { StepPrinter } from '#core/output/StepPrinter';
-import { fakeEmojiDiscord, projectWith } from '#tests/commands/emojis/fakeEmojiDiscord';
+import { fakeEmojiDiscord, printedPath, projectWith } from '#tests/commands/emojis/fakeEmojiDiscord';
 import { fakeTerminal } from '#tests/fakeTerminal';
 
 import type { EmojiPrompts } from '#commands/emojis/prompts';
@@ -81,7 +81,7 @@ describe('emojis RemoveRunner', () => {
     it('asks whether to delete the file too, and keeps it on a no', async () => {
         const project = await projectWith({ 'seed.png': 's' });
         const discord = fakeEmojiDiscord({ emojis: ['seed'] });
-        const folder = join(project.dir, 'emojis');
+        const folder = printedPath(project);
         const offers: string[] = [];
 
         const { printed, done } = remove(project, discord.rest, {
@@ -129,7 +129,7 @@ describe('emojis RemoveRunner', () => {
         const project = await projectWith({ 'reactions/seed.png': 's', 'wave.png': 'w' });
         const discord = fakeEmojiDiscord({ emojis: ['seed', 'wave'] });
         const questions: string[] = [];
-        const folder = join(project.dir, 'emojis');
+        const folder = printedPath(project);
 
         const { printed, done } = remove(project, discord.rest, {
             names: ['seed'],
@@ -172,7 +172,7 @@ describe('emojis RemoveRunner', () => {
         await done;
 
         expect(offered).toEqual([
-            { value: 'seed', label: 'seed', hint: join(project.dir, 'emojis/seed.png') },
+            { value: 'seed', label: 'seed', hint: printedPath(project, 'seed.png') },
             { value: 'old_logo', label: 'old_logo' }
         ]);
         expect(discord.emojis().map(({ name }) => name)).toEqual(['seed']);

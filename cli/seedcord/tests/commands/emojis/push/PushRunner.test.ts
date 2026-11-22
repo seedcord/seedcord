@@ -1,5 +1,3 @@
-import { join } from 'node:path';
-
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vite-plus/test';
@@ -8,7 +6,7 @@ import { PushPresenter } from '#commands/emojis/push/PushPresenter';
 import { PUSH_STEPS, PushRunner } from '#commands/emojis/push/PushRunner';
 import { PROCEED } from '#core/output/confirm';
 import { StepPrinter } from '#core/output/StepPrinter';
-import { discordError, fakeEmojiDiscord, projectWith } from '#tests/commands/emojis/fakeEmojiDiscord';
+import { discordError, fakeEmojiDiscord, printedPath, projectWith } from '#tests/commands/emojis/fakeEmojiDiscord';
 import { fakeTerminal } from '#tests/fakeTerminal';
 
 import type { EmojiPrompts } from '#commands/emojis/prompts';
@@ -62,7 +60,7 @@ describe('PushRunner', () => {
         expect(imageOf('party_parrot')).toBe(`data:image/gif;base64,${Buffer.from('parrot').toString('base64')}`);
         expect(printed()).toContain(
             [
-                `  ${join(project.dir, 'emojis')}  3 emojis`,
+                `  ${printedPath(project)}  3 emojis`,
                 '    + party_parrot wave',
                 '      1 already uploaded',
                 '      Changed an image? seedcord emojis push --replace <name> uploads it again.',
@@ -92,7 +90,7 @@ describe('PushRunner', () => {
         const { printed, done } = push(project, discord.rest, { confirm });
         await done;
 
-        expect(printed()).toContain(`Nothing to upload. seed beta has every emoji in ${join(project.dir, 'emojis')}.`);
+        expect(printed()).toContain(`Nothing to upload. seed beta has every emoji in ${printedPath(project)}.`);
         expect(printed()).toContain('Changed an image? seedcord emojis push --replace <name> uploads it again.');
         expect(discord.requests.filter((request) => !request.startsWith('GET'))).toEqual([]);
     });
@@ -155,7 +153,7 @@ describe('PushRunner', () => {
         await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliSomeFailed });
         expect(discord.emojis().map(({ id, name }) => `${name} ${id}`)).toEqual(['wave wave-id']);
         expect(printed()).toContain(
-            `Could not upload ${join(project.dir, 'emojis/wave.png')} (Discord can't read it as an image).`
+            `Could not upload ${printedPath(project, 'wave.png')} (Discord can't read it as an image).`
         );
     });
 
@@ -170,7 +168,7 @@ describe('PushRunner', () => {
 
         await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliSomeFailed });
         expect(discord.emojis().map(({ id, name }) => `${name} ${id}`)).toEqual(['wave wave-id']);
-        expect(printed()).toContain(`Could not upload ${join(project.dir, 'emojis/wave.png')} (Missing Access).`);
+        expect(printed()).toContain(`Could not upload ${printedPath(project, 'wave.png')} (Missing Access).`);
     });
 
     it.for<{ when: string; rejects: Record<string, Error>; reason: string }>([

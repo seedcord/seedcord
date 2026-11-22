@@ -35,8 +35,8 @@ export interface PushPlan {
 // an UploadedFile replaces the emoji it comes with
 export type Upload = UploadedFile | { file: EmojiFile; emoji?: never };
 
-// 2048 KiB. discord's own error reads "File cannot be larger than 2048.0 kb"
-const MAX_UPLOAD_BYTES = 2_097_152;
+// discord's own error reads "File cannot be larger than 2048.0 kb"
+const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 
 async function assertUploadable(files: readonly EmojiFile[]): Promise<void> {
     const sized = await Promise.all(
