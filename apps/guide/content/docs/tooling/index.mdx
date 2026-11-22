@@ -32,11 +32,12 @@ Every other key is optional: `root`, `files`, `vitePlugins`, `make`, the rest of
 | [`seedcord make`](/tooling/make) | asks for a name and a few values, then writes new files from one of your templates |
 | [`seedcord build`](/build) | type checks your bot and bundles it for a server, a Cloudflare Worker, or another program to import |
 | [`seedcord commands`](/tooling/commands) | deploys your commands to Discord, lists what Discord holds, and deletes the ones you no longer want |
+| [`seedcord emojis`](/tooling/emojis) | uploads the images in your emojis folder to your application, and lists, downloads, or deletes what's there |
 | [`seedcord ask`](/tooling/ask) | searches the guide for a question, a pasted error, or an error code, and links the sections that match |
 
 {/* prettier-ignore-end */}
 
-A project from `create-seedcord` wraps these as scripts, along with `check`, `commands:deploy`, and the `deploy` and `types` scripts of an edge bot. [Your first bot](/first-bot#scripts) lists every one.
+A project from `create-seedcord` wraps these as scripts, along with `check`, `commands:deploy`, `emojis`, and the `deploy` and `types` scripts of an edge bot. [Your first bot](/first-bot#scripts) lists every one.
 
 ## Your bot's config
 
@@ -50,7 +51,7 @@ A project from `create-seedcord` wraps these as scripts, along with `check`, `co
 | --- | --- | --- |
 | `bot.interactions` | the folder seedcord scans for handlers, plus middleware, ignored ids, and whether replies are ephemeral by default | [Components](/components), [Replying](/replying#make-replies-public-by-default) |
 | `bot.commands` | the folder seedcord scans for commands, and `guilds`, the test servers that bare `@RegisterCommand()` commands deploy to | [Commands](/commands), [Test servers](/commands/deployed#test-servers) |
-| `bot.emojis` | the emoji names [`Emojis`](ref:gateway/Emojis) resolves at startup | [Components](/components) |
+| `bot.emojis` | the emojis [`Emojis`](ref:gateway/Emojis) resolves at startup that don't come from your emojis folder, like a guild's | [Components](/components#emojis-by-name) |
 | `bot.events` | the folder seedcord scans for event handlers. Gateway only | [Events](/events) |
 | `bot.clientOptions` | passed straight to the discord.js `Client`. Gateway only | [Your first bot](/first-bot) |
 | `subscribers` | the folder seedcord scans for bus subscribers | [The bus](/events/bus) |

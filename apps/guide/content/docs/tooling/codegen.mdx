@@ -35,7 +35,7 @@ An option's name and its required flag are arguments to method calls. Those call
 
 <Shell run="codegen" />
 
-Run it after you add a command, change its options, attach a plugin, or edit your emoji block. Also run it after you add something an attached plugin types for you, like a new message in a translations plugin's locale files.
+Run it after you add a command, change its options, attach a plugin, add an image to your emojis folder, or edit your emoji block. Also run it after you add something an attached plugin types for you, like a new message in a translations plugin's locale files.
 
 Your handler then reads its options through `this.options`. `getString('query')` comes back as `string` because you marked that option required. A typo in the name stops the build. [Command options](/commands/options) covers what each kind returns.
 
@@ -54,7 +54,7 @@ Every run rewrites the whole file from scratch.
 | [`SlashRegistry`](ref:core/SlashRegistry) | every command class in your `commands` folder |
 | [`UserContextMenuRegistry`](ref:core/UserContextMenuRegistry) | the same folder, for right-click commands on a user |
 | [`MessageContextMenuRegistry`](ref:core/MessageContextMenuRegistry) | the same folder, for right-click commands on a message |
-| [`EmojiMap`](ref:types/EmojiMap) | the `bot.emojis` block on your config, which [Components](/components) shows in full |
+| [`EmojiMap`](ref:types/EmojiMap) | the images in your emojis folder and the `bot.emojis` block on your config. [Components](/components#emojis-by-name) shows both |
 | [`Core`](ref:gateway/Core) | the key you gave each attached plugin |
 | [`PluginTypes`](ref:core/PluginTypes) | what each attached plugin found in your project, like the keys in its locale files |
 

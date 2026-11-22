@@ -14,8 +14,7 @@ export interface UploadedFile {
     emoji: UploadedEmoji;
 }
 
-// has a `file` when the folder still has one for it
-export type OnDiscord = Pick<UploadedFile, 'emoji'> & Partial<Pick<UploadedFile, 'file'>>;
+export type OnDiscord = UploadedFile | { emoji: UploadedEmoji; file?: never };
 
 export interface EmojiDiff {
     missing: EmojiFile[];

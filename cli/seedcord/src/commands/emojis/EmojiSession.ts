@@ -45,9 +45,8 @@ export class EmojiSession {
         }
     }
 
-    public async upload({ name, file }: EmojiFile): Promise<void> {
-        // discord ignores the mime type but won't take the string without the data: prefix
-        const image = `data:image/png;base64,${await readFile(file, 'base64')}`;
+    public async upload({ name, file, mime }: EmojiFile): Promise<void> {
+        const image = `data:${mime};base64,${await readFile(file, 'base64')}`;
         await this.rest.post(Routes.applicationEmojis(this.app.id), { body: { name, image } });
     }
 

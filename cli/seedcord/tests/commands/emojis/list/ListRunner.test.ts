@@ -104,10 +104,15 @@ describe('emojis ListRunner', () => {
         expect(await runner.json(quietSteps, {})).toEqual({
             application: { id: APP_ID, name: 'seed beta' },
             folder,
-            uploaded: [{ name: 'seed', key: 'Seed', id: 'seed-id', file: join(folder, 'seed.png') }],
+            uploaded: [{ name: 'seed', key: 'Seed', id: 'seed-id', file: join(folder, 'seed.png'), mime: 'image/png' }],
             notUploaded: [
-                { name: 'party_parrot', key: 'PartyParrot', file: join(folder, 'reactions/party_parrot.gif') },
-                { name: 'wave', key: 'Wave', file: join(folder, 'wave.png') }
+                {
+                    name: 'party_parrot',
+                    key: 'PartyParrot',
+                    file: join(folder, 'reactions/party_parrot.gif'),
+                    mime: 'image/gif'
+                },
+                { name: 'wave', key: 'Wave', file: join(folder, 'wave.png'), mime: 'image/png' }
             ],
             onlyOnDiscord: [{ name: 'old_logo', id: 'old_logo-id' }]
         });

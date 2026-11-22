@@ -176,7 +176,7 @@ describe('CodegenRunner writeFrom', () => {
         const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
         await mkdir(join(root, 'emojis'));
-        await writeFile(join(root, 'emojis', 'dot.png'), '');
+        for (const image of ['dot.png', '1up.png']) await writeFile(join(root, 'emojis', image), '');
         const config = configAt(root, resolve(root, 'bot.ts'));
         const files = new ProjectFiles(config);
         using _devFiles = setDevFiles(files.layout.toJSON());
@@ -202,6 +202,7 @@ describe('CodegenRunner writeFrom', () => {
         expect(written).toContain("ban: { options: {}; cache: 'cached' }");
         expect(runsUnderSeedcordDev()).toBe(true);
         expect(written).toContain("Dot: 'application';");
+        expect(written).toContain("'1Up': 'application';");
     });
 });
 

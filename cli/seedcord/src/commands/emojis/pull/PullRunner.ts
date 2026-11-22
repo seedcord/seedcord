@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { emojiFileAt, usableEmojiFiles } from '@seedcord/utils/internal';
 import { partition } from 'es-toolkit';
 
 import { namedOnDiscord, onDiscord } from '#commands/emojis/emojiDiff';
@@ -28,19 +29,24 @@ export interface PullOptions {
     readonly guild?: string | true | undefined;
 }
 
-export interface Save {
+interface Download {
     emoji: UploadedEmoji;
     to: string;
-    // the existing file this download overwrites. it might be a .png while `to` is a .webp
-    replaces?: string;
+    replaces?: never;
 }
+
+// `replaces` might be a .png while `to` is a .webp
+interface Overwrite extends Omit<Download, 'replaces'> {
+    replaces: string;
+}
+
+export type Save = Download | Overwrite;
 
 export interface PullPlan {
     folder: string;
     source: string;
-    fresh: Save[];
-    // the ones that download over a file
-    over: Save[];
+    fresh: Download[];
+    overwrites: Overwrite[];
     alreadyInFolder: number;
 }
 
@@ -57,7 +63,7 @@ export class PullRunner {
         const read = await readFolder(presenter, this.deps, process.cwd());
         const guildId = guild === true ? await presenter.pickGuild(() => readBotGuilds(read.rest)) : guild;
         if (guild === true && guildId === undefined) return;
-        const { folder, session, source, diff } = await readDiscord(presenter, read, guildId);
+        const { folder, files, session, source, diff } = await readDiscord(presenter, read, guildId);
 
         const wanted = names.length > 0 ? namedOnDiscord(diff, names, source) : onDiscord(diff);
         const inFolder = wanted.filter(({ file }) => file !== undefined).length;
@@ -69,8 +75,15 @@ export class PullRunner {
             if (!file) return [{ emoji, to: join(folder, name) }];
             return overwrite ? [{ emoji, to: join(dirname(file.file), name), replaces: file.file }] : [];
         });
-        const [over, fresh] = partition(saves, ({ replaces }) => replaces !== undefined);
-        const plan = { folder, source, fresh, over, alreadyInFolder: wanted.length - saves.length };
+        // discord allows party_parrot and PartyParrot together, and both would be Emojis.PartyParrot
+        const replaced = new Set(saves.map(({ replaces }) => replaces));
+        usableEmojiFiles([
+            ...files.filter(({ file }) => !replaced.has(file)),
+            ...saves.map(({ to }) => emojiFileAt(to))
+        ]);
+
+        const [overwrites, fresh] = partition(saves, (save) => save.replaces !== undefined);
+        const plan = { folder, source, fresh, overwrites, alreadyInFolder: wanted.length - saves.length };
         if (saves.length === 0) {
             presenter.nothingToDownload(plan);
             return;

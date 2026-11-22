@@ -8,7 +8,7 @@
 
     /* two identical tracks slid -50% make the loop restart without a visible jump */
     .marquee-anim {
-        animation: marquee-x 240s linear infinite;
+        animation: marquee-x 200s linear infinite;
     }
 
     .shot-settle {

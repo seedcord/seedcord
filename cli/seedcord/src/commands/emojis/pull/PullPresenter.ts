@@ -48,12 +48,12 @@ export class PullPresenter extends StepsPresenter<PullStep> {
         );
     }
 
-    public preview({ folder, fresh, over, alreadyInFolder }: PullPlan): void {
+    public preview({ folder, fresh, overwrites, alreadyInFolder }: PullPlan): void {
         const files = (saves: readonly Save[]): string[] => saves.map(({ to }) => posixRelative(folder, to));
-        const rows = [...markedRows('+', files(fresh)), ...markedRows('~', files(over))];
+        const rows = [...markedRows('+', files(fresh)), ...markedRows('~', files(overwrites))];
         if (alreadyInFolder > 0) rows.push({ items: [paint.mute(`${alreadyInFolder} already in the folder`)] });
 
-        const downloads = plural(fresh.length + over.length, 'download');
+        const downloads = plural(fresh.length + overwrites.length, 'download');
         printSections(this.output, [{ title: displayPath(folder), note: downloads, rows }]);
     }
 

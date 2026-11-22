@@ -81,6 +81,7 @@ export class Ping extends SlashHandler<'ping'> {
 - Any Vite plugin, `.env` modes, and bundled data files, the same in dev and in the build
 - A dev terminal that shows startup phases and reply timings
 - `seedcord commands` to deploy, list, and clean up your commands on Discord
+- `seedcord emojis` to upload, list, and manage a folder of images as your application's emojis
 - `seedcord codegen --check` for CI
 - `seedcord make` to write new files from your own templates
 - `seedcord ask` to search the guide from your terminal in natural language
@@ -96,7 +97,7 @@ export class Ping extends SlashHandler<'ping'> {
 - A typed event bus on both transports
 - A typed kv store, in memory or on any Keyv or unstorage driver
 - Cron jobs and scheduled tasks
-- Custom emojis looked up by the name in your config
+- Custom emojis read by name, typed from the files in your emojis folder
 - Logging in named channels you can quiet one at a time
 
 ...and a lot more in [the guide](https://seedcord.org/guide).

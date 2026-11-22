@@ -56,9 +56,10 @@ describe('PushRunner', () => {
             'POST party_parrot',
             'POST wave'
         ]);
-        expect(discord.emojis().find(({ name }) => name === 'wave')?.image).toBe(
-            `data:image/png;base64,${Buffer.from('wave').toString('base64')}`
-        );
+        const imageOf = (wanted: string): string | undefined =>
+            discord.emojis().find(({ name }) => name === wanted)?.image;
+        expect(imageOf('wave')).toBe(`data:image/png;base64,${Buffer.from('wave').toString('base64')}`);
+        expect(imageOf('party_parrot')).toBe(`data:image/gif;base64,${Buffer.from('parrot').toString('base64')}`);
         expect(printed()).toContain(
             [
                 `  ${join(project.dir, 'emojis')}  3 emojis`,

@@ -48,6 +48,7 @@ export default defineConfig({
 | `dev.idleAnimation` | `true` | | whether the [dev terminal](/tooling/dev) animates while nothing happens |
 | `make.templates` | `./templates` | the config's folder | the folder [`seedcord make`](/tooling/make) reads templates from |
 | `make.helpers` | `{}` | | [your own Handlebars helpers](/tooling/make#your-own-helpers) for those templates |
+| `emojis.dir` | `./emojis` | the config's folder | the folder of images [`seedcord emojis`](/tooling/emojis) uploads to your application |
 
 {/* prettier-ignore-end */}
 
@@ -55,7 +56,7 @@ The `dev` keys only apply to `seedcord dev`. `dev.tunnel` takes `true`, `false`,
 
 ## Where paths resolve
 
-Every relative path is relative to one of two folders. `root`, `build.outDir`, `build.tsconfig`, and `make.templates` are relative to the folder that holds `seedcord.config.ts`. Everything that points into your bot's code is relative to `root`, so with `root: './src'` you write `instance: './bot.ts'`. Writing `'./src/bot.ts'` there would look for `src/src/bot.ts`.
+Every relative path is relative to one of two folders. `root`, `build.outDir`, `build.tsconfig`, `make.templates`, and `emojis.dir` are relative to the folder that holds `seedcord.config.ts`. Everything that points into your bot's code is relative to `root`, so with `root: './src'` you write `instance: './bot.ts'`. Writing `'./src/bot.ts'` there would look for `src/src/bot.ts`.
 
 The folder paths inside `new Seedcord({ ... })` follow the same rule, so `interactions: { path: './handlers' }` reaches `src/handlers`. From a handler folder, seedcord loads the same code files that [`importFiles`](ref:utils/importFiles) would. A plugin that reads a folder, like Mongoose with its `path`, [resolves it the same way](/writing-plugins/files#where-a-relative-path-starts).
 

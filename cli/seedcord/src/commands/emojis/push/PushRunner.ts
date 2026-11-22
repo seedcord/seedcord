@@ -33,8 +33,8 @@ export interface PushPlan {
     onlyOnDiscord: UploadedEmoji[];
 }
 
-// `emoji` is the one being replaced, if any
-export type Upload = Pick<UploadedFile, 'file'> & Partial<Pick<UploadedFile, 'emoji'>>;
+// an UploadedFile replaces the emoji it comes with
+export type Upload = UploadedFile | { file: EmojiFile; emoji?: never };
 
 // 2048 KiB. discord's own error reads "File cannot be larger than 2048.0 kb"
 const MAX_UPLOAD_BYTES = 2_097_152;
@@ -97,7 +97,7 @@ export class PushRunner {
 
         const outcome = await presenter.upload(
             uploads,
-            ({ file, emoji }) => (emoji ? session.replace({ file, emoji }) : session.upload(file)),
+            (upload) => (upload.emoji ? session.replace(upload) : session.upload(upload.file)),
             rejectionOf
         );
         if (target === 'edge' && outcome.done.length > 0) presenter.edgeHint();

@@ -173,6 +173,31 @@ describe('emojis PullRunner', () => {
         expect(printed()).toMatch(/read discord +\S+ +1 emoji on guild 111\n/u);
     });
 
+    it('downloads an emoji whose name starts with a digit', async () => {
+        const project = await projectWith({});
+        const { rest } = fakeEmojiDiscord({ emojis: ['1up'] });
+
+        await pull(project, rest, { names: [] }).done;
+
+        expect(await saved(project, '1up.webp')).toBe('1up-id');
+    });
+
+    it.for<{ why: string; files: Record<string, string>; emojis: string[] }>([
+        { why: 'two downloads', files: {}, emojis: ['party_parrot', 'PartyParrot'] },
+        { why: 'a download and a file', files: { 'party_parrot.png': 'p' }, emojis: ['PartyParrot'] }
+    ])('stops before any download when $why would share a key', async ({ files, emojis }) => {
+        const project = await projectWith(files);
+        const { rest } = fakeEmojiDiscord({ emojis: [...emojis, 'seed'] });
+
+        const { done } = pull(project, rest, { names: [] });
+
+        await expect(done).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreDuplicateName,
+            message: expect.stringContaining('PartyParrot') as string
+        });
+        expect(existsSync(join(project.dir, 'emojis/seed.webp'))).toBe(false);
+    });
+
     it('throws CliEmojiNameUnknown for a name that discord lacks', async () => {
         const project = await projectWith({});
         const { rest } = fakeEmojiDiscord({ emojis: ['seed'] });

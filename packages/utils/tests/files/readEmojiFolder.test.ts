@@ -32,16 +32,19 @@ function problem(code: SeedcordErrorCode, ...messageParts: string[]): unknown {
 
 describe('readEmojiFolder', () => {
     it.for([
-        { file: 'confirmation_check.png', name: 'confirmation_check', key: 'ConfirmationCheck' },
-        { file: 'core.avif', name: 'core', key: 'Core' },
-        { file: 'streak2x.gif', name: 'streak2x', key: 'Streak2X' },
-        { file: 'HTTPServer.webp', name: 'HTTPServer', key: 'HttpServer' },
-        { file: 'LOUD.PNG', name: 'LOUD', key: 'Loud' },
-        { file: 'badges/gold_star.jpeg', name: 'gold_star', key: 'GoldStar' }
-    ])('reads $file as the emoji $name under the key $key', async ({ file, name, key }) => {
+        { file: 'confirmation_check.png', name: 'confirmation_check', key: 'ConfirmationCheck', mime: 'image/png' },
+        { file: 'core.avif', name: 'core', key: 'Core', mime: 'image/avif' },
+        { file: 'streak2x.gif', name: 'streak2x', key: 'Streak2X', mime: 'image/gif' },
+        { file: 'HTTPServer.webp', name: 'HTTPServer', key: 'HttpServer', mime: 'image/webp' },
+        { file: 'LOUD.PNG', name: 'LOUD', key: 'Loud', mime: 'image/png' },
+        { file: '9lives.png', name: '9lives', key: '9Lives', mime: 'image/png' },
+        { file: '_1up.png', name: '_1up', key: '1Up', mime: 'image/png' },
+        { file: '__.png', name: '__', key: '__', mime: 'image/png' },
+        { file: 'badges/gold_star.jpeg', name: 'gold_star', key: 'GoldStar', mime: 'image/jpeg' }
+    ])('reads $file as the emoji $name under the key $key', async ({ file, ...emoji }) => {
         const folder = await folderWith(file);
 
-        expect(await readEmojiFolder(folder)).toEqual([{ key, name, file: join(folder, file) }]);
+        expect(await readEmojiFolder(folder)).toEqual([{ ...emoji, file: join(folder, file) }]);
     });
 
     it('reads a missing folder as empty', async () => {
@@ -51,7 +54,9 @@ describe('readEmojiFolder', () => {
     it('skips dotfiles, dot-folders and node_modules', async () => {
         const folder = await folderWith('.DS_Store', '.drafts/wip.png', 'node_modules/pkg/logo.png', 'core.png');
 
-        expect(await readEmojiFolder(folder)).toEqual([{ key: 'Core', name: 'core', file: join(folder, 'core.png') }]);
+        expect(await readEmojiFolder(folder)).toEqual([
+            { key: 'Core', name: 'core', file: join(folder, 'core.png'), mime: 'image/png' }
+        ]);
     });
 
     it.for([
@@ -63,13 +68,6 @@ describe('readEmojiFolder', () => {
     ])('rejects $file because its name has $why', async ({ file }) => {
         expect(await problemsIn(file)).toEqual([problem(SeedcordErrorCode.ConfigEmojiFileUnusable, '2 to 32')]);
     });
-
-    it.for(['9lives.png', '_9lives.png', '__.png'])(
-        'rejects %s because its key would not start with a letter',
-        async (file) => {
-            expect(await problemsIn(file)).toEqual([problem(SeedcordErrorCode.ConfigEmojiFileUnusable, 'Emojis')]);
-        }
-    );
 
     it('rejects a file that Discord does not take as an image', async () => {
         expect(await problemsIn('notes.txt')).toEqual([problem(SeedcordErrorCode.ConfigEmojiFileUnusable, 'PNG')]);
@@ -83,6 +81,6 @@ describe('readEmojiFolder', () => {
     });
 
     it('reports every problem in one throw', async () => {
-        expect(await problemsIn('thumbs-up.png', '9lives.png', 'notes.txt')).toHaveLength(3);
+        expect(await problemsIn('thumbs-up.png', 'a.png', 'notes.txt')).toHaveLength(3);
     });
 });
