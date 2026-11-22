@@ -58,6 +58,7 @@ export default {
                 '@seedcord/plugin-i18n',
                 '@seedcord/plugin-kysely',
                 '@seedcord/plugin-mongoose',
+                '@seedcord/plugin-oauth',
                 '@seedcord/plugin-tasks',
                 '@types/better-sqlite3',
                 '@types/pg',
@@ -98,6 +99,7 @@ export default {
         'plugins/i18n': typeTestsAndFixtures,
         'plugins/kysely': typeTestsOnly,
         'plugins/mongoose': typeTestsOnly,
+        'plugins/oauth': typeTestsOnly,
         'plugins/tasks': typeTestsAndFixtures,
         'cli/seedcord': {
             entry: [TYPE_TESTS, 'playground/**/*.{ts,tsx}', 'tests/fixtures/*/**/*.{ts,tsx,mts,js,jsx,mjs}'],

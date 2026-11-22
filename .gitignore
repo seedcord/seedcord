@@ -29,6 +29,7 @@ dist/
 .wrangler/
 .cloudflare/
 .seedcord/
+.kv/
 
 # Ignore IDE specific files
 **/.idea

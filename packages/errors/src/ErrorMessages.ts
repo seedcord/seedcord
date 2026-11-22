@@ -1,11 +1,19 @@
 import { PRODUCTION_SITES } from '@seedcord/brand';
 
 import { SeedcordErrorCode } from './ErrorCodes';
-import { deployFix, emojiFileProblems, listedFolderProblems, placeText, token, vitePluginFix } from './messageParts';
+import {
+    deployFix,
+    emojiFileProblems,
+    listedFolderProblems,
+    loginNeededBecause,
+    placeText,
+    token,
+    vitePluginFix
+} from './messageParts';
 import { allOf, capitalized, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
 import { paint } from './palette';
 
-import type { VitePluginPlace } from './messageParts';
+import type { LoginNeededReason, VitePluginPlace } from './messageParts';
 
 /** @internal */
 const messages = {
@@ -25,8 +33,8 @@ const messages = {
         `Could not read the emojis in ${where} to resolve ${paint.sky(key)} (${paint.bold(name)}). ${reasonThen(reason, fix)}`,
     [SeedcordErrorCode.ConfigWebhookNotFound]: (envKey: string) =>
         `Discord can't find a webhook at the URL in ${paint.bold(envKey)}. Someone deleted it, or the id or token in the URL is wrong. Create a webhook and copy its URL.`,
-    [SeedcordErrorCode.ConfigMissingEnv]: (name: string) =>
-        `${paint.bold(name)} is not set. Add it to your environment or your .env file.`,
+    [SeedcordErrorCode.ConfigMissingEnv]: (name: string, whereToFindIt?: string) =>
+        `${paint.bold(name)} is not set.${whereToFindIt ? ` ${whereToFindIt}` : ''} Add it to your environment or your .env file.`,
     [SeedcordErrorCode.ConfigInvalidEnv]: (name: string, expected: string, why?: string) =>
         `${paint.bold(name)} has a value seedcord cannot use.${why ? ` ${why}` : ''} Set it to ${expected}.`,
     [SeedcordErrorCode.MissingGuildsIntent]: (commands: readonly string[]) =>
@@ -314,6 +322,15 @@ const messages = {
         `${paint.path(place)} uses ${paint.sky(reference)}, but that file doesn't define it. Define ${paint.sky(reference)} in this file too. Fluent formats each file on its own.`,
     [SeedcordErrorCode.PluginI18nBaseMissing]: (dir: string, baseFile: string) =>
         `${paint.path(dir)} doesn't have ${paint.path(baseFile)}, the file that lists every message. Add it, or set ${paint.bold('base')} to a locale that has a file.`,
+
+    [SeedcordErrorCode.PluginOAuthLoginNeeded]: (userId: string, why: LoginNeededReason) =>
+        `The user ${paint.sky(userId)} has to log in with Discord. ${loginNeededBecause(why)} Send them to the login link.`,
+    [SeedcordErrorCode.PluginOAuthIdentifyMissing]: () =>
+        `Discord didn't return the user who logged in because the authorize link didn't request the ${paint.bold('identify')} scope. Build the link with ${paint.bold('authorizeUrl()')}, which always adds it.`,
+    [SeedcordErrorCode.PluginOAuthTokensInMemory]: (plugin: string) =>
+        `${paint.sky(plugin)} saves each user's tokens in ${paint.bold('kv')}, and this bot's ${paint.bold('kv')} keeps everything in memory. A restart would delete the tokens. Set ${paint.bold('kv')} in your bot's config to a driver that saves to a file or a database.`,
+    [SeedcordErrorCode.PluginOAuthSecretRefused]: () =>
+        `Discord refused the client secret. Copy it again from your application's OAuth2 page in the Developer Portal. The OAuth plugin reads it from ${paint.bold('DISCORD_CLIENT_SECRET')}, and ${paint.sky('OAuthClient')} takes it as ${paint.bold('clientSecret')}.`,
 
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 

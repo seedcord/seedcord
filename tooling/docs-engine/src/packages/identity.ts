@@ -38,6 +38,10 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
         displayName: 'plugin-i18n',
         aliases: ['plugin-i18n', 'i18n', 'translations', 'fluent', 'localization']
     },
+    '@seedcord/plugin-oauth': {
+        displayName: 'plugin-oauth',
+        aliases: ['plugin-oauth', 'oauth', 'oauth2', 'login', 'tokens']
+    },
     '@seedcord/types': {
         displayName: 'types',
         aliases: ['types']

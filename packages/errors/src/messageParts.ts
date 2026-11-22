@@ -31,6 +31,16 @@ export const emojiFileProblems = {
     size: 'Discord rejects a file over 2048 KiB. Export it smaller.'
 };
 
+export type LoginNeededReason = 'never' | 'refused' | { missingScope: string };
+
+export function loginNeededBecause(why: LoginNeededReason): string {
+    if (why === 'never') {
+        return "They don't have saved tokens here. They never logged in, they were logged out, or the client secret changed since they logged in.";
+    }
+    if (why === 'refused') return 'Discord refused their saved tokens, which happens after they remove the app.';
+    return `Their login is from before ${paint.bold(why.missingScope)} was in ${paint.bold('scopes')}.`;
+}
+
 // the edge worker sets chalk's color level after this module loads
 export const token = (): string => paint.bold(BOT_TOKEN_ENV);
 

@@ -642,6 +642,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../../packages/errors
+      '@seedcord/plugin-oauth':
+        specifier: workspace:^
+        version: link:../../plugins/oauth
       '@seedcord/ui':
         specifier: workspace:^
         version: link:../../tooling/ui
@@ -1286,6 +1289,9 @@ importers:
       '@seedcord/plugin-kysely':
         specifier: workspace:^
         version: link:../../plugins/kysely
+      '@seedcord/plugin-oauth':
+        specifier: workspace:^
+        version: link:../../plugins/oauth
       better-sqlite3:
         specifier: catalog:deps
         version: 13.2.0
@@ -1301,6 +1307,9 @@ importers:
       typescript:
         specifier: catalog:peer
         version: 6.0.3
+      unstorage:
+        specifier: catalog:deps
+        version: 2.0.0-beta.0
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:^
@@ -1941,6 +1950,58 @@ importers:
       mongoose:
         specifier: catalog:peer
         version: 9.12.0
+
+  plugins/oauth:
+    dependencies:
+      '@discordjs/rest':
+        specifier: catalog:deps
+        version: 2.6.3
+      '@seedcord/errors':
+        specifier: workspace:^
+        version: link:../../packages/errors
+      '@seedcord/types':
+        specifier: workspace:^
+        version: link:../../packages/types
+      '@seedcord/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
+      discord-api-types:
+        specifier: ^0.38.59
+        version: 0.38.59
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
+      typescript:
+        specifier: catalog:consumerTypes
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@seedcord/eslint-config':
+        specifier: workspace:^
+        version: link:../../tooling/eslint-config
+      '@seedcord/logger':
+        specifier: workspace:^
+        version: link:../../packages/logger
+      '@seedcord/prose':
+        specifier: workspace:^
+        version: link:../../tooling/prose
+      '@seedcord/tsconfig':
+        specifier: workspace:^
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:^
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vite-config':
+        specifier: workspace:^
+        version: link:../../tooling/vite-config
+      envapt:
+        specifier: catalog:peer
+        version: 9.2.0
 
   plugins/tasks:
     dependencies:

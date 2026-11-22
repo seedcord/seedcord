@@ -6,6 +6,16 @@
         "index",
         "typing",
         "lifecycle",
+        "---i18n---",
+        "i18n",
+        "i18n-commands",
+        "---Tasks---",
+        "tasks",
+        "tasks-scheduling",
+        "tasks-control",
+        "---OAuth---",
+        "oauth",
+        "oauth-calls",
         "---Mongoose---",
         "mongoose",
         "mongoose-services",
@@ -13,13 +23,6 @@
         "kysely",
         "kysely-schema",
         "kysely-services",
-        "kysely-migrations",
-        "---Tasks---",
-        "tasks",
-        "tasks-scheduling",
-        "tasks-control",
-        "---i18n---",
-        "i18n",
-        "i18n-commands"
+        "kysely-migrations"
     ]
 }
