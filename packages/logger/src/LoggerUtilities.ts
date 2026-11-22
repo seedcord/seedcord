@@ -1,5 +1,8 @@
 import { paint } from '@seedcord/errors';
 import { formatFilePath } from '@seedcord/utils';
+import chalk from 'chalk';
+
+import { LEVEL_COLOR } from './palette';
 
 import type { LogLevel, ILogger } from '@seedcord/types';
 
@@ -71,15 +74,15 @@ export class LoggerUtilities {
     }
 
     /**
-     * Logs a heading and its lines as one record so the TUI renders them as a single block.
-     * `styleHeading` replaces the default mint bold, pass an identity function for a heading that
-     * styles its own spans.
+     * Logs a heading and its lines as one record so the TUI renders them as a single block. The heading
+     * is bold, in the color of its level. `styleHeading` replaces that style, bold included. Pass an
+     * identity function for a heading that styles its own spans.
      */
     public block(
         heading: string,
         lines: readonly string[],
         level: LogLevel = 'trace',
-        styleHeading: (heading: string) => string = paint.mint.bold
+        styleHeading: (heading: string) => string = chalk.hex(LEVEL_COLOR[level]).bold
     ): void {
         this.logger[level]([styleHeading(heading), ...lines].join('\n'));
     }

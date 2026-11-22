@@ -25,10 +25,12 @@
         "@seedcord/http": "workspace:^",
         "@seedcord/plugin-i18n": "workspace:^",
         "@seedcord/plugin-kysely": "workspace:^",
+        "@seedcord/plugin-oauth": "workspace:^",
         "better-sqlite3": "catalog:deps",
         "discord-api-types": "catalog:deps",
         "envapt": "catalog:peer",
-        "kysely": "catalog:peer"
+        "kysely": "catalog:peer",
+        "unstorage": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",

@@ -93,6 +93,7 @@ When someone asks how seedcord does something, answer for gateway and for http. 
     - **Suspect your own helper first.** Code that formats, parses, compares, or walks plain data, etc, is usually something the platform already does. Search for it before you write it, and look again when you read one that already exists.
     - **Check that every runtime that the code reaches has it.** A package runs on the oldest Node in its `engines` field, and anything the edge build imports also runs in workerd. Confirm the built-in exists in both before you use it.
     - **Keep one copy.** When several packages need the same built-in wrapped, put the wrapper in `@seedcord/utils`. A package that can't import utils calls the built-in directly.
+- **Write a number made of units as its factors.** A day in milliseconds is `24 * 60 * 60 * 1000`, and 5 MiB is `5 * 1024 * 1024`. A reader has to divide `86_400_000` to learn that it's a day.
 - **Only implement what was asked.** Surface additions as a question first. Wait for the third use before extracting an abstraction.
 - **No dead code.** Before adding `export`, confirm something outside the file uses the symbol. A symbol that exists only for a test belongs in the test folder.
 - **Grep every consuming surface before deleting anything.** That includes markdown and generated output. Show that nothing calls it or point to the replacement.

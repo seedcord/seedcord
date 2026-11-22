@@ -73,6 +73,60 @@ If you pass `KeyValue` alone, `TValue` becomes `unknown`, the fallback for a typ
 
 </Callout>
 
+### Taking the type from an option
+
+A static `with()` on your class can take a type from the options that it's given. It takes the options and returns a class with them already set. `Flags` below takes a list of names, and its `isOn()` only accepts a name from that list.
+
+With a type argument, the bot's author would write the list twice, once as a type and once as the value. `attach` can't infer the type from a value that you pass it.
+
+```ts twoslash
+import { Plugin, Seedcord } from '@seedcord/gateway';
+
+import type { CoreBase } from '@seedcord/gateway';
+
+declare const seedcord: Seedcord;
+
+// ---cut---
+export abstract class Flags<TName extends string> extends Plugin {
+    protected abstract readonly names: readonly TName[];
+
+    public static with<TName extends string>(
+        names: readonly TName[]
+    ): new (host: CoreBase) => Flags<TName> {
+        const Attached = class extends Flags<TName> {
+            protected readonly names = names;
+        };
+        Object.defineProperty(Attached, 'name', { value: 'Flags' });
+        return Attached;
+    }
+
+    public async init(): Promise<void> {}
+
+    public isOn(name: TName): boolean {
+        return this.names.includes(name);
+    }
+}
+
+const WithNames = Flags.with(['beta', 'dark']);
+const { flags } = seedcord.attach('flags', WithNames);
+//      ^?
+```
+
+`Flags.with(['beta', 'dark'])` is an ordinary generic call, so TypeScript infers `TName` from the array. `flags` comes back as `Flags<'beta' | 'dark'>`, and its `isOn()` only takes those two names.
+
+`with()` returns a subclass because `attach` takes a class and builds the instance itself. `Attached` holds `names` as a class field.
+
+`Flags` is `abstract`, which makes `attach('flags', Flags)` a compile error. Without that, a bot could attach the class directly and get the untyped version without noticing.
+
+Two things are different from a plugin without `with()`:
+
+- **Where the options go.** `attach` passes every argument after the class to your constructor, and that's where a plugin's options usually go. Your users pass them to `with()` here, so say that in your README.
+- **The class name.** The class that `with()` returns has its own name, `Attached` in this sample, and seedcord's logger labels a plugin's lines with its class name. The `Object.defineProperty` line sets that name to `Flags`.
+
+[`OAuth.with()`](ref:plugin-oauth/OAuth.with) in `@seedcord/plugin-oauth` works this way.
+
+Skip `with()` when your options don't change a type. A plain constructor argument is less for your users to learn.
+
 ## Reading another plugin
 
 A plugin on the base from `@seedcord/core/plugin` has a `this.core` typed as `CoreBase`, which doesn't list attached plugins. If you read another plugin by key there, it fails to compile.
