@@ -11,7 +11,7 @@ export const PROCEED: Confirm = () => Promise.resolve(true);
 interface AsksFirst {
     yes: boolean;
     command: string;
-    // "deploys", "uploads". the error reads "asks before it deploys"
+    // like "deploys" or "uploads". the error says "asks before it deploys"
     action: string;
 }
 

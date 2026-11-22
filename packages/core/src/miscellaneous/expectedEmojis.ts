@@ -6,7 +6,7 @@ import type { EmojiConfig } from '@seedcord/types';
 
 export type ExpectedEmoji =
     | { kind: 'folder'; key: string; name: string }
-    // from bot.emojis. also on the application, like the folder ones
+    // comes from bot.emojis. still an application emoji, same as the folder ones
     | { kind: 'application'; key: string; name: string }
     | { kind: 'guild'; key: string; name: string; guildId: string };
 

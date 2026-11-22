@@ -383,10 +383,14 @@ export enum SeedcordErrorCode {
     CliAskFailed = 3149,
     /** The bot comes from a version of `@seedcord/gateway` or `@seedcord/http` that this CLI can't load. */
     CliHostContractMismatch = 3150,
-    /** `seedcord emojis` got a name that isn't a file in the emojis folder. */
-    CliEmojiNotInFolder = 3151,
+    /** `seedcord emojis` got a name that the emojis folder or Discord doesn't have. */
+    CliEmojiNameUnknown = 3151,
     /** A flag that opens a picker ran outside a terminal. */
     CliPickerNeedsTerminal = 3152,
+    /** `seedcord emojis remove` got an emoji that still has a file in the emojis folder. */
+    CliEmojiFileKept = 3153,
+    /** Discord's CDN didn't send an emoji's image to `seedcord emojis pull`. */
+    CliEmojiDownloadFailed = 3154,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

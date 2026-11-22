@@ -8,8 +8,8 @@ import { ListRunner } from '#commands/emojis/list/ListRunner';
 import { EMOJI_STEPS } from '#commands/emojis/readEmojis';
 import { quietSteps } from '#core/output/quietSteps';
 import { StepPrinter } from '#core/output/StepPrinter';
-import { APP_ID, fakeProject } from '#tests/commands/commands/fakeBot';
-import { fakeEmojiDiscord, writeEmojis } from '#tests/commands/emojis/fakeEmojiDiscord';
+import { APP_ID } from '#tests/commands/commands/fakeBot';
+import { fakeEmojiDiscord, projectWith } from '#tests/commands/emojis/fakeEmojiDiscord';
 import { fakeTerminal } from '#tests/fakeTerminal';
 
 import type { ListOptions } from '#commands/emojis/list/ListRunner';
@@ -21,8 +21,7 @@ interface Listed {
 }
 
 async function runnerWith(files: Record<string, string>, onDiscord: string[]): Promise<[ListRunner, FakeProject]> {
-    const project = await fakeProject();
-    await writeEmojis(project.dir, files);
+    const project = await projectWith(files);
     const { rest } = fakeEmojiDiscord({ emojis: onDiscord });
     return [new ListRunner({ projectLoader: project, openDiscord: () => rest }), project];
 }

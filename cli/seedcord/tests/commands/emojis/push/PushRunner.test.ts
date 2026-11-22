@@ -8,16 +8,15 @@ import { PushPresenter } from '#commands/emojis/push/PushPresenter';
 import { PUSH_STEPS, PushRunner } from '#commands/emojis/push/PushRunner';
 import { PROCEED } from '#core/output/confirm';
 import { StepPrinter } from '#core/output/StepPrinter';
-import { fakeProject } from '#tests/commands/commands/fakeBot';
-import { discordError, fakeEmojiDiscord, writeEmojis } from '#tests/commands/emojis/fakeEmojiDiscord';
+import { discordError, fakeEmojiDiscord, projectWith } from '#tests/commands/emojis/fakeEmojiDiscord';
 import { fakeTerminal } from '#tests/fakeTerminal';
 
-import type { PushPrompts } from '#commands/emojis/push/PushPresenter';
+import type { EmojiPrompts } from '#commands/emojis/prompts';
 import type { PushOptions } from '#commands/emojis/push/PushRunner';
 import type { FakeProject } from '#tests/commands/commands/fakeBot';
 import type { REST } from '@discordjs/rest';
 
-interface PushSetup extends PushOptions, Partial<PushPrompts> {
+interface PushSetup extends PushOptions, Partial<EmojiPrompts> {
     verbose?: boolean;
 }
 
@@ -37,12 +36,6 @@ function push(
     const presenter = new PushPresenter(printer, { confirm, pick }, verbose);
     const runner = new PushRunner({ projectLoader: project, openDiscord: () => rest });
     return { printed: stdout.text, done: runner.run(presenter, options) };
-}
-
-async function projectWith(files: Record<string, string | Uint8Array>, edge = false): Promise<FakeProject> {
-    const project = await fakeProject({ edge });
-    await writeEmojis(project.dir, files);
-    return project;
 }
 
 const TWO_MEBIBYTES = 2048 * 1024;
@@ -183,13 +176,13 @@ describe('PushRunner', () => {
         expect(discord.emojis()).toEqual([]);
     });
 
-    it('throws CliEmojiNotInFolder for a --replace name without a file', async () => {
+    it('throws CliEmojiNameUnknown for a --replace name without a file', async () => {
         const project = await projectWith({ 'wave.png': 'wave' });
         const discord = fakeEmojiDiscord({ emojis: ['wave', 'old_logo'] });
 
         const { done } = push(project, discord.rest, { replace: ['old_logo'] });
 
-        await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliEmojiNotInFolder });
+        await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliEmojiNameUnknown });
         expect(discord.requests.filter((request) => !request.startsWith('GET'))).toEqual([]);
     });
 
@@ -201,8 +194,8 @@ describe('PushRunner', () => {
 
         const { done } = push(project, discord.rest, {
             replace: true,
-            pick: (names) => {
-                offered.push([...names]);
+            pick: (choices) => {
+                offered.push(choices.map(({ value }) => value));
                 return Promise.resolve(['seed']);
             },
             confirm: (question) => {

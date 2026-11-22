@@ -26,23 +26,28 @@ export class EmojiSession {
         return new EmojiSession(rest, { id, name });
     }
 
-    public async list(): Promise<UploadedEmoji[]> {
+    public async list(guildId?: string): Promise<UploadedEmoji[]> {
+        const [route, what, fix] =
+            guildId === undefined
+                ? [Routes.applicationEmojis(this.app.id), "the application's emojis"]
+                : [
+                      Routes.guildEmojis(guildId),
+                      `the emojis of guild ${guildId}`,
+                      'Check that the bot is in that guild.'
+                  ];
         try {
-            const listed = await emojisAt(this.rest, Routes.applicationEmojis(this.app.id));
+            const listed = await emojisAt(this.rest, route);
             return listed.flatMap(({ id, name }) => (id && name ? [{ id, name }] : []));
         } catch (error: unknown) {
-            throw new SeedcordError(
-                SeedcordErrorCode.CoreDiscordReadFailed,
-                ["the application's emojis", errorReason(error)],
-                { cause: error }
-            );
+            throw new SeedcordError(SeedcordErrorCode.CoreDiscordReadFailed, [what, errorReason(error), fix], {
+                cause: error
+            });
         }
     }
 
     public async upload({ name, file }: EmojiFile): Promise<void> {
-        const bytes = await readFile(file);
         // discord ignores the mime type but won't take the string without the data: prefix
-        const image = `data:image/png;base64,${bytes.toString('base64')}`;
+        const image = `data:image/png;base64,${await readFile(file, 'base64')}`;
         await this.rest.post(Routes.applicationEmojis(this.app.id), { body: { name, image } });
     }
 
@@ -55,7 +60,16 @@ export class EmojiSession {
             await this.rename(emoji, emoji.name);
             throw error;
         }
-        await this.rest.delete(Routes.applicationEmoji(this.app.id, emoji.id));
+        await this.delete(emoji);
+    }
+
+    public async delete({ id }: UploadedEmoji): Promise<void> {
+        await this.rest.delete(Routes.applicationEmoji(this.app.id, id));
+    }
+
+    // .webp with these params works for static and animated ones. .gif 415s on a static emoji
+    public imageUrl({ id }: UploadedEmoji): string {
+        return `${this.rest.cdn.emoji(id, { extension: 'webp' })}?animated=true&quality=lossless`;
     }
 
     private async rename({ id }: UploadedEmoji, name: string): Promise<void> {

@@ -1,3 +1,7 @@
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { differenceBy } from 'es-toolkit';
+
 import type { EmojiFile } from '@seedcord/utils/internal';
 
 export interface UploadedEmoji {
@@ -10,6 +14,9 @@ export interface UploadedFile {
     emoji: UploadedEmoji;
 }
 
+// has a `file` when the folder still has one for it
+export type OnDiscord = Pick<UploadedFile, 'emoji'> & Partial<Pick<UploadedFile, 'file'>>;
+
 export interface EmojiDiff {
     missing: EmojiFile[];
     uploaded: UploadedFile[];
@@ -19,11 +26,10 @@ export interface EmojiDiff {
 // names are case sensitive on discord
 export function diffEmojis(files: readonly EmojiFile[], onDiscord: readonly UploadedEmoji[]): EmojiDiff {
     const byName = new Map(onDiscord.map((emoji) => [emoji.name, emoji]));
-    const inFolder = new Set(files.map(({ name }) => name));
     const diff: EmojiDiff = {
         missing: [],
         uploaded: [],
-        onlyOnDiscord: onDiscord.filter(({ name }) => !inFolder.has(name))
+        onlyOnDiscord: differenceBy(onDiscord, files, ({ name }) => name)
     };
     for (const file of files) {
         const emoji = byName.get(file.name);
@@ -31,4 +37,19 @@ export function diffEmojis(files: readonly EmojiFile[], onDiscord: readonly Uplo
         else diff.missing.push(file);
     }
     return diff;
+}
+
+export function onDiscord({ uploaded, onlyOnDiscord }: EmojiDiff): OnDiscord[] {
+    return [...uploaded, ...onlyOnDiscord.map((emoji) => ({ emoji }))];
+}
+
+// `where` isn't painted in here, do that before passing it in
+export function unknownName(name: string, where: string, fix = 'Check the spelling. Names are case sensitive.'): never {
+    throw new SeedcordTypeError(SeedcordErrorCode.CliEmojiNameUnknown, [name, where, fix]);
+}
+
+// throws if a name isn't on discord
+export function namedOnDiscord(diff: EmojiDiff, names: readonly string[], source: string): OnDiscord[] {
+    const byName = new Map(onDiscord(diff).map((found) => [found.emoji.name, found]));
+    return names.map((name) => byName.get(name) ?? unknownName(name, paint.bold(source)));
 }

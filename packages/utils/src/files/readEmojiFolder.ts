@@ -16,7 +16,7 @@ export interface EmojiFile extends FolderEmoji {
     file: string;
 }
 
-// only the extension gets checked since nothing opens the file. discord reads the real format from the bytes
+// only checks the extension since nothing opens the file. discord reads the real format from the bytes
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.apng', '.webp', '.avif']);
 // discord answers 400 for a name outside this
 const DISCORD_NAME = /^\w{2,32}$/;
@@ -59,20 +59,20 @@ async function filesIn(folder: string): Promise<EmojiFile[]> {
         });
 }
 
-// the build writes this list into the bot, which can't use the file paths
+// the built bot is handed this list, and the file paths don't exist there
 export async function folderEmojisIn(folder: string): Promise<FolderEmoji[]> {
     const files = await readEmojiFolder(folder);
     return files.map(({ key, name }) => ({ key, name }));
 }
 
-// sorted by path, subfolders included. a missing folder reads as empty
+// sorted by path and includes subfolders. returns [] if the folder doesn't exist
 export async function readEmojiFolder(folder: string): Promise<EmojiFile[]> {
     const found = await filesIn(folder);
     const checked = found.map((file) => ({ file, problem: fileProblem(file) }));
     const unusable = checked.flatMap(({ problem }) => problem ?? []);
     const usable = checked.flatMap(({ file, problem }) => (problem ? [] : file));
     const byName = Map.groupBy(usable, ({ name }) => name);
-    // two files with one name also share a key. that pair gets one error, for the name
+    // same name always means same key. those two only get the name error
     const onePerName = [...byName.values()].flatMap((sharing) => sharing.slice(0, 1));
     const byKey = Map.groupBy(onePerName, ({ key }) => key);
 

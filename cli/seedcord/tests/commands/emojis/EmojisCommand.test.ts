@@ -5,10 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 
 import { EmojisCommand } from '#commands/emojis/EmojisCommand';
 import { ListRunner } from '#commands/emojis/list/ListRunner';
+import { PullRunner } from '#commands/emojis/pull/PullRunner';
 import { PushRunner } from '#commands/emojis/push/PushRunner';
+import { RemoveRunner } from '#commands/emojis/remove/RemoveRunner';
 import { captureOutput } from '#tests/captureOutput';
-import { fakeProject } from '#tests/commands/commands/fakeBot';
-import { fakeEmojiDiscord, writeEmojis } from '#tests/commands/emojis/fakeEmojiDiscord';
+import { fakeEmojiDiscord, projectWith } from '#tests/commands/emojis/fakeEmojiDiscord';
 
 import type { Prompter } from '@seedcord/cli-prompts';
 
@@ -18,11 +19,15 @@ interface Ran {
 }
 
 async function run(args: string[], prompter?: Prompter): Promise<Ran> {
-    const project = await fakeProject();
-    await writeEmojis(project.dir, { 'wave.png': 'new wave', 'seed.png': 's', 'fresh.png': 'f' });
-    const discord = fakeEmojiDiscord({ emojis: ['wave', 'seed'] });
+    const project = await projectWith({ 'wave.png': 'new wave', 'seed.png': 's', 'fresh.png': 'f' });
+    const discord = fakeEmojiDiscord({ emojis: ['wave', 'seed', 'old_logo'] });
     const deps = { projectLoader: project, openDiscord: () => discord.rest };
-    const runners = { pushRunner: new PushRunner(deps), listRunner: new ListRunner(deps) };
+    const runners = {
+        pushRunner: new PushRunner(deps),
+        listRunner: new ListRunner(deps),
+        removeRunner: new RemoveRunner(deps),
+        pullRunner: new PullRunner({ ...deps, fetch: () => Promise.resolve(new Response('image')) })
+    };
 
     const program = new Command().exitOverride();
     new EmojisCommand(prompter ? { ...runners, prompter } : runners).register(program);
@@ -71,6 +76,19 @@ describe('seedcord emojis push, on a terminal', () => {
         await ran.done;
 
         expect(changes(ran)).toEqual([]);
+    });
+
+    it('asks before pull --force overwrites and stops on a no', async () => {
+        using output = captureOutput();
+        using terminal = new PromptTerminal();
+        const ran = await run(['pull', '--force'], terminal.prompter);
+
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Overwrite 2 files in'));
+        await terminal.press('n', KEY.enter);
+        await ran.done;
+
+        expect(output.stdout()).toContain('Nothing downloaded.');
+        expect(output.stdout()).not.toMatch(/download +\S+ +\d+ downloaded/u);
     });
 });
 
@@ -149,5 +167,66 @@ describe('seedcord emojis list', () => {
         expect(output.stdout()).toBe('');
         expect(output.stderr()).toContain(`[${SeedcordErrorCode.ConfigEmojiNotFound}]`);
         expect(process.exitCode).toBe(1);
+    });
+});
+
+describe('seedcord emojis remove and pull, off a terminal', () => {
+    const stdinIsTTY = process.stdin.isTTY;
+
+    beforeEach(() => {
+        process.stdin.isTTY = false;
+    });
+
+    afterEach(() => {
+        process.stdin.isTTY = stdinIsTTY;
+    });
+
+    it('deletes the named emojis with --yes', async () => {
+        using _output = captureOutput();
+
+        const ran = await run(['remove', 'old_logo', '--yes']);
+        await ran.done;
+
+        expect(changes(ran)).toEqual(['DELETE old_logo']);
+    });
+
+    it('throws CliPickerNeedsTerminal for remove without names', async () => {
+        using output = captureOutput();
+
+        const ran = await run(['remove', '--yes']);
+        await ran.done;
+
+        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliPickerNeedsTerminal}]`);
+        expect(ran.discord.requests).toEqual([]);
+    });
+
+    it('pulls without a question', async () => {
+        using output = captureOutput();
+
+        const ran = await run(['pull']);
+        await ran.done;
+
+        expect(output.stdout()).toContain('    + old_logo.webp\n');
+        expect(output.stdout()).toMatch(/download +\S+ +1 downloaded\n/u);
+    });
+
+    it('throws CliNeedsYes for pull --force before it reads anything', async () => {
+        using output = captureOutput();
+
+        const ran = await run(['pull', '--force']);
+        await ran.done;
+
+        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliNeedsYes}]`);
+        expect(ran.discord.requests).toEqual([]);
+    });
+
+    it('overwrites with pull --force --yes', async () => {
+        using output = captureOutput();
+
+        const ran = await run(['pull', '--force', '--yes']);
+        await ran.done;
+
+        expect(output.stdout()).toContain('    ~ seed.webp wave.webp\n');
+        expect(output.stdout()).toMatch(/download +\S+ +3 downloaded\n/u);
     });
 });

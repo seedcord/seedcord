@@ -1,15 +1,17 @@
 import { stat } from 'node:fs/promises';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { discordErrorOf, errorReason } from '@seedcord/utils/internal';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
+import { partition } from 'es-toolkit';
 
+import { unknownName } from '#commands/emojis/emojiDiff';
+import { assertNoneFailed } from '#commands/emojis/outcome';
 import { EMOJI_STEPS, readEmojis } from '#commands/emojis/readEmojis';
 import { defaultRunnerDeps } from '#core/discord/runnerDeps';
 
-import type { EmojiDiff, UploadedEmoji, UploadedFile } from '#commands/emojis/emojiDiff';
-import type { EmojiSession } from '#commands/emojis/EmojiSession';
+import type { UploadedEmoji, UploadedFile } from '#commands/emojis/emojiDiff';
 import type { RunnerDeps } from '#core/discord/runnerDeps';
 import type { PushPresenter } from './PushPresenter';
 import type { EmojiFile } from '@seedcord/utils/internal';
@@ -18,31 +20,21 @@ export const PUSH_STEPS = [...EMOJI_STEPS, 'upload'] as const;
 export type PushStep = (typeof PUSH_STEPS)[number];
 
 export interface PushOptions {
-    // true opens the picker
+    // true means open the picker
     readonly replace?: readonly string[] | true | undefined;
 }
 
 export interface PushPlan {
     folder: string;
-    app: string;
+    source: string;
     add: EmojiFile[];
     replace: UploadedFile[];
     keep: UploadedFile[];
     onlyOnDiscord: UploadedEmoji[];
 }
 
-type PlanSource = Pick<PushPlan, 'folder' | 'app'> & { diff: EmojiDiff; replacing: ReadonlySet<string> };
-
-interface UploadFailure {
-    file: string;
-    reason: string;
-}
-
-export interface PushResult {
-    added: number;
-    replaced: number;
-    failed: UploadFailure[];
-}
+// `emoji` is the one being replaced, if any
+export type Upload = Pick<UploadedFile, 'file'> & Partial<Pick<UploadedFile, 'emoji'>>;
 
 // 2048 KiB. discord's own error reads "File cannot be larger than 2048.0 kb"
 const MAX_UPLOAD_BYTES = 2_097_152;
@@ -73,13 +65,6 @@ async function assertUploadable(files: readonly EmojiFile[]): Promise<void> {
     );
 }
 
-function planOf({ folder, app, diff, replacing }: PlanSource): PushPlan {
-    const { missing, uploaded, onlyOnDiscord } = diff;
-    const plan: PushPlan = { folder, app, add: missing, replace: [], keep: [], onlyOnDiscord };
-    for (const pair of uploaded) (replacing.has(pair.file.name) ? plan.replace : plan.keep).push(pair);
-    return plan;
-}
-
 export class PushRunner {
     constructor(private readonly deps: RunnerDeps) {}
 
@@ -88,49 +73,34 @@ export class PushRunner {
     }
 
     public async run(presenter: PushPresenter, { replace = [] }: PushOptions): Promise<void> {
-        const { folder, target, session, files, diff } = await readEmojis(presenter, this.deps, process.cwd());
+        const { folder, target, session, source, files, diff } = await readEmojis(presenter, this.deps, process.cwd());
 
         const names = replace === true ? await presenter.pickReplacements(diff.uploaded) : replace;
         if (names === undefined) return;
         const unknown = names.find((name) => !files.some((file) => file.name === name));
         if (unknown !== undefined) {
-            throw new SeedcordTypeError(SeedcordErrorCode.CliEmojiNotInFolder, [unknown, folder]);
+            unknownName(unknown, paint.path(folder), 'Pass the name of a file in that folder, without its extension.');
         }
 
-        const plan = planOf({ folder, app: session.app.name, diff, replacing: new Set(names) });
-        const sending = [...plan.add, ...plan.replace.map(({ file }) => file)];
-        if (sending.length === 0) {
+        const [replacing, keep] = partition(diff.uploaded, ({ file }) => names.includes(file.name));
+        const { missing: add, onlyOnDiscord } = diff;
+        const plan = { folder, source, add, replace: replacing, keep, onlyOnDiscord };
+        const uploads: Upload[] = [...plan.add.map((file) => ({ file })), ...plan.replace];
+        if (uploads.length === 0) {
             presenter.nothingToUpload(plan);
             return;
         }
-        await assertUploadable(sending);
+        await assertUploadable(uploads.map(({ file }) => file));
 
         presenter.preview(plan);
         if (!(await presenter.approve(plan))) return;
 
-        const result = await presenter.upload(() => this.send(session, plan));
-        presenter.result(result, target === 'edge');
-        if (result.failed.length > 0) throw new SeedcordError(SeedcordErrorCode.CliSomeFailed, ['emojis', 'uploaded']);
-    }
-
-    private async send(session: EmojiSession, { add, replace }: PushPlan): Promise<PushResult> {
-        const result: PushResult = { added: 0, replaced: 0, failed: [] };
-        const uploads = [
-            ...add.map((file) => ({ file, counted: 'added' as const, send: () => session.upload(file) })),
-            ...replace.map((pair) => ({
-                file: pair.file,
-                counted: 'replaced' as const,
-                send: () => session.replace(pair)
-            }))
-        ];
-        for (const { file, counted, send } of uploads) {
-            try {
-                await send();
-                result[counted]++;
-            } catch (error: unknown) {
-                result.failed.push({ file: file.file, reason: rejectionOf(error) });
-            }
-        }
-        return result;
+        const outcome = await presenter.upload(
+            uploads,
+            ({ file, emoji }) => (emoji ? session.replace({ file, emoji }) : session.upload(file)),
+            rejectionOf
+        );
+        if (target === 'edge' && outcome.done.length > 0) presenter.edgeHint();
+        assertNoneFailed(outcome, 'upload');
     }
 }

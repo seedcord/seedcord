@@ -7,12 +7,18 @@ export interface SectionRow {
     items: string[];
 }
 
+const MARKS = { '+': paint.mint, '~': paint.iris, '-': paint.coral } satisfies Record<string, typeof paint.mint>;
+
+export function markedRows(mark: keyof typeof MARKS, items: readonly string[]): SectionRow[] {
+    const tone = MARKS[mark];
+    return items.length === 0 ? [] : [{ marker: tone.bold(mark), items: items.map((item) => tone(item)) }];
+}
+
 interface RowItem {
     label: string;
     detail: string;
 }
 
-// one row for all the labels, or a row each when the details show
 export function itemRows(items: readonly RowItem[], detailed: boolean, marker?: string): SectionRow[] {
     if (detailed) return items.map(({ label, detail }) => ({ marker, items: [`${label}  ${paint.mute(detail)}`] }));
     return items.length === 0 ? [] : [{ marker, items: items.map(({ label }) => label) }];

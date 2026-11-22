@@ -18,9 +18,9 @@ export interface BotLayoutData {
     readonly listed: readonly string[];
     // outDir and the logs folder
     readonly skippedFolders: readonly string[];
-    // seedcord.config.ts. a script without a config doesn't have one
+    // where seedcord.config.ts is. undefined when a script runs without a config
     readonly configFile?: string | undefined;
-    // emojis.dir in seedcord.config.ts. a script without a config doesn't have one
+    // emojis.dir from that config, undefined in the same case
     readonly emojiFolder?: string | undefined;
 }
 

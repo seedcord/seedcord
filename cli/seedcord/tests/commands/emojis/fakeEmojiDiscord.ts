@@ -4,8 +4,9 @@ import { dirname, join } from 'node:path';
 import { DiscordAPIError } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v10';
 
-import { APP_ID } from '#tests/commands/commands/fakeBot';
+import { APP_ID, fakeProject } from '#tests/commands/commands/fakeBot';
 
+import type { FakeProject } from '#tests/commands/commands/fakeBot';
 import type { REST } from '@discordjs/rest';
 import type { RESTJSONErrorCodes } from 'discord-api-types/v10';
 
@@ -20,9 +21,13 @@ interface StoredEmoji {
 interface EmojiDiscordOptions {
     // the application starts with an emoji for each name
     emojis?: readonly string[];
-    // an upload under one of these names rejects with its error
+    // uploading or deleting one of these names rejects with its error
     rejects?: Record<string, Error>;
+    // what guild 111 has
+    guildEmojis?: readonly string[];
 }
+
+export const GUILD_ID = '111';
 
 interface FakeEmojiDiscord {
     rest: REST;
@@ -36,15 +41,22 @@ export function discordError(code: RESTJSONErrorCodes, message: string): Discord
     return new DiscordAPIError({ code, message }, code, BAD_REQUEST, 'POST', Routes.applicationEmojis(APP_ID), {});
 }
 
-export async function writeEmojis(projectDir: string, files: Record<string, string | Uint8Array>): Promise<void> {
+// a fake bot whose emojis folder has these files
+export async function projectWith(files: Record<string, string | Uint8Array>, edge = false): Promise<FakeProject> {
+    const project = await fakeProject({ edge });
     for (const [path, content] of Object.entries(files)) {
-        const file = join(projectDir, 'emojis', path);
+        const file = join(project.dir, 'emojis', path);
         await mkdir(dirname(file), { recursive: true });
         await writeFile(file, content);
     }
+    return project;
 }
 
-export function fakeEmojiDiscord({ emojis = [], rejects = {} }: EmojiDiscordOptions = {}): FakeEmojiDiscord {
+export function fakeEmojiDiscord({
+    emojis = [],
+    rejects = {},
+    guildEmojis = []
+}: EmojiDiscordOptions = {}): FakeEmojiDiscord {
     const stored = new Map<string, StoredEmoji>(
         emojis.map((name) => [`${name}-id`, { id: `${name}-id`, name, image: 'old' }])
     );
@@ -59,6 +71,9 @@ export function fakeEmojiDiscord({ emojis = [], rejects = {} }: EmojiDiscordOpti
         get: (route: string) => {
             requests.push(`GET ${route}`);
             if (route === Routes.currentApplication()) return Promise.resolve({ id: APP_ID, name: APP_NAME });
+            if (route === Routes.guildEmojis(GUILD_ID)) {
+                return Promise.resolve(guildEmojis.map((name) => ({ id: `${name}-guild-id`, name })));
+            }
             return Promise.resolve({ items: [...stored.values()].map(({ id, name }) => ({ id, name })) });
         },
         post: (_route: string, { body }: { body: { name: string; image: string } }) => {
@@ -80,11 +95,15 @@ export function fakeEmojiDiscord({ emojis = [], rejects = {} }: EmojiDiscordOpti
         },
         delete: (route: string) => {
             const id = idIn(route);
-            requests.push(`DELETE ${stored.get(id)?.name ?? id}`);
+            const name = stored.get(id)?.name ?? id;
+            requests.push(`DELETE ${name}`);
+            const rejection = rejects[name];
+            if (rejection) return Promise.reject(rejection);
             stored.delete(id);
             return Promise.resolve();
-        }
+        },
+        cdn: { emoji: (id: string) => `https://cdn.test/emojis/${id}.webp` }
     };
-    // eslint-disable-next-line no-restricted-syntax -- the emoji runners call only get, post, patch and delete on this double
+    // eslint-disable-next-line no-restricted-syntax -- the emoji runners call only these five members on this double
     return { rest: rest as unknown as REST, emojis: () => [...stored.values()], requests };
 }
