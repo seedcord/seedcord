@@ -3,17 +3,29 @@ import { readFile } from 'node:fs/promises';
 import { emojisOf } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { errorReason } from '@seedcord/utils/internal';
-import { Routes } from 'discord-api-types/v10';
+import { discordErrorOf, errorReason } from '@seedcord/utils/internal';
+import { RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 
 import { applicationOf } from '#core/discord/applicationOf';
 
 import type { DiscordRest } from '#core/discord/runnerDeps';
 import type { UploadedEmoji, UploadedFile } from './EmojiDiff';
-import type { EmojiFile } from '@seedcord/utils/internal';
+import type { DiscordErrorFields, EmojiFile } from '@seedcord/utils/internal';
 import type { RESTGetCurrentApplicationResult, RESTPostAPIApplicationEmojiResult } from 'discord-api-types/v10';
 
 type Application = Pick<RESTGetCurrentApplicationResult, 'id' | 'name'>;
+
+const REJECTIONS: Partial<Record<DiscordErrorFields['code'], string>> = {
+    [RESTJSONErrorCodes.InvalidFileUploaded]: "Discord can't read it as an image",
+    [RESTJSONErrorCodes.FailedToResizeAssetBelowTheMaximumSize]:
+        'it is still over 256 KiB after Discord resized it to 128px'
+};
+
+// why a step failed, in words for the warning line
+export function rejectionOf(error: unknown): string {
+    const code = discordErrorOf(error)?.code;
+    return (code === undefined ? undefined : REJECTIONS[code]) ?? errorReason(error);
+}
 
 export class EmojiSession {
     private constructor(
@@ -76,7 +88,7 @@ export class EmojiSession {
         return `${this.rest.cdn.emoji(id, { extension: 'webp' })}?animated=true&quality=lossless`;
     }
 
-    // runs `undo` if `step` throws, then rethrows. if `undo` throws too, the error gives the old emoji's new name
+    // if `undo` throws too, the error gives the old emoji's new name
     private async undoing<Result>(
         parked: string,
         undo: () => Promise<void>,
@@ -87,9 +99,9 @@ export class EmojiSession {
         } catch (error: unknown) {
             try {
                 await undo();
-            } catch (undoError: unknown) {
-                throw new SeedcordError(SeedcordErrorCode.CliEmojiRollbackFailed, [errorReason(error), parked], {
-                    cause: undoError
+            } catch {
+                throw new SeedcordError(SeedcordErrorCode.CliEmojiRollbackFailed, [rejectionOf(error), parked], {
+                    cause: error
                 });
             }
             throw error;

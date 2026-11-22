@@ -4,7 +4,7 @@ import { routeLeavesOf, type SlashRouteLeaf } from '@seedcord/utils/internal';
 import { ApplicationCommandOptionType, ApplicationCommandType, InteractionContextType } from 'discord-api-types/v10';
 
 import type { FoundCommand } from '#core/modules/CommandScanner';
-import type { ExpectedEmoji, OptionKind, RouteCache, SlashOption, SlashRouteEntry } from '@seedcord/core/internal';
+import type { OptionKind, RouteCache, SlashOption, SlashRouteEntry } from '@seedcord/core/internal';
 import type { ILogger } from '@seedcord/types';
 import type {
     APIApplicationCommandBasicOption,
@@ -22,17 +22,10 @@ export type SlashTables = Record<string, SlashRouteEntry>;
 // keyed by the command name discord shows in the menu
 export type ContextMenuTables = Record<string, { cache: RouteCache }>;
 
-// gateway reads this tag to type Emojis.X as GuildEmoji or ApplicationEmoji
-export type EmojiTags = Record<string, ExpectedEmoji['kind']>;
-
-interface CommandTables {
+export interface CommandTables {
     slash: SlashTables;
     userContextMenus: ContextMenuTables;
     messageContextMenus: ContextMenuTables;
-}
-
-export interface Augmentation extends CommandTables {
-    emojis: EmojiTags;
 }
 
 export type ScannedCommand = Pick<FoundCommand, 'sourceFile' | 'json'>;

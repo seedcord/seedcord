@@ -1,6 +1,6 @@
-import { paint, SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
-import { differenceBy, partition, uniq, upperFirst } from 'es-toolkit';
+import { differenceBy, partition, uniq } from 'es-toolkit';
 
 import type { EmojiFile } from '@seedcord/utils/internal';
 
@@ -27,11 +27,10 @@ export class EmojiDiff {
     public readonly uploaded: UploadedFile[];
     public readonly onlyOnDiscord: UploadedEmoji[];
 
-    // `source` is the application's name, or "guild <id>"
     constructor(
         files: readonly EmojiFile[],
         onDiscord: readonly UploadedEmoji[],
-        private readonly source: string
+        private readonly paintedSource: string
     ) {
         const byName = new Map(onDiscord.map((emoji) => [emoji.name, emoji]));
         const [uploaded, missing] = partition(
@@ -50,6 +49,6 @@ export class EmojiDiff {
     // throws if a name isn't on discord
     public named(names: readonly string[]): OnDiscord[] {
         const byName = new Map(this.onDiscord().map((found) => [found.emoji.name, found]));
-        return uniq(names).map((name) => byName.get(name) ?? unknownName(name, paint.bold(upperFirst(this.source))));
+        return uniq(names).map((name) => byName.get(name) ?? unknownName(name, this.paintedSource));
     }
 }

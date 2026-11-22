@@ -129,6 +129,15 @@ describe('emojis PullRunner', () => {
         expect(printed()).toContain('    ~ reactions/seed.webp\n');
     });
 
+    it('keeps the download when the old file differs from it only in the case of its extension', async () => {
+        const project = await projectWith({ 'wave.WEBP': 'mine' });
+        const { rest } = fakeEmojiDiscord({ emojis: ['wave'] });
+
+        await pull(project, rest, { names: [], force: true }).done;
+
+        expect(await saved(project, 'wave.webp')).toBe('wave-id');
+    });
+
     it('overwrites without asking with --force', async () => {
         const project = await projectWith({ 'seed.png': 'mine' });
         const { rest } = fakeEmojiDiscord({ emojis: ['seed'] });
@@ -221,13 +230,19 @@ describe('emojis PullRunner', () => {
         expect(existsSync(join(project.dir, 'emojis/seed.webp'))).toBe(false);
     });
 
-    it('throws CliEmojiNameUnknown for a name that discord lacks', async () => {
+    it.for([
+        { from: 'the application', guild: undefined, opens: "seed beta doesn't have" },
+        { from: 'a guild', guild: GUILD_ID, opens: "Guild 111 doesn't have" }
+    ])('throws CliEmojiNameUnknown for a name that $from lacks', async ({ guild, opens }) => {
         const project = await projectWith({});
-        const { rest } = fakeEmojiDiscord({ emojis: ['seed'] });
+        const { rest } = fakeEmojiDiscord({ emojis: ['seed'], guildEmojis: ['blob'] });
 
-        const { done } = pull(project, rest, { names: ['wave'] });
+        const { done } = pull(project, rest, { names: ['wave'], guild });
 
-        await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliEmojiNameUnknown });
+        await expect(done).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliEmojiNameUnknown,
+            message: expect.stringContaining(opens) as string
+        });
     });
 
     it('saves the others when one download fails, then throws CliSomeFailed', async () => {

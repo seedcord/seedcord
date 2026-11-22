@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { clashesIn, emojiFileAt } from '@seedcord/utils/internal';
+import { emojiClashes, emojiFileAt } from '@seedcord/utils/internal';
 import { partition } from 'es-toolkit';
 
 import { assertNoneFailed } from '#commands/emojis/outcome';
@@ -57,18 +57,13 @@ interface Planned {
 
 // discord's names are case sensitive, and discord allows party_parrot and PartyParrot together
 function assertNoClashes(planned: readonly Planned[]): void {
-    const byPath = Map.groupBy(planned, ({ path }) => path.toLowerCase());
-    const onePerPath = [...byPath.values()].flatMap((sharing) => sharing.slice(0, 1));
-    const labelOf = ({ label }: Planned): string => label;
     throwSingleOrAggregate(
-        [
-            ...clashesIn('file', byPath, labelOf, 'macOS and Windows save them as one file.'),
-            ...clashesIn(
-                `${paint.bold('Emojis')} key`,
-                Map.groupBy(onePerPath, ({ key }) => key),
-                labelOf
-            )
-        ],
+        emojiClashes(planned, {
+            by: ({ path }) => path.toLowerCase(),
+            kind: 'file',
+            note: 'macOS and Windows save them as one file.',
+            labelOf: ({ label }) => label
+        }),
         SeedcordErrorCode.CliProblems
     );
 }
@@ -126,8 +121,10 @@ export class PullRunner {
         const response = await this.deps.fetch(session.imageUrl(emoji));
         if (!response.ok) throw new SeedcordError(SeedcordErrorCode.CliEmojiDownloadFailed, [response.status]);
 
+        const image = await response.bytes();
+        // removed before the write because wave.WEBP and wave.webp are one file on macOS and Windows
+        if (replaces !== undefined) await rm(replaces);
         await mkdir(dirname(to), { recursive: true });
-        await writeFile(to, await response.bytes());
-        if (replaces !== undefined && replaces !== to) await rm(replaces);
+        await writeFile(to, image);
     }
 }

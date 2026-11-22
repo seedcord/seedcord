@@ -8,4 +8,4 @@
 '@seedcord/types': patch
 ---
 
-Added `seedcord emojis`, which uploads the images in an `emojis` folder beside `seedcord.config.ts` as application emojis and lists, downloads and deletes the ones on your application. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else.
+Added `seedcord emojis` to upload the images in an `emojis` folder beside `seedcord.config.ts` to your application, and to list, download and delete the emojis already there. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else.

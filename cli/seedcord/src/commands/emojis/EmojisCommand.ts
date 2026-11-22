@@ -42,7 +42,7 @@ interface Yes {
 }
 
 const DESCRIPTIONS = {
-    push: "Upload the files in your emojis folder that Discord doesn't have",
+    push: "Upload the files Discord doesn't have from your emojis folder",
     list: 'Compare your emojis folder with the emojis on Discord',
     pull: 'Download the emojis on Discord that your folder is missing',
     remove: 'Delete emojis from Discord'

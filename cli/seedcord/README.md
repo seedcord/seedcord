@@ -49,7 +49,7 @@ Run it through your project's scripts, like `pnpm dev`. A global `seedcord` thro
 | `seedcord build` | type checks the bot and bundles it into `outDir` with Vite. An edge bot builds into a Cloudflare worker |
 | `seedcord codegen` | writes the typed augmentations for your commands and config |
 | `seedcord commands` | deploys, lists and cleans up your commands on Discord |
-| `seedcord emojis` | uploads the images in your `emojis` folder to your application, and lists, downloads or deletes the ones on your application |
+| `seedcord emojis` | uploads the images in your `emojis` folder to your application, and lists, downloads or deletes its emojis |
 | `seedcord make` | writes new files from one of your Handlebars templates, or one an installed plugin ships |
 | `seedcord ask` | searches the guide for a question, a pasted error, or an error code, and works outside a project |
 

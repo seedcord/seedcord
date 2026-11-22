@@ -2,19 +2,18 @@ import { stat } from 'node:fs/promises';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { discordErrorOf, errorReason } from '@seedcord/utils/internal';
-import { RESTJSONErrorCodes } from 'discord-api-types/v10';
 import { partition } from 'es-toolkit';
 
+import { unknownName } from '#commands/emojis/EmojiDiff';
+import { rejectionOf } from '#commands/emojis/EmojiSession';
 import { assertNoneFailed } from '#commands/emojis/outcome';
 import { EMOJI_STEPS, readEmojis } from '#commands/emojis/readEmojis';
 import { defaultRunnerDeps } from '#core/discord/runnerDeps';
-import { unknownName } from '#src/commands/emojis/EmojiDiff';
 
+import type { UploadedEmoji, UploadedFile } from '#commands/emojis/EmojiDiff';
 import type { RunnerDeps } from '#core/discord/runnerDeps';
-import type { UploadedEmoji, UploadedFile } from '#src/commands/emojis/EmojiDiff';
 import type { PushPresenter } from './PushPresenter';
-import type { DiscordErrorFields, EmojiFile } from '@seedcord/utils/internal';
+import type { EmojiFile } from '@seedcord/utils/internal';
 
 export const PUSH_STEPS = [...EMOJI_STEPS, 'upload'] as const;
 export type PushStep = (typeof PUSH_STEPS)[number];
@@ -38,17 +37,6 @@ export type Upload = UploadedFile | { file: EmojiFile; emoji?: never };
 
 // 2048 KiB. discord's own error reads "File cannot be larger than 2048.0 kb"
 const MAX_UPLOAD_BYTES = 2_097_152;
-
-const REJECTIONS: Partial<Record<DiscordErrorFields['code'], string>> = {
-    [RESTJSONErrorCodes.InvalidFileUploaded]: "Discord can't read it as an image",
-    [RESTJSONErrorCodes.FailedToResizeAssetBelowTheMaximumSize]:
-        'it is still over 256 KiB after Discord resized it to 128px'
-};
-
-function rejectionOf(error: unknown): string {
-    const code = discordErrorOf(error)?.code;
-    return (code === undefined ? undefined : REJECTIONS[code]) ?? errorReason(error);
-}
 
 async function assertUploadable(files: readonly EmojiFile[]): Promise<void> {
     const sized = await Promise.all(

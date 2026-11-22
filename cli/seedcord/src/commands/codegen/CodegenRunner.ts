@@ -26,8 +26,8 @@ import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Steps } from '#core/output/Steps';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
-import type { EmojiTags, ScannedCommand } from './AugmentationBuilder';
-import type { PluginTypeTable } from './renderAugmentation';
+import type { ScannedCommand } from './AugmentationBuilder';
+import type { EmojiTags, PluginTypeTable } from './renderAugmentation';
 import type { ExpectedEmoji } from '@seedcord/core/internal';
 import type { ILogger } from '@seedcord/types';
 

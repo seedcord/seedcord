@@ -12,20 +12,18 @@ type Tone = typeof paint.mint;
 const MARKS = { '+': paint.mint, '~': paint.iris, '-': paint.coral } satisfies Record<string, Tone>;
 export type Mark = keyof typeof MARKS;
 
-// pass `labelOf` for a label that paints part of itself in another tone
-export function markedRows(mark: Mark, labels: readonly string[]): SectionRow[];
-export function markedRows<Item>(
+// for a label that paints part of itself in another tone
+export function markedRowsOf<Item>(
     mark: Mark,
     items: readonly Item[],
     labelOf: (item: Item, tone: Tone) => string
-): SectionRow[];
-export function markedRows(
-    mark: Mark,
-    items: readonly unknown[],
-    labelOf = (label: unknown, tone: Tone): string => tone(String(label))
 ): SectionRow[] {
     const tone = MARKS[mark];
     return items.length === 0 ? [] : [{ marker: tone.bold(mark), items: items.map((item) => labelOf(item, tone)) }];
+}
+
+export function markedRows(mark: Mark, labels: readonly string[]): SectionRow[] {
+    return markedRowsOf(mark, labels, (label, tone) => tone(label));
 }
 
 export interface RowItem {

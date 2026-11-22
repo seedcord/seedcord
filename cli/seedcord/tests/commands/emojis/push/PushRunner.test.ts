@@ -173,17 +173,29 @@ describe('PushRunner', () => {
         expect(printed()).toContain(`Could not upload ${join(project.dir, 'emojis/wave.png')} (Missing Access).`);
     });
 
-    it("warns with the old emoji's new name when putting it back fails too", async () => {
+    it.for<{ when: string; rejects: Record<string, Error>; reason: string }>([
+        {
+            when: 'the new upload',
+            rejects: { 'DELETE sc_wave-id': new Error('Missing Access'), 'DELETE wave': new Error('Missing Access') },
+            reason: 'Missing Access'
+        },
+        {
+            when: 'the old name',
+            rejects: {
+                'POST wave': discordError(RESTJSONErrorCodes.InvalidFileUploaded, 'Invalid Asset'),
+                'PATCH sc_wave-id to wave': new Error('Missing Access')
+            },
+            reason: "Discord can't read it as an image"
+        }
+    ])('warns how to clean up when discord refuses to give back $when', async ({ rejects, reason }) => {
         const project = await projectWith({ 'wave.png': 'new wave' });
-        const discord = fakeEmojiDiscord({
-            emojis: ['wave'],
-            rejects: { 'DELETE sc_wave-id': new Error('Missing Access'), 'DELETE wave': new Error('Missing Access') }
-        });
+        const discord = fakeEmojiDiscord({ emojis: ['wave'], rejects });
 
         const { printed, done } = push(project, discord.rest, { replace: ['wave'] });
 
         await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliSomeFailed });
-        expect(printed()).toContain('Missing Access, and the old emoji is still on Discord as sc_wave-id');
+        expect(printed()).toContain(`${reason}, and the old emoji is still on Discord as sc_wave-id`);
+        expect(printed()).toContain('seedcord emojis remove sc_wave-id');
     });
 
     it('uploads the other files when discord rejects one, then throws CliSomeFailed', async () => {
@@ -251,6 +263,18 @@ describe('PushRunner', () => {
             'fresh new-1',
             'seed new-2'
         ]);
+    });
+
+    it('stops a bare --replace when nothing is uploaded yet', async () => {
+        const project = await projectWith({ 'fresh.png': 'f' });
+        const discord = fakeEmojiDiscord();
+        const never = (): Promise<never> => Promise.reject(new Error('push asked a question'));
+
+        const { printed, done } = push(project, discord.rest, { replace: true, pick: never, confirm: never });
+        await done;
+
+        expect(printed()).toContain('Nothing to replace.');
+        expect(discord.emojis()).toEqual([]);
     });
 
     it('tells an edge bot to rebuild after an upload', async () => {

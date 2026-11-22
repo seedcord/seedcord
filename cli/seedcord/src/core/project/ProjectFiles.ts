@@ -31,7 +31,7 @@ function layoutOf({ root, configFile, files, target, emojis }: ProjectPaths): Bo
 export class ProjectFiles {
     public readonly layout: BotLayout;
 
-    constructor(paths: ProjectPaths) {
+    constructor(private readonly paths: ProjectPaths) {
         this.layout = layoutOf(paths);
     }
 
@@ -41,7 +41,7 @@ export class ProjectFiles {
     }
 
     public async builtLists(): Promise<BuiltLists> {
-        const [entries, emojis] = await Promise.all([this.entries(), folderEmojisIn(this.layout.emojiFolder)]);
+        const [entries, emojis] = await Promise.all([this.entries(), folderEmojisIn(this.paths.emojis.dir)]);
         const folders = entries.flatMap(({ isFolder, path }) => (isFolder ? [this.layout.keyOf(path)] : [])).toSorted();
         return { folders, emojis };
     }

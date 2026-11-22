@@ -7,7 +7,6 @@ import type { Choice } from '@seedcord/cli-prompts';
 
 export interface EmojiPrompts {
     confirm: Confirm;
-    // only asked in a terminal. a flag like --delete-file answers it everywhere else
     offer: Confirm;
     pick: (choices: readonly Choice<string>[]) => Promise<string[]>;
     pickGuild: (choices: readonly Choice<string>[]) => Promise<string>;

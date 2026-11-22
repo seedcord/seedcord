@@ -70,10 +70,11 @@ class EmojiResolver {
 
     private async listFor(emoji: ExpectedEmoji): Promise<EmojisByName | Error> {
         const guildId = emoji.kind === 'guild' ? emoji.guildId : undefined;
-        let list = this.lists.get(guildId ?? APPLICATION);
+        const key = guildId ?? APPLICATION;
+        let list = this.lists.get(key);
         if (!list) {
             list = await this.read(guildId);
-            this.lists.set(guildId ?? APPLICATION, list);
+            this.lists.set(key, list);
         }
         return list;
     }

@@ -40,7 +40,13 @@ export class PushPresenter extends StepsPresenter<PushStep> {
         super(output);
     }
 
+    // undefined when there's nothing to replace or the picker was cancelled
     public pickReplacements(uploaded: readonly UploadedFile[]): Promise<string[] | undefined> {
+        if (uploaded.length === 0) {
+            this.output.line();
+            this.output.line("Nothing to replace. None of your folder's files are on Discord yet.");
+            return Promise.resolve(undefined);
+        }
         const choices = uploaded.map(({ file }) => ({ value: file.name, label: file.name }));
         return picked(this.output, this.prompts.pick, choices);
     }
