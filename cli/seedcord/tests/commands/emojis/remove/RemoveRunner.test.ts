@@ -96,7 +96,13 @@ describe('emojis RemoveRunner', () => {
         expect(offers).toEqual([`Delete 1 file from ${folder} too?`]);
         expect(discord.emojis()).toEqual([]);
         expect(existsSync(join(folder, 'seed.png'))).toBe(true);
-        expect(printed()).toContain(`Keeping 1 file in ${folder}, so the next seedcord emojis push uploads it again.`);
+        expect(printed()).toContain(
+            [
+                '    - seed',
+                `      Keeping 1 file in ${folder}, so the next seedcord emojis push uploads it again.`,
+                ''
+            ].join('\n')
+        );
     });
 
     it('deletes the file after a yes to that question', async () => {

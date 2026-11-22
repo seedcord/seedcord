@@ -18,6 +18,12 @@ import type { PushPlan, PushStep, Upload } from './PushRunner';
 
 const emojis = (count: number): string => plural(count, 'emoji');
 
+// changed image still counts as uploaded because push only matches by name
+function replaceHint(): string {
+    const command = paint.bold('seedcord emojis push --replace <name>');
+    return paint.mute(`Changed an image? ${command} uploads it again.`);
+}
+
 function question({ add, replace, source }: PushPlan): string {
     const app = paint.bold(source);
     if (replace.length === 0) return `Upload ${emojis(add.length)} to ${app}?`;
@@ -40,19 +46,19 @@ export class PushPresenter extends StepsPresenter<PushStep> {
         return picked(this.output, this.prompts.pick, choices);
     }
 
-    public nothingToUpload(plan: PushPlan): void {
-        const { folder, source, keep } = plan;
+    public nothingToUpload({ folder, source, keep }: PushPlan): void {
         this.output.line();
+        if (keep.length === 0) {
+            this.output.line(`Nothing to upload. ${paint.path(folder)} doesn't have any emojis in it.`);
+            return;
+        }
         this.output.line(
-            keep.length === 0
-                ? `Nothing to upload. ${paint.path(folder)} doesn't have any emojis in it.`
-                : `Nothing to upload. ${paint.bold(source)} has all ${emojis(keep.length)} from ${paint.path(folder)}.`
+            `Nothing to upload. ${paint.bold(source)} has all ${emojis(keep.length)} from ${paint.path(folder)}.`
         );
-        this.replaceHint(plan);
+        this.output.line(replaceHint());
     }
 
-    public preview(plan: PushPlan): void {
-        const { folder, add, replace, keep, onlyOnDiscord } = plan;
+    public preview({ folder, add, replace, keep, onlyOnDiscord }: PushPlan): void {
         const rows: SectionRow[] = [
             ...markedRows(
                 '+',
@@ -69,6 +75,7 @@ export class PushPresenter extends StepsPresenter<PushStep> {
                     ? keep.map(({ file }) => file.name)
                     : [paint.mute(`${keep.length} already uploaded`)]
             });
+            if (replace.length === 0) rows.push({ items: [replaceHint()] });
         }
 
         const inFolder = add.length + replace.length + keep.length;
@@ -81,7 +88,6 @@ export class PushPresenter extends StepsPresenter<PushStep> {
             });
         }
         printSections(this.output, sections);
-        this.replaceHint(plan);
     }
 
     public approve(plan: PushPlan): Promise<boolean> {
@@ -110,12 +116,5 @@ export class PushPresenter extends StepsPresenter<PushStep> {
 
     public edgeHint(): void {
         printEdgeHint(this.output, 'the emojis that this push uploaded');
-    }
-
-    // a changed image still counts as uploaded because push only matches by name
-    private replaceHint({ keep, replace }: PushPlan): void {
-        if (keep.length === 0 || replace.length > 0) return;
-        const command = paint.bold('seedcord emojis push --replace <name>');
-        this.output.line(paint.mute(`Changed an image? ${command} uploads it again.`));
     }
 }

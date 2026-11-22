@@ -48,16 +48,11 @@ export class RemovePresenter extends StepsPresenter<RemoveStep> {
 
     public preview(plan: RemovePlan): void {
         const { folder, source, removals, deleteFiles } = plan;
-        const sections: Section[] = [
-            {
-                title: source,
-                note: plural(removals.length, 'emoji'),
-                rows: markedRows(
-                    '-',
-                    removals.map(({ emoji }) => emoji.name)
-                )
-            }
-        ];
+        const rows = markedRows(
+            '-',
+            removals.map(({ emoji }) => emoji.name)
+        );
+        const sections: Section[] = [{ title: source, note: plural(removals.length, 'emoji'), rows }];
         if (deleteFiles) {
             sections.push({
                 title: displayPath(folder),
@@ -67,17 +62,18 @@ export class RemovePresenter extends StepsPresenter<RemoveStep> {
                     plan.files.map((file) => posixRelative(folder, file))
                 )
             });
+        } else if (plan.files.length > 0) {
+            const kept = plan.files.length;
+            const push = paint.bold('seedcord emojis push');
+            rows.push({
+                items: [
+                    paint.mute(
+                        `Keeping ${files(kept)} in ${paint.path(folder)}, so the next ${push} uploads ${kept === 1 ? 'it' : 'them'} again.`
+                    )
+                ]
+            });
         }
         printSections(this.output, sections);
-
-        if (deleteFiles || plan.files.length === 0) return;
-        const kept = plan.files.length;
-        const push = paint.bold('seedcord emojis push');
-        this.output.line(
-            paint.mute(
-                `Keeping ${files(kept)} in ${paint.path(folder)}, so the next ${push} uploads ${kept === 1 ? 'it' : 'them'} again.`
-            )
-        );
     }
 
     public approve({ folder, source, removals, files: withFiles, deleteFiles }: RemovePlan): Promise<boolean> {

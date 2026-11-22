@@ -64,6 +64,7 @@ describe('PushRunner', () => {
                 `  ${join(project.dir, 'emojis')}  3 emojis`,
                 '    + party_parrot wave',
                 '      1 already uploaded',
+                '      Changed an image? seedcord emojis push --replace <name> uploads it again.',
                 '',
                 '  only on Discord  1 emoji, kept',
                 '      old_logo'
