@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
-import { emojisAt } from '@seedcord/core/internal';
+import { emojisOf } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { errorReason } from '@seedcord/utils/internal';
@@ -27,16 +27,12 @@ export class EmojiSession {
     }
 
     public async list(guildId?: string): Promise<UploadedEmoji[]> {
-        const [route, what, fix] =
+        const [what, fix] =
             guildId === undefined
-                ? [Routes.applicationEmojis(this.app.id), "the application's emojis"]
-                : [
-                      Routes.guildEmojis(guildId),
-                      `the emojis of guild ${guildId}`,
-                      'Check that the bot is in that guild.'
-                  ];
+                ? ["the application's emojis"]
+                : [`the emojis of guild ${guildId}`, 'Check that the bot is in that guild.'];
         try {
-            const listed = await emojisAt(this.rest, route);
+            const listed = await emojisOf(this.rest, this.app.id, guildId);
             return listed.flatMap(({ id, name }) => (id && name ? [{ id, name }] : []));
         } catch (error: unknown) {
             throw new SeedcordError(SeedcordErrorCode.CoreDiscordReadFailed, [what, errorReason(error), fix], {
@@ -50,7 +46,7 @@ export class EmojiSession {
         await this.rest.post(Routes.applicationEmojis(this.app.id), { body: { name, image } });
     }
 
-    // discord can't swap an emoji's image and names have to be unique. that's why the old one gets renamed first
+    // the old one is renamed first because names are unique and discord can't swap an image
     public async replace({ file, emoji }: UploadedFile): Promise<void> {
         await this.rename(emoji, `sc_${emoji.id}`);
         try {

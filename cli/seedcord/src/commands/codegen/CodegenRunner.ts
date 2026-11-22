@@ -57,7 +57,7 @@ interface CodegenResult {
 }
 
 function emojiTags(expected: readonly ExpectedEmoji[]): EmojiTags {
-    return Object.fromEntries(expected.map(({ key, kind }) => [key, kind === 'folder' ? 'application' : kind]));
+    return Object.fromEntries(expected.map(({ key, kind }) => [key, kind]));
 }
 
 interface CodegenRunnerDeps {

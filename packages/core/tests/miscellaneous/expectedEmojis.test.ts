@@ -4,18 +4,19 @@ import { join } from 'node:path';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { setDevFiles } from '@seedcord/utils/internal';
-import { assert, describe, expect, it, onTestFinished } from 'vite-plus/test';
+import { assert, describe, expect, it } from 'vite-plus/test';
 
 import { expectedEmojis } from '#src/miscellaneous/expectedEmojis';
 
 import type { EmojiConfig } from '@seedcord/types';
 
 function projectWithEmojis(...files: string[]): Disposable {
-    const project = mkdtempDisposableSync(join(tmpdir(), 'seedcord-emojis-'));
-    onTestFinished(() => project.remove());
+    using setup = new DisposableStack();
+    const project = setup.use(mkdtempDisposableSync(join(tmpdir(), 'seedcord-emojis-')));
     mkdirSync(join(project.path, 'emojis'));
     for (const file of files) writeFileSync(join(project.path, 'emojis', file), '');
-    return setDevFiles({ root: project.path, listed: [], skippedFolders: [], emojiFolder: '/emojis' });
+    setup.use(setDevFiles({ root: project.path, listed: [], skippedFolders: [], emojiFolder: '/emojis' }));
+    return setup.move();
 }
 
 describe('expectedEmojis', () => {
@@ -23,15 +24,15 @@ describe('expectedEmojis', () => {
         using _project = projectWithEmojis('dot.png');
 
         expect(await expectedEmojis({ Yes: 'dot', Wave: ['wave', 'g1'] })).toEqual([
-            { kind: 'folder', key: 'Dot', name: 'dot' },
-            { kind: 'application', key: 'Yes', name: 'dot' },
+            { kind: 'application', key: 'Dot', name: 'dot', inFolder: true },
+            { kind: 'application', key: 'Yes', name: 'dot', inFolder: false },
             { kind: 'guild', key: 'Wave', name: 'wave', guildId: 'g1' }
         ]);
     });
 
     it('lists bot.emojis alone for a bot that the CLI did not start', async () => {
         expect(await expectedEmojis({ Confirm: 'confirm' })).toEqual([
-            { kind: 'application', key: 'Confirm', name: 'confirm' }
+            { kind: 'application', key: 'Confirm', name: 'confirm', inFolder: false }
         ]);
     });
 

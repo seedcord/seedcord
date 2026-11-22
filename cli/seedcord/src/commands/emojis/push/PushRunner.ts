@@ -14,7 +14,7 @@ import { defaultRunnerDeps } from '#core/discord/runnerDeps';
 import type { UploadedEmoji, UploadedFile } from '#commands/emojis/emojiDiff';
 import type { RunnerDeps } from '#core/discord/runnerDeps';
 import type { PushPresenter } from './PushPresenter';
-import type { EmojiFile } from '@seedcord/utils/internal';
+import type { DiscordErrorFields, EmojiFile } from '@seedcord/utils/internal';
 
 export const PUSH_STEPS = [...EMOJI_STEPS, 'upload'] as const;
 export type PushStep = (typeof PUSH_STEPS)[number];
@@ -39,7 +39,7 @@ export type Upload = UploadedFile | { file: EmojiFile; emoji?: never };
 // 2048 KiB. discord's own error reads "File cannot be larger than 2048.0 kb"
 const MAX_UPLOAD_BYTES = 2_097_152;
 
-const REJECTIONS: Partial<Record<number | string, string>> = {
+const REJECTIONS: Partial<Record<DiscordErrorFields['code'], string>> = {
     [RESTJSONErrorCodes.InvalidFileUploaded]: "Discord can't read it as an image",
     [RESTJSONErrorCodes.FailedToResizeAssetBelowTheMaximumSize]:
         'it is still over 256 KiB after Discord resized it to 128px'
@@ -61,7 +61,7 @@ async function assertUploadable(files: readonly EmojiFile[]): Promise<void> {
         sized
             .filter(({ size }) => size > MAX_UPLOAD_BYTES)
             .map(({ file }) => new SeedcordTypeError(SeedcordErrorCode.ConfigEmojiFileUnusable, [file, 'size'])),
-        SeedcordErrorCode.ConfigEmojiUnresolved
+        SeedcordErrorCode.ConfigEmojiFolderInvalid
     );
 }
 

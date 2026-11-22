@@ -8,7 +8,7 @@ import { partition } from 'es-toolkit';
 
 import { namedOnDiscord, onDiscord } from '#commands/emojis/emojiDiff';
 import { assertNoneFailed } from '#commands/emojis/outcome';
-import { EMOJI_STEPS, readDiscord, readFolder } from '#commands/emojis/readEmojis';
+import { EMOJI_STEPS, readEmojisOnDiscord, readFolder } from '#commands/emojis/readEmojis';
 import { readBotGuilds } from '#core/discord/readBotGuilds';
 import { defaultRunnerDeps } from '#core/discord/runnerDeps';
 
@@ -63,7 +63,7 @@ export class PullRunner {
         const read = await readFolder(presenter, this.deps, process.cwd());
         const guildId = guild === true ? await presenter.pickGuild(() => readBotGuilds(read.rest)) : guild;
         if (guild === true && guildId === undefined) return;
-        const { folder, files, session, source, diff } = await readDiscord(presenter, read, guildId);
+        const { folder, files, session, source, diff } = await readEmojisOnDiscord(presenter, read, guildId);
 
         const wanted = names.length > 0 ? namedOnDiscord(diff, names, source) : onDiscord(diff);
         const inFolder = wanted.filter(({ file }) => file !== undefined).length;

@@ -39,6 +39,8 @@ const messages = {
         `Another process already listens on port ${port}. Stop it, or set ${paint.bold(setting)} in ${configFile ? paint.path(configFile) : 'your Seedcord config'} to a free port.`,
     [SeedcordErrorCode.ConfigEmojiFileUnusable]: (file: string, problem: keyof typeof emojiFileProblems) =>
         `${paint.path(file)} can't be an emoji. ${emojiFileProblems[problem]}`,
+    [SeedcordErrorCode.ConfigEmojiFolderInvalid]: (count: number) =>
+        `Your emojis folder has ${paint.iris(count)} problems. Each one is listed below.`,
 
     [SeedcordErrorCode.LifecycleTaskChangeRejected]: (action: 'add' | 'remove', startup: 'running' | 'finished') =>
         `${startup === 'running' ? 'Startup is running, so its tasks cannot change.' : 'Startup already finished, so this task would never run.'} ${action === 'add' ? 'Add' : 'Remove'} startup tasks before you call ${paint.bold('start()')}.`,
@@ -390,8 +392,8 @@ const messages = {
     [SeedcordErrorCode.CliEmojiNameUnknown]: (name: string, where: string, fix: string) =>
         `${where} doesn't have an emoji with the name ${paint.bold(name)}. ${fix}`,
     [SeedcordErrorCode.CliEmojiDownloadFailed]: (status: number) => `Discord's CDN answered ${status}`,
-    [SeedcordErrorCode.CliPickerNeedsTerminal]: (opener: string, needs: string, example: string) =>
-        `${paint.bold(opener)} without ${needs} opens a picker, but a picker only opens in a terminal with ${paint.bold('CI')} unset. Pass ${needs}, as in ${paint.bold(example)}.`,
+    [SeedcordErrorCode.CliPickerNeedsTerminal]: (opener: string, skipWith: string, example: string) =>
+        `${paint.bold(opener)} without ${skipWith} opens a picker, but a picker only opens in a terminal with ${paint.bold('CI')} unset. Pass ${skipWith}, as in ${paint.bold(example)}.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>

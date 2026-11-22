@@ -21,9 +21,10 @@ function byName(list: readonly APIEmoji[]): EmojisByName {
     return map;
 }
 
-// app emojis come back as { items }, guild emojis as a plain array
-export async function emojisAt(rest: EmojiRest, route: `/${string}`): Promise<APIEmoji[]> {
-    // justified: the discord api contract for the two emoji list routes
+// a guild's emojis when it gets a guild id. app emojis come back as { items }, guild emojis as a plain array
+export async function emojisOf(rest: EmojiRest, applicationId: string, guildId?: string): Promise<APIEmoji[]> {
+    const route = guildId === undefined ? Routes.applicationEmojis(applicationId) : Routes.guildEmojis(guildId);
+    // justified: the discord api contract for these two routes
     const listed = (await rest.get(route)) as RESTGetAPIApplicationEmojisResult | RESTGetAPIGuildEmojisResult;
     return Array.isArray(listed) ? listed : listed.items;
 }
@@ -31,7 +32,8 @@ export async function emojisAt(rest: EmojiRest, route: `/${string}`): Promise<AP
 class EmojiResolver {
     private readonly resolved = accessorStore<ResolvedEmoji>();
     private readonly problems: Error[] = [];
-    private readonly listsByRoute = new Map<string, EmojisByName | Error>();
+    // the application's list is under the key undefined
+    private readonly listsByGuild = new Map<string | undefined, EmojisByName | Error>();
 
     constructor(
         private readonly rest: EmojiRest,
@@ -65,19 +67,18 @@ class EmojiResolver {
     }
 
     private async listFor(emoji: ExpectedEmoji): Promise<EmojisByName | Error> {
-        const route =
-            emoji.kind === 'guild' ? Routes.guildEmojis(emoji.guildId) : Routes.applicationEmojis(this.applicationId);
-        let list = this.listsByRoute.get(route);
+        const guildId = emoji.kind === 'guild' ? emoji.guildId : undefined;
+        let list = this.listsByGuild.get(guildId);
         if (!list) {
-            list = await this.read(route);
-            this.listsByRoute.set(route, list);
+            list = await this.read(guildId);
+            this.listsByGuild.set(guildId, list);
         }
         return list;
     }
 
-    private async read(route: `/${string}`): Promise<EmojisByName | Error> {
+    private async read(guildId?: string): Promise<EmojisByName | Error> {
         try {
-            return byName(await emojisAt(this.rest, route));
+            return byName(await emojisOf(this.rest, this.applicationId, guildId));
         } catch (error) {
             return asError(error);
         }

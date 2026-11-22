@@ -2,6 +2,7 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
 import { assert, describe, expect, it, vi } from 'vite-plus/test';
 
+import { folderEmoji } from '#src/miscellaneous/expectedEmojis';
 import { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
 
 import type { ExpectedEmoji } from '#src/miscellaneous/expectedEmojis';
@@ -16,7 +17,7 @@ function apiEmoji(name: string, id: string, animated = false): APIEmoji {
 }
 
 function inApp(key: string, name: string): ExpectedEmoji {
-    return { kind: 'application', key, name };
+    return { kind: 'application', key, name, inFolder: false };
 }
 
 function inGuild(key: string, name: string, guildId = 'g1'): ExpectedEmoji {
@@ -64,14 +65,6 @@ describe('resolveEmojis', () => {
         const resolved = await resolveEmojis(fixture.rest, APP, [inGuild('Wave', 'wave')]);
 
         expect(resolved.Wave?.id).toBe('333');
-    });
-
-    it('resolves a folder emoji from the application', async () => {
-        const resolved = await resolveEmojis(restWith().rest, APP, [
-            { kind: 'folder', key: 'Confirm', name: 'confirm' }
-        ]);
-
-        expect(resolved.Confirm?.id).toBe('111');
     });
 
     it('reads the guild route only once for two emojis from one guild', async () => {
@@ -134,7 +127,7 @@ describe('resolveEmojis', () => {
     });
 
     it.for<{ from: string; emoji: ExpectedEmoji; fix: string }>([
-        { from: 'the emojis folder', emoji: { kind: 'folder', key: 'Dot', name: 'dot' }, fix: 'seedcord emojis push' },
+        { from: 'the emojis folder', emoji: folderEmoji({ key: 'Dot', name: 'dot' }), fix: 'seedcord emojis push' },
         { from: 'bot.emojis', emoji: inApp('Dot', 'dot'), fix: 'Check the spelling' }
     ])('gives the fix for a missing emoji that comes from $from', async ({ emoji, fix }) => {
         expect(await failureOf([emoji])).toMatchObject({

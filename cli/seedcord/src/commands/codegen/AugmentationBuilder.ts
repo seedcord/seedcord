@@ -23,9 +23,9 @@ export type SlashTables = Record<string, SlashRouteEntry>;
 export type ContextMenuTables = Record<string, { cache: RouteCache }>;
 
 // gateway reads this tag to type Emojis.X as GuildEmoji or ApplicationEmoji
-export type EmojiTags = Record<string, ExcludeStrict<ExpectedEmoji['kind'], 'folder'>>;
+export type EmojiTags = Record<string, ExpectedEmoji['kind']>;
 
-export interface CommandTables {
+interface CommandTables {
     slash: SlashTables;
     userContextMenus: ContextMenuTables;
     messageContextMenus: ContextMenuTables;

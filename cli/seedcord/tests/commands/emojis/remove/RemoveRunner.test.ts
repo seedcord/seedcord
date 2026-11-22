@@ -44,13 +44,13 @@ function remove(
 }
 
 describe('emojis RemoveRunner', () => {
-    it('deletes the named emojis from the application', async () => {
+    it('deletes the named emojis from the application, each one once', async () => {
         const project = await projectWith({ 'seed.png': 's' });
         const discord = fakeEmojiDiscord({ emojis: ['seed', 'old_logo', 'test'] });
         const questions: string[] = [];
 
         const { printed, done } = remove(project, discord.rest, {
-            names: ['old_logo', 'test'],
+            names: ['old_logo', 'test', 'test'],
             confirm: (question) => {
                 questions.push(question);
                 return Promise.resolve(true);

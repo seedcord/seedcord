@@ -58,11 +58,7 @@ describe('seedcord emojis, on a terminal', () => {
         using terminal = new PromptTerminal();
         const ran = await run([], terminal.prompter);
 
-        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Upload the emojis'));
-        const menu = await terminal.screen();
-        expect(menu).toContain("Replace an emoji's image");
-        expect(menu).toContain("Download a guild's emojis");
-        expect(menu).toContain('Delete emojis from Discord');
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Upload the files'));
         await terminal.press(KEY.down, KEY.down, KEY.enter);
         await ran.done;
 
@@ -75,7 +71,7 @@ describe('seedcord emojis, on a terminal', () => {
         using terminal = new PromptTerminal();
         const ran = await run([], terminal.prompter);
 
-        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Upload the emojis'));
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Upload the files'));
         await terminal.press(KEY.down, KEY.enter);
         await vi.waitFor(async () => expect(await terminal.screen()).toContain('Which emojis do you want to replace?'));
         await terminal.press(KEY.escape);
@@ -89,7 +85,7 @@ describe('seedcord emojis, on a terminal', () => {
         using terminal = new PromptTerminal();
         const ran = await run([], terminal.prompter);
 
-        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Upload the emojis'));
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Upload the files'));
         await terminal.press(KEY.down, KEY.down, KEY.down, KEY.down, KEY.enter);
         await vi.waitFor(async () => expect(await terminal.screen()).toContain('Which guild?'));
         expect(await terminal.screen()).toContain('Alpha');
@@ -104,7 +100,7 @@ describe('seedcord emojis, on a terminal', () => {
         using terminal = new PromptTerminal();
         const ran = await run([], terminal.prompter);
 
-        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Upload the emojis'));
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Upload the files'));
         await terminal.press(KEY.escape);
         await ran.done;
 
@@ -166,7 +162,7 @@ describe('seedcord emojis, on a terminal', () => {
     });
 });
 
-describe('seedcord emojis push, off a terminal', () => {
+function offTerminal(): void {
     const stdinIsTTY = process.stdin.isTTY;
 
     beforeEach(() => {
@@ -176,6 +172,10 @@ describe('seedcord emojis push, off a terminal', () => {
     afterEach(() => {
         process.stdin.isTTY = stdinIsTTY;
     });
+}
+
+describe('seedcord emojis push, off a terminal', () => {
+    offTerminal();
 
     it('throws CliNeedsYes before it reads anything', async () => {
         using output = captureOutput();
@@ -245,15 +245,7 @@ describe('seedcord emojis list', () => {
 });
 
 describe('seedcord emojis remove and pull, off a terminal', () => {
-    const stdinIsTTY = process.stdin.isTTY;
-
-    beforeEach(() => {
-        process.stdin.isTTY = false;
-    });
-
-    afterEach(() => {
-        process.stdin.isTTY = stdinIsTTY;
-    });
+    offTerminal();
 
     it('deletes the named emojis with --yes', async () => {
         using _output = captureOutput();

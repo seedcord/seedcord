@@ -81,7 +81,7 @@ export function usableEmojiFiles(found: readonly NamedFile[]): EmojiFile[] {
 
     throwSingleOrAggregate(
         [...unusable, ...clashes('emoji', byName), ...clashes(`${paint.bold('Emojis')} key`, byKey)],
-        SeedcordErrorCode.ConfigEmojiUnresolved
+        SeedcordErrorCode.ConfigEmojiFolderInvalid
     );
     return usable;
 }

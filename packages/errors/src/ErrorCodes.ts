@@ -28,6 +28,8 @@ export enum SeedcordErrorCode {
     PortInUse = 1011,
     /** A file in the emojis folder can't become an emoji. */
     ConfigEmojiFileUnusable = 1012,
+    /** The emojis folder has two or more problems, like a file that can't become an emoji or two files with one name. */
+    ConfigEmojiFolderInvalid = 1013,
 
     /** A startup task was added or removed while startup ran, or added after it finished. */
     LifecycleTaskChangeRejected = 1101,
@@ -351,7 +353,7 @@ export enum SeedcordErrorCode {
     CliNeedsYes = 3133,
     /** A class carrying `@RegisterCommand` builds a component that is not a command or a context menu. */
     CliCommandNotACommand = 3134,
-    /** Some of the things a command tried to change on Discord failed. It warned about each one. */
+    /** Some of the items a command worked through failed. It warned about each one. */
     CliSomeFailed = 3135,
     /** The CLI ran on Bun for an edge bot. */
     CliEdgeOnBun = 3136,

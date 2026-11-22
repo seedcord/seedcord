@@ -41,7 +41,7 @@ interface Yes {
 }
 
 const DESCRIPTIONS = {
-    push: 'Upload the emojis Discord is missing from your folder',
+    push: "Upload the files in your folder that Discord doesn't have",
     list: 'Compare your emojis folder with the emojis on Discord',
     pull: 'Download the emojis on Discord that your folder is missing',
     remove: 'Delete emojis from Discord'
@@ -67,8 +67,7 @@ const ASKS = {
 interface Picker {
     // the flag or command that opens the picker, like `--replace`
     opener: string;
-    // what you'd pass to skip the picker
-    needs: string;
+    skipWith: string;
     example: string;
     question: string;
 }
@@ -76,19 +75,19 @@ interface Picker {
 const PICKERS = {
     replace: {
         opener: '--replace',
-        needs: 'emoji names',
+        skipWith: 'emoji names',
         example: 'seedcord emojis push --replace wave',
         question: 'Which emojis do you want to replace?'
     },
     remove: {
         opener: 'seedcord emojis remove',
-        needs: 'emoji names',
+        skipWith: 'emoji names',
         example: 'seedcord emojis remove wave',
         question: 'Which emojis do you want to delete?'
     },
     guild: {
         opener: '--guild',
-        needs: 'a guild id',
+        skipWith: 'a guild id',
         example: 'seedcord emojis pull --guild 1234567890123456789',
         question: 'Which guild?'
     }
@@ -123,7 +122,7 @@ export class EmojisCommand extends BaseCommand {
             .command('push')
             .description(DESCRIPTIONS.push)
             .option('--yes', 'Upload without asking first')
-            .option('--replace [names...]', 'Also upload these again in place of the ones on Discord')
+            .option('--replace [names...]', 'Upload these again, replacing the ones on Discord')
             .action((flags, command) =>
                 this.runSteps(command, PUSH_STEPS, (printer) => this.push(printer, command, flags))
             );
@@ -131,7 +130,7 @@ export class EmojisCommand extends BaseCommand {
         emojis
             .command('list')
             .description(DESCRIPTIONS.list)
-            .option('--check', 'Exit with an error when the folder has files that are missing on Discord')
+            .option('--check', "Exit with an error if Discord doesn't have a file from the folder")
             .option('--json', 'Print the listing as JSON for scripts')
             .action((flags, command) => {
                 if (flags.json) return this.runJson(command, () => this.listRunner.json(stderrSteps(), flags));
@@ -142,7 +141,7 @@ export class EmojisCommand extends BaseCommand {
             .command('pull')
             .description(DESCRIPTIONS.pull)
             .argument('[names...]', 'The emojis to download. Without names, it downloads every missing one')
-            .option('--force', 'Also download the ones your folder already has, over their files')
+            .option('--force', 'Overwrite the files your folder already has')
             .option('--guild [id]', "Download a guild's emojis in place of the application's")
             .action((names, flags, command) =>
                 this.runSteps(command, PULL_STEPS, (printer) => this.pull(printer, { names, ...flags }))
@@ -229,7 +228,7 @@ export class EmojisCommand extends BaseCommand {
 
     private assertCanPick(picking: keyof typeof PICKERS): void {
         if (isInteractive()) return;
-        const { opener, needs, example } = PICKERS[picking];
-        throw new SeedcordTypeError(SeedcordErrorCode.CliPickerNeedsTerminal, [opener, needs, example]);
+        const { opener, skipWith, example } = PICKERS[picking];
+        throw new SeedcordTypeError(SeedcordErrorCode.CliPickerNeedsTerminal, [opener, skipWith, example]);
     }
 }

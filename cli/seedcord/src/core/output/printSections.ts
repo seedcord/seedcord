@@ -8,8 +8,9 @@ export interface SectionRow {
 }
 
 const MARKS = { '+': paint.mint, '~': paint.iris, '-': paint.coral } satisfies Record<string, typeof paint.mint>;
+type Mark = keyof typeof MARKS;
 
-export function markedRows(mark: keyof typeof MARKS, items: readonly string[]): SectionRow[] {
+export function markedRows(mark: Mark, items: readonly string[]): SectionRow[] {
     const tone = MARKS[mark];
     return items.length === 0 ? [] : [{ marker: tone.bold(mark), items: items.map((item) => tone(item)) }];
 }
@@ -19,9 +20,12 @@ interface RowItem {
     detail: string;
 }
 
-export function itemRows(items: readonly RowItem[], detailed: boolean, marker?: string): SectionRow[] {
-    if (detailed) return items.map(({ label, detail }) => ({ marker, items: [`${label}  ${paint.mute(detail)}`] }));
-    return items.length === 0 ? [] : [{ marker, items: items.map(({ label }) => label) }];
+// one row per item with its detail when `detailed`, else one row of labels. a mark paints the labels too
+export function itemRows(items: readonly RowItem[], detailed: boolean, mark?: Mark): SectionRow[] {
+    const marker = mark && MARKS[mark].bold(mark);
+    const labelOf = ({ label }: RowItem): string => (mark ? MARKS[mark](label) : label);
+    if (detailed) return items.map((item) => ({ marker, items: [`${labelOf(item)}  ${paint.mute(item.detail)}`] }));
+    return items.length === 0 ? [] : [{ marker, items: items.map(labelOf) }];
 }
 
 export interface Section {

@@ -1,9 +1,9 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { setBuiltFiles } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { EmojiInjector, Emojis } from '#src/emojis/EmojiInjector';
+import { registerBuiltFiles } from '#tests/helpers/builtFiles';
 
 import type { Core } from '#interfaces/Core';
 import type { ResolvedEmoji } from '@seedcord/core';
@@ -49,15 +49,7 @@ describe('EmojiInjector', () => {
     });
 
     it('resolves an emoji that only the emojis folder has', async () => {
-        using _built = setBuiltFiles({
-            root: process.cwd(),
-            listed: [],
-            skippedFolders: [],
-            folders: [],
-            modules: {},
-            listedFiles: {},
-            emojis: [{ key: 'Confirm', name: 'confirm' }]
-        });
+        using _built = registerBuiltFiles({}, [], [{ key: 'Confirm', name: 'confirm' }]);
 
         await new EmojiInjector(coreWith(undefined).core).init();
 

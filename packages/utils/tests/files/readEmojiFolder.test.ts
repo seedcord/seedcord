@@ -3,23 +3,23 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it, onTestFinished } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { readEmojiFolder } from '#src/files/readEmojiFolder';
 
-async function folderWith(...files: string[]): Promise<string> {
-    const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-emojis-'));
-    onTestFinished(() => tmp.remove());
+async function folderWith(...files: string[]): ReturnType<typeof mkdtempDisposable> {
+    const folder = await mkdtempDisposable(join(tmpdir(), 'seedcord-emojis-'));
     for (const file of files) {
-        await mkdir(dirname(join(tmp.path, file)), { recursive: true });
-        await writeFile(join(tmp.path, file), '');
+        await mkdir(dirname(join(folder.path, file)), { recursive: true });
+        await writeFile(join(folder.path, file), '');
     }
-    return tmp.path;
+    return folder;
 }
 
 // one error per problem, whether the scan throws it alone or inside an aggregate
 async function problemsIn(...files: string[]): Promise<unknown[]> {
-    const error: unknown = await readEmojiFolder(await folderWith(...files)).catch((thrown: unknown) => thrown);
+    await using folder = await folderWith(...files);
+    const error: unknown = await readEmojiFolder(folder.path).catch((thrown: unknown) => thrown);
     // justified: AggregateError types its errors as any[]
     return error instanceof AggregateError ? (error.errors as unknown[]) : [error];
 }
@@ -42,20 +42,22 @@ describe('readEmojiFolder', () => {
         { file: '__.png', name: '__', key: '__', mime: 'image/png' },
         { file: 'badges/gold_star.jpeg', name: 'gold_star', key: 'GoldStar', mime: 'image/jpeg' }
     ])('reads $file as the emoji $name under the key $key', async ({ file, ...emoji }) => {
-        const folder = await folderWith(file);
+        await using folder = await folderWith(file);
 
-        expect(await readEmojiFolder(folder)).toEqual([{ ...emoji, file: join(folder, file) }]);
+        expect(await readEmojiFolder(folder.path)).toEqual([{ ...emoji, file: join(folder.path, file) }]);
     });
 
     it('reads a missing folder as empty', async () => {
-        expect(await readEmojiFolder(join(await folderWith(), 'missing'))).toEqual([]);
+        await using folder = await folderWith();
+
+        expect(await readEmojiFolder(join(folder.path, 'missing'))).toEqual([]);
     });
 
     it('skips dotfiles, dot-folders and node_modules', async () => {
-        const folder = await folderWith('.DS_Store', '.drafts/wip.png', 'node_modules/pkg/logo.png', 'core.png');
+        await using folder = await folderWith('.DS_Store', '.drafts/wip.png', 'node_modules/pkg/logo.png', 'core.png');
 
-        expect(await readEmojiFolder(folder)).toEqual([
-            { key: 'Core', name: 'core', file: join(folder, 'core.png'), mime: 'image/png' }
+        expect(await readEmojiFolder(folder.path)).toEqual([
+            { key: 'Core', name: 'core', file: join(folder.path, 'core.png'), mime: 'image/png' }
         ]);
     });
 
@@ -81,6 +83,11 @@ describe('readEmojiFolder', () => {
     });
 
     it('reports every problem in one throw', async () => {
-        expect(await problemsIn('thumbs-up.png', 'a.png', 'notes.txt')).toHaveLength(3);
+        await using folder = await folderWith('thumbs-up.png', 'a.png', 'notes.txt');
+
+        await expect(readEmojiFolder(folder.path)).rejects.toMatchObject({
+            code: SeedcordErrorCode.ConfigEmojiFolderInvalid,
+            errors: { length: 3 }
+        });
     });
 });

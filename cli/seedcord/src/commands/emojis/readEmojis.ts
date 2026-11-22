@@ -45,7 +45,11 @@ export async function readFolder(
     return { folder, target: config.target.kind, files, rest: openDiscord(instance) };
 }
 
-export async function readDiscord(steps: Steps<EmojiStep>, read: EmojiFolder, guildId?: string): Promise<EmojiState> {
+export async function readEmojisOnDiscord(
+    steps: Steps<EmojiStep>,
+    read: EmojiFolder,
+    guildId?: string
+): Promise<EmojiState> {
     const { session, source, onDiscord } = await steps.step(
         'read discord',
         async () => {
@@ -61,5 +65,5 @@ export async function readDiscord(steps: Steps<EmojiStep>, read: EmojiFolder, gu
 }
 
 export async function readEmojis(steps: Steps<EmojiStep>, deps: RunnerDeps, projectDir: string): Promise<EmojiState> {
-    return readDiscord(steps, await readFolder(steps, deps, projectDir));
+    return readEmojisOnDiscord(steps, await readFolder(steps, deps, projectDir));
 }

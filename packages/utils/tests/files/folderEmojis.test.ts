@@ -2,24 +2,23 @@ import { mkdirSync, mkdtempDisposableSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { describe, expect, it, onTestFinished } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { setBuiltFiles, setDevFiles } from '#src/files/slots';
 import { folderEmojis } from '#src/files/sources';
 
-function projectWithEmojis(...files: string[]): string {
+function projectWithEmojis(...files: string[]): ReturnType<typeof mkdtempDisposableSync> {
     const project = mkdtempDisposableSync(path.join(tmpdir(), 'seedcord-emojis-'));
-    onTestFinished(() => project.remove());
     mkdirSync(path.join(project.path, 'emojis'));
     for (const file of files) writeFileSync(path.join(project.path, 'emojis', file), '');
-    return project.path;
+    return project;
 }
 
 describe('folderEmojis', () => {
     it('reads the folder from disk under seedcord dev', async () => {
-        const project = projectWithEmojis('dot.png', 'confirmation_check.avif');
+        using project = projectWithEmojis('dot.png', 'confirmation_check.avif');
         using _dev = setDevFiles({
-            root: path.join(project, 'src'),
+            root: path.join(project.path, 'src'),
             listed: [],
             skippedFolders: [],
             emojiFolder: '/../emojis'

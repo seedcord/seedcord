@@ -8,7 +8,10 @@ import type { EmojiState, EmojiStep } from '#commands/emojis/readEmojis';
 import type { Section } from '#core/output/printSections';
 import type { PresenterOutput } from '#core/output/StepsPresenter';
 
-type Listed = Parameters<typeof itemRows>[0];
+type Rows = [listed: Parameters<typeof itemRows>[0], mark?: Parameters<typeof itemRows>[2]];
+
+// a key that starts with a digit can't follow a dot
+const accessOf = (key: string): string => (/^\d/u.test(key) ? `Emojis['${key}']` : `Emojis.${key}`);
 
 export class ListPresenter extends StepsPresenter<EmojiStep> {
     constructor(
@@ -23,12 +26,12 @@ export class ListPresenter extends StepsPresenter<EmojiStep> {
         const sections = [
             this.section(
                 'uploaded',
-                uploaded.map(({ file, emoji }) => ({ label: file.name, detail: `Emojis.${file.key}  ${emoji.id}` }))
+                uploaded.map(({ file, emoji }) => ({ label: file.name, detail: `${accessOf(file.key)}  ${emoji.id}` }))
             ),
             this.section(
                 'not uploaded',
-                missing.map(({ name, key }) => ({ label: paint.mint(name), detail: `Emojis.${key}` })),
-                paint.mint.bold('+')
+                missing.map(({ name, key }) => ({ label: name, detail: accessOf(key) })),
+                '+'
             )
         ];
         if (onlyOnDiscord.length > 0) {
@@ -46,7 +49,7 @@ export class ListPresenter extends StepsPresenter<EmojiStep> {
         this.output.line(paint.mute(`Run ${push} to upload the ${missing.length} that are missing.`));
     }
 
-    private section(title: string, listed: Listed, marker?: string): Section {
-        return { title, note: plural(listed.length, 'emoji'), rows: itemRows(listed, this.verbose, marker) };
+    private section(title: string, ...[listed, mark]: Rows): Section {
+        return { title, note: plural(listed.length, 'emoji'), rows: itemRows(listed, this.verbose, mark) };
     }
 }

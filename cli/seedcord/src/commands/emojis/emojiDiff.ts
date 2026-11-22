@@ -1,6 +1,6 @@
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
-import { differenceBy } from 'es-toolkit';
+import { differenceBy, uniq } from 'es-toolkit';
 
 import type { EmojiFile } from '@seedcord/utils/internal';
 
@@ -50,5 +50,5 @@ export function unknownName(name: string, where: string, fix = 'Check the spelli
 // throws if a name isn't on discord
 export function namedOnDiscord(diff: EmojiDiff, names: readonly string[], source: string): OnDiscord[] {
     const byName = new Map(onDiscord(diff).map((found) => [found.emoji.name, found]));
-    return names.map((name) => byName.get(name) ?? unknownName(name, paint.bold(source)));
+    return uniq(names).map((name) => byName.get(name) ?? unknownName(name, paint.bold(source)));
 }

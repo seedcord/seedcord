@@ -19,6 +19,7 @@ import type { ExtractStrict } from 'type-fest';
 
 type SavedEmojiType = GuildEmoji | ApplicationEmoji;
 type GuildExpected = ExtractStrict<ExpectedEmoji, { kind: 'guild' }>;
+type ApplicationExpected = ExtractStrict<ExpectedEmoji, { kind: 'application' }>;
 
 /** A resolved emoji, plus the discord.js emoji it came from on {@link GatewayEmoji.source}. */
 export class GatewayEmoji<Source extends SavedEmojiType = SavedEmojiType> extends ResolvedEmoji {
@@ -101,7 +102,7 @@ export class EmojiInjector {
         return guild.emojis.cache.find((cached) => cached.name === emoji.name) ?? emojiNotFound(emoji);
     }
 
-    private inApplication(emoji: ExpectedEmoji): ApplicationEmoji | Error {
+    private inApplication(emoji: ApplicationExpected): ApplicationEmoji | Error {
         const cache = this.core.bot.client.application?.emojis.cache;
         return cache?.find((cached) => cached.name === emoji.name) ?? emojiNotFound(emoji);
     }

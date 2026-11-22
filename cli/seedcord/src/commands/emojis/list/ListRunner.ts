@@ -1,4 +1,4 @@
-import { emojiNotFound } from '@seedcord/core/internal';
+import { emojiNotFound, folderEmoji } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { throwSingleOrAggregate } from '@seedcord/errors/internal';
 
@@ -43,7 +43,7 @@ export class ListRunner {
     private check({ diff }: EmojiState, { check = false }: ListOptions): void {
         if (!check) return;
         throwSingleOrAggregate(
-            diff.missing.map(({ key, name }) => emojiNotFound({ kind: 'folder', key, name })),
+            diff.missing.map((file) => emojiNotFound(folderEmoji(file))),
             SeedcordErrorCode.ConfigEmojiUnresolved
         );
     }
