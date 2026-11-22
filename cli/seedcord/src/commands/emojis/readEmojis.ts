@@ -8,7 +8,7 @@ import { diffEmojis } from './emojiDiff';
 import { EmojiSession } from './EmojiSession';
 
 import type { ResolvedTarget } from '#core/config/schema';
-import type { RunnerDeps } from '#core/discord/runnerDeps';
+import type { DiscordRest, RunnerDeps } from '#core/discord/runnerDeps';
 import type { Steps } from '#core/output/Steps';
 import type { EmojiDiff } from './emojiDiff';
 import type { EmojiFile } from '@seedcord/utils/internal';
@@ -16,34 +16,40 @@ import type { EmojiFile } from '@seedcord/utils/internal';
 export const EMOJI_STEPS = [...BOT_STEPS, 'read folder', 'read discord'] as const;
 export type EmojiStep = (typeof EMOJI_STEPS)[number];
 
-export interface EmojiState {
+export interface EmojiFolder {
     folder: string;
     target: ResolvedTarget['kind'];
+    files: EmojiFile[];
+    rest: DiscordRest;
+}
+
+export interface EmojiState extends EmojiFolder {
     session: EmojiSession;
     // the app's name, or "guild <id>"
     source: string;
-    files: EmojiFile[];
     diff: EmojiDiff;
 }
 
-export async function readEmojis(
+export async function readFolder(
     steps: Steps<EmojiStep>,
     { projectLoader, openDiscord }: RunnerDeps,
-    projectDir: string,
-    guildId?: string
-): Promise<EmojiState> {
+    projectDir: string
+): Promise<EmojiFolder> {
     const { config, instance } = await loadBot(steps, projectLoader, projectDir);
     const folder = config.emojis.dir;
-
     const files = await steps.step(
         'read folder',
         () => readEmojiFolder(folder),
         (found) => plural(found.length, 'emoji')
     );
+    return { folder, target: config.target.kind, files, rest: openDiscord(instance) };
+}
+
+export async function readDiscord(steps: Steps<EmojiStep>, read: EmojiFolder, guildId?: string): Promise<EmojiState> {
     const { session, source, onDiscord } = await steps.step(
         'read discord',
         async () => {
-            const session = await EmojiSession.open(openDiscord(instance));
+            const session = await EmojiSession.open(read.rest);
             const source = guildId === undefined ? session.app.name : `guild ${guildId}`;
             return { session, source, onDiscord: await session.list(guildId) };
         },
@@ -51,5 +57,9 @@ export async function readEmojis(
     );
     steps.detail('app', paint.mute(session.app.id));
 
-    return { folder, target: config.target.kind, session, source, files, diff: diffEmojis(files, onDiscord) };
+    return { ...read, session, source, diff: diffEmojis(read.files, onDiscord) };
+}
+
+export async function readEmojis(steps: Steps<EmojiStep>, deps: RunnerDeps, projectDir: string): Promise<EmojiState> {
+    return readDiscord(steps, await readFolder(steps, deps, projectDir));
 }

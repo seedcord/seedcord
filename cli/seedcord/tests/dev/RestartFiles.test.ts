@@ -61,7 +61,10 @@ describe('RestartFiles', () => {
         ['pnpm-lock.yaml', true],
         ['tsconfig.build.json', true],
         ['src/package.json', false],
-        ['src/tsconfig.json', false]
+        ['src/tsconfig.json', false],
+        ['emojis/wave.png', true],
+        ['emojis/reactions/party.gif', true],
+        ['src/emojis/wave.png', false]
     ])('asks for a restart when %s is saved: %s', async (file, expected) => {
         const { files, config } = await configFiles();
 

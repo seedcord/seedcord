@@ -29,7 +29,7 @@ function question({ add, replace, source }: PushPlan): string {
 export class PushPresenter extends StepsPresenter<PushStep> {
     constructor(
         output: PresenterOutput<PushStep>,
-        private readonly prompts: EmojiPrompts,
+        private readonly prompts: Pick<EmojiPrompts, 'confirm' | 'pick'>,
         private readonly verbose: boolean
     ) {
         super(output);

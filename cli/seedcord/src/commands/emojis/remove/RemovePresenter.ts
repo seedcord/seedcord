@@ -1,3 +1,4 @@
+import { unlessCancelled } from '@seedcord/cli-prompts';
 import { paint } from '@seedcord/errors';
 import { displayPath } from '@seedcord/errors/internal';
 import { posixRelative } from '@seedcord/utils/internal';
@@ -15,24 +16,29 @@ import type { Section } from '#core/output/printSections';
 import type { PresenterOutput } from '#core/output/StepsPresenter';
 import type { RemovePlan, RemoveStep } from './RemoveRunner';
 
+const files = (count: number): string => plural(count, 'file');
+
 export class RemovePresenter extends StepsPresenter<RemoveStep> {
     constructor(
         output: PresenterOutput<RemoveStep>,
-        private readonly prompts: EmojiPrompts
+        private readonly prompts: Pick<EmojiPrompts, 'confirm' | 'offer' | 'pick'>
     ) {
         super(output);
     }
 
-    public pick(removable: readonly OnDiscord[], deleteFile: boolean): Promise<string[] | undefined> {
+    public pick(removable: readonly OnDiscord[]): Promise<string[] | undefined> {
         const choices = removable.map(({ emoji, file }) => {
             const choice = { value: emoji.name, label: emoji.name };
-            if (!file) return choice;
-            return {
-                ...choice,
-                hint: deleteFile ? `and ${displayPath(file.file)}` : 'has a file, needs --delete-file'
-            };
+            return file ? { ...choice, hint: displayPath(file.file) } : choice;
         });
         return picked(this.output, this.prompts.pick, choices);
+    }
+
+    // undefined when the question was cancelled
+    public offerFiles(folder: string, withFiles: readonly string[]): Promise<boolean | undefined> {
+        return unlessCancelled(this.output, () =>
+            this.prompts.offer(`Delete ${files(withFiles.length)} from ${paint.path(folder)} too?`)
+        );
     }
 
     public nothingToDelete(): void {
@@ -40,7 +46,8 @@ export class RemovePresenter extends StepsPresenter<RemoveStep> {
         this.output.line('Nothing to delete.');
     }
 
-    public preview({ folder, source, removals, files }: RemovePlan): void {
+    public preview(plan: RemovePlan): void {
+        const { folder, source, removals, deleteFiles } = plan;
         const sections: Section[] = [
             {
                 title: source,
@@ -51,21 +58,30 @@ export class RemovePresenter extends StepsPresenter<RemoveStep> {
                 )
             }
         ];
-        if (files.length > 0) {
+        if (deleteFiles) {
             sections.push({
                 title: displayPath(folder),
-                note: plural(files.length, 'file'),
+                note: files(plan.files.length),
                 rows: markedRows(
                     '-',
-                    files.map((file) => posixRelative(folder, file))
+                    plan.files.map((file) => posixRelative(folder, file))
                 )
             });
         }
         printSections(this.output, sections);
+
+        if (deleteFiles || plan.files.length === 0) return;
+        const kept = plan.files.length;
+        const push = paint.bold('seedcord emojis push');
+        this.output.line(
+            paint.mute(
+                `Keeping ${files(kept)} in ${paint.path(folder)}, so the next ${push} uploads ${kept === 1 ? 'it' : 'them'} again.`
+            )
+        );
     }
 
-    public approve({ folder, source, removals, files }: RemovePlan): Promise<boolean> {
-        const andFiles = files.length > 0 ? ` and ${plural(files.length, 'file')} from ${paint.path(folder)}` : '';
+    public approve({ folder, source, removals, files: withFiles, deleteFiles }: RemovePlan): Promise<boolean> {
+        const andFiles = deleteFiles ? ` and ${files(withFiles.length)} from ${paint.path(folder)}` : '';
         return approved(
             this.output,
             this.prompts.confirm,

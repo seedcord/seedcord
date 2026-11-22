@@ -1,7 +1,5 @@
 import { rm } from 'node:fs/promises';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { compact } from 'es-toolkit';
 
 import { namedOnDiscord, onDiscord } from '#commands/emojis/emojiDiff';
@@ -19,6 +17,7 @@ export type RemoveStep = (typeof REMOVE_STEPS)[number];
 export interface RemoveOptions {
     // an empty list opens the picker
     readonly names: readonly string[];
+    // if it's not set, remove asks in a terminal and keeps the files everywhere else
     readonly deleteFile?: boolean | undefined;
 }
 
@@ -26,8 +25,9 @@ export interface RemovePlan {
     folder: string;
     source: string;
     removals: OnDiscord[];
-    // files to delete along with the emojis. empty unless --delete-file is on
+    // the files that belong to the picked emojis
     files: string[];
+    deleteFiles: boolean;
 }
 
 export class RemoveRunner {
@@ -40,25 +40,25 @@ export class RemoveRunner {
     public async run(presenter: RemovePresenter, { names, deleteFile = false }: RemoveOptions): Promise<void> {
         const { folder, session, source, diff } = await readEmojis(presenter, this.deps, process.cwd());
 
-        const picked = names.length > 0 ? names : await presenter.pick(onDiscord(diff), deleteFile);
+        const picked = names.length > 0 ? names : await presenter.pick(onDiscord(diff));
         if (picked === undefined) return;
         const removals = namedOnDiscord(diff, picked, source);
         if (removals.length === 0) {
             presenter.nothingToDelete();
             return;
         }
-        const files = compact(removals.map(({ file }) => file?.file));
-        if (!deleteFile && files.length > 0) {
-            throw new SeedcordTypeError(SeedcordErrorCode.CliEmojiFileKept, [files]);
-        }
 
-        const plan = { folder, source, removals, files };
+        const files = compact(removals.map(({ file }) => file?.file));
+        const deleteFiles = deleteFile || (files.length > 0 && (await presenter.offerFiles(folder, files)));
+        if (deleteFiles === undefined) return;
+
+        const plan = { folder, source, removals, files, deleteFiles };
         presenter.preview(plan);
         if (!(await presenter.approve(plan))) return;
 
         const outcome = await presenter.delete(removals, async ({ emoji, file }) => {
             await session.delete(emoji);
-            if (file) await rm(file.file);
+            if (file && deleteFiles) await rm(file.file);
         });
         assertNoneFailed(outcome, 'delete');
     }

@@ -387,10 +387,8 @@ export enum SeedcordErrorCode {
     CliEmojiNameUnknown = 3151,
     /** A flag that opens a picker ran outside a terminal. */
     CliPickerNeedsTerminal = 3152,
-    /** `seedcord emojis remove` got an emoji that still has a file in the emojis folder. */
-    CliEmojiFileKept = 3153,
     /** Discord's CDN didn't send an emoji's image to `seedcord emojis pull`. */
-    CliEmojiDownloadFailed = 3154,
+    CliEmojiDownloadFailed = 3153,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

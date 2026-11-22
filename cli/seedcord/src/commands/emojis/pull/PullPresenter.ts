@@ -1,32 +1,51 @@
+import { unlessCancelled } from '@seedcord/cli-prompts';
 import { paint } from '@seedcord/errors';
 import { displayPath } from '@seedcord/errors/internal';
 import { posixRelative } from '@seedcord/utils/internal';
 
 import { settleStep } from '#commands/emojis/outcome';
-import { approved } from '#commands/emojis/prompts';
 import { plural } from '#core/format';
 import { markedRows, printSections } from '#core/output/printSections';
 import { StepsPresenter } from '#core/output/StepsPresenter';
 
 import type { Outcome } from '#commands/emojis/outcome';
-import type { Confirm } from '#core/output/confirm';
+import type { EmojiPrompts } from '#commands/emojis/prompts';
 import type { PresenterOutput } from '#core/output/StepsPresenter';
 import type { PullPlan, PullStep, Save } from './PullRunner';
+import type { GuildSummary } from '@seedcord/core/internal';
 
 export class PullPresenter extends StepsPresenter<PullStep> {
     constructor(
         output: PresenterOutput<PullStep>,
-        private readonly confirm: Confirm
+        private readonly prompts: Pick<EmojiPrompts, 'offer' | 'pickGuild'>
     ) {
         super(output);
     }
 
-    public nothingToDownload({ folder, source, alreadyInFolder }: PullPlan): void {
+    // undefined when the bot isn't in a guild, or the picker was cancelled
+    public async pickGuild(read: () => Promise<GuildSummary[]>): Promise<string | undefined> {
+        const guilds = await this.output.step('read guilds', read, (found) => plural(found.length, 'guild'));
+        if (guilds.length === 0) {
+            this.output.line();
+            this.output.line("The bot isn't in any guilds.");
+            return undefined;
+        }
+        const choices = guilds.map(({ id, name }) => ({ value: id, label: name, hint: id }));
+        return unlessCancelled(this.output, () => this.prompts.pickGuild(choices));
+    }
+
+    // undefined when the question was cancelled
+    public offerOverwrite(inFolder: number): Promise<boolean | undefined> {
+        return unlessCancelled(this.output, () =>
+            this.prompts.offer(`Overwrite the ${inFolder === 1 ? 'one' : inFolder} you already have?`)
+        );
+    }
+
+    public nothingToDownload({ folder, source }: PullPlan): void {
         this.output.line();
         this.output.line(
             `Nothing to download. ${paint.path(folder)} already has those emojis from ${paint.bold(source)}.`
         );
-        if (alreadyInFolder > 0) this.output.line(paint.mute(`Pass ${paint.bold('--force')} to download them again.`));
     }
 
     public preview({ folder, fresh, over, alreadyInFolder }: PullPlan): void {
@@ -36,15 +55,6 @@ export class PullPresenter extends StepsPresenter<PullStep> {
 
         const downloads = plural(fresh.length + over.length, 'download');
         printSections(this.output, [{ title: displayPath(folder), note: downloads, rows }]);
-    }
-
-    public approveOverwrite({ folder, source, over }: PullPlan): Promise<boolean> {
-        return approved(
-            this.output,
-            this.confirm,
-            `Overwrite ${plural(over.length, 'file')} in ${paint.path(folder)} with what's on ${paint.bold(source)}?`,
-            'Nothing downloaded.'
-        );
     }
 
     public download(saves: readonly Save[], run: (save: Save) => Promise<void>): Promise<Outcome<Save>> {

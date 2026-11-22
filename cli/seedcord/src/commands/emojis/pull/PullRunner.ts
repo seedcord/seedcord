@@ -7,7 +7,8 @@ import { partition } from 'es-toolkit';
 
 import { namedOnDiscord, onDiscord } from '#commands/emojis/emojiDiff';
 import { assertNoneFailed } from '#commands/emojis/outcome';
-import { EMOJI_STEPS, readEmojis } from '#commands/emojis/readEmojis';
+import { EMOJI_STEPS, readDiscord, readFolder } from '#commands/emojis/readEmojis';
+import { readBotGuilds } from '#core/discord/readBotGuilds';
 import { defaultRunnerDeps } from '#core/discord/runnerDeps';
 
 import type { UploadedEmoji } from '#commands/emojis/emojiDiff';
@@ -15,20 +16,22 @@ import type { EmojiSession } from '#commands/emojis/EmojiSession';
 import type { RunnerDeps } from '#core/discord/runnerDeps';
 import type { PullPresenter } from './PullPresenter';
 
-export const PULL_STEPS = [...EMOJI_STEPS, 'download'] as const;
+export const PULL_STEPS = [...EMOJI_STEPS, 'read guilds', 'download'] as const;
 export type PullStep = (typeof PULL_STEPS)[number];
 
 export interface PullOptions {
     // an empty list means pull everything
     readonly names: readonly string[];
+    // if it's not set, pull asks in a terminal and skips the existing files everywhere else
     readonly force?: boolean | undefined;
-    readonly guild?: string | undefined;
+    // true means pick one from the guilds the bot is in
+    readonly guild?: string | true | undefined;
 }
 
 export interface Save {
     emoji: UploadedEmoji;
     to: string;
-    // the existing file that --force overwrites. it might be a .png while `to` is a .webp
+    // the existing file this download overwrites. it might be a .png while `to` is a .webp
     replaces?: string;
 }
 
@@ -51,15 +54,21 @@ export class PullRunner {
     }
 
     public async run(presenter: PullPresenter, { names, force = false, guild }: PullOptions): Promise<void> {
-        const { folder, session, source, diff } = await readEmojis(presenter, this.deps, process.cwd(), guild);
+        const read = await readFolder(presenter, this.deps, process.cwd());
+        const guildId = guild === true ? await presenter.pickGuild(() => readBotGuilds(read.rest)) : guild;
+        if (guild === true && guildId === undefined) return;
+        const { folder, session, source, diff } = await readDiscord(presenter, read, guildId);
 
         const wanted = names.length > 0 ? namedOnDiscord(diff, names, source) : onDiscord(diff);
+        const inFolder = wanted.filter(({ file }) => file !== undefined).length;
+        const overwrite = force || (inFolder > 0 && (await presenter.offerOverwrite(inFolder)));
+        if (overwrite === undefined) return;
+
         const saves = wanted.flatMap(({ emoji, file }): Save[] => {
             const name = `${emoji.name}.webp`;
             if (!file) return [{ emoji, to: join(folder, name) }];
-            return force ? [{ emoji, to: join(dirname(file.file), name), replaces: file.file }] : [];
+            return overwrite ? [{ emoji, to: join(dirname(file.file), name), replaces: file.file }] : [];
         });
-
         const [over, fresh] = partition(saves, ({ replaces }) => replaces !== undefined);
         const plan = { folder, source, fresh, over, alreadyInFolder: wanted.length - saves.length };
         if (saves.length === 0) {
@@ -67,7 +76,6 @@ export class PullRunner {
             return;
         }
         presenter.preview(plan);
-        if (over.length > 0 && !(await presenter.approveOverwrite(plan))) return;
 
         const outcome = await presenter.download(saves, (save) => this.save(session, save));
         assertNoneFailed(outcome, 'download');

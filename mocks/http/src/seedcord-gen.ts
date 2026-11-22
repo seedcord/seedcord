@@ -24,7 +24,8 @@ declare module '@seedcord/http' {
 
     }
     interface EmojiMap {
-
+        Cancel: 'application';
+        Confirm: 'application';
     }
     interface PluginTypes {
         '@seedcord/plugin-i18n': Fits<(typeof Bot)['i18n'], { messages: { 'asked-in': { locale: 'text' }; greet: { name: 'text' }; pings: { count: 'number' }; roll: { actor: 'text'; count: 'text'; sides: 'text'; value: 'text' }; 'roll-again': {}; roundtrip: { ms: 'number' }; uptime: { seconds: 'number' } } }>;

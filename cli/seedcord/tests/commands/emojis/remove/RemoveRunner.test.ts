@@ -24,7 +24,12 @@ interface Removed {
 function remove(
     project: FakeProject,
     rest: REST,
-    { confirm = PROCEED, pick = () => Promise.resolve([]), ...options }: RemoveOptions & Partial<EmojiPrompts>
+    {
+        confirm = PROCEED,
+        offer = () => Promise.resolve(false),
+        pick = () => Promise.resolve([]),
+        ...options
+    }: RemoveOptions & Partial<EmojiPrompts>
 ): Removed {
     const stdout = fakeTerminal();
     const printer = new StepPrinter({
@@ -35,7 +40,7 @@ function remove(
         stderr: stdout
     });
     const runner = new RemoveRunner({ projectLoader: project, openDiscord: () => rest });
-    return { printed: stdout.text, done: runner.run(new RemovePresenter(printer, { confirm, pick }), options) };
+    return { printed: stdout.text, done: runner.run(new RemovePresenter(printer, { confirm, offer, pick }), options) };
 }
 
 describe('emojis RemoveRunner', () => {
@@ -73,14 +78,45 @@ describe('emojis RemoveRunner', () => {
         expect(printed()).toContain('Nothing deleted.');
     });
 
-    it('throws CliEmojiFileKept for an emoji that still has a file', async () => {
+    it('asks whether to delete the file too, and keeps it on a no', async () => {
+        const project = await projectWith({ 'seed.png': 's' });
+        const discord = fakeEmojiDiscord({ emojis: ['seed'] });
+        const folder = join(project.dir, 'emojis');
+        const offers: string[] = [];
+
+        const { printed, done } = remove(project, discord.rest, {
+            names: ['seed'],
+            offer: (question) => {
+                offers.push(question);
+                return Promise.resolve(false);
+            }
+        });
+        await done;
+
+        expect(offers).toEqual([`Delete 1 file from ${folder} too?`]);
+        expect(discord.emojis()).toEqual([]);
+        expect(existsSync(join(folder, 'seed.png'))).toBe(true);
+        expect(printed()).toContain(`Keeping 1 file in ${folder}, so the next seedcord emojis push uploads it again.`);
+    });
+
+    it('deletes the file after a yes to that question', async () => {
         const project = await projectWith({ 'seed.png': 's' });
         const discord = fakeEmojiDiscord({ emojis: ['seed'] });
 
-        const { done } = remove(project, discord.rest, { names: ['seed'] });
+        await remove(project, discord.rest, { names: ['seed'], offer: () => Promise.resolve(true) }).done;
 
-        await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliEmojiFileKept });
-        expect(discord.emojis()).toHaveLength(1);
+        expect(discord.emojis()).toEqual([]);
+        expect(existsSync(join(project.dir, 'emojis/seed.png'))).toBe(false);
+    });
+
+    it("doesn't ask about files for an emoji without one", async () => {
+        const project = await projectWith({});
+        const discord = fakeEmojiDiscord({ emojis: ['old_logo'] });
+        const offer = (): Promise<never> => Promise.reject(new Error('remove asked about files'));
+
+        await remove(project, discord.rest, { names: ['old_logo'], offer }).done;
+
+        expect(discord.emojis()).toEqual([]);
     });
 
     it('deletes the emoji and its file with --delete-file', async () => {
@@ -130,7 +166,7 @@ describe('emojis RemoveRunner', () => {
         await done;
 
         expect(offered).toEqual([
-            { value: 'seed', label: 'seed', hint: 'has a file, needs --delete-file' },
+            { value: 'seed', label: 'seed', hint: join(project.dir, 'emojis/seed.png') },
             { value: 'old_logo', label: 'old_logo' }
         ]);
         expect(discord.emojis().map(({ name }) => name)).toEqual(['seed']);

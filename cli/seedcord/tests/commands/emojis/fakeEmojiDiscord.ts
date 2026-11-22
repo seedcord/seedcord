@@ -71,6 +71,7 @@ export function fakeEmojiDiscord({
         get: (route: string) => {
             requests.push(`GET ${route}`);
             if (route === Routes.currentApplication()) return Promise.resolve({ id: APP_ID, name: APP_NAME });
+            if (route === Routes.userGuilds()) return Promise.resolve([{ id: GUILD_ID, name: 'Alpha' }]);
             if (route === Routes.guildEmojis(GUILD_ID)) {
                 return Promise.resolve(guildEmojis.map((name) => ({ id: `${name}-guild-id`, name })));
             }

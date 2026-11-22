@@ -11,10 +11,14 @@ import { StepPrinter } from '#core/output/StepPrinter';
 import { fakeEmojiDiscord, GUILD_ID, projectWith } from '#tests/commands/emojis/fakeEmojiDiscord';
 import { fakeTerminal } from '#tests/fakeTerminal';
 
+import type { EmojiPrompts } from '#commands/emojis/prompts';
 import type { PullOptions } from '#commands/emojis/pull/PullRunner';
-import type { Confirm } from '#core/output/confirm';
 import type { FakeProject } from '#tests/commands/commands/fakeBot';
 import type { REST } from '@discordjs/rest';
+
+interface PullSetup extends Partial<Pick<EmojiPrompts, 'offer' | 'pickGuild'>> {
+    cdn?: (url: string) => Promise<Response>;
+}
 
 interface Pulled {
     printed: () => string;
@@ -31,19 +35,19 @@ function fakeCdn(missing: readonly string[] = []): (url: string) => Promise<Resp
     };
 }
 
-// only --force over existing files is allowed to ask
-const neverAsked: Confirm = () => Promise.reject(new Error('pull asked a question'));
+// pull only asks when the folder already has some of the emojis
+const neverAsked = (): Promise<never> => Promise.reject(new Error('pull asked a question'));
 
 function pull(
     project: FakeProject,
     rest: REST,
     options: PullOptions,
-    { cdn = fakeCdn(), confirm = neverAsked } = {}
+    { cdn = fakeCdn(), offer = neverAsked, pickGuild = neverAsked }: PullSetup = {}
 ): Pulled {
     const stdout = fakeTerminal();
     const printer = new StepPrinter({ command: 'emojis', labels: PULL_STEPS, verbose: false, stdout, stderr: stdout });
     const runner = new PullRunner({ projectLoader: project, openDiscord: () => rest, fetch: cdn });
-    return { printed: stdout.text, done: runner.run(new PullPresenter(printer, confirm), options) };
+    return { printed: stdout.text, done: runner.run(new PullPresenter(printer, { offer, pickGuild }), options) };
 }
 
 function saved(project: FakeProject, path: string): Promise<string> {
@@ -55,7 +59,7 @@ describe('emojis PullRunner', () => {
         const project = await projectWith({ 'seed.png': 's' });
         const { rest } = fakeEmojiDiscord({ emojis: ['seed', 'old_logo', 'test'] });
 
-        const { printed, done } = pull(project, rest, { names: [] });
+        const { printed, done } = pull(project, rest, { names: [] }, { offer: () => Promise.resolve(false) });
         await done;
 
         expect(await saved(project, 'old_logo.webp')).toBe('old_logo-id');
@@ -90,65 +94,71 @@ describe('emojis PullRunner', () => {
         expect(await saved(project, 'seed.webp')).toBe('seed-id');
     });
 
-    it('points at --force when the folder already has everything', async () => {
-        const project = await projectWith({ 'seed.png': 's' });
-        const { rest } = fakeEmojiDiscord({ emojis: ['seed'] });
+    it('asks whether to overwrite the ones it already has, and keeps them on a no', async () => {
+        const project = await projectWith({ 'seed.png': 'mine', 'wave.png': 'mine' });
+        const { rest } = fakeEmojiDiscord({ emojis: ['seed', 'wave', 'old_logo'] });
+        const offers: string[] = [];
 
-        const { printed, done } = pull(project, rest, { names: [] });
-        await done;
-
-        expect(printed()).toContain('Nothing to download.');
-        expect(printed()).toContain('Pass --force to download them again.');
-    });
-
-    it('asks before --force downloads over a file, then keeps one file per name', async () => {
-        const project = await projectWith({ 'reactions/seed.png': 's' });
-        const { rest } = fakeEmojiDiscord({ emojis: ['seed', 'old_logo'] });
-        const questions: string[] = [];
-
-        const { printed, done } = pull(
+        const { done } = pull(
             project,
             rest,
-            { names: [], force: true },
+            { names: [] },
             {
-                confirm: (question) => {
-                    questions.push(question);
-                    return Promise.resolve(true);
+                offer: (question) => {
+                    offers.push(question);
+                    return Promise.resolve(false);
                 }
             }
         );
         await done;
 
-        expect(questions).toEqual([`Overwrite 1 file in ${join(project.dir, 'emojis')} with what's on seed beta?`]);
+        expect(offers).toEqual(['Overwrite the 2 you already have?']);
+        expect(await saved(project, 'seed.png')).toBe('mine');
+        expect(await saved(project, 'old_logo.webp')).toBe('old_logo-id');
+    });
+
+    it('downloads over a file after a yes and keeps one file per name', async () => {
+        const project = await projectWith({ 'reactions/seed.png': 's' });
+        const { rest } = fakeEmojiDiscord({ emojis: ['seed'] });
+
+        const { printed, done } = pull(project, rest, { names: [] }, { offer: () => Promise.resolve(true) });
+        await done;
+
         expect(await saved(project, 'reactions/seed.webp')).toBe('seed-id');
         expect(existsSync(join(project.dir, 'emojis/reactions/seed.png'))).toBe(false);
         expect(printed()).toContain('    ~ reactions/seed.webp\n');
     });
 
-    it("doesn't download anything when the answer to --force is no", async () => {
+    it('overwrites without asking with --force', async () => {
         const project = await projectWith({ 'seed.png': 'mine' });
-        const { rest } = fakeEmojiDiscord({ emojis: ['seed', 'old_logo'] });
-
-        const { printed, done } = pull(
-            project,
-            rest,
-            { names: [], force: true },
-            { confirm: () => Promise.resolve(false) }
-        );
-        await done;
-
-        expect(await saved(project, 'seed.png')).toBe('mine');
-        expect(existsSync(join(project.dir, 'emojis/old_logo.webp'))).toBe(false);
-        expect(printed()).toContain('Nothing downloaded.');
-    });
-
-    it("doesn't ask for --force when every download is a new file", async () => {
-        const project = await projectWith({});
         const { rest } = fakeEmojiDiscord({ emojis: ['seed'] });
 
         await pull(project, rest, { names: [], force: true }).done;
 
         expect(await saved(project, 'seed.webp')).toBe('seed-id');
+    });
+
+    it('lists the guilds the bot is in for a bare --guild and pulls from the picked one', async () => {
+        const project = await projectWith({});
+        const { rest } = fakeEmojiDiscord({ emojis: ['seed'], guildEmojis: ['blob'] });
+        const offered: unknown[] = [];
+
+        const { printed, done } = pull(
+            project,
+            rest,
+            { names: [], guild: true },
+            {
+                pickGuild: (choices) => {
+                    offered.push(...choices);
+                    return Promise.resolve(GUILD_ID);
+                }
+            }
+        );
+        await done;
+
+        expect(offered).toEqual([{ value: GUILD_ID, label: 'Alpha', hint: GUILD_ID }]);
+        expect(await saved(project, 'blob.webp')).toBe('blob-guild-id');
+        expect(printed()).toMatch(/read guilds +\S+ +1 guild\n/u);
     });
 
     it("downloads a guild's emojis with --guild", async () => {

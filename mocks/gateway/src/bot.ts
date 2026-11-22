@@ -40,10 +40,6 @@ export const seedcord = new Seedcord({
         events: {
             path: './events',
             middlewares: './events/middlewares'
-        },
-        emojis: {
-            Confirm: 'confirmation_check',
-            Cancel: 'confirmation_cross'
         }
     },
     subscribers: {

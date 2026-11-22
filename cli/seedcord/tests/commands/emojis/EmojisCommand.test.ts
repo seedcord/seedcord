@@ -38,7 +38,7 @@ function changes({ discord }: Ran): string[] {
     return discord.requests.filter((request) => !request.startsWith('GET'));
 }
 
-describe('seedcord emojis push, on a terminal', () => {
+describe('seedcord emojis, on a terminal', () => {
     const original = { stdin: process.stdin.isTTY, stdout: process.stdout.isTTY, ci: process.env.CI };
 
     beforeEach(() => {
@@ -51,6 +51,65 @@ describe('seedcord emojis push, on a terminal', () => {
         process.stdin.isTTY = original.stdin;
         process.stdout.isTTY = original.stdout;
         if (original.ci !== undefined) process.env.CI = original.ci;
+    });
+
+    it('opens a menu without a subcommand and runs the picked one', async () => {
+        using output = captureOutput();
+        using terminal = new PromptTerminal();
+        const ran = await run([], terminal.prompter);
+
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Upload the emojis'));
+        const menu = await terminal.screen();
+        expect(menu).toContain("Replace an emoji's image");
+        expect(menu).toContain("Download a guild's emojis");
+        expect(menu).toContain('Delete emojis from Discord');
+        await terminal.press(KEY.down, KEY.down, KEY.enter);
+        await ran.done;
+
+        expect(output.stdout()).toContain('  not uploaded  1 emoji\n    + fresh\n');
+        expect(changes(ran)).toEqual([]);
+    });
+
+    it('opens the replace picker from the menu', async () => {
+        using _output = captureOutput();
+        using terminal = new PromptTerminal();
+        const ran = await run([], terminal.prompter);
+
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Upload the emojis'));
+        await terminal.press(KEY.down, KEY.enter);
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Which emojis do you want to replace?'));
+        await terminal.press(KEY.escape);
+        await ran.done;
+
+        expect(changes(ran)).toEqual([]);
+    });
+
+    it('lists the guilds for a guild pull from the menu', async () => {
+        using _output = captureOutput();
+        using terminal = new PromptTerminal();
+        const ran = await run([], terminal.prompter);
+
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Upload the emojis'));
+        await terminal.press(KEY.down, KEY.down, KEY.down, KEY.down, KEY.enter);
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Which guild?'));
+        expect(await terminal.screen()).toContain('Alpha');
+        await terminal.press(KEY.escape);
+        await ran.done;
+
+        expect(changes(ran)).toEqual([]);
+    });
+
+    it('prints cancelled when the menu is cancelled', async () => {
+        using output = captureOutput();
+        using terminal = new PromptTerminal();
+        const ran = await run([], terminal.prompter);
+
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Upload the emojis'));
+        await terminal.press(KEY.escape);
+        await ran.done;
+
+        expect(output.stdout().trimEnd().split('\n').at(-1)).toBe('  cancelled');
+        expect(ran.discord.requests).toEqual([]);
     });
 
     it('uploads after a yes to its question', async () => {
@@ -78,17 +137,32 @@ describe('seedcord emojis push, on a terminal', () => {
         expect(changes(ran)).toEqual([]);
     });
 
-    it('asks before pull --force overwrites and stops on a no', async () => {
+    it('asks whether pull should overwrite, and only adds the new ones on a no', async () => {
         using output = captureOutput();
         using terminal = new PromptTerminal();
-        const ran = await run(['pull', '--force'], terminal.prompter);
+        const ran = await run(['pull'], terminal.prompter);
 
-        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Overwrite 2 files in'));
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Overwrite the 2 you already have?'));
         await terminal.press('n', KEY.enter);
         await ran.done;
 
-        expect(output.stdout()).toContain('Nothing downloaded.');
-        expect(output.stdout()).not.toMatch(/download +\S+ +\d+ downloaded/u);
+        expect(output.stdout()).toContain('    + old_logo.webp\n');
+        expect(output.stdout()).toMatch(/download +\S+ +1 downloaded\n/u);
+    });
+
+    it('asks whether remove should delete the file, then deletes only the emoji on a no', async () => {
+        using output = captureOutput();
+        using terminal = new PromptTerminal();
+        const ran = await run(['remove', 'seed'], terminal.prompter);
+
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Delete 1 file from'));
+        await terminal.press('n', KEY.enter);
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Delete 1 emoji from seed beta?'));
+        await terminal.press('y', KEY.enter);
+        await ran.done;
+
+        expect(changes(ran)).toEqual(['DELETE seed']);
+        expect(output.stdout()).toContain('Keeping 1 file in');
     });
 });
 
@@ -210,23 +284,33 @@ describe('seedcord emojis remove and pull, off a terminal', () => {
         expect(output.stdout()).toMatch(/download +\S+ +1 downloaded\n/u);
     });
 
-    it('throws CliNeedsYes for pull --force before it reads anything', async () => {
+    it('overwrites with pull --force', async () => {
         using output = captureOutput();
 
         const ran = await run(['pull', '--force']);
         await ran.done;
 
-        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliNeedsYes}]`);
+        expect(output.stdout()).toContain('    ~ seed.webp wave.webp\n');
+        expect(output.stdout()).toMatch(/download +\S+ +3 downloaded\n/u);
+    });
+
+    it('throws CliPickerNeedsTerminal for a bare pull --guild', async () => {
+        using output = captureOutput();
+
+        const ran = await run(['pull', '--guild']);
+        await ran.done;
+
+        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliPickerNeedsTerminal}]`);
         expect(ran.discord.requests).toEqual([]);
     });
 
-    it('overwrites with pull --force --yes', async () => {
+    it('keeps the file when remove --yes runs without --delete-file', async () => {
         using output = captureOutput();
 
-        const ran = await run(['pull', '--force', '--yes']);
+        const ran = await run(['remove', 'seed', '--yes']);
         await ran.done;
 
-        expect(output.stdout()).toContain('    ~ seed.webp wave.webp\n');
-        expect(output.stdout()).toMatch(/download +\S+ +3 downloaded\n/u);
+        expect(changes(ran)).toEqual(['DELETE seed']);
+        expect(output.stdout()).toContain('Keeping 1 file in');
     });
 });

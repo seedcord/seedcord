@@ -389,11 +389,9 @@ const messages = {
         `This version of ${paint.bold('seedcord')} can't load a bot built with your version of ${paint.bold(transport)}. Update ${paint.bold('seedcord')} and ${paint.bold(transport)} together to their latest versions.`,
     [SeedcordErrorCode.CliEmojiNameUnknown]: (name: string, where: string, fix: string) =>
         `${where} doesn't have an emoji with the name ${paint.bold(name)}. ${fix}`,
-    [SeedcordErrorCode.CliEmojiFileKept]: (files: readonly string[]) =>
-        `${allOf.format(files.map((file) => paint.path(file)))} ${isOne(files.length) ? 'is' : 'are'} still in your emojis folder, and the next ${paint.bold('seedcord emojis push')} would upload ${isOne(files.length) ? 'it' : 'them'} again. Pass ${paint.bold('--delete-file')} to delete ${isOne(files.length) ? 'the file' : 'the files'} too.`,
     [SeedcordErrorCode.CliEmojiDownloadFailed]: (status: number) => `Discord's CDN answered ${status}`,
-    [SeedcordErrorCode.CliPickerNeedsTerminal]: (flag: string, example: string) =>
-        `${paint.bold(flag)} without emoji names opens a picker, but a picker only opens in a terminal with ${paint.bold('CI')} unset. Pass the names of the emojis, as in ${paint.bold(example)}.`,
+    [SeedcordErrorCode.CliPickerNeedsTerminal]: (opener: string, needs: string, example: string) =>
+        `${paint.bold(opener)} without ${needs} opens a picker, but a picker only opens in a terminal with ${paint.bold('CI')} unset. Pass ${needs}, as in ${paint.bold(example)}.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>

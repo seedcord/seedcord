@@ -1,10 +1,10 @@
-import { SlashHandler, SlashRoute, timestampFromSnowflake } from '@seedcord/http';
+import { Emojis, SlashHandler, SlashRoute, timestampFromSnowflake } from '@seedcord/http';
 
 @SlashRoute('ping')
 export class Ping extends SlashHandler<'ping'> {
     public async execute(): Promise<void> {
         const lines = [
-            `### ${this.t('greet', { name: this.user.username })}`,
+            `### ${Emojis.Confirm} ${this.t('greet', { name: this.user.username })}`,
             this.t('roundtrip', { ms: Date.now() - timestampFromSnowflake(this.event.id) })
         ];
         const runs = this.core.stats.pings.bump();
