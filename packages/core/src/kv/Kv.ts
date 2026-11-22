@@ -1,5 +1,8 @@
+import { KeyedQueue } from '@seedcord/utils/internal';
+
+import { keepRequestOpenFor } from '#src/requestScope';
+
 import { GuardedDriver } from './GuardedDriver';
-import { KeyedQueue } from './KeyedQueue';
 import { KvCollection } from './KvCollection';
 
 import type { Config } from '@seedcord/types';
@@ -65,7 +68,7 @@ export class Kv {
     public readonly driver: ConfiguredDriver;
     readonly #guarded: GuardedDriver;
     readonly #path: readonly string[];
-    readonly #updates = new KeyedQueue();
+    readonly #updates = new KeyedQueue(keepRequestOpenFor);
 
     constructor(driver: ConfiguredDriver, ...path: string[]) {
         this.driver = driver;

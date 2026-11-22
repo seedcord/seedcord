@@ -13,6 +13,11 @@ export class KeyedQueue {
     private readonly runTails = new Map<string, Promise<void>>();
     private readonly watches = new Set<Set<string>>();
 
+    // workers freezes a task once the request that started it has ended. the task's promise never
+    // settles then, and every later task for its key waits forever. `keepOpen` gets each task so the
+    // caller can hand it to `waitUntil`
+    constructor(private readonly keepOpen: (task: Promise<void>) => void = () => undefined) {}
+
     public run<TResult>(key: string, task: () => Promise<TResult>): Promise<TResult> {
         const run = (this.tails.get(key) ?? Promise.resolve()).then(task);
         const tail = settled(run).then(() => {
@@ -20,6 +25,7 @@ export class KeyedQueue {
         });
         this.track(this.tails, key, tail);
         this.track(this.runTails, key, tail);
+        this.keepOpen(tail);
         return run;
     }
 
@@ -27,7 +33,9 @@ export class KeyedQueue {
         // skips other reads. waiting on them slows down a busy key on a networked backend
         const read = (this.runTails.get(key) ?? Promise.resolve()).then(task);
         // a later run() waits for this read to finish
-        this.track(this.tails, key, settled(this.tails.get(key) ?? Promise.resolve(), read));
+        const tail = settled(this.tails.get(key) ?? Promise.resolve(), read);
+        this.track(this.tails, key, tail);
+        this.keepOpen(tail);
         return read;
     }
 
