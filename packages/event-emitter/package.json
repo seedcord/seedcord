@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/event-emitter",
-    "version": "0.2.2-next.0",
+    "version": "0.2.2",
     "description": "Typed event emitter with waitFor, for Node and the edge",
     "keywords": [
         "edge",

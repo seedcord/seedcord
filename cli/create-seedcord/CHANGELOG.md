@@ -1,6 +1,6 @@
 # create-seedcord
 
-## 0.7.0-next.1
+## 0.7.0
 
 ### ✨ Minor
 
@@ -10,14 +10,9 @@
 
 - A new edge bot now gets `@cloudflare/vite-plugin@2.0.0-rc.0` and `cf@1.0.0-rc.0`. ([#468](https://github.com/seedcord/seedcord/pull/468))
 - A new project's `seedcord.config.ts` now puts `idleAnimation` and `hmr` under `dev`. ([#472](https://github.com/seedcord/seedcord/pull/472))
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
 - Fixed `create-seedcord`, `seedcord make`, and `seedcord commands` waiting for Enter before they exit on Windows. ([#466](https://github.com/seedcord/seedcord/pull/466), thanks [@camdzic](https://github.com/camdzic))
 - The `AGENTS.md` in a new project now tells a coding agent to run `ask` before it writes a helper, to finish with the `check` script, and to read a seedcord package's changelog before bumping it. ([`f04820a`](https://github.com/seedcord/seedcord/commit/f04820a6791557bc213e0c2e7c8dad3135738880))
-
-## 0.6.2-next.0
-
-### 🩹 Patch
-
-- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
 - Replaced hand-written types and helpers with the ones from `type-fest` and `es-toolkit`. ([#453](https://github.com/seedcord/seedcord/pull/453))
 
 ## 0.6.1

@@ -1,6 +1,6 @@
 # @seedcord/logger
 
-## 0.7.0-next.1
+## 0.7.0
 
 ### 💥 Breaking
 
@@ -8,25 +8,14 @@
 
 ### 🩹 Patch
 
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
 - Fixed `logger.utils.block()` showing every heading in green. A heading now has the color of its level, like amber for a warning and red for an error. ([#473](https://github.com/seedcord/seedcord/pull/473))
 
 #### 📦 Seedcord packages
 
-- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
-- `@seedcord/types` 0.17.0-next.0 → 0.17.0-next.1
-- `@seedcord/utils` 0.10.0-next.0 → 0.10.0-next.1
-
-## 0.6.2-next.0
-
-### 🩹 Patch
-
-- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
-
-#### 📦 Seedcord packages
-
-- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
-- `@seedcord/types` 0.16.2 → 0.17.0-next.0
-- `@seedcord/utils` 0.9.2 → 0.10.0-next.0
+- `@seedcord/errors` 0.16.0-next.1 → 0.16.0
+- `@seedcord/utils` 0.10.0-next.1 → 0.10.0
+- `@seedcord/types` 0.17.0-next.1 → 0.17.0
 
 ## 0.6.1
 

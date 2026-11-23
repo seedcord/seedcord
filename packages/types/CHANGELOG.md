@@ -1,34 +1,23 @@
 # @seedcord/types
 
-## 0.17.0-next.1
+## 0.17.0
 
 ### 💥 Breaking
 
 - seedcord doesn't log on a `health` channel anymore. The bot's web server logs on a new `server` channel, so rename any plugin attached under the key `server`. ([#472](https://github.com/seedcord/seedcord/pull/472))
 - `port` and `healthCheck` are now one `server` block on gateway and node http bots, like `server: { port: 8080, health: '/healthz' }`. `healthCheck: false` becomes `server: { health: false }`, and `port: false` becomes `server: { port: false }`. A gateway bot's server now listens on port 3000 by default, where it used 6967. ([#472](https://github.com/seedcord/seedcord/pull/472))
+- Removed `TypedOmit`, `TypedExclude`, and `TypedExtract` in favor of `Except`, `ExcludeStrict`, and `ExtractStrict` from `type-fest`. Removed `Tail` in favor of `ArrayTail` from `type-fest`. Removed `FilterUnionByProperty`, `StringStartsWith`, `StringEndsWith`, and `StringContains` in favor of TypeScript's `Extract`. ([#453](https://github.com/seedcord/seedcord/pull/453))
+- A command or button without a handler now replies "This doesn't do anything right now." To send your own reply, pass a handler class as `interactions.unhandled` in your config, and it can read `this.t` like any other handler. ([`26be090`](https://github.com/seedcord/seedcord/commit/26be0906bb63c31635b98b6dc231df94bb35a900))
 
 ### ✨ Minor
 
 - Added `core.url`, which gives a plugin the address people reach the bot at, from the new `server.url` config key. Under `seedcord dev`, a bot without `server.url` gets its localhost address, and an http bot whose `dev.tunnel` is a URL gets that URL. ([#472](https://github.com/seedcord/seedcord/pull/472))
-
-### 🩹 Patch
-
-- Added `seedcord emojis` to upload the images in an `emojis` folder beside `seedcord.config.ts` to your application, and to list, download and delete the emojis already there. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else. ([#474](https://github.com/seedcord/seedcord/pull/474))
-- `InteractionsConfig` now has an `unhandled` field, typed by each transport as its own handler class. ([`26be090`](https://github.com/seedcord/seedcord/commit/26be0906bb63c31635b98b6dc231df94bb35a900))
-
-## 0.17.0-next.0
-
-### 💥 Breaking
-
-- Removed `TypedOmit`, `TypedExclude`, and `TypedExtract` in favor of `Except`, `ExcludeStrict`, and `ExtractStrict` from `type-fest`. Removed `Tail` in favor of `ArrayTail` from `type-fest`. Removed `FilterUnionByProperty`, `StringStartsWith`, `StringEndsWith`, and `StringContains` in favor of TypeScript's `Extract`. ([#453](https://github.com/seedcord/seedcord/pull/453))
-
-### ✨ Minor
-
 - Added `bot.interactions.ephemeral`. Set it to `false` to make replies public by default. ([#459](https://github.com/seedcord/seedcord/pull/459), thanks [@camdzic](https://github.com/camdzic))
 - A plugin can now set `dispatchMembers`, an object of functions that seedcord runs once for each interaction or event. Each result becomes `this.<name>` on handlers and middleware, and as `ctx.<name>` in gates and `Notice.render`. ([#456](https://github.com/seedcord/seedcord/pull/456))
 
 ### 🩹 Patch
 
+- Added `seedcord emojis` to upload the images in an `emojis` folder beside `seedcord.config.ts` to your application, and to list, download and delete the emojis already there. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else. ([#474](https://github.com/seedcord/seedcord/pull/474))
 - Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
 - Replaced hand-written types and helpers with the ones from `type-fest` and `es-toolkit`. ([#453](https://github.com/seedcord/seedcord/pull/453))
 

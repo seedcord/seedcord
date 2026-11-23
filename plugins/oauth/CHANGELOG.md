@@ -1,6 +1,6 @@
 # @seedcord/plugin-oauth
 
-## 0.1.0-next.0
+## 0.1.0
 
 ### ✨ Minor
 
@@ -10,6 +10,6 @@
 
 #### 📦 Seedcord packages
 
-- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
-- `@seedcord/types` 0.17.0-next.0 → 0.17.0-next.1
-- `@seedcord/utils` 0.10.0-next.0 → 0.10.0-next.1
+- `@seedcord/errors` 0.16.0-next.1 → 0.16.0
+- `@seedcord/utils` 0.10.0-next.1 → 0.10.0
+- `@seedcord/types` 0.17.0-next.1 → 0.17.0

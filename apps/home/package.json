@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/home",
-    "version": "0.0.4-next.0",
+    "version": "0.0.4",
     "private": true,
     "type": "module",
     "scripts": {

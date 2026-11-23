@@ -1,23 +1,15 @@
 # @seedcord/guide
 
-## 0.0.4-next.1
+## 0.0.4
 
 ### 🩹 Patch
 
 #### 📦 Seedcord packages
 
-- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
-- `@seedcord/plugin-oauth` 0.0.0 → 0.1.0-next.0
-
-## 0.0.4-next.0
-
-### 🩹 Patch
-
-#### 📦 Seedcord packages
-
-- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
-- `discord-component-embed` 1.1.0 → 1.1.1-next.0
-- `@seedcord/ui` 0.2.2 → 0.2.3-next.0
+- `@seedcord/errors` 0.16.0-next.1 → 0.16.0
+- `discord-component-embed` 1.1.1-next.0 → 1.1.1
+- `@seedcord/plugin-oauth` 0.1.0-next.0 → 0.1.0
+- `@seedcord/ui` 0.2.3-next.0 → 0.2.3
 
 ## 0.0.3
 

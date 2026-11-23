@@ -1,16 +1,6 @@
 # @seedcord/plugin-tasks
 
-## 0.1.0-next.1
-
-### 🩹 Patch
-
-#### 📦 Seedcord packages
-
-- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
-- `@seedcord/utils` 0.10.0-next.0 → 0.10.0-next.1
-- `@seedcord/logger` 0.6.2-next.0 → 0.7.0-next.1
-
-## 0.1.0-next.0
+## 0.1.0
 
 ### ✨ Minor
 
@@ -20,8 +10,6 @@
 
 #### 📦 Seedcord packages
 
-- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
-- `@seedcord/gateway` 0.10.0 → 0.11.0-next.0
-- `@seedcord/http` 0.13.0 → 0.14.0-next.0
-- `@seedcord/logger` 0.6.1 → 0.6.2-next.0
-- `@seedcord/utils` 0.9.2 → 0.10.0-next.0
+- `@seedcord/errors` 0.16.0-next.1 → 0.16.0
+- `@seedcord/utils` 0.10.0-next.1 → 0.10.0
+- `@seedcord/logger` 0.7.0-next.1 → 0.7.0

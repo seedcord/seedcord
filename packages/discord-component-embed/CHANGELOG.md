@@ -1,6 +1,6 @@
 # discord-component-embed
 
-## 1.1.1-next.0
+## 1.1.1
 
 ### 🩹 Patch
 

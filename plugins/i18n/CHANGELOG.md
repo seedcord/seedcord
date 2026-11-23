@@ -1,6 +1,6 @@
 # @seedcord/plugin-i18n
 
-## 0.1.0-next.0
+## 0.1.0
 
 ### ✨ Minor
 
@@ -10,5 +10,5 @@
 
 #### 📦 Seedcord packages
 
-- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
-- `@seedcord/utils` 0.9.2 → 0.10.0-next.0
+- `@seedcord/errors` 0.16.0-next.1 → 0.16.0
+- `@seedcord/utils` 0.10.0-next.1 → 0.10.0

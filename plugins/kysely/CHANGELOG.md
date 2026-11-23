@@ -1,17 +1,6 @@
 # @seedcord/plugin-kysely-postgres
 
-## 0.9.0-next.1
-
-### 🩹 Patch
-
-#### 📦 Seedcord packages
-
-- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
-- `@seedcord/types` 0.17.0-next.0 → 0.17.0-next.1
-- `@seedcord/utils` 0.10.0-next.0 → 0.10.0-next.1
-- `@seedcord/logger` 0.6.2-next.0 → 0.7.0-next.1
-
-## 0.9.0-next.0
+## 0.9.0
 
 ### 💥 Breaking
 
@@ -29,16 +18,16 @@
 
 - `PluginConnectionFailed` now includes the driver's error, like `connect ECONNREFUSED 127.0.0.1:5432`, and the option to check. ([#465](https://github.com/seedcord/seedcord/pull/465))
 - Fixed two service classes registered under the same key replacing each other. Startup and `seedcord codegen` now throw `CoreDuplicateName` with both class names. ([#465](https://github.com/seedcord/seedcord/pull/465))
-- Fixed `connection` reading `undefined` before `init()`. It now throws `PluginNotReady`, the same as `services`. ([#465](https://github.com/seedcord/seedcord/pull/465))
+- Fixed `connection` reading `undefined` before `init()`, and on Mongoose the closed connection after `dispose()`. Both now throw `PluginNotReady`, the same as `services`. ([#465](https://github.com/seedcord/seedcord/pull/465))
 - Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
 - The plugin now logs a warning for an exported class in `path` that extends its service base but isn't decorated. It used to skip that class without saying anything. ([#465](https://github.com/seedcord/seedcord/pull/465))
 
 #### 📦 Seedcord packages
 
-- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
-- `@seedcord/types` 0.16.2 → 0.17.0-next.0
-- `@seedcord/logger` 0.6.1 → 0.6.2-next.0
-- `@seedcord/utils` 0.9.2 → 0.10.0-next.0
+- `@seedcord/errors` 0.16.0-next.1 → 0.16.0
+- `@seedcord/utils` 0.10.0-next.1 → 0.10.0
+- `@seedcord/types` 0.17.0-next.1 → 0.17.0
+- `@seedcord/logger` 0.7.0-next.1 → 0.7.0
 
 ## 0.8.1
 

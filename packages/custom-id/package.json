@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/custom-id",
-    "version": "0.3.2-next.0",
+    "version": "0.3.2",
     "description": "Typed customId encoding and decoding",
     "keywords": [
         "custom-id",

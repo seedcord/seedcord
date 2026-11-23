@@ -1,13 +1,17 @@
 # @seedcord/home
 
-## 0.0.4-next.0
+## 0.0.4
 
 ### 🩹 Patch
 
 #### 📦 Seedcord packages
 
-- `discord-component-embed` 1.1.0 → 1.1.1-next.0
-- `@seedcord/ui` 0.2.2 → 0.2.3-next.0
+- `@seedcord/errors` 0.16.0-next.1 → 0.16.0
+- `@seedcord/custom-id` 0.3.2-next.0 → 0.3.2
+- `discord-component-embed` 1.1.1-next.0 → 1.1.1
+- `@seedcord/eslint-plugin` 0.5.2-next.1 → 0.5.2
+- `eslint-plugin-discordjs` 0.2.2-next.0 → 0.2.2
+- `@seedcord/ui` 0.2.3-next.0 → 0.2.3
 
 ## 0.0.3
 

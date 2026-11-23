@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/plugin-i18n",
-    "version": "0.1.0-next.0",
+    "version": "0.1.0",
     "description": "Translate a seedcord bot's replies and commands into each user's Discord language with Fluent",
     "keywords": [
         "discord-bot",

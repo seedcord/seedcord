@@ -1,6 +1,6 @@
 # @seedcord/event-emitter
 
-## 0.2.2-next.0
+## 0.2.2
 
 ### 🩹 Patch
 

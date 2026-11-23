@@ -1,12 +1,14 @@
 # @seedcord/gateway
 
-## 0.11.0-next.1
+## 0.11.0
 
 ### 💥 Breaking
 
+- Fixed an error card posting publicly after `defer({ ephemeral: false })`. When a `send()` or `followUp()` passes a different `ephemeral` than the defer, seedcord now deletes the placeholder and sends a new message with that value. ([`3cfdb6d`](https://github.com/seedcord/seedcord/commit/3cfdb6d6ac81409786146a6a4d440040bd47c7ac))
 - Your bot now reads the `emojis` folder beside `seedcord.config.ts` when it starts, and stops if a file in it isn't uploaded to your application. If you already keep other files in a folder with that name, move them, or point `emojis.dir` in `seedcord.config.ts` at an empty folder. ([#474](https://github.com/seedcord/seedcord/pull/474))
 - A gateway bot now has the `port` and `fetch()` members that an http bot already had, and every bot has the new `url`. Rename any plugin attached under one of those keys. ([#472](https://github.com/seedcord/seedcord/pull/472))
 - seedcord doesn't log on a `health` channel anymore. The bot's web server logs on a new `server` channel, so rename any plugin attached under the key `server`. ([#472](https://github.com/seedcord/seedcord/pull/472))
+- Fixed a second `send()` after `defer()` replacing the first one. The first call fills the placeholder, and every `send()` after it now sends a new message, the same as after `reply()`. ([`3cfdb6d`](https://github.com/seedcord/seedcord/commit/3cfdb6d6ac81409786146a6a4d440040bd47c7ac))
 - `port` and `healthCheck` are now one `server` block on gateway and node http bots, like `server: { port: 8080, health: '/healthz' }`. `healthCheck: false` becomes `server: { health: false }`, and `port: false` becomes `server: { port: false }`. A gateway bot's server now listens on port 3000 by default, where it used 6967. ([#472](https://github.com/seedcord/seedcord/pull/472))
 - A command or button without a handler now replies "This doesn't do anything right now." To send your own reply, pass a handler class as `interactions.unhandled` in your config, and it can read `this.t` like any other handler. ([`26be090`](https://github.com/seedcord/seedcord/commit/26be0906bb63c31635b98b6dc231df94bb35a900))
 
@@ -15,51 +17,30 @@
 - Added `core.url`, which gives a plugin the address people reach the bot at, from the new `server.url` config key. Under `seedcord dev`, a bot without `server.url` gets its localhost address, and an http bot whose `dev.tunnel` is a URL gets that URL. ([#472](https://github.com/seedcord/seedcord/pull/472))
 - Added `seedcord emojis` to upload the images in an `emojis` folder beside `seedcord.config.ts` to your application, and to list, download and delete the emojis already there. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else. ([#474](https://github.com/seedcord/seedcord/pull/474))
 - Added `interactionDispatching`, which the bus publishes when an interaction dispatch starts. `unhandledInteractionError` now includes the `interactionId`, and `unhandledEventError` now includes the event `name`. ([#469](https://github.com/seedcord/seedcord/pull/469))
+- Added `bot.interactions.ephemeral`. Set it to `false` to make replies public by default. ([#459](https://github.com/seedcord/seedcord/pull/459), thanks [@camdzic](https://github.com/camdzic))
+- A plugin can now set `dispatchMembers`, an object of functions that seedcord runs once for each interaction or event. Each result becomes `this.<name>` on handlers and middleware, and as `ctx.<name>` in gates and `Notice.render`. ([#456](https://github.com/seedcord/seedcord/pull/456))
 - Plugins can now answer web requests with a `fetch(request)` method, like a webhook from another service. seedcord calls each plugin's `fetch` in attach order before the interactions engine. A gateway bot serves those routes on the same server as its health path. ([#472](https://github.com/seedcord/seedcord/pull/472))
 
 ### 🩹 Patch
 
+- Fixed `ctx.guild` and `ctx.channelId` being null in an event gate when someone reacts to a message or joins a voice channel in a guild. ([#456](https://github.com/seedcord/seedcord/pull/456))
 - Fixed three checks on a gateway bot that missed Discord's errors because discord.js loads a different build of `@discordjs/rest` than seedcord does. A deleted log webhook now stops startup with `ConfigWebhookNotFound`, a refused command deploy points at the token or the command fields, and error reports show the interaction's timestamps. ([`9c7fb58`](https://github.com/seedcord/seedcord/commit/9c7fb583b077c0e7bddaabd07969597b250b3517))
 - Fixed a gateway bot shutting down while a bus subscriber or a log sink was still running after its handler returned. A graceful shutdown now waits for them, up to the drain window. ([#472](https://github.com/seedcord/seedcord/pull/472))
+- Fixed `EventHandler<'interactionCreate'>` and `EventMiddleware<'interactionCreate'>` compiling. Both are now type errors. ([#453](https://github.com/seedcord/seedcord/pull/453))
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
 - `responseAttempted` now includes a `body` with what the write sent, like the components of a reply or the modal from `showModal`, so a subscriber can log what Discord rejected. ([#469](https://github.com/seedcord/seedcord/pull/469))
 - The health path now answers 503 while the bot starts and again once shutdown starts, and a gateway bot opens its server when the Ready phase begins. The bot's own server now answers a request body over 1 MiB with a 413. ([#472](https://github.com/seedcord/seedcord/pull/472))
-
-#### 📦 Seedcord packages
-
-- `@seedcord/core` 0.14.0-next.0 → 0.14.0-next.1
-- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
-- `@seedcord/types` 0.17.0-next.0 → 0.17.0-next.1
-- `@seedcord/utils` 0.10.0-next.0 → 0.10.0-next.1
-- `@seedcord/logger` 0.6.2-next.0 → 0.7.0-next.1
-
-## 0.11.0-next.0
-
-### 💥 Breaking
-
-- Fixed an error card posting publicly after `defer({ ephemeral: false })`. When a `send()` or `followUp()` passes a different `ephemeral` than the defer, seedcord now deletes the placeholder and sends a new message with that value. ([`3cfdb6d`](https://github.com/seedcord/seedcord/commit/3cfdb6d6ac81409786146a6a4d440040bd47c7ac))
-- Fixed a second `send()` after `defer()` replacing the first one. The first call fills the placeholder, and every `send()` after it now sends a new message, the same as after `reply()`. ([`3cfdb6d`](https://github.com/seedcord/seedcord/commit/3cfdb6d6ac81409786146a6a4d440040bd47c7ac))
-
-### ✨ Minor
-
-- Added `bot.interactions.ephemeral`. Set it to `false` to make replies public by default. ([#459](https://github.com/seedcord/seedcord/pull/459), thanks [@camdzic](https://github.com/camdzic))
-- A plugin can now set `dispatchMembers`, an object of functions that seedcord runs once for each interaction or event. Each result becomes `this.<name>` on handlers and middleware, and as `ctx.<name>` in gates and `Notice.render`. ([#456](https://github.com/seedcord/seedcord/pull/456))
-
-### 🩹 Patch
-
-- Fixed `ctx.guild` and `ctx.channelId` being null in an event gate when someone reacts to a message or joins a voice channel in a guild. ([#456](https://github.com/seedcord/seedcord/pull/456))
-- Fixed `EventHandler<'interactionCreate'>` and `EventMiddleware<'interactionCreate'>` compiling. They should now correctly show red squigglies. ([#453](https://github.com/seedcord/seedcord/pull/453))
-- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
 - Replaced hand-written types and helpers with the ones from `type-fest` and `es-toolkit`. ([#453](https://github.com/seedcord/seedcord/pull/453))
 
 #### 📦 Seedcord packages
 
-- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
-- `@seedcord/core` 0.13.0 → 0.14.0-next.0
-- `@seedcord/types` 0.16.2 → 0.17.0-next.0
-- `@seedcord/custom-id` 0.3.1 → 0.3.2-next.0
-- `@seedcord/event-emitter` 0.2.1 → 0.2.2-next.0
-- `@seedcord/logger` 0.6.1 → 0.6.2-next.0
-- `@seedcord/utils` 0.9.2 → 0.10.0-next.0
+- `@seedcord/core` 0.14.0-next.1 → 0.14.0
+- `@seedcord/errors` 0.16.0-next.1 → 0.16.0
+- `@seedcord/utils` 0.10.0-next.1 → 0.10.0
+- `@seedcord/types` 0.17.0-next.1 → 0.17.0
+- `@seedcord/logger` 0.7.0-next.1 → 0.7.0
+- `@seedcord/custom-id` 0.3.2-next.0 → 0.3.2
+- `@seedcord/event-emitter` 0.2.2-next.0 → 0.2.2
 
 ## 0.10.0
 
