@@ -3,6 +3,7 @@ import { createViteConfig } from '@seedcord/vite-config';
 
 export default createViteConfig(import.meta.url, {
     pack: createTsdownConfig({
-        entry: ['src/index.ts']
+        entry: ['src/index.ts'],
+        deps: { alwaysBundle: ['@seedcord/plugin-utils/oauth'] }
     })
 });

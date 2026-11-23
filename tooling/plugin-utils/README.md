@@ -11,4 +11,6 @@ A private package for the code that the first-party plugins share. Each plugin t
 
 Add code here when two or more first-party plugins share it and plugin authors don't need it. Put anything that every plugin author would want on `@seedcord/core/plugin`.
 
+The main entry imports `reflect-metadata`, so a plugin that bundles it has to depend on that package. Put code for plugins that don't use decorators on an entry of its own, like `./oauth` for the OAuth and Linked Roles plugins.
+
 Test helpers go on the `./testing` export. Only the plugins' tests import it, so the plugin builds never bundle it.

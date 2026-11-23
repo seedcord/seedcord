@@ -217,15 +217,18 @@ describe('LinkedRoles portal sync', () => {
         expect(bodiesSent(requests, 'PUT', RECORDS_ROUTE)).toHaveLength(2);
     });
 
-    it('logs the callback address while the application lacks it, and checks again on the next start', async () => {
+    it('logs the callback address on every start while the application lacks it, and only reads Discord for it', async () => {
         using logs = captureLogs();
         const { linkedRoles, requests } = await botWith({ redirects: ['https://other.test/callback'] });
-
         await linkedRoles.ready();
+        const afterFirst = requests.length;
+
         await linkedRoles.ready();
 
         expect(logs.at('warn')).toEqual([expect.stringContaining(CALLBACK), expect.stringContaining(CALLBACK)]);
-        expect(bodiesSent(requests, 'PUT', RECORDS_ROUTE)).toHaveLength(2);
+        expect(requests.slice(afterFirst).map(({ method, route }) => `${method} ${route}`)).toEqual([
+            'GET /applications/@me'
+        ]);
     });
 
     it('logs and lets startup go on when Discord refuses', async () => {
@@ -237,16 +240,16 @@ describe('LinkedRoles portal sync', () => {
         await expect(linkedRoles.ready()).resolves.toBeUndefined();
         expect(logs.at('error')).toHaveLength(1);
     });
+});
+
+describe('LinkedRoles routes', () => {
+    const connected = (): Options['values'] => () => ({ platformUsername: 'dhruv', metadata: { level: 12 } });
 
     it("builds the verification link under the path in the bot's url", async () => {
         const { linkedRoles } = await botWith({ host: { url: 'https://example.test/bot' } });
 
         expect(linkedRoles.verifyUrl()).toBe('https://example.test/bot/linked-roles/verify');
     });
-});
-
-describe('LinkedRoles routes', () => {
-    const connected = (): Options['values'] => () => ({ platformUsername: 'dhruv', metadata: { level: 12 } });
 
     it('sends a visitor of the verify link to Discord, asking for its scopes and yours', async () => {
         const { linkedRoles } = await botWith({ options: { scopes: ['connections'] } });

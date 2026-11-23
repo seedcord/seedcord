@@ -23,6 +23,12 @@ const valid = { merged_prs: 12, is_maintainer: true, first_merge: new Date(0) };
 
 const one = { type: RecordType.IntegerEqual, name: 'Level', description: 'Your level' };
 
+// the message has color codes around the names and numbers
+function rejectedSaying(says: string): unknown {
+    const message: unknown = expect.toSatisfy((text: string) => stripVTControlCharacters(text).includes(says));
+    return expect.objectContaining({ code: SeedcordErrorCode.PluginLinkedRolesValueRejected, message });
+}
+
 describe('RecordSet', () => {
     it("accepts records that fit Discord's limits", () => {
         expect(new RecordSet(records).firstProblem()).toBeUndefined();
@@ -80,17 +86,20 @@ describe('RecordSet', () => {
         });
     });
 
-    it.for<[what: string, wrong: Record<string, unknown>]>([
-        ['a number with a fraction', { merged_prs: 1.5 }],
-        ['a number that prints with an exponent', { merged_prs: 1e21 }],
-        ['a date that never parsed', { first_merge: new Date('soon') }],
-        ['text in a boolean record', { is_maintainer: 'yes' }],
-        ['a missing value', { is_maintainer: undefined }],
-        ['a key that no record has', { stars: 4 }],
-        ['a key that every object inherits', { constructor: 4 }]
-    ])('refuses %s', ([, wrong]) => {
+    it.for<[what: string, wrong: Record<string, unknown>, says: string]>([
+        ['a number with a fraction', { merged_prs: 1.5 }, 'returned 1.5 for merged_prs'],
+        ['a number that prints with an exponent', { merged_prs: 1e21 }, 'returned 1e+21 for merged_prs'],
+        ['a date that never parsed', { first_merge: new Date('soon') }, 'returned an invalid Date for first_merge'],
+        ['a date in an integer record', { merged_prs: new Date(0) }, 'returned a Date for merged_prs'],
+        ['text in a boolean record', { is_maintainer: 'yes' }, 'returned "yes" for is_maintainer'],
+        ['an object', { is_maintainer: { value: true } }, 'returned an object for is_maintainer'],
+        ['a missing value', { is_maintainer: undefined }, 'returned nothing for is_maintainer'],
+        ['null', { is_maintainer: null }, 'returned null for is_maintainer'],
+        ['a key that no record has', { stars: 4 }, 'returned 4 for stars'],
+        ['a key that every object inherits', { constructor: 4 }, 'returned 4 for constructor']
+    ])('refuses %s', ([, wrong, says]) => {
         expect(() => new RecordSet(records).connectionBody({ metadata: { ...valid, ...wrong } })).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginLinkedRolesValueRejected })
+            rejectedSaying(says)
         );
     });
 
@@ -99,7 +108,7 @@ describe('RecordSet', () => {
         ['platformUsername', 101]
     ] as const)('refuses a %s of %d characters', ([field, length]) => {
         expect(() => new RecordSet(records).connectionBody({ metadata: valid, [field]: 'x'.repeat(length) })).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginLinkedRolesValueRejected })
+            rejectedSaying(`returned ${length} characters for ${field}`)
         );
     });
 });

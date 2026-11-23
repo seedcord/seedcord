@@ -44,19 +44,13 @@ export class TestHost extends PluginHost<'http', 'server'> {
     // justified: nothing under test reads the config
     public readonly config = {} as CoreBase['config'];
     public readonly rest: REST;
-    // a gateway bot only has its application id once it logged in
-    public loggedIn = true;
+    public readonly applicationId = APP_ID;
     private readonly configuredUrl: string | typeof SERVER_URL_UNSET;
 
     constructor({ api, url = 'https://bot.test/', kv = new MapDriver() }: TestHostOptions) {
         super('http', 'server', kv);
         this.rest = new REST({ api }).setToken('bot-token');
         this.configuredUrl = url;
-    }
-
-    public get applicationId(): string {
-        if (!this.loggedIn) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
-        return APP_ID;
     }
 
     public get url(): URL {

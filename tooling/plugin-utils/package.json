@@ -17,6 +17,12 @@
                 "default": "./dist/index.mjs"
             }
         },
+        "./oauth": {
+            "import": {
+                "types": "./dist/oauth.d.mts",
+                "default": "./dist/oauth.mjs"
+            }
+        },
         "./testing": {
             "import": {
                 "types": "./dist/testing.d.mts",
@@ -46,11 +52,13 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vite-config": "workspace:^",
+        "envapt": "catalog:peer",
         "type-fest": "catalog:deps",
         "vite-plus": "catalog:deps"
     },
     "peerDependencies": {
         "@seedcord/core": "workspace:^",
+        "envapt": "catalog:peer",
         "typescript": "catalog:peer"
     },
     "engines": {

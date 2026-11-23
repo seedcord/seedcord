@@ -11,8 +11,6 @@ export interface SeenRequest {
     method: string;
     // without the api prefix or the query
     route: string;
-    // the query with its `?`, or an empty string
-    search: string;
     headers: IncomingHttpHeaders;
     body: string;
 }
@@ -29,7 +27,6 @@ interface FakeDiscord {
 }
 
 const OK = 200;
-const NO_CONTENT = 204;
 // listen() without a host also takes connections from other machines on the network
 const LOOPBACK = '127.0.0.1';
 
@@ -44,16 +41,11 @@ export async function fakeDiscord(reply: (request: SeenRequest) => Promisable<Re
                 method: request.method ?? '',
                 // decoded because discord-api-types writes the current user's route as /users/%40me
                 route: decodeURIComponent(url.pathname.replace(/^\/api\/v\d+/u, '')),
-                search: url.search,
                 headers: request.headers,
                 body: Buffer.concat(chunks).toString()
             };
             requests.push(seen);
             void Promise.resolve(reply(seen)).then(({ status = OK, json = {} }) => {
-                if (status === NO_CONTENT) {
-                    response.writeHead(status).end();
-                    return;
-                }
                 response.writeHead(status, { 'content-type': 'application/json' });
                 response.end(JSON.stringify(json));
             });

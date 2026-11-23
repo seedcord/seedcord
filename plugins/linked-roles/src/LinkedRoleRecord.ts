@@ -39,10 +39,17 @@ export interface LinkedRoleRecord {
 /** The `records` of a Linked Roles plugin, by key. Discord takes 5 at most. */
 export type LinkedRoleRecords = Record<string, LinkedRoleRecord>;
 
-// from discord's application role connection metadata docs
-export const RECORD_LIMITS = { records: 5, key: 50, name: 100, description: 200 } as const;
+// from discord's docs for role connection metadata records and for a user's role connection
+export const DISCORD_LIMITS = {
+    records: 5,
+    key: 50,
+    name: 100,
+    description: 200,
+    platformName: 50,
+    platformUsername: 100
+} as const;
 
-type Limits = typeof RECORD_LIMITS;
+type Limits = typeof DISCORD_LIMITS;
 type KeyCharacter = LowercaseLetter | DigitCharacter | '_';
 
 type TooLong<TText extends string, TMax extends number> = GreaterThan<StringLength<TText>, TMax>;
@@ -66,7 +73,7 @@ type TextProblems<TRecord extends LinkedRoleRecord> = {
     };
 };
 
-// intersect this with a generic `records` parameter to make discord's limits compile errors.
+// intersect this with a generic `records` parameter to turn discord's limits into compile errors.
 // it only reads literal keys and text, and RecordSet.firstProblem() checks the rest at run time
 export type RecordProblems<TRecords extends LinkedRoleRecords> = (GreaterThan<
     UnionLength<keyof TRecords>,
@@ -112,6 +119,9 @@ export type RoleMetadata<TRecords extends LinkedRoleRecords> = Simplify<{
  *
  * @typeParam TRecords - The `records` you pass.
  */
+// the fields of a role connection with a length limit
+export type PlatformField = 'platformName' | 'platformUsername';
+
 export interface RoleConnection<TRecords extends LinkedRoleRecords> {
     /** The name of your service. 50 characters at most. */
     platformName?: string | undefined;

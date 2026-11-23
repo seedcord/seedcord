@@ -3,10 +3,9 @@ import { isSeedcordError, SeedcordErrorCode, SlashHandler, SlashRoute } from '@s
 @SlashRoute('linked-role')
 export class LinkedRole extends SlashHandler<'linked-role'> {
     public async execute(): Promise<void> {
-        const { linkedRoles } = this.core;
         const action = this.options.getString('action');
         if (action === 'connect') {
-            await this.reply(`Connect here: ${linkedRoles.verifyUrl()}`);
+            await this.reply(`Connect here: ${this.core.linkedRoles.verifyUrl()}`);
             return;
         }
 
@@ -15,7 +14,7 @@ export class LinkedRole extends SlashHandler<'linked-role'> {
             await this.edit(action === 'clear' ? await this.clear() : await this.update());
         } catch (error) {
             if (!isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.PluginOAuthLoginNeeded)) throw error;
-            await this.edit(`Connect first: ${linkedRoles.verifyUrl()}`);
+            await this.edit(`Connect first: ${this.core.linkedRoles.verifyUrl()}`);
         }
     }
 

@@ -332,10 +332,10 @@ const messages = {
     [SeedcordErrorCode.PluginOAuthSecretRefused]: () =>
         `Discord refused the client secret. Copy it again from your application's OAuth2 page in the Developer Portal. The OAuth plugin reads it from ${paint.bold('DISCORD_CLIENT_SECRET')}, and ${paint.sky('OAuthClient')} takes it as ${paint.bold('clientSecret')}.`,
 
-    [SeedcordErrorCode.PluginLinkedRolesValueRejected]: (key: string, got: string, fix: string) =>
-        `${paint.bold('values')} returned ${quoted(got)} for ${paint.sky(key)}. ${fix}`,
+    [SeedcordErrorCode.PluginLinkedRolesValueRejected]: (key: string, returned: string, fix: string) =>
+        `${paint.bold('values')} returned ${returned} for ${paint.sky(key)}. ${fix}`,
     [SeedcordErrorCode.PluginLinkedRolesTokensNotKept]: (method: 'push' | 'clear') =>
-        `${paint.bold(`${method}()`)} writes with the tokens that a user approved when they connected, and this bot doesn't save them. Set ${paint.bold('keepTokens: true')} in ${paint.bold('LinkedRoles.with()')}. Users who connected before that have to connect again.`,
+        `${paint.bold(`${method}()`)} needs each user's saved tokens, and this bot doesn't save them. Set ${paint.bold('keepTokens: true')} in ${paint.bold('LinkedRoles.with()')}. Users who connected before that have to connect again.`,
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 
     [SeedcordErrorCode.CliConfigInvalidExport]: () =>

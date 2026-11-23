@@ -1,17 +1,17 @@
 import { MemoryDriver } from '@seedcord/core';
 import { keepRequestOpenFor } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
-import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { OAuthClient } from '@seedcord/plugin-oauth';
+import { discordClientSecret, warnUnlessRedirectListed } from '@seedcord/plugin-utils/oauth';
 import { Routes } from 'discord-api-types/v10';
-import { Converters, Envapter } from 'envapt';
 
 import { RecordSet } from './RecordSet';
 
 import type { LinkedRoleRecords, RecordProblems, RoleConnection } from './LinkedRoleRecord';
 import type { ConnectionResult, LinkedRolesResult } from './LinkedRolesResult';
-import type { CoreBase } from '@seedcord/core';
+import type { CoreBase, KvCollection } from '@seedcord/core';
 import type { LoginOutcome, OAuthScope, UserCalls } from '@seedcord/plugin-oauth';
 import type { APIUser, RESTPatchCurrentApplicationJSONBody } from 'discord-api-types/v10';
 import type { ExcludeStrict, If, Promisable } from 'type-fest';
@@ -58,9 +58,9 @@ export interface LinkedRolesOptions<
      */
     scopes?: readonly TScopes[] | undefined;
     /**
-     * Saves each user's tokens in your bot's `kv` so you can update their values later. Your `kv` needs
-     * a driver that saves to a file or a database for it. Leave it out when a user's values never change
-     * after they connect.
+     * Saves each user's tokens in your bot's `kv` so you can update their values later. This needs a `kv`
+     * driver that saves to a file or a database. Leave it out when a user's values never change after
+     * they connect.
      */
     keepTokens?: TKeep | undefined;
     /**
@@ -96,7 +96,7 @@ export interface LinkedRolesOptions<
 
 type SavedTokenMethod = 'push' | 'clear';
 
-// without `keepTokens: true` the sentence is the parameter's type. no user id fits it, and typescript
+// without `keepTokens: true` the parameter's type is this sentence. no user id fits it, and typescript
 // prints it in the error
 type SavedTokenUserId<TKeep extends boolean, TMethod extends SavedTokenMethod> = If<
     TKeep,
@@ -104,9 +104,8 @@ type SavedTokenUserId<TKeep extends boolean, TMethod extends SavedTokenMethod> =
     `${TMethod}() needs the saved tokens. Set keepTokens: true in LinkedRoles.with().`
 >;
 
-const CLIENT_SECRET_KEY = 'DISCORD_CLIENT_SECRET';
-// two deployments of one application overwrite each other's verification URL. once this much time
-// has passed, a deployment's next start sets its own again
+// someone can change the records or the verification URL in the portal. the first start after this
+// long sets them again
 const RESYNC_MS = 24 * 60 * 60 * 1000;
 
 const BAD_REQUEST = 400;
@@ -197,7 +196,7 @@ export abstract class LinkedRoles<
     public init(): void {
         // read here only to fail at startup when one is missing. otherwise the first visitor gets an error
         void this.core.url;
-        void this.#clientSecret();
+        void discordClientSecret();
 
         const problem = this.#records().firstProblem();
         if (problem !== undefined) this.rejectOptions(problem);
@@ -209,46 +208,47 @@ export abstract class LinkedRoles<
 
     /**
      * Registers your records with Discord and sets the application's Linked Roles Verification URL to
-     * {@link LinkedRoles.verifyUrl}. It also logs the callback address while it's missing under Redirects
-     * on your application's OAuth2 page since only you can add it there.
+     * {@link LinkedRoles.verifyUrl}. A later start skips those calls unless your records or `server.url`
+     * changed, or the last time it made them was more than a day ago.
      *
-     * A later start skips those calls unless your records or `server.url` changed, or the last time it
-     * made them was more than a day ago. Every start makes them while the callback address is missing.
+     * If the callback address isn't under Redirects on your application's OAuth2 page, it logs the
+     * address. Only you can add it there.
      */
     public override async ready(): Promise<void> {
         const portal = this.kv.collection<string>('portal');
         try {
             const client = this.#client();
-            const records = this.#records().recordsBody();
-            const verifyUrl = client.loginUrl();
-            const wanted = JSON.stringify({ records, verifyUrl, callback: client.redirectUri });
-            if ((await portal.get('synced')) === wanted) return;
-
-            await this.core.rest.put(Routes.applicationRoleConnectionMetadata(this.core.applicationId), {
-                body: records
-            });
-            await this.core.rest.patch(Routes.currentApplication(), {
-                body: { role_connections_verification_url: verifyUrl } satisfies RESTPatchCurrentApplicationJSONBody
-            });
-            if (!(await client.isRedirectListed())) {
-                this.logger.utils.block(
-                    'Nobody can connect until this address is under Redirects on your OAuth2 page',
-                    [paint.sky(client.redirectUri)],
-                    'warn'
-                );
-                return;
-            }
-            await portal.set('synced', wanted, RESYNC_MS);
+            await this.#syncRecords(portal, client.loginUrl());
+            await warnUnlessRedirectListed(
+                client,
+                portal,
+                this.logger,
+                'Nobody can connect until this address is under Redirects on your OAuth2 page'
+            );
         } catch (error) {
             // only logging here because if we throw on edge it'd break every interaction
             this.logger.error("Couldn't set up Linked Roles on Discord", error);
         }
     }
 
+    async #syncRecords(portal: KvCollection<string>, verifyUrl: string): Promise<void> {
+        const records = this.#records().recordsBody();
+        const wanted = JSON.stringify({ records, verifyUrl });
+        if ((await portal.get('synced')) === wanted) return;
+
+        await this.core.rest.put(Routes.applicationRoleConnectionMetadata(this.core.applicationId), {
+            body: records
+        });
+        await this.core.rest.patch(Routes.currentApplication(), {
+            body: { role_connections_verification_url: verifyUrl } satisfies RESTPatchCurrentApplicationJSONBody
+        });
+        await portal.set('synced', wanted, RESYNC_MS);
+    }
+
     /**
      * The address that starts the flow for a user. Discord opens it from a server's Linked Roles menu.
-     * Put it in your own command too because that menu doesn't run it again for someone who is
-     * already connected.
+     * Also reply with it from a command of your own because that menu doesn't open it again for someone
+     * who is already connected.
      */
     public verifyUrl(): string {
         return this.#client().loginUrl();
@@ -261,12 +261,14 @@ export abstract class LinkedRoles<
      * It resolves to a {@link ConnectionResult}. Its `kind` is `'connected'` after a write. When your
      * `values` refused this user, its `kind` is `'refused'` and it has the `message`.
      *
-     * Discord takes about one write per user every five seconds. If you call `push()` for the same user
-     * sooner than that, the call waits until Discord takes it.
-     *
+     * @throws Whatever your `values` throws.
      * @throws A **SeedcordError** with the code `PluginOAuthLoginNeeded` when the user never connected,
      * or took your application off their account since. They have to open {@link LinkedRoles.verifyUrl} again.
-     * @throws A **SeedcordError** when the plugin doesn't have `keepTokens: true`.
+     * @throws A **SeedcordTypeError** with the code `PluginLinkedRolesValueRejected` when your `values`
+     * returns a value that doesn't fit its record, or a key that isn't in `records`.
+     * @throws A **SeedcordRangeError** with the code `PluginLinkedRolesValueRejected` when `platformName`
+     * or `platformUsername` is longer than Discord takes.
+     * @throws A **SeedcordTypeError** when the plugin doesn't have `keepTokens: true`.
      */
     public async push(userId: SavedTokenUserId<TKeep, 'push'>): Promise<ConnectionResult> {
         const asUser = this.#asUserWithSavedTokens('push', userId);
@@ -274,12 +276,13 @@ export abstract class LinkedRoles<
     }
 
     /**
-     * Empties the values that Discord has for a user, for when they shouldn't have your roles anymore.
-     * The plugin keeps their tokens, and a later {@link LinkedRoles.push} writes their values again.
+     * Empties the values that Discord has for a user. Use it for a user who shouldn't keep the roles that
+     * depend on your records. The plugin keeps their tokens, and a later {@link LinkedRoles.push} writes
+     * their values again.
      *
      * @throws A **SeedcordError** with the code `PluginOAuthLoginNeeded` when the user never connected,
      * or took your application off their account since.
-     * @throws A **SeedcordError** when the plugin doesn't have `keepTokens: true`.
+     * @throws A **SeedcordTypeError** when the plugin doesn't have `keepTokens: true`.
      */
     public async clear(userId: SavedTokenUserId<TKeep, 'clear'>): Promise<void> {
         await this.#asUserWithSavedTokens('clear', userId).setRoleConnection({});
@@ -325,7 +328,7 @@ export abstract class LinkedRoles<
     // variable
     #asUserWithSavedTokens(method: SavedTokenMethod, userId: string): UserCalls<OAuthScope> {
         if (!this.#keepsTokens) {
-            throw new SeedcordError(SeedcordErrorCode.PluginLinkedRolesTokensNotKept, [method]);
+            throw new SeedcordTypeError(SeedcordErrorCode.PluginLinkedRolesTokensNotKept, [method]);
         }
         return this.#client().as(userId);
     }
@@ -346,23 +349,12 @@ export abstract class LinkedRoles<
             // without keepTokens a login's tokens only have to last until its callback has written
             store: this.#keepsTokens ? this.kv.collection<string>('tokens') : new Map(),
             clientId: this.core.applicationId,
-            clientSecret: this.#clientSecret(),
+            clientSecret: discordClientSecret(),
             baseUrl: this.core.url,
             routes: { login: 'linked-roles/verify', callback: 'linked-roles/callback' },
             scopes: ['role_connections.write', ...(this.options.scopes ?? [])],
             keepOpen: keepRequestOpenFor
         });
         return this.#built;
-    }
-
-    // envapt throws on workers if you read before the bot binds its env, and plugins get built before that
-    #clientSecret(): string {
-        if (!Envapter.has(CLIENT_SECRET_KEY)) {
-            throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, [
-                CLIENT_SECRET_KEY,
-                "It's the client secret on your application's OAuth2 page in the Developer Portal."
-            ]);
-        }
-        return Envapter.getRequired(CLIENT_SECRET_KEY, Converters.String);
     }
 }

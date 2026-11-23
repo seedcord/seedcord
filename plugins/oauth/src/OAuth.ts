@@ -1,9 +1,9 @@
 import { MemoryDriver } from '@seedcord/core';
 import { keepRequestOpenFor } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
-import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
-import { Converters, Envapter } from 'envapt';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { discordClientSecret, warnUnlessRedirectListed } from '@seedcord/plugin-utils/oauth';
 
 import { OAuthClient } from './OAuthClient';
 
@@ -38,9 +38,6 @@ export interface OAuthOptions<TScopes extends OAuthScope = never, TExtra extends
 
 const BAD_REQUEST = 400;
 const SERVER_ERROR = 500;
-const CLIENT_SECRET_KEY = 'DISCORD_CLIENT_SECRET';
-// someone can remove the redirect in the portal later, and the warning should come back then
-const RECHECK_REDIRECT_MS = 24 * 60 * 60 * 1000;
 
 const FAILURE_PAGES = {
     denied: { status: BAD_REQUEST, text: 'The login was cancelled. You can close this tab.' },
@@ -117,29 +114,19 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
     public init(): void {
         // read here only to fail at startup when one is missing. otherwise the first visitor finds out
         void this.core.url;
-        void this.#clientSecret();
+        void discordClientSecret();
         if (this.kv.driver instanceof MemoryDriver) {
             throw new SeedcordTypeError(SeedcordErrorCode.PluginOAuthTokensInMemory, [this.constructor.name]);
         }
     }
 
     public override async ready(): Promise<void> {
-        // an edge bot runs ready() every time an isolate starts. with the confirmed address in kv, discord
-        // gets asked once a day
-        const confirmed = this.kv.collection<string>('portal');
         try {
-            const client = this.#client();
-            const callback = client.redirectUri;
-            if ((await confirmed.get('redirect')) === callback) return;
-
-            if (await client.isRedirectListed()) {
-                await confirmed.set('redirect', callback, RECHECK_REDIRECT_MS);
-                return;
-            }
-            this.logger.utils.block(
-                'Discord will refuse logins until this address is under Redirects on your OAuth2 page',
-                [paint.sky(callback)],
-                'warn'
+            await warnUnlessRedirectListed(
+                this.#client(),
+                this.kv.collection<string>('portal'),
+                this.logger,
+                'Discord will refuse logins until this address is under Redirects on your OAuth2 page'
             );
         } catch (error) {
             // only a warning. on edge a throw here would fail every interaction
@@ -200,7 +187,7 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
             rest: this.core.rest,
             store: this.kv.collection<string>('tokens'),
             clientId: this.core.applicationId,
-            clientSecret: this.#clientSecret(),
+            clientSecret: discordClientSecret(),
             baseUrl: this.core.url,
             scopes: this.options.scopes,
             extraScopes: this.options.extraScopes,
@@ -217,16 +204,5 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
             return onFailure?.(outcome, request) ?? new Response(text, { status });
         }
         return onLogin?.(outcome.login, request) ?? new Response('You are logged in. You can close this tab.');
-    }
-
-    // envapt throws on workers if you read before the bot binds its env, and plugins get built before that
-    #clientSecret(): string {
-        if (!Envapter.has(CLIENT_SECRET_KEY)) {
-            throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, [
-                CLIENT_SECRET_KEY,
-                "It's the client secret on your application's OAuth2 page in the Developer Portal."
-            ]);
-        }
-        return Envapter.getRequired(CLIENT_SECRET_KEY, Converters.String);
     }
 }

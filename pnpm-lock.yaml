@@ -721,6 +721,9 @@ importers:
       '@seedcord/plugin-kysely':
         specifier: workspace:^
         version: link:../../plugins/kysely
+      '@seedcord/plugin-linked-roles':
+        specifier: workspace:^
+        version: link:../../plugins/linked-roles
       '@seedcord/plugin-mongoose':
         specifier: workspace:^
         version: link:../../plugins/mongoose
@@ -1932,6 +1935,9 @@ importers:
       '@seedcord/logger':
         specifier: workspace:^
         version: link:../../packages/logger
+      '@seedcord/plugin-utils':
+        specifier: workspace:^
+        version: link:../../tooling/plugin-utils
       '@seedcord/prose':
         specifier: workspace:^
         version: link:../../tooling/prose
@@ -2042,6 +2048,9 @@ importers:
       '@seedcord/logger':
         specifier: workspace:^
         version: link:../../packages/logger
+      '@seedcord/plugin-utils':
+        specifier: workspace:^
+        version: link:../../tooling/plugin-utils
       '@seedcord/prose':
         specifier: workspace:^
         version: link:../../tooling/prose
@@ -2671,6 +2680,9 @@ importers:
       '@seedcord/vite-config':
         specifier: workspace:^
         version: link:../vite-config
+      envapt:
+        specifier: catalog:peer
+        version: 9.2.0
       type-fest:
         specifier: catalog:deps
         version: 5.10.0

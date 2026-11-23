@@ -3,11 +3,12 @@ import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal
 import { keepDefined } from '@seedcord/utils';
 import { difference, mapValues } from 'es-toolkit';
 
-import { RECORD_KINDS, RECORD_LIMITS } from './LinkedRoleRecord';
+import { DISCORD_LIMITS, RECORD_KINDS } from './LinkedRoleRecord';
 
 import type {
     LinkedRoleRecord,
     LinkedRoleRecords,
+    PlatformField,
     RecordKind,
     RoleConnection,
     RoleMetadata,
@@ -18,9 +19,6 @@ import type {
     RESTPutAPICurrentUserApplicationRoleConnectionJSONBody
 } from 'discord-api-types/v10';
 
-// from discord's application role connection docs
-const TEXT_LIMITS = { platformName: 50, platformUsername: 100 } as const;
-
 interface KindFormat {
     // undefined for a value of the wrong kind
     text(value: unknown): string | undefined;
@@ -29,7 +27,7 @@ interface KindFormat {
 
 const KIND_FORMATS = {
     integer: {
-        // isInteger would let 1e21 through, and that prints as 1e+21
+        // isInteger passes 1e21, which prints as 1e+21
         text: (value) => (Number.isSafeInteger(value) ? String(value) : undefined),
         needs: 'An integer record needs a whole number.'
     },
@@ -43,17 +41,30 @@ const KIND_FORMATS = {
     }
 } satisfies Record<RecordKind, KindFormat>;
 
-function rejected(key: string, value: unknown, fix: string): SeedcordTypeError {
-    return new SeedcordTypeError(SeedcordErrorCode.PluginLinkedRolesValueRejected, [key, String(value), fix]);
+// what the error says `values` returned. String() would print a missing value as "undefined" and
+// an object as "[object Object]"
+function shown(value: unknown): string {
+    if (value === undefined) return 'nothing';
+    if (value === null) return 'null';
+    if (typeof value === 'string') return paint.sky(JSON.stringify(value));
+    if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+        return paint.iris(String(value));
+    }
+    if (value instanceof Date) return Number.isNaN(value.getTime()) ? 'an invalid Date' : 'a Date';
+    return typeof value === 'object' ? 'an object' : `a ${typeof value}`;
 }
 
-function withinLimit(field: keyof typeof TEXT_LIMITS, text: string | undefined): string | undefined {
-    const max = TEXT_LIMITS[field];
+function rejected(key: string, value: unknown, fix: string): SeedcordTypeError {
+    return new SeedcordTypeError(SeedcordErrorCode.PluginLinkedRolesValueRejected, [key, shown(value), fix]);
+}
+
+function withinLimit(field: PlatformField, text: string | undefined): string | undefined {
+    const max = DISCORD_LIMITS[field];
     if (text !== undefined && text.length > max) {
         throw new SeedcordRangeError(SeedcordErrorCode.PluginLinkedRolesValueRejected, [
             field,
-            text,
-            `It has ${paint.iris(text.length)} characters, but Discord takes ${paint.iris(max)} at most.`
+            `${paint.iris(text.length)} characters`,
+            `Discord takes ${paint.iris(max)} at most.`
         ]);
     }
     return text;
@@ -70,14 +81,14 @@ function lengthProblem(what: string, text: string, max: number): string | undefi
 function keyProblem(key: string): string | undefined {
     const what = `The record key ${paint.sky(`'${key}'`)}`;
     return (
-        lengthProblem(what, key, RECORD_LIMITS.key) ??
+        lengthProblem(what, key, DISCORD_LIMITS.key) ??
         (/^[a-z0-9_]+$/.test(key) ? undefined : `${what} can only use a-z, 0-9, and _`)
     );
 }
 
 function fieldProblem(key: string, record: LinkedRoleRecord, field: TextField): string | undefined {
     const what = `The ${paint.bold(field)} of the record ${paint.sky(key)}`;
-    return lengthProblem(what, record[field], RECORD_LIMITS[field]);
+    return lengthProblem(what, record[field], DISCORD_LIMITS[field]);
 }
 
 // the records a bot author gave the plugin, and the two request bodies that get built from them.
@@ -91,8 +102,8 @@ export class RecordSet<TRecords extends LinkedRoleRecords> {
 
     public firstProblem(): string | undefined {
         const entries = Object.entries(this.records);
-        if (entries.length > RECORD_LIMITS.records) {
-            return `${paint.bold('records')} has ${paint.iris(entries.length)} records. Discord takes ${paint.iris(RECORD_LIMITS.records)} at most`;
+        if (entries.length > DISCORD_LIMITS.records) {
+            return `${paint.bold('records')} has ${paint.iris(entries.length)} records. Discord takes ${paint.iris(DISCORD_LIMITS.records)} at most`;
         }
         for (const [key, record] of entries) {
             const problem =
