@@ -57,8 +57,11 @@ type KeyProblem<TKey extends string> =
               : never
           : `'${TKey}' can only use a-z, 0-9, and _.`;
 
+// the fields of a record with a length limit
+export type TextField = 'name' | 'description';
+
 type TextProblems<TRecord extends LinkedRoleRecord> = {
-    [Field in 'name' | 'description' as TooLong<TRecord[Field], Limits[Field]> extends true ? Field : never]: {
+    [Field in TextField as TooLong<TRecord[Field], Limits[Field]> extends true ? Field : never]: {
         error: `A record ${Field} can be ${Limits[Field]} characters long at most.`;
     };
 };

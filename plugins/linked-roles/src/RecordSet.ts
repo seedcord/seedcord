@@ -5,7 +5,14 @@ import { difference, mapValues } from 'es-toolkit';
 
 import { RECORD_KINDS, RECORD_LIMITS } from './LinkedRoleRecord';
 
-import type { LinkedRoleRecord, LinkedRoleRecords, RecordKind, RoleConnection, RoleMetadata } from './LinkedRoleRecord';
+import type {
+    LinkedRoleRecord,
+    LinkedRoleRecords,
+    RecordKind,
+    RoleConnection,
+    RoleMetadata,
+    TextField
+} from './LinkedRoleRecord';
 import type {
     RESTPutAPIApplicationRoleConnectionMetadataJSONBody,
     RESTPutAPICurrentUserApplicationRoleConnectionJSONBody
@@ -68,7 +75,7 @@ function keyProblem(key: string): string | undefined {
     );
 }
 
-function fieldProblem(key: string, record: LinkedRoleRecord, field: 'name' | 'description'): string | undefined {
+function fieldProblem(key: string, record: LinkedRoleRecord, field: TextField): string | undefined {
     const what = `The ${paint.bold(field)} of the record ${paint.sky(key)}`;
     return lengthProblem(what, record[field], RECORD_LIMITS[field]);
 }

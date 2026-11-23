@@ -12,9 +12,9 @@ import { RecordSet } from './RecordSet';
 import type { LinkedRoleRecords, RecordProblems, RoleConnection } from './LinkedRoleRecord';
 import type { LinkedRolesResult } from './LinkedRolesResult';
 import type { CoreBase } from '@seedcord/core';
-import type { OAuthScope, UserCalls } from '@seedcord/plugin-oauth';
+import type { LoginOutcome, OAuthScope, UserCalls } from '@seedcord/plugin-oauth';
 import type { APIUser, RESTPatchCurrentApplicationJSONBody } from 'discord-api-types/v10';
-import type { Promisable } from 'type-fest';
+import type { ExcludeStrict, Promisable } from 'type-fest';
 
 /**
  * What your `values` gets about the person who is connecting.
@@ -92,10 +92,33 @@ const CLIENT_SECRET_KEY = 'DISCORD_CLIENT_SECRET';
 // has passed, a deployment's next start sets its own again
 const RESYNC_MS = 24 * 60 * 60 * 1000;
 
+const BAD_REQUEST = 400;
+const SERVER_ERROR = 500;
+
+const PLAIN_PAGES = {
+    connected: { status: 200, text: "You're connected. You can close this tab." },
+    denied: { status: BAD_REQUEST, text: "You cancelled on Discord and aren't connected. You can close this tab." },
+    invalid: { status: BAD_REQUEST, text: "This link didn't finish. Open it again from Discord." },
+    failed: {
+        status: SERVER_ERROR,
+        text: "We couldn't connect you because of a problem on our side. Try again in a bit."
+    }
+} satisfies Record<ExcludeStrict<LinkedRolesResult['kind'], 'refused'>, { status: number; text: string }>;
+
+function plainPage(result: LinkedRolesResult): Response {
+    if (result.kind === 'refused') return new Response(result.message);
+    const { status, text } = PLAIN_PAGES[result.kind];
+    return new Response(text, { status });
+}
+
 /**
  * Sets up Discord's Linked Roles for your bot. Attach what {@link LinkedRoles.with} returns.
  *
- * It reads the client secret from `DISCORD_CLIENT_SECRET`, and your bot's config needs `server.url`.
+ * It serves `linked-roles/verify` and `linked-roles/callback` under your bot's `server.url`. Add the
+ * callback's address under Redirects on your application's OAuth2 page. The plugin logs the exact address
+ * at startup while it's missing.
+ *
+ * It reads the client secret from `DISCORD_CLIENT_SECRET`.
  *
  * @typeParam TRecords - The `records` from the options. Leave it out.
  * @typeParam TScopes - The `scopes` from the options. Leave it out.
@@ -109,7 +132,9 @@ export abstract class LinkedRoles<
     protected abstract readonly options: LinkedRolesOptions<TRecords, TScopes, TKeep>;
 
     #recordSet?: RecordSet<TRecords> | undefined;
-    #built?: OAuthClient<TScopes | 'role_connections.write'> | undefined;
+    // typed with every scope because typescript can't resolve a typed call's arguments while `TScopes`
+    // is still a type parameter
+    #built?: OAuthClient<OAuthScope> | undefined;
 
     /**
      * Returns the plugin class to attach, with your options in it. Attaching `LinkedRoles` directly
@@ -212,6 +237,45 @@ export abstract class LinkedRoles<
         return this.#client().loginUrl();
     }
 
+    public override fetch(request: Request): Promise<Response | undefined> {
+        return this.#client().fetch(request, async (outcome) => {
+            const result = await this.#resultOf(outcome);
+            if (result.kind === 'failed') this.logger.error("Couldn't connect a user", result.error);
+            return (await this.options.onResult?.(result, request)) ?? plainPage(result);
+        });
+    }
+
+    async #resultOf(outcome: LoginOutcome): Promise<LinkedRolesResult> {
+        // the verify link never lists scopes. this is a visitor who added `?scopes=` to it by hand
+        if (outcome.kind === 'unlisted') return { kind: 'invalid' };
+        if (outcome.kind !== 'login') return outcome;
+
+        const { user } = outcome.login;
+        try {
+            const refusal = await this.#connect(user);
+            return refusal === undefined ? { kind: 'connected', user } : { kind: 'refused', user, message: refusal };
+        } catch (error) {
+            return { kind: 'failed', error };
+        } finally {
+            if (!this.#keepsTokens) await this.#client().forget(user.id);
+        }
+    }
+
+    // resolves to the string when `values` refuses the user, and to undefined after a write
+    async #connect(user: APIUser): Promise<string | undefined> {
+        const asUser = this.#client().as(user.id);
+        const returned = await this.options.values({
+            user,
+            // justified: it's the same object for any scopes. `TScopes` only limits which calls compile
+            // for the bot author
+            asUser: asUser as UserCalls<TScopes | 'role_connections.write'>
+        });
+        // a string is the bot author's message for someone they refuse, like 'Use the bot once first.'
+        if (typeof returned === 'string') return returned;
+        await asUser.setRoleConnection(this.#records().connectionBody(returned));
+        return undefined;
+    }
+
     get #keepsTokens(): boolean {
         return this.options.keepTokens === true;
     }
@@ -222,8 +286,8 @@ export abstract class LinkedRoles<
     }
 
     // built on first use since a gateway bot only has its application id after it logs in
-    #client(): OAuthClient<TScopes | 'role_connections.write'> {
-        this.#built ??= new OAuthClient({
+    #client(): OAuthClient<OAuthScope> {
+        this.#built ??= new OAuthClient<OAuthScope>({
             rest: this.core.rest,
             // without keepTokens a login's tokens only have to last until its callback has written
             store: this.#keepsTokens ? this.kv.collection<string>('tokens') : new Map(),

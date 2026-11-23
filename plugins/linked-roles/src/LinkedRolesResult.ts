@@ -1,5 +1,6 @@
 import type { FailedLogin } from '@seedcord/plugin-oauth';
 import type { APIUser } from 'discord-api-types/v10';
+import type { ExcludeStrict } from 'type-fest';
 
 /**
  * How a visit to the callback route ended.
@@ -16,4 +17,4 @@ import type { APIUser } from 'discord-api-types/v10';
 export type LinkedRolesResult =
     | { kind: 'connected'; user: APIUser }
     | { kind: 'refused'; user: APIUser; message: string }
-    | Extract<FailedLogin, { kind: 'denied' | 'invalid' | 'failed' }>;
+    | ExcludeStrict<FailedLogin, { kind: 'unlisted' }>;
