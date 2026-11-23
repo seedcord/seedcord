@@ -22,19 +22,19 @@ function typesWhatValuesGets(): void {
     LinkedRoles.with({
         records,
         scopes: ['connections'],
-        values: ({ user, discord }) => {
+        values: ({ user, asUser }) => {
             expectTypeOf(user).toEqualTypeOf<APIUser>();
-            expectTypeOf(discord.connections()).resolves.toEqualTypeOf<RESTGetAPICurrentUserConnectionsResult>();
+            expectTypeOf(asUser.connections()).resolves.toEqualTypeOf<RESTGetAPICurrentUserConnectionsResult>();
             // @ts-expect-error guilds isn't in scopes
-            void discord.guilds();
+            void asUser.guilds();
             return { platformUsername: user.username, metadata };
         }
     });
     LinkedRoles.with({
         records,
-        values: ({ discord }) => {
+        values: ({ asUser }) => {
             // @ts-expect-error connections needs the scope
-            void discord.connections();
+            void asUser.connections();
             return { metadata };
         }
     });

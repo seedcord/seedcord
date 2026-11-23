@@ -1926,6 +1926,9 @@ importers:
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
+      '@seedcord/logger':
+        specifier: workspace:^
+        version: link:../../packages/logger
       '@seedcord/prose':
         specifier: workspace:^
         version: link:../../tooling/prose

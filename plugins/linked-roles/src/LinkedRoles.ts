@@ -1,7 +1,10 @@
 import { MemoryDriver } from '@seedcord/core';
+import { keepRequestOpenFor } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { OAuthClient } from '@seedcord/plugin-oauth';
+import { Routes } from 'discord-api-types/v10';
 import { Converters, Envapter } from 'envapt';
 
 import { RecordSet } from './RecordSet';
@@ -10,18 +13,23 @@ import type { LinkedRoleRecords, RecordProblems, RoleConnection } from './Linked
 import type { LinkedRolesResult } from './LinkedRolesResult';
 import type { CoreBase } from '@seedcord/core';
 import type { OAuthScope, UserCalls } from '@seedcord/plugin-oauth';
-import type { APIUser } from 'discord-api-types/v10';
+import type { APIUser, RESTPatchCurrentApplicationJSONBody } from 'discord-api-types/v10';
 import type { Promisable } from 'type-fest';
 
 /**
- * What your `values` gets: the user who is connecting, and Discord calls as them.
+ * What your `values` gets about the person who is connecting.
  *
  * @typeParam TScopes - The `scopes` you pass.
  */
 export interface ConnectingUser<TScopes extends OAuthScope = never> {
+    /** Their Discord account. */
     user: APIUser;
-    /** Calls Discord as this user. A typed call like `connections()` needs its scope in your `scopes`. */
-    discord: UserCalls<TScopes | 'role_connections.write'>;
+    /**
+     * Functions that call Discord's API with this person's own token, the one they approved on the consent
+     * screen. `asUser.connections()` returns the accounts they linked on their Discord profile, like GitHub.
+     * A call like that needs its scope in your `scopes`, or it doesn't compile.
+     */
+    asUser: UserCalls<TScopes | 'role_connections.write'>;
 }
 
 /**
@@ -52,16 +60,37 @@ export interface LinkedRolesOptions<
     /**
      * Returns a user's value for every record. Return a string to refuse them, like when they have to do
      * something in your bot first. The plugin shows them the string and doesn't write anything.
+     *
+     * @example
+     * ```ts
+     * // counts merged pull requests for the GitHub account on the person's Discord profile.
+     * // reading their linked accounts needs scopes: ['connections']
+     * values: async ({ asUser }) => {
+     *     const accounts = await asUser.connections();
+     *     const github = accounts.find((account) => account.type === ConnectionService.GitHub && account.verified);
+     *     if (!github) return 'Connect your GitHub account on Discord, then try again.';
+     *     return { platformUsername: github.name, metadata: { merged_prs: await mergedPullRequests(github.name) } };
+     * }
+     * ```
      */
     values(connecting: ConnectingUser<TScopes>): Promisable<RoleConnection<TRecords> | string>;
     /**
      * Returns the page that a visitor gets after the callback route, for every `kind` of
      * {@link LinkedRolesResult}. Without it, they get a plain page that says what happened.
+     *
+     * @example
+     * ```ts
+     * // sends every visitor to your own site, with how it ended in the address
+     * onResult: (result) => Response.redirect(`https://example.com/linked?result=${result.kind}`)
+     * ```
      */
     onResult?: ((result: LinkedRolesResult, request: Request) => Promisable<Response>) | undefined;
 }
 
 const CLIENT_SECRET_KEY = 'DISCORD_CLIENT_SECRET';
+// two deployments of one application overwrite each other's verification URL. once this much time
+// has passed, a deployment's next start sets its own again
+const RESYNC_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Sets up Discord's Linked Roles for your bot. Attach what {@link LinkedRoles.with} returns.
@@ -78,6 +107,9 @@ export abstract class LinkedRoles<
     TKeep extends boolean = false
 > extends Plugin {
     protected abstract readonly options: LinkedRolesOptions<TRecords, TScopes, TKeep>;
+
+    #recordSet?: RecordSet<TRecords> | undefined;
+    #built?: OAuthClient<TScopes | 'role_connections.write'> | undefined;
 
     /**
      * Returns the plugin class to attach, with your options in it. Attaching `LinkedRoles` directly
@@ -123,18 +155,90 @@ export abstract class LinkedRoles<
     public init(): void {
         // read here only to fail at startup when one is missing. otherwise the first visitor gets an error
         void this.core.url;
-        void this.clientSecret();
+        void this.#clientSecret();
 
-        const problem = new RecordSet(this.options.records).firstProblem();
+        const problem = this.#records().firstProblem();
         if (problem !== undefined) this.rejectOptions(problem);
 
-        if (this.options.keepTokens === true && this.kv.driver instanceof MemoryDriver) {
+        if (this.#keepsTokens && this.kv.driver instanceof MemoryDriver) {
             throw new SeedcordTypeError(SeedcordErrorCode.PluginOAuthTokensInMemory, [this.constructor.name]);
         }
     }
 
+    /**
+     * Registers your records with Discord and sets the application's Linked Roles Verification URL to
+     * {@link LinkedRoles.verifyUrl}. It also logs the callback address while it's missing under Redirects
+     * on your application's OAuth2 page since only you can add it there.
+     *
+     * A later start skips those calls unless your records or `server.url` changed, or the last time it
+     * made them was more than a day ago. Every start makes them while the callback address is missing.
+     */
+    public override async ready(): Promise<void> {
+        const portal = this.kv.collection<string>('portal');
+        try {
+            const client = this.#client();
+            const records = this.#records().recordsBody();
+            const verifyUrl = client.loginUrl();
+            const wanted = JSON.stringify({ records, verifyUrl, callback: client.redirectUri });
+            if ((await portal.get('synced')) === wanted) return;
+
+            await this.core.rest.put(Routes.applicationRoleConnectionMetadata(this.core.applicationId), {
+                body: records
+            });
+            await this.core.rest.patch(Routes.currentApplication(), {
+                body: { role_connections_verification_url: verifyUrl } satisfies RESTPatchCurrentApplicationJSONBody
+            });
+            if (!(await client.isRedirectListed())) {
+                this.logger.utils.block(
+                    'Nobody can connect until this address is under Redirects on your OAuth2 page',
+                    [paint.sky(client.redirectUri)],
+                    'warn'
+                );
+                return;
+            }
+            await portal.set('synced', wanted, RESYNC_MS);
+        } catch (error) {
+            // only logging here because if we throw on edge it'd break every interaction
+            this.logger.error("Couldn't set up Linked Roles on Discord", error);
+        }
+    }
+
+    /**
+     * The address that starts the flow for a user. Discord opens it from a server's Linked Roles menu.
+     * Put it in your own command too because that menu doesn't run it again for someone who is
+     * already connected.
+     */
+    public verifyUrl(): string {
+        return this.#client().loginUrl();
+    }
+
+    get #keepsTokens(): boolean {
+        return this.options.keepTokens === true;
+    }
+
+    #records(): RecordSet<TRecords> {
+        this.#recordSet ??= new RecordSet<TRecords>(this.options.records);
+        return this.#recordSet;
+    }
+
+    // built on first use since a gateway bot only has its application id after it logs in
+    #client(): OAuthClient<TScopes | 'role_connections.write'> {
+        this.#built ??= new OAuthClient({
+            rest: this.core.rest,
+            // without keepTokens a login's tokens only have to last until its callback has written
+            store: this.#keepsTokens ? this.kv.collection<string>('tokens') : new Map(),
+            clientId: this.core.applicationId,
+            clientSecret: this.#clientSecret(),
+            baseUrl: this.core.url,
+            routes: { login: 'linked-roles/verify', callback: 'linked-roles/callback' },
+            scopes: ['role_connections.write', ...(this.options.scopes ?? [])],
+            keepOpen: keepRequestOpenFor
+        });
+        return this.#built;
+    }
+
     // envapt throws on workers if you read before the bot binds its env, and plugins get built before that
-    private clientSecret(): string {
+    #clientSecret(): string {
         if (!Envapter.has(CLIENT_SECRET_KEY)) {
             throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, [
                 CLIENT_SECRET_KEY,

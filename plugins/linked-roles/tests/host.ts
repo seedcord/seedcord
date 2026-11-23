@@ -5,10 +5,10 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { CoreBase } from '@seedcord/core';
 
-const APP_ID = '1564002376115949650';
+export const APP_ID = '1564002376115949650';
 
 // a kv driver that isn't the in-memory default, which the plugin refuses to keep tokens in
-class MapDriver {
+export class MapDriver {
     private readonly records = new Map<string, string>();
 
     public get(key: string): string | undefined {
