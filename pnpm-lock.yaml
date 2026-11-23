@@ -1289,6 +1289,9 @@ importers:
       '@seedcord/plugin-kysely':
         specifier: workspace:^
         version: link:../../plugins/kysely
+      '@seedcord/plugin-linked-roles':
+        specifier: workspace:^
+        version: link:../../plugins/linked-roles
       '@seedcord/plugin-oauth':
         specifier: workspace:^
         version: link:../../plugins/oauth

@@ -11,10 +11,12 @@ declare module '@seedcord/http' {
     interface Core {
         db: AttachedPlugin<(typeof Bot)['db']>;
         i18n: AttachedPlugin<(typeof Bot)['i18n']>;
+        linkedRoles: AttachedPlugin<(typeof Bot)['linkedRoles']>;
         oauth: AttachedPlugin<(typeof Bot)['oauth']>;
         stats: AttachedPlugin<(typeof Bot)['stats']>;
     }
     interface SlashRegistry {
+        'linked-role': { options: { action: { kind: 'string'; required: true; choices: ['connect', 'update', 'clear'] } }; cache: 'cached' };
         ping: { options: { detailed: { kind: 'boolean'; required: false } }; cache: 'cached' };
         roll: { options: { sides: { kind: 'integer'; required: false } }; cache: 'cached' };
         servers: { options: {}; cache: 'cached' };
@@ -30,8 +32,12 @@ declare module '@seedcord/http' {
         Confirm: 'application';
     }
     interface PluginTypes {
-        '@seedcord/plugin-i18n': Fits<(typeof Bot)['i18n'], { messages: { 'asked-in': { locale: 'text' }; greet: { name: 'text' }; pings: { count: 'number' }; roll: { actor: 'text'; count: 'text'; sides: 'text'; value: 'text' }; 'roll-again': {}; roundtrip: { ms: 'number' }; uptime: { seconds: 'number' } } }>;
-        '@seedcord/plugin-kysely': Fits<(typeof Bot)['db'], { services: { rolls: (typeof import('./services/Rolls'))['Rolls'] } }>;
+        '@seedcord/plugin-i18n': { messages: { 'asked-in': { locale: 'text' }; greet: { name: 'text' }; pings: { count: 'number' }; roll: { actor: 'text'; count: 'text'; sides: 'text'; value: 'text' }; 'roll-again': {}; roundtrip: { ms: 'number' }; uptime: { seconds: 'number' } } };
+        '@seedcord/plugin-kysely': { services: { rolls: (typeof import('./services/Rolls'))['Rolls'] } };
+    }
+    interface PluginTypeChecks {
+        '@seedcord/plugin-i18n': [Fits<(typeof Bot)['i18n'], { messages: { 'asked-in': { locale: 'text' }; greet: { name: 'text' }; pings: { count: 'number' }; roll: { actor: 'text'; count: 'text'; sides: 'text'; value: 'text' }; 'roll-again': {}; roundtrip: { ms: 'number' }; uptime: { seconds: 'number' } } }>];
+        '@seedcord/plugin-kysely': [Fits<(typeof Bot)['db'], { services: { rolls: (typeof import('./services/Rolls'))['Rolls'] } }>];
     }
     interface DispatchMemberValues {
         askedIn: Awaited<ReturnType<(typeof Bot)['stats']['pings']['dispatchMembers']['askedIn']>>;
