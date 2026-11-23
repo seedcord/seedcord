@@ -53,7 +53,9 @@
     "dependencies": {
         "@seedcord/errors": "workspace:^",
         "@seedcord/plugin-oauth": "workspace:^",
+        "@seedcord/utils": "workspace:^",
         "discord-api-types": "catalog:deps",
+        "es-toolkit": "catalog:deps",
         "type-fest": "catalog:deps"
     },
     "devDependencies": {

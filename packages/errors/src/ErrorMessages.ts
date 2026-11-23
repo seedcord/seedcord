@@ -332,6 +332,8 @@ const messages = {
     [SeedcordErrorCode.PluginOAuthSecretRefused]: () =>
         `Discord refused the client secret. Copy it again from your application's OAuth2 page in the Developer Portal. The OAuth plugin reads it from ${paint.bold('DISCORD_CLIENT_SECRET')}, and ${paint.sky('OAuthClient')} takes it as ${paint.bold('clientSecret')}.`,
 
+    [SeedcordErrorCode.PluginLinkedRolesValueRejected]: (key: string, got: string, fix: string) =>
+        `${paint.bold('values')} returned ${quoted(got)} for ${paint.sky(key)}. ${fix}`,
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 
     [SeedcordErrorCode.CliConfigInvalidExport]: () =>

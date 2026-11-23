@@ -1901,9 +1901,15 @@ importers:
       '@seedcord/plugin-oauth':
         specifier: workspace:^
         version: link:../oauth
+      '@seedcord/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
       discord-api-types:
         specifier: ^0.38.59
         version: 0.38.59
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.2
       type-fest:
         specifier: catalog:deps
         version: 5.10.0

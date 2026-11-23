@@ -291,6 +291,9 @@ export enum SeedcordErrorCode {
     /** Discord refused the client secret on a token call. */
     PluginOAuthSecretRefused = 2504,
 
+    /** A Linked Roles `values` function returned something that the plugin can't send to Discord. */
+    PluginLinkedRolesValueRejected = 2601,
+
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,
 
