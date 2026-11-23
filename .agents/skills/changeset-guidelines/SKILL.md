@@ -139,6 +139,14 @@ Why: a plain present-tense sentence reads like docs describing how things always
 
 ---
 
+## 12. List a package only where the sentence is true for it
+
+Every package in the frontmatter gets the whole summary in its changelog. Say a feature added a helper to `@seedcord/utils` and two error codes to `@seedcord/errors`. Each of those packages gets its own changeset saying what changed there, like "Added the error codes that `seedcord emojis` throws."
+
+Why: people and coding agents read one package's changelog before they bump it. The full `seedcord emojis` paragraph in the `@seedcord/utils` changelog reads as if utils uploads emojis.
+
+---
+
 ## The worked example
 
 One real change, a `Cooldown` keyed a route id that a two-button handler shared. First draft through final.

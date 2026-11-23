@@ -11,18 +11,18 @@
 
 ### ✨ Minor
 
-- Added `seedcord emojis` to upload the images in an `emojis` folder beside `seedcord.config.ts` to your application, and to list, download and delete the emojis already there. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else. ([#474](https://github.com/seedcord/seedcord/pull/474))
-- A plugin can now set `dispatchMembers`, an object of functions that seedcord runs once for each interaction or event. Each result becomes `this.<name>` on handlers and middleware, and as `ctx.<name>` in gates and `Notice.render`. ([#456](https://github.com/seedcord/seedcord/pull/456))
-- Added `@seedcord/plugin-i18n`, which gives every handler a `t` function that formats your Fluent messages in the user's Discord language. `seedcord codegen` types each message's key and variables. With a `commandTranslations` file per locale, the plugin also translates your commands before each deploy. ([#464](https://github.com/seedcord/seedcord/pull/464))
-- Added `@seedcord/plugin-tasks`, which runs the `Task` classes in a folder on a cron pattern, or once later through `tasks.schedule()`. Scheduled tasks are stored in `config.kv`, so they're still there after a restart if your driver keeps its records. Cron jobs and scheduled jobs don't run on their own under `seedcord dev` unless you pass `runInDev: true` to the plugin. ([#434](https://github.com/seedcord/seedcord/pull/434), thanks [@camdzic](https://github.com/camdzic))
+- Added the error codes that `seedcord emojis` throws. ([#474](https://github.com/seedcord/seedcord/pull/474))
+- Added `CorePluginMemberReserved`, `CorePluginMemberThrew`, and `CorePluginAttachedTwice` for a plugin's `dispatchMembers`, and `CliHostContractMismatch` for a CLI that can't load your transport's version. ([#456](https://github.com/seedcord/seedcord/pull/456))
+- Added the `PluginI18n` error codes that `@seedcord/plugin-i18n` throws. ([#464](https://github.com/seedcord/seedcord/pull/464))
+- Added the `PluginTasks` error codes that `@seedcord/plugin-tasks` throws. ([#434](https://github.com/seedcord/seedcord/pull/434), thanks [@camdzic](https://github.com/camdzic))
 
 ### 🩹 Patch
 
-- The bot now reads its token from `BOT_TOKEN` when `DISCORD_BOT_TOKEN` is unset, so a bot moving to seedcord can keep its old variable name. ([`fa309a1`](https://github.com/seedcord/seedcord/commit/fa309a101b75c102a50fd189ad05e9cda52b934c))
+- `@seedcord/core` now reads `BOT_TOKEN_KEYS` from here, and a missing or invalid token's error lists both `DISCORD_BOT_TOKEN` and `BOT_TOKEN`. ([`fa309a1`](https://github.com/seedcord/seedcord/commit/fa309a101b75c102a50fd189ad05e9cda52b934c))
 - `PluginConnectionFailed` now includes the driver's error, like `connect ECONNREFUSED 127.0.0.1:5432`, and the option to check. ([#465](https://github.com/seedcord/seedcord/pull/465))
 - Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
-- Added `@seedcord/plugin-oauth`, which logs people in with Discord and calls the API as them, like `this.core.oauth.as(userId).guilds()`. It keeps each user's tokens encrypted in your bot's `kv` and refreshes them before they expire. ([#473](https://github.com/seedcord/seedcord/pull/473))
-- `@WebhookUrl` now also takes a function that returns the url, like `@WebhookUrl(() => settings.banLogWebhook)`, for a url you keep outside the environment. ([#468](https://github.com/seedcord/seedcord/pull/468))
+- Added the error codes that `@seedcord/plugin-oauth` throws. ([#473](https://github.com/seedcord/seedcord/pull/473))
+- The missing `@WebhookUrl` error now says it also takes a function that returns the URL. ([#468](https://github.com/seedcord/seedcord/pull/468))
 
 ## 0.15.1
 
