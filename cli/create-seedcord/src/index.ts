@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import process from 'node:process';
 
-import { PRODUCTION_SITES } from '@seedcord/brand';
+import { DISCORD_URL, PRODUCTION_SITES } from '@seedcord/brand';
 import { Prompter, unlessCancelled } from '@seedcord/cli-prompts';
 import { paint } from '@seedcord/errors';
 
@@ -131,6 +131,7 @@ async function reportOutcome(
     // powershell and cmd split a command wrapped with a trailing `\`
     output.row('again', [paint.bold(reproducingCommand(answers, manager.name))]);
     output.row('guide', [paint.sky(PRODUCTION_SITES.guide.url)]);
+    output.row('discord', [paint.sky(DISCORD_URL)]);
     output.line();
     output.line(
         paint.mute(
