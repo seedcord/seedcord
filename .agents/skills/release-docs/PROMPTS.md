@@ -141,7 +141,7 @@ Worktree: <path>. Guide pages: apps/guide/content/docs/<tab>/. The dev server ru
 ## Check every page you touch
 
 1. curl the page with its trailing slash: 200, and no "Errors were thrown" in the html.
-2. Ten twoslash fences per page at most.
+2. Fifteen twoslash fences per page at most.
 3. Every ref: link target exists.
 4. vp fmt <files>.
 

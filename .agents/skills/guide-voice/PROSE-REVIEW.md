@@ -196,6 +196,12 @@ finding, and a tic is a habit rather than a single sentence.
     decorator option and the generic are both hand-written and have to agree.
     Give the repair, which states the obligation and what enforces it.
 
+    The same miss covers any person the page talks about, like a bot's user or
+    a server admin. Plain present reads as something that happens by itself.
+    "Discord doesn't give the role back. The member claims it again" reads as
+    if the claim follows, where nothing happens until the member acts. Report
+    it and give the repair with `has to` or `needs to`.
+
 11. A rule with the reason left out. The page tells the reader to do something a
     certain way and never says what goes wrong otherwise. A recommendation
     hedged into "it's recommended to" or "that is rarely necessary" with no
