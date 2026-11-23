@@ -41,7 +41,7 @@ In a terminal you get a link to each section. An agent runs it without one of co
 
 Your agent has never seen seedcord. It's newer than whatever your model was trained on, so naturally it writes the discord.js it remembers.
 
-To be fair, a lot of that gets caught. A route or an option that doesn't exist is a compile error, and lint catches more. What doesn't get caught is the agent rebuilding something seedcord already has. I had one hand-write pagination. It compiled, lint passed, and it worked, so nothing told it that seedcord ships pagination (well I did, annoyingly, but that's besides the point).
+To be fair, a lot of that gets caught. A route or an option that doesn't exist is a compile error, and lint catches more. What doesn't get caught is the agent rebuilding something seedcord already has. I had one hand-write pagination. It compiled, lint passed, and it worked, so nothing told it that seedcord ships pagination (well I did, begrudgingly, but that's besides the point).
 
 Regardless, the agent has to look things up before it writes, and it doesn't know what the page is called. That's what `ask` is for. A new project's `AGENTS.md` tells the agent to run it before hand-writing anything bigger than a plain reply.
 

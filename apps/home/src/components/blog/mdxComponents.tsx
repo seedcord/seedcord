@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { CodeCard } from '#components/code/CodeCard';
 import { Code } from '#components/ui/Code';
 import { SiteLink } from '#components/ui/SiteLink';
-import { CODE_MARK_LIGHT } from '#lib/code/marks';
+import { CODE_MARK_PROSE } from '#lib/code/marks';
 
 import type { HighlightLanguage } from '@seedcord/ui/shiki';
 import type { MDXComponents } from 'mdx/types';
@@ -98,7 +98,7 @@ const PROSE = tw`text-lg/relaxed text-(--seed-dark)/85`;
 
 export const mdxComponents = {
     pre: Fence,
-    code: ({ children }) => <Code className={cn(CODE_MARK_LIGHT)}>{children}</Code>,
+    code: ({ children }) => <Code className={cn(CODE_MARK_PROSE)}>{children}</Code>,
     h2: headingFor('h2'),
     h3: headingFor('h3'),
     h4: headingFor('h4'),
