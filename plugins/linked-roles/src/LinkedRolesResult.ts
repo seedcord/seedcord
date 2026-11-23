@@ -1,0 +1,19 @@
+import type { FailedLogin } from '@seedcord/plugin-oauth';
+import type { APIUser } from 'discord-api-types/v10';
+
+/**
+ * How a visit to the callback route ended.
+ *
+ * - `connected`: the plugin wrote the user's role connection.
+ * - `refused`: your `values` returned a string, which is `message`. The plugin didn't write anything.
+ * - `denied`: the visitor pressed cancel on Discord's consent screen, or Discord refused the request.
+ *   `error` is Discord's reason, like `access_denied`.
+ * - `invalid`: the link expired, the page was reloaded, or the visit didn't come from a link that this
+ *   browser opened.
+ * - `failed`: something threw, like the token exchange, your `values`, or the write to Discord. `error`
+ *   is what was thrown.
+ */
+export type LinkedRolesResult =
+    | { kind: 'connected'; user: APIUser }
+    | { kind: 'refused'; user: APIUser; message: string }
+    | Extract<FailedLogin, { kind: 'denied' | 'invalid' | 'failed' }>;

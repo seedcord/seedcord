@@ -1,4 +1,4 @@
-import { ApplicationRoleConnectionMetadataType as MetadataType } from 'discord-api-types/v10';
+import { ApplicationRoleConnectionMetadataType as RecordType } from 'discord-api-types/v10';
 
 import type { LocalizationMap } from 'discord-api-types/v10';
 import type {
@@ -20,10 +20,12 @@ import type {
  */
 export interface LinkedRoleRecord {
     /**
-     * How Discord compares the value. `values` returns a whole number for an integer type, a `Date` for
-     * a datetime type, and `true` or `false` for a boolean type.
+     * A member of `RecordType`, which sets how Discord compares the value. `values` returns a whole number
+     * for an integer type, a `Date` for a datetime type, and `true` or `false` for a boolean type.
+     *
+     * `RecordType` is `ApplicationRoleConnectionMetadataType` from `discord-api-types` under a shorter name.
      */
-    type: MetadataType;
+    type: RecordType;
     /** What Discord shows for the record. 100 characters at most. */
     name: string;
     /** A longer explanation of the record. 200 characters at most. */
@@ -81,15 +83,15 @@ interface KindValues {
 export type RecordKind = keyof KindValues;
 
 export const RECORD_KINDS = {
-    [MetadataType.IntegerLessThanOrEqual]: 'integer',
-    [MetadataType.IntegerGreaterThanOrEqual]: 'integer',
-    [MetadataType.IntegerEqual]: 'integer',
-    [MetadataType.IntegerNotEqual]: 'integer',
-    [MetadataType.DatetimeLessThanOrEqual]: 'datetime',
-    [MetadataType.DatetimeGreaterThanOrEqual]: 'datetime',
-    [MetadataType.BooleanEqual]: 'boolean',
-    [MetadataType.BooleanNotEqual]: 'boolean'
-} as const satisfies Record<MetadataType, RecordKind>;
+    [RecordType.IntegerLessThanOrEqual]: 'integer',
+    [RecordType.IntegerGreaterThanOrEqual]: 'integer',
+    [RecordType.IntegerEqual]: 'integer',
+    [RecordType.IntegerNotEqual]: 'integer',
+    [RecordType.DatetimeLessThanOrEqual]: 'datetime',
+    [RecordType.DatetimeGreaterThanOrEqual]: 'datetime',
+    [RecordType.BooleanEqual]: 'boolean',
+    [RecordType.BooleanNotEqual]: 'boolean'
+} as const satisfies Record<RecordType, RecordKind>;
 
 /**
  * A value for every record, typed by the record's `type`.

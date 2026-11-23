@@ -1,7 +1,7 @@
 import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { ApplicationRoleConnectionMetadataType as MetadataType } from 'discord-api-types/v10';
+import { ApplicationRoleConnectionMetadataType as RecordType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { RecordSet } from '#src/RecordSet';
@@ -10,18 +10,18 @@ import type { LinkedRoleRecords } from '#src/LinkedRoleRecord';
 
 const records = {
     merged_prs: {
-        type: MetadataType.IntegerGreaterThanOrEqual,
+        type: RecordType.IntegerGreaterThanOrEqual,
         name: 'Merged PRs',
         description: 'Pull requests merged',
         nameLocalizations: { fr: 'PR fusionnées' }
     },
-    is_maintainer: { type: MetadataType.BooleanEqual, name: 'Maintainer', description: 'Maintains seedcord' },
-    first_merge: { type: MetadataType.DatetimeGreaterThanOrEqual, name: 'Since', description: 'First merge' }
+    is_maintainer: { type: RecordType.BooleanEqual, name: 'Maintainer', description: 'Maintains seedcord' },
+    first_merge: { type: RecordType.DatetimeGreaterThanOrEqual, name: 'Since', description: 'First merge' }
 } satisfies LinkedRoleRecords;
 
 const valid = { merged_prs: 12, is_maintainer: true, first_merge: new Date(0) };
 
-const one = { type: MetadataType.IntegerEqual, name: 'Level', description: 'Your level' };
+const one = { type: RecordType.IntegerEqual, name: 'Level', description: 'Your level' };
 
 describe('RecordSet', () => {
     it("accepts records that fit Discord's limits", () => {
@@ -46,20 +46,20 @@ describe('RecordSet', () => {
         expect(new RecordSet(records).recordsBody()).toEqual([
             {
                 key: 'merged_prs',
-                type: MetadataType.IntegerGreaterThanOrEqual,
+                type: RecordType.IntegerGreaterThanOrEqual,
                 name: 'Merged PRs',
                 description: 'Pull requests merged',
                 name_localizations: { fr: 'PR fusionnées' }
             },
             {
                 key: 'is_maintainer',
-                type: MetadataType.BooleanEqual,
+                type: RecordType.BooleanEqual,
                 name: 'Maintainer',
                 description: 'Maintains seedcord'
             },
             {
                 key: 'first_merge',
-                type: MetadataType.DatetimeGreaterThanOrEqual,
+                type: RecordType.DatetimeGreaterThanOrEqual,
                 name: 'Since',
                 description: 'First merge'
             }

@@ -59,6 +59,7 @@
         "type-fest": "catalog:deps"
     },
     "devDependencies": {
+        "@discordjs/rest": "catalog:deps",
         "@seedcord/core": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/prose": "workspace:^",
