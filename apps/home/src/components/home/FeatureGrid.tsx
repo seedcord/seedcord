@@ -1,6 +1,7 @@
 import { cn, Icon, tw } from '@seedcord/ui';
 import {
     AtSign,
+    BadgeCheck,
     Blocks,
     Binary,
     Bot,
@@ -220,6 +221,7 @@ const GROUPS: Group[] = [
             { icon: Languages, label: 'i18n', gloss: "replies and commands in each user's language" },
             { icon: CalendarClock, label: 'Tasks', gloss: 'cron jobs and scheduled tasks' },
             { icon: UserRoundKey, label: 'OAuth', gloss: 'Discord login, and calls to Discord as that user' },
+            { icon: BadgeCheck, label: 'Linked Roles', gloss: 'server roles from values your bot has' },
             { icon: Leaf, label: 'Mongoose', gloss: 'MongoDB, services typed by key' },
             { icon: Database, label: 'Kysely', gloss: 'SQLite, Postgres, or MySQL, queries typed off your schema' }
         ]
