@@ -1,7 +1,7 @@
 {
     "title": "Plugins",
     "root": true,
-    "closed": ["Mongoose", "Kysely", "Tasks", "i18n"],
+    "closed": ["Mongoose", "Kysely", "Tasks", "i18n", "OAuth", "Linked Roles"],
     "pages": [
         "index",
         "typing",
@@ -16,6 +16,9 @@
         "---OAuth---",
         "oauth",
         "oauth-calls",
+        "---Linked Roles---",
+        "linked-roles",
+        "linked-roles-updates",
         "---Mongoose---",
         "mongoose",
         "mongoose-services",

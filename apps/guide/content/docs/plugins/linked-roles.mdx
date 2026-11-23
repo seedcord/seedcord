@@ -1,0 +1,266 @@
+---
+title: Linked Roles
+description: Give members server roles based on what your bot has for them outside Discord, like matches won in your game or a GitHub account, through Discord's Linked Roles.
+---
+
+Discord's [Linked Roles](https://docs.discord.com/developers/tutorials/configuring-app-metadata-for-linked-roles) let a server put a requirement on a role that only your bot can answer, like "100 matches won or more" in your game. A member who meets it can claim the role. [`@seedcord/plugin-linked-roles`](ref:plugin-linked-roles) serves that whole flow from your bot.
+
+A record is one thing that a server can set a requirement on, like matches won or merged pull requests. By hand, you'd register your records with Discord and serve a verification route and a callback route. You'd also log each member in with OAuth2 and send their values in the string format that Discord takes for each type. The plugin does all of that, and it checks the values you return against the records you declared.
+
+<Shell add="@seedcord/plugin-linked-roles" />
+
+## Attaching the plugin
+
+```ts twoslash hovers title="src/bot.ts"
+// ---cut-start---
+// @filename: players.ts
+export declare const players: {
+    byDiscordId(
+        userId: string
+    ): Promise<{ name: string; wins: number } | undefined>;
+};
+
+// @filename: bot.ts
+// ---cut-end---
+import { Seedcord } from '@seedcord/gateway';
+import {
+    LinkedRoles,
+    RecordType
+} from '@seedcord/plugin-linked-roles';
+import { GatewayIntentBits } from 'discord.js';
+
+import { players } from './players';
+
+const Ranked = LinkedRoles.with({
+    records: {
+        matches_won: {
+            type: RecordType.IntegerGreaterThanOrEqual,
+            name: 'Matches won',
+            description: 'or more matches won'
+        }
+    },
+    values: async ({ user }) => {
+        const player = await players.byDiscordId(user.id);
+        if (!player) {
+            return { refuse: 'Link Discord in the game first.' };
+        }
+        return {
+            platformUsername: player.name,
+            metadata: { matches_won: player.wins }
+        };
+    }
+});
+
+export const seedcord = new Seedcord({
+    // the address people reach your bot at
+    server: { url: 'https://bot.example.com' },
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+}).attach('linkedRoles', Ranked);
+
+export default seedcord;
+```
+
+In `records`, you list what a server can set a requirement on. This bot has one record, `matches_won`. The plugin runs `values` for each person who connects, and you return their value for every record. `players` in the sample is a file of your own that looks up your game's player by their Discord id. A member who hasn't linked Discord in the game doesn't have a player, so `values` refuses them with a message.
+
+[`LinkedRoles.with()`](ref:plugin-linked-roles/LinkedRoles.with) returns a plugin class with your options in it, and `Ranked` is that class. You attach it like any other plugin. That's also how `matches_won` in `metadata` gets typed as a number from the record's `type`. The plugin authoring guide shows [how to write a `with()`](/writing-plugins/typing#taking-the-type-from-an-option) for a plugin of your own.
+
+[`LinkedRoles`](ref:plugin-linked-roles/LinkedRoles) works on gateway, on http, and on [Cloudflare Workers](/build/workers). It needs these, and a deployed bot doesn't start without them:
+
+{/* prettier-ignore-start */}
+
+| it needs | where it comes from | without it |
+| --- | --- | --- |
+| your bot's public address | `server.url` in the config, as in the sample. You can leave it out under `seedcord dev`, which uses your local or tunnel address | `CoreServerUrlUnset` |
+| your application's client secret | `DISCORD_CLIENT_SECRET` in the environment | `ConfigMissingEnv` |
+
+{/* prettier-ignore-end */}
+
+Copy the client secret from your application's **OAuth2** page in the [Developer Portal](https://discord.com/developers/applications).
+
+<Callout type="warning">
+
+Discord [only redirects to an address on your application's list](https://docs.discord.com/developers/topics/oauth2#authorization-code-grant), and a bot can't add one for you. On the same **OAuth2** page, add your callback address under **Redirects**. It's `server.url` followed by `linked-roles/callback`. For the sample, that's `https://bot.example.com/linked-roles/callback`.
+
+</Callout>
+
+If the address isn't on the list, the plugin logs a warning at startup with the exact address to paste.
+
+```txt output
+Nobody can connect until this address is under Redirects on your OAuth2 page
+https://bot.example.com/linked-roles/callback
+```
+
+When your bot starts, the plugin also registers your records with Discord and sets your application's [Linked Roles Verification URL](https://docs.discord.com/developers/resources/application-role-connection-metadata) to `server.url` followed by `linked-roles/verify`. A later start skips those calls unless your records or `server.url` changed, or the last time it made them was more than a day ago.
+
+<Callout type="warning">
+
+Use a separate application for development. Under `seedcord dev`, the plugin sets the verification URL to your local or tunnel address. On your production application, every member's link would then open your development bot. The development application needs its own client secret, and its own callback address under **Redirects**.
+
+</Callout>
+
+<Callout type="transport" only="edge">
+
+Set a `kv` driver on a worker, like [D1 through unstorage](/built-ins/drivers#on-cloudflare-workers). The plugin saves in `kv` that it registered your records. On the default driver every isolate starts with an empty `kv`, so each one registers them again.
+
+</Callout>
+
+## Declaring records
+
+You give each record a `type` from `RecordType`, a `name`, and a `description`. The type sets how Discord compares a member's value to the role's requirement. It also sets what you return for that record from `values`.
+
+{/* prettier-ignore-start */}
+
+| `values` returns | for a `RecordType` of | the server sets |
+| --- | --- | --- |
+| a whole number | `IntegerLessThanOrEqual`, `IntegerGreaterThanOrEqual`, `IntegerEqual`, `IntegerNotEqual` | a number to compare it to |
+| a `Date` | `DatetimeLessThanOrEqual`, `DatetimeGreaterThanOrEqual` | a number of days before today |
+| `true` or `false` | `BooleanEqual`, `BooleanNotEqual` | nothing, the requirement is the record itself |
+
+{/* prettier-ignore-end */}
+
+`RecordType` is `ApplicationRoleConnectionMetadataType` from `discord-api-types` under a shorter name. Discord's docs explain [what each type compares](https://docs.discord.com/developers/resources/application-role-connection-metadata#application-role-connection-metadata-object-application-role-connection-metadata-type).
+
+Discord [takes five records at most](https://docs.discord.com/developers/resources/application-role-connection-metadata#update-application-role-connection-metadata-records). A key can only use `a-z`, `0-9`, and `_`, and takes at most 50 characters. A name takes at most 100 characters and a description at most 200. If a record breaks one of these, your bot fails to compile, and the error message gives the limit. For a key or text that isn't a literal, like one you build from a variable, the bot stops at startup with `PluginOptionsRejected`.
+
+To show a record in other languages, add `nameLocalizations` and `descriptionLocalizations`, keyed by Discord locale code. [`LinkedRoleRecords`](ref:plugin-linked-roles/LinkedRoleRecords) is the type of the whole `records` object.
+
+```ts twoslash
+import { RecordType } from '@seedcord/plugin-linked-roles';
+
+import type { LinkedRoleRecords } from '@seedcord/plugin-linked-roles';
+
+export const records = {
+    matches_won: {
+        type: RecordType.IntegerGreaterThanOrEqual,
+        name: 'Matches won',
+        description: 'or more matches won',
+        nameLocalizations: {
+            fr: 'Matchs gagnés',
+            de: 'Gewonnene Spiele'
+        }
+    }
+} satisfies LinkedRoleRecords;
+```
+
+## How a member gets the role
+
+1. A server admin opens **Server Settings**, then **Roles**, picks a role, and under **Links** clicks **Add requirement**. They pick your bot and set a value for one of your records. [Discord's tutorial](https://docs.discord.com/developers/tutorials/configuring-app-metadata-for-linked-roles#trying-it-out) walks through it.
+2. A member clicks the server name, then **Linked Roles**, and clicks the role.
+3. Discord sends their browser to your bot's `linked-roles/verify` route, which redirects them to Discord's consent screen.
+4. After they approve, Discord sends them to `linked-roles/callback`. The plugin runs your `values` for them and writes what it returns to Discord.
+5. Back in Discord, they finish claiming the role.
+
+The callback only finishes a visit that the same browser started at the verify route, the same way the [OAuth plugin's login](/plugins/oauth#sending-someone-to-the-login) does. A callback from any other browser gets the `invalid` result [in the table below](#the-page-after-connecting).
+
+## What values gets
+
+[`values`](ref:plugin-linked-roles/LinkedRolesOptions.values) gets a [`ConnectingUser`](ref:plugin-linked-roles/ConnectingUser). It has the Discord `user` who is connecting, and `asUser`, which calls Discord's API with that person's own token. With `'connections'` in `scopes`, `asUser.connections()` returns the accounts they linked on their Discord profile.
+
+```ts twoslash hovers title="src/bot.ts"
+// ---cut-start---
+// @filename: github.ts
+export declare function mergedPullRequests(
+    login: string
+): Promise<number>;
+
+// @filename: bot.ts
+// ---cut-end---
+import {
+    LinkedRoles,
+    RecordType
+} from '@seedcord/plugin-linked-roles';
+import { ConnectionService } from 'discord.js';
+
+import { mergedPullRequests } from './github';
+
+export const Contributors = LinkedRoles.with({
+    records: {
+        merged_prs: {
+            type: RecordType.IntegerGreaterThanOrEqual,
+            name: 'Merged pull requests',
+            description: 'or more merged pull requests'
+        }
+    },
+    scopes: ['connections'],
+    values: async ({ asUser }) => {
+        const accounts = await asUser.connections();
+        const github = accounts.find(
+            (account) =>
+                account.type === ConnectionService.GitHub &&
+                account.verified
+        );
+        if (!github) {
+            return { refuse: 'Connect GitHub on Discord first.' };
+        }
+        return {
+            platformUsername: github.name,
+            metadata: {
+                merged_prs: await mergedPullRequests(github.name)
+            }
+        };
+    }
+});
+```
+
+`asUser.connections()` compiles because the sample lists `'connections'` in `scopes`. The consent screen asks for `identify` and `role_connections.write` on every visit, plus the `scopes` you list. `asUser` has the same calls as the OAuth plugin's `as()`, and [Scopes and calls](/plugins/oauth-calls#the-calls-for-your-scopes) lists every one.
+
+From `values`, you return one of two things:
+
+- **The member's values**, a [`RoleConnection`](ref:plugin-linked-roles/RoleConnection). In `metadata`, you set a value for every record, of the kind its `type` takes. `platformName` and `platformUsername` are optional, and Discord shows them with the connection. `platformName` takes at most 50 characters and `platformUsername` at most 100.
+- **A refusal**, a [`Refusal`](ref:plugin-linked-roles/Refusal). If you return `{ refuse: 'your message' }`, the plugin doesn't write anything to Discord, and it shows the member your message.
+
+The plugin converts the values to the strings Discord takes. If a value doesn't fit, like a number with a fraction for an integer record, the plugin throws `PluginLinkedRolesValueRejected`. The member then gets the `failed` result [in the table below](#the-page-after-connecting).
+
+<Callout type="warning">
+
+If `values` reads the bot that its class gets attached to, like another plugin on it, TypeScript reports that both are [referenced in their own initializer](/plugins/typing#referenced-directly-or-indirectly-in-its-own-initializer). That section has two ways to fix it.
+
+</Callout>
+
+## The page after connecting
+
+Without [`onResult`](ref:plugin-linked-roles/LinkedRolesOptions.onResult), the member gets a plain page that says what happened. To show your own page or send them somewhere else, return a `Response` from `onResult`.
+
+```ts twoslash
+import {
+    LinkedRoles,
+    RecordType
+} from '@seedcord/plugin-linked-roles';
+// ---cut---
+export const WithOwnPage = LinkedRoles.with({
+    records: {
+        matches_won: {
+            type: RecordType.IntegerGreaterThanOrEqual,
+            name: 'Matches won',
+            description: 'or more matches won'
+        }
+    },
+    values: () => ({ metadata: { matches_won: 12 } }),
+    onResult: (result) =>
+        Response.redirect(
+            `https://example.com/linked?result=${result.kind}`
+        )
+});
+```
+
+`onResult` gets a [`LinkedRolesResult`](ref:plugin-linked-roles/LinkedRolesResult) and then the callback's `Request`. It runs for every kind of result, and it has to return a `Response` for each:
+
+{/* prettier-ignore-start */}
+
+| `result.kind` | what happened | the plain page's status |
+| --- | --- | --- |
+| `connected` | the plugin wrote the member's values. `result.user` is who connected | 200 |
+| `refused` | your `values` returned a refusal. `result.message` is its text | 200, with your message |
+| `denied` | the member pressed **Cancel**, or Discord refused the request. `result.error` has Discord's reason | 400 |
+| `invalid` | the link expired, the page was reloaded, or this browser didn't start the visit | 400 |
+| `failed` | something threw, like your `values` or the write to Discord. The plugin logs `result.error` before it calls `onResult` | 500 |
+
+{/* prettier-ignore-end */}
+
+The plugin only writes a member's values when they connect. [Updating values](/plugins/linked-roles-updates) covers writing them again after they change, and what Discord does with the role then.

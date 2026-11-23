@@ -57,6 +57,7 @@ export default {
                 '@keyv/sqlite',
                 '@seedcord/plugin-i18n',
                 '@seedcord/plugin-kysely',
+                '@seedcord/plugin-linked-roles',
                 '@seedcord/plugin-mongoose',
                 '@seedcord/plugin-oauth',
                 '@seedcord/plugin-tasks',
