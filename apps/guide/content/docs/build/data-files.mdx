@@ -3,7 +3,7 @@ title: Data files
 description: Ship JSON, images, and other non-code files with your bot by listing their folders in files, then read them with readFiles in dev and in production.
 ---
 
-You keep translations in `src/locales/en.json` and `src/locales/de.json`, plus a card background in `assets/card.png` beside `src`. You read them with `fs.readFile`. That worked under `seedcord dev` and broke after `seedcord build`. The build only keeps files something imports, so it left out the JSON and the PNG. A path built from `import.meta.dirname` also pointed into `dist`, where those files never were.
+Say your bot keeps translations in `src/locales/en.json` and `src/locales/de.json`, plus a card background in `assets/card.png` beside `src`. If you read them with `fs.readFile`, they load under `seedcord dev` and fail after `seedcord build`. The build only keeps files that something imports, so the JSON and the PNG aren't in the build. A path built from `import.meta.dirname` also points into `dist`, where those files never are.
 
 To ship the JSON and the PNG, list their folders under `files` in `seedcord.config.ts`. Those folders go into the build with your code:
 
@@ -18,7 +18,7 @@ export default defineConfig({
 });
 ```
 
-`'./locales'` resolves against `root`, so it means `src/locales`, subfolders included. A folder beside `root` works too, like `'../assets'` for `assets/card.png`, as long as it's inside the folder that holds `seedcord.config.ts`.
+`'./locales'` resolves against `root`, so it means `src/locales`, subfolders included. A folder beside `root` works too, like `'../assets'` for `assets/card.png` as long as it's inside the folder that holds `seedcord.config.ts`.
 
 ## Reading data files
 
@@ -79,7 +79,7 @@ Keep the loop in code that runs after the bot starts, like a startup task, a plu
 | you pass | it throws | the fix |
 | --- | --- | --- |
 | a folder `files` doesn't list, like `'./other'` | `CoreDirectoryNotListed` | add it to `files` |
-| a folder the build skips, like `'./locales/.cache'` | `CoreDirectorySkipped` | move the files out of the dot-folder |
+| a folder that the build skips, like `'./locales/.cache'` | `CoreDirectorySkipped` | move the files out of the dot-folder |
 | a relative path in a test or `tsx` run | `CoreDirectoryRootUnknown` | pass an absolute path, or run the bot through `seedcord dev` or the build |
 
 {/* prettier-ignore-end */}
@@ -90,6 +90,6 @@ The CLI checks `files` too. Every command throws `CliListedFolderUnusable` for a
 
 ## Code files and plugin files
 
-You don't list code in `files`. The build includes every `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs` file under `root`. `readFiles` leaves those files out, even inside a listed folder. seedcord loads your handler folders through [`importFiles`](ref:utils/importFiles), which imports every code file in a folder.
+You don't list code in `files`. The build includes every `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs` file under `root`. `readFiles` skips those files, even inside a listed folder. seedcord loads your handler folders through [`importFiles`](ref:utils/importFiles), which imports every code file in a folder.
 
-A plugin you publish can't use `files`, because the bot that installs the plugin writes that list. Import the plugin's data files from its own code, like `./defaults.json`, so the plugin's build includes them in the package. [Loading a bot's files](/writing-plugins/files) covers a plugin that reads the bot's own folders.
+A plugin you publish can't use `files` because the bot that installs the plugin writes that list. Import the plugin's data files from its own code, like `./defaults.json`, so the plugin's build includes them in the package. [Loading a bot's files](/writing-plugins/files) covers a plugin that reads the bot's own folders.

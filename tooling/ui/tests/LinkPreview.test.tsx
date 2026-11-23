@@ -1,5 +1,5 @@
 import { toComponentEmbedJson } from 'discord-component-embed';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { PREVIEW_EMOJI, PreviewCard } from '#src/LinkPreview';
 
@@ -8,7 +8,7 @@ import type { ReactElement } from 'react';
 const card = (body: string): ReactElement => (
     <PreviewCard
         accent={0}
-        breadcrumb={['docs', '@seedcord/plugin-kysely-postgres', 'v0.5.2']}
+        breadcrumb={['docs', '@seedcord/plugin-kysely', 'v0.5.2']}
         breadcrumbEmoji={PREVIEW_EMOJI.docs}
         title="OmitIndexSignature"
         titleEmoji={PREVIEW_EMOJI.type}

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { interactionRoutesOf, storeInteractionRoute } from '#src/internal.index';
 import { InteractionKind } from '#src/metadataKeys';
@@ -16,7 +16,7 @@ describe('interactionRoutesOf', () => {
         ]);
     });
 
-    it('returns nothing for an undecorated constructor', () => {
+    it('returns an empty list for an undecorated constructor', () => {
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- a bare metadata carrier
         class Bare {}
 

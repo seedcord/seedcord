@@ -14,15 +14,15 @@ import type { TunnelKind, TunnelStatus } from './TunnelCoordinator';
 import type { ILogger } from '@seedcord/types';
 
 const PASTE_HINT = 'The tunnel is still up, so try pasting that URL into the dashboard.';
-const RESTART_HINT = 'Restart for a fresh hostname, or set `tunnel` to an https URL you already serve.';
-const NO_PORT_HINT = `seedcord didn't start a tunnel, since the bot runs with ${paint.bold('port: false')} and cloudflared doesn't have a port to forward to. Give the bot a port while you develop, or set ${paint.amber('tunnel')} to the URL of the server that serves your bot: ${paint.sky(PRODUCTION_SITES.guide.at('build/embed'))}`;
+const RESTART_HINT = 'Restart for a fresh hostname, or set `dev.tunnel` to an https URL you already serve.';
+const NO_PORT_HINT = `seedcord didn't start a tunnel since the bot runs with ${paint.bold('server.port: false')} and cloudflared doesn't have a port to forward to. Give the bot a port while you develop, or set ${paint.amber('dev.tunnel')} to the URL of the server that serves your bot: ${paint.sky(PRODUCTION_SITES.guide.at('build/embed'))}`;
 
 export function missingCloudflaredHint(platform: NodeJS.Platform): string {
     const arrow = paint.mute('→');
     return [
         `${paint.sky.bold('cloudflared')} is missing, so a tunnel can't be set up for you. Discord won't have any url to reach this bot`,
         `${arrow} install it with ${paint.mint.bold(installHint(platform))}`,
-        `${arrow} or set ${paint.amber('tunnel')} to an https url you already serve, like ${paint.sky.italic('https://bot.example.com')}`
+        `${arrow} or set ${paint.amber('dev.tunnel')} to an https url you already serve, like ${paint.sky.italic('https://bot.example.com')}`
     ].join('\n');
 }
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { rssFeed } from '#lib/blog/feed';
 import { POST } from '#tests/fixtures/post';

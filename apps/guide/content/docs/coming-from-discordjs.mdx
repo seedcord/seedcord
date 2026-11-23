@@ -1,0 +1,285 @@
+---
+title: Coming from discord.js
+description: Migrate a discord.js bot to seedcord by finding what replaces your interactionCreate switch, collectors, and the rest, then add seedcord to your repo.
+---
+
+A gateway bot runs on discord.js, so your client, your builders, and the interactions your handlers receive are the same objects you use today. To migrate, you move your code into handler classes and one config object.
+
+## What replaces your discord.js code
+
+<Tabs>
+<Tab label="Interactions">
+
+{/* prettier-ignore-start */}
+
+| in discord.js | in seedcord |
+| --- | --- |
+| a `switch` inside `interactionCreate` | a [`SlashHandler`](/commands) per command |
+| a collector on buttons | a [`ButtonHandler`](/components/buttons) for a `CustomId` |
+| prefix commands in `messageCreate` | slash commands, or an [`EventHandler`](/events/messages) on gateway |
+| `client.on()` for other events | an [`EventHandler`](/events) per event, on gateway |
+
+{/* prettier-ignore-end */}
+
+</Tab>
+<Tab label="Replies and checks">
+
+{/* prettier-ignore-start */}
+
+| in discord.js | in seedcord |
+| --- | --- |
+| a `try`/`catch` that replies with an error | throw a [`Notice`](/replying/throwing) |
+| choosing `reply()` or `deferReply()` | [`this.reply()` or `this.defer()`](/replying) |
+| a `Map` of cooldown timestamps | the [`Cooldown`](/checks/cooldown) gate |
+| permission `if`s at the top of a handler | [`Gated`](/checks/permissions) with `RequirePermissions` |
+
+{/* prettier-ignore-end */}
+
+</Tab>
+<Tab label="State and startup">
+
+{/* prettier-ignore-start */}
+
+| in discord.js | in seedcord |
+| --- | --- |
+| a database client or a shared `Map` | a [`Plugin`](/plugins), or [`this.core.kv`](/built-ins) |
+| `console.log` | a [`Logger`](/built-ins/logging) |
+| a deploy-commands script | the bot [deploys on start](/commands/deployed) |
+| `client.login()` in the entry file | [`new Seedcord({ ... })`](/first-bot#your-bots-settings) in `bot.ts` |
+
+{/* prettier-ignore-end */}
+
+</Tab>
+</Tabs>
+
+Take the `switch` first. In plain discord.js, you write one listener that receives every interaction and branches on the command name.
+
+```ts plain title="index.ts"
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    switch (interaction.commandName) {
+        case 'ping':
+            await interaction.reply('Pong');
+            break;
+        case 'ban': {
+            const target = interaction.options.getUser(
+                'target',
+                true
+            );
+            await interaction.reply(`Banned ${target.username}.`);
+            break;
+        }
+    }
+});
+```
+
+In seedcord, you move each `case` into its own class. The `ban` case becomes this one.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+
+        await this.reply(`Banned ${target.username}.`);
+    }
+}
+```
+
+You write the name that the `switch` compares in `@SlashRoute('ban')` and again in `SlashHandler<'ban'>`, and the compiler catches a mismatch. You call `getUser('target')` without `true` because [`seedcord codegen`](/tooling/codegen) reads your command file and types `target` as required, so `target` is never `null`. You write a button's `case` as a `ButtonHandler` with [`@ButtonRoute`](ref:core/ButtonRoute), which takes the `CustomId` that minted the button.
+
+## What's still discord.js
+
+On gateway, these are plain discord.js:
+
+- **The client.** `this.core.bot.client` is the discord.js `Client`.
+- **The client options.** seedcord passes `clientOptions` from `new Seedcord({ ... })` to `new Client()` unchanged, intents and partials included.
+- **The interaction.** In a command or component handler, `this.event` is the discord.js interaction.
+- **The builders.** In a [`BuilderComponent`](ref:core/BuilderComponent) subclass, `this.instance` is the discord.js builder.
+- **The cache.** Anything you read from `guild.members.cache` or another manager comes from discord.js.
+
+<Callout type="warning">
+
+Reply through `this.reply()`. seedcord doesn't see a raw `this.event.reply()` call, so its ack state for the interaction still reads `unacked`. A later `this.edit()` then throws, and a later `this.reply()` reaches Discord, which rejects it. The `@seedcord/no-raw-interaction-acks` lint rule reports the raw call, and [Raw acks](/replying/raw-acks) has the few cases where you need one.
+
+</Callout>
+
+<Callout type="transport" only="http">
+
+An http bot doesn't use the discord.js client. `this.event` is Discord's raw payload, like `APIChatInputApplicationCommandInteraction` where gateway has `ChatInputCommandInteraction`. An option getter like `getUser` returns an `APIUser` where gateway returns a `User`. You call Discord's API through [`this.api`](ref:http/RepliableHandler.api).
+
+</Callout>
+
+## Adding seedcord to an existing repo
+
+`pnpm create seedcord` only writes into a new or empty folder. To use it, scaffold a project beside your bot and move your code in. To keep your repo as it is, set it up by hand.
+
+seedcord's packages ship only ESM builds. Set `"type": "module"` in your `package.json`, as the scaffold does. Then install the transport with its peer dependencies, plus the CLI and its tools for development.
+
+<Shell add="@seedcord/gateway discord.js @discordjs/builders envapt" />
+
+<Shell add="-D seedcord vite typescript @seedcord/tsconfig @types/node" />
+
+<Callout type="transport" only="http">
+
+An http bot installs `@seedcord/http` with `@discordjs/builders` and `envapt`. It doesn't need discord.js.
+
+</Callout>
+
+Extend seedcord's `tsconfig`. It turns on the `experimentalDecorators` compiler option needed by seedcord's decorators. Listing `vite/client` in `types` adds the type for `import.meta.env`, which holds your [build-time values](/build/env#build-time-values).
+
+```json title="tsconfig.json"
+{
+    "extends": "@seedcord/tsconfig/node",
+    "compilerOptions": {
+        "types": ["node", "vite/client"]
+    },
+    "include": ["src/**/*.ts", "seedcord.config.ts"]
+}
+```
+
+You also need three more files:
+
+- **`seedcord.config.ts`**, where you tell the CLI where your code is. Copy the scaffold's version from [Your first bot](/first-bot#where-your-folders-resolve).
+- **`src/bot.ts`**, where you build your bot with `new Seedcord({ ... })` and export it as the default, like the [scaffold's `bot.ts`](/first-bot#your-bots-settings).
+- **`src/index.ts`**, where you import that default export and call `await seedcord.start()`. A bot on Cloudflare Workers skips this file.
+
+For seedcord's lint rules, add an `eslint.config.ts` from [the lint setup for an existing project](/tooling/lint#starting-from-an-existing-project). seedcord reads the token from `DISCORD_BOT_TOKEN`, or from `BOT_TOKEN` if your `.env` already uses that name.
+
+<Callout type="danger">
+
+Point that token at a [test application](/discord-application#make-a-second-application-for-production) until every command is ported. Each deploy replaces Discord's whole list of commands for a scope, so starting seedcord against your live bot removes every command you haven't ported yet.
+
+</Callout>
+
+## Sharing code with an API or a dashboard
+
+Say your repo also runs an API or a dashboard that reads the same database as the bot. Put the models and queries in their own package that doesn't import seedcord, and import that package from both programs. A plugin's services need a running bot to build them, so an API can't reuse them. In the bot, a [plugin](/plugins) can wrap the shared package so its connection opens and closes with the bot.
+
+## What breaks after you migrate
+
+- **Collectors end on a restart.** A collector runs in the process that opened it, so a restart ends every prompt that's still waiting. seedcord routes a click to your `ButtonHandler` by its custom id, so the handler still answers after a restart. If you keep a collector, give its buttons a `CustomId` and list it under [`ignoreCustomIds`](/components/custom-ids#clicks-the-router-should-skip). Otherwise the router answers those clicks too, and Discord rejects whichever answer comes second.
+- **Buttons and menus on old messages get the default reply.** Their custom ids are strings you wrote by hand, so they don't match any seedcord handler. seedcord answers a click on one of them with "This doesn't do anything right now.", which only the person who clicked can see. You can replace it with [a handler that rewrites those ids](#fixing-buttons-and-menus-on-old-messages).
+- **Prefix commands need a privileged intent.** Reading message text needs the Message Content intent. [The intent review](/events/messages#prefix-commands-and-the-intent-review) that comes with it is the reason to move them to slash commands.
+- **An http bot doesn't cache anything or receive message events.** Discord posts only interactions to it, so every read of a member or a guild is a REST call.
+
+### Fixing buttons and menus on old messages
+
+An older message your bot sent before the move still has the custom ids you wrote by hand, like `accept-123-456`. Discord sends that string back on every click. However, it doesn't match a seedcord route, so the click reaches the [unhandled handler](/commands#a-command-without-a-handler).
+
+You can replace that handler with one that rewrites the message. It finds each old id in a table and puts the seedcord id in its place. Then it edits the message, so the next click reaches your real handler.
+
+```ts twoslash title="src/Unhandled.ts"
+import {
+    CustomId,
+    InteractionHandler,
+    type Repliables
+} from '@seedcord/gateway';
+
+const RegisterId = new CustomId('register');
+const AcceptId = new CustomId('accept')
+    .snowflake('challenger')
+    .snowflake('opponent');
+
+type NextFunc = (parts: string[]) => string;
+
+const LEGACY_IDS: [old: RegExp, next: NextFunc][] = [
+    [/^register$/, () => RegisterId.encode({})],
+    [
+        /^accept-(\d+)-(\d+)$/,
+        ([challenger = '', opponent = '']) =>
+            AcceptId.encode({ challenger, opponent })
+    ]
+];
+
+function translate(customId: string): string | undefined {
+    for (const [old, next] of LEGACY_IDS) {
+        const match = old.exec(customId);
+        if (match) return next(match.slice(1));
+    }
+    return undefined;
+}
+
+// swaps every old custom_id in place, inside rows and containers too
+function rewriteIds(node: unknown): boolean {
+    if (typeof node !== 'object' || node === null) return false;
+
+    let changed = false;
+    for (const [key, value] of Object.entries(node)) {
+        const next =
+            key === 'custom_id' && typeof value === 'string'
+                ? translate(value)
+                : undefined;
+        if (next) Reflect.set(node, key, next);
+        changed = Boolean(next) || rewriteIds(value) || changed;
+    }
+    return changed;
+}
+
+export class Unhandled extends InteractionHandler<Repliables> {
+    public async execute(): Promise<void> {
+        if (await this.rewroteOldIds()) {
+            await this.edit(
+                'This message was just updated. Try again.'
+            );
+            return;
+        }
+        await this.reply("This doesn't do anything right now.", {
+            ephemeral: true
+        });
+    }
+
+    private async rewroteOldIds(): Promise<boolean> {
+        if (!this.event.isMessageComponent()) return false;
+
+        const { message } = this.event;
+        const components = message.components.map((component) =>
+            component.toJSON()
+        );
+        if (!rewriteIds(components)) return false;
+
+        await this.defer({ ephemeral: true });
+        await message.edit({
+            components,
+            flags: message.flags.bitfield
+        });
+        return true;
+    }
+}
+```
+
+You add one row to `LEGACY_IDS` for each id your old bot wrote. `old` matches the old string. `next` builds the new id from the parts that `old` captured, like the two user ids in `accept-123-456`. Import `RegisterId` and `AcceptId` from the files that build your buttons. If a copy's shape drifts from the real one, it encodes ids that your handler reads as stale.
+
+`rewriteIds` walks every key at every depth, so it reaches the buttons and menus inside rows and containers. The edit passes `flags` back unchanged because [Discord asks for every flag](https://docs.discord.com/developers/resources/message#edit-message) the message already has when you edit it. Pass `Unhandled` as `interactions.unhandled` in your config. It answers every interaction that doesn't have a handler, so `execute` ends on the same reply that seedcord sends by default. If someone clicks an old button, they get "This message was just updated. Try again." Their next click then reaches your real handler. A message that nobody clicks keeps its old ids.
+
+<Callout type="transport" only="http">
+
+On http, `InteractionHandler` and `Repliables` come from `@seedcord/http`. The message arrives as raw JSON, which doesn't have `edit()`, so `rewroteOldIds` checks `this.event.type` and sends the rewritten components through `this.api`.
+
+```ts plain
+export class Unhandled extends InteractionHandler<Repliables> {
+    // execute() stays the same
+
+    private async rewroteOldIds(): Promise<boolean> {
+        if (this.event.type !== InteractionType.MessageComponent) {
+            return false;
+        }
+
+        const { message } = this.event;
+        if (!rewriteIds(message.components)) return false;
+
+        await this.defer({ ephemeral: true });
+        await this.api.channels.editMessage(
+            message.channel_id,
+            message.id,
+            { components: message.components, flags: message.flags }
+        );
+        return true;
+    }
+}
+```
+
+</Callout>

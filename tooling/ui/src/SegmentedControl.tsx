@@ -1,13 +1,13 @@
 'use client';
 
+import { cn } from 'cn';
 import { LayoutGroup, m } from 'motion/react';
 import { useId } from 'react';
 
-import { cn } from './lib/cn';
 import { layoutSpring } from './lib/motion';
 import { tw } from './lib/tw';
 
-import type { KeyboardEvent, ReactElement, ReactNode } from 'react';
+import type { ComponentProps, KeyboardEvent, ReactElement, ReactNode } from 'react';
 
 const segmentedControlContainerClassName = cn(
     tw`inline-flex items-stretch border border-(--border) bg-(--surface-subtle)`,
@@ -32,13 +32,13 @@ const segmentedControlVariants = {
         container: segmentedControlContainerClassName,
         option: cn(
             tw`font-medium text-(--text-muted) hover:text-(--text)`,
-            tw`disabled:hover:text-(--text-muted) aria-checked:text-(--text-accent-b-faint)`
+            tw`disabled:hover:text-(--text-muted) data-active:text-(--text-accent-b-faint)`
         ),
         indicator: tw`absolute inset-1 rounded-sm bg-(--surface-accent-b-moderate) shadow-(--shadow-card)`
     },
     underline: {
         container: tw`inline-flex items-end gap-3`,
-        option: tw`cursor-pointer pb-1 font-mono text-sm text-(--seed-dark)/55 hover:text-(--seed-dark) aria-checked:text-(--seed-dark)`,
+        option: tw`cursor-pointer pb-1 font-mono text-sm text-(--seed-dark)/55 hover:text-(--seed-dark) data-active:text-(--seed-dark)`,
         indicator: tw`absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-(--seed-dark)`
     }
 } as const;
@@ -71,6 +71,23 @@ export interface SegmentedControlProps<TValue extends string> {
     fullWidth?: boolean;
     className?: string;
     'aria-label'?: string;
+    /** Shows the options as tabs. Render each option's panel with the ids from `segmentIds(tabsPrefix, index)`. */
+    tabsPrefix?: string | undefined;
+}
+
+/** The ids that link a tab to its panel when a {@link SegmentedControl} renders as tabs. */
+export function segmentIds(prefix: string, index: number): { tab: string; panel: string } {
+    return { tab: `${prefix}-tab-${String(index)}`, panel: `${prefix}-panel-${String(index)}` };
+}
+
+function optionAria(
+    tabsPrefix: string | undefined,
+    index: number,
+    isActive: boolean
+): Pick<ComponentProps<'button'>, 'role' | 'id' | 'aria-controls' | 'aria-selected' | 'aria-checked'> {
+    if (tabsPrefix === undefined) return { role: 'radio', 'aria-checked': isActive };
+    const ids = segmentIds(tabsPrefix, index);
+    return { role: 'tab', id: ids.tab, 'aria-controls': ids.panel, 'aria-selected': isActive };
 }
 
 export function SegmentedControl<TValue extends string>({
@@ -81,7 +98,8 @@ export function SegmentedControl<TValue extends string>({
     variant = 'pill',
     fullWidth = false,
     className,
-    'aria-label': ariaLabel
+    'aria-label': ariaLabel,
+    tabsPrefix
 }: SegmentedControlProps<TValue>): ReactElement {
     const instanceId = useId();
     const layoutId = `seedcord-segmented-control-${instanceId}`;
@@ -97,13 +115,13 @@ export function SegmentedControl<TValue extends string>({
         const next = enabled[(at + step + enabled.length) % enabled.length];
         if (next === undefined) return;
         onChange(next.value);
-        event.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]')[options.indexOf(next)]?.focus();
+        event.currentTarget.querySelectorAll('button')[options.indexOf(next)]?.focus();
     };
 
     return (
         <LayoutGroup id={layoutId}>
             <div
-                role="radiogroup"
+                role={tabsPrefix === undefined ? 'radiogroup' : 'tablist'}
                 aria-label={ariaLabel}
                 onKeyDown={moveSelection}
                 className={cn(
@@ -113,14 +131,14 @@ export function SegmentedControl<TValue extends string>({
                     className
                 )}
             >
-                {options.map((opt) => {
+                {options.map((opt, index) => {
                     const isActive = opt.value === value;
                     return (
                         <button
                             key={opt.value}
                             type="button"
-                            role="radio"
-                            aria-checked={isActive}
+                            {...optionAria(tabsPrefix, index, isActive)}
+                            data-active={isActive || undefined}
                             tabIndex={isActive ? 0 : -1}
                             disabled={opt.disabled}
                             onClick={() => onChange(opt.value)}

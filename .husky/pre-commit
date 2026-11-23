@@ -1,5 +1,0 @@
-#!/bin/sh
-
-echo "Pre-commit hook triggered."
-
-pnpm exec lint-staged

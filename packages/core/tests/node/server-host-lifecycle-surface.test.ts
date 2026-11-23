@@ -1,5 +1,5 @@
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vite-plus/test';
 
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 import { TestServerHost } from '#tests/utils/TestServerHost';
@@ -9,7 +9,7 @@ describe('the lifecycle surface a bot author reaches', () => {
         TestServerHost.resetHost();
     });
 
-    it('carries addTask alone on shutdown', () => {
+    it('exposes addTask alone on shutdown', () => {
         const host = new TestServerHost();
 
         expect(Object.keys(host.shutdown)).toEqual(['addTask']);
@@ -18,7 +18,7 @@ describe('the lifecycle surface a bot author reaches', () => {
         expect('removeSignalHandlers' in host.shutdown).toBe(false);
     });
 
-    it('carries addTask alone on startup', () => {
+    it('exposes addTask alone on startup', () => {
         const host = new TestServerHost();
 
         expect(Object.keys(host.startup)).toEqual(['addTask']);

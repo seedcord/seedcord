@@ -110,7 +110,7 @@ export class HttpSlashOptions {
     }
 }
 
-// the autocomplete wire carries integer/number values as strings
+// the autocomplete wire sends integer/number values as strings
 function numeric(value: number | string): number | null {
     if (typeof value === 'number') return value;
     if (value.trim() === '') return null;

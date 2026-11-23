@@ -1,5 +1,5 @@
 /** @jsxImportSource react */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ActionRow, Container, LinkButton, Section, TextDisplay, Thumbnail, toComponentEmbed } from '#src/index';
 
@@ -120,7 +120,7 @@ describe('ComponentEmbedError path', () => {
         ]);
     });
 
-    it('calls a component with no name Anonymous', () => {
+    it('calls a component without a name Anonymous', () => {
         const [Unnamed] = [(): ReactElement => <TextDisplay>{''}</TextDisplay>] as const;
 
         expect(thrownBy(() => toComponentEmbed(<Container>{<Unnamed />}</Container>)).path).toEqual([
@@ -159,7 +159,7 @@ describe('ComponentEmbedError path', () => {
         expect(thrownBy(() => toComponentEmbed(<Container>{child}</Container>)).path).toEqual(path);
     });
 
-    it('stays empty for a limit on the whole embed', () => {
+    it('is empty for a limit on the whole embed', () => {
         const error = thrownBy(() =>
             toComponentEmbed(
                 <Container>

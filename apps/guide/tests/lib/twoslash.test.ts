@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { twoslashBlock } from '#lib/twoslash';
 
@@ -35,7 +35,7 @@ describe('the twoslash transformer', () => {
             )
         );
 
-        // shiki owns the theme classes between these two
+        // only shiki writes the theme classes between these two
         expect(html).toMatch(/<pre class="[^"]*\bshiki\b[^"]*\btwoslash\b/);
         expect(html).not.toContain('twoslash-error-line');
     });
@@ -109,7 +109,7 @@ describe('the twoslash transformer', () => {
         await expect(render(source, 'tsx')).rejects.toThrow('not marked as being expected');
     });
 
-    it('carries the type on a hovered token, without its tsdoc', async () => {
+    it('shows only the type on a hovered token, without its tsdoc', async () => {
         const html = await render("const routes = ['ping'] as const;");
 
         expect(html).toContain('twoslash-hover');
@@ -126,7 +126,7 @@ describe('the twoslash transformer', () => {
         expect(second).not.toContain("Type 'string' is not assignable to type 'number'.");
     });
 
-    it('stays out of the way when the fence carries no flag', async () => {
+    it('leaves an unflagged fence as it is', async () => {
         const { html } = await twoslashBlock('const count = 12;', 'ts', 'off');
 
         expect(html).not.toContain('twoslash');
@@ -166,7 +166,7 @@ describe('the twoslash transformer', () => {
         });
     });
 
-    it('hands the copy button a sample with no twoslash notation', async () => {
+    it('hands the copy button a sample without twoslash notation', async () => {
         const { text } = await twoslashBlock(
             sample('// @errors: 2322', 'const count: number = "twelve";'),
             'ts',
@@ -253,7 +253,7 @@ describe('the twoslash transformer', () => {
                 )
             );
 
-            // once the 8 spaces are gone the 9-wide argument starts at 24
+            // with the 8 spaces removed, the 9-wide argument starts at 24
             expect(html).toContain('--ts-col:28.5');
         });
     });

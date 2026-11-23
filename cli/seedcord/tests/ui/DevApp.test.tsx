@@ -1,6 +1,7 @@
 import { settled, stableFrame } from '@seedcord/cli-prompts/testing';
+import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { NO_FILTER_ROOM } from '#ui/components/primitives/FilterPanel';
 import { NO_ROOM } from '#ui/components/primitives/ScrollableLogView';
@@ -50,24 +51,6 @@ function view(
         size
     );
 }
-
-// every channel the framework logs on
-const MANY_CHANNELS = [
-    'default',
-    'bot',
-    'lifecycle',
-    'health',
-    'interactions',
-    'events',
-    'commands',
-    'subscribers',
-    'errors',
-    'gates',
-    'plugins',
-    'hmr',
-    'cli',
-    'tsc'
-];
 
 function logOn(channel: string): LogRecord {
     return { level: 'info', message: `from ${channel}`, label: 'Bot', channel, timestamp: 1_700_000_000_000 };
@@ -218,7 +201,7 @@ describe('DevApp tiers', () => {
         app.unmount();
     });
 
-    it('opens with a rule across the whole terminal, so nothing sits on the top edge', async () => {
+    it('opens with a rule across the whole terminal, so the top row is only the rule', async () => {
         const app = view(FULL);
         const frame = await stableFrame(app.lastFrame);
 
@@ -227,7 +210,7 @@ describe('DevApp tiers', () => {
         app.unmount();
     });
 
-    // the stack can take every row the log column has, so the pane keeps one back for its own message
+    // the pane keeps one row back for its own message because the stack can take every row the log column has
     it('always says something in the log pane', async () => {
         const store = squeezedStore();
 
@@ -288,7 +271,7 @@ describe('DevApp filters below the full layout', () => {
     it('asks for more room and holds the filter keys when the chips do not fit', async () => {
         const onPrefsChange = vi.fn();
         const app = view({ rows: 9, columns: 79 }, { onPrefsChange });
-        for (const record of MANY_CHANNELS.map(logOn)) LogStore.instance.onLog(record);
+        for (const record of FRAMEWORK_CHANNELS.map(logOn)) LogStore.instance.onLog(record);
         await LogStore.instance.flush();
 
         app.press('f');
@@ -302,7 +285,7 @@ describe('DevApp filters below the full layout', () => {
 
     it('shows every chip once the panel has room', async () => {
         const app = view({ rows: 12, columns: 79 });
-        for (const record of MANY_CHANNELS.map(logOn)) LogStore.instance.onLog(record);
+        for (const record of FRAMEWORK_CHANNELS.map(logOn)) LogStore.instance.onLog(record);
         await LogStore.instance.flush();
 
         app.press('f');

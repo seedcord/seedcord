@@ -4,7 +4,7 @@ node_modules/
 # debug
 npm-debug.*
 
-# pnpm release:preview
+# vp run release:preview
 /release.md
 
 # local env files
@@ -29,19 +29,11 @@ dist/
 .wrangler/
 .cloudflare/
 .seedcord/
+.kv/
 
 # Ignore IDE specific files
 **/.idea
 **/.vs
-
-# .vscode/ is whitelisted: only the standard shared editor config files are tracked;
-# everything else (planning docs, audits, scratch, personal notes) stays local.
-# Add to the !.vscode/<file> list as new project-wide editor configs appear.
-/.vscode/*
-!/.vscode/extensions.json
-!/.vscode/launch.json
-!/.vscode/settings.json
-!/.vscode/tasks.json
 
 # Turborepo
 .turbo/
@@ -104,3 +96,4 @@ Thumbs.db
 
 # Turborepo
 .turbo
+.vitest/

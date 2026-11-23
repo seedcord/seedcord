@@ -101,7 +101,7 @@ ruleTester.run('command-builder-missing-register-command', rule, {
             errors: [{ messageId: 'missingRegister', data: { label: 'slash command' } }]
         },
         {
-            // a same-named decorator from another module satisfies nothing
+            // a same-named decorator from another module doesn't count
             code: dedent`
                 import { BuilderComponent } from '@seedcord/core';
                 import { RegisterCommand } from 'some-other-lib';

@@ -1,11 +1,11 @@
-import { createServer } from 'node:net';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 import { ShutdownPhase, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 import { Events } from 'discord.js';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
 import { Plugin } from '#src/Plugin';
 import { Seedcord } from '#src/Seedcord';
@@ -14,31 +14,34 @@ import { testConfig } from './utils/test-config';
 
 import type { ILogSink } from '@seedcord/types';
 import type { Client } from 'discord.js';
-import type { AddressInfo } from 'node:net';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
-function freePort(): Promise<number> {
-    const probe = createServer().listen(0, '127.0.0.1');
-    return new Promise((resolve) => {
-        probe.once('listening', () => {
-            // justified: address() is AddressInfo once a TCP server is listening
-            const { port } = probe.address() as AddressInfo;
-            probe.close(() => resolve(port));
-        });
-    });
+// port 0 has node pick a free port
+const ANY_PORT = { port: 0 } as const;
+// a shutdown with nothing to wait for finishes well inside this
+const STILL_OPEN_MS = 300;
+
+class Page extends Plugin {
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+
+    public override fetch(request: Request): Response | undefined {
+        return new URL(request.url).pathname === '/page' ? new Response('page') : undefined;
+    }
 }
 
-async function healthStatusWithin(port: number, ms: number): Promise<number | 'refused'> {
-    const until = Date.now() + ms;
-    while (Date.now() < until) {
-        const status = await fetch(`http://127.0.0.1:${port}/health`).then(
-            (response) => response.status,
-            () => undefined
-        );
-        if (status !== undefined) return status;
-        await new Promise((resolve) => setTimeout(resolve, 20));
-    }
-    return 'refused';
+function get(seedcord: Seedcord, path: string): Promise<Response> {
+    return fetch(`http://127.0.0.1:${String(seedcord.port)}${path}`);
+}
+
+// the mock client never connects, and login waits on ClientReady
+function readyOnLogin(seedcord: Seedcord): void {
+    vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
+    const client = seedcord.bot.client as unknown as { once: Mock };
+    client.once.mockImplementation((event: Events, onReady: () => void) => {
+        if (event === Events.ClientReady) onReady();
+    });
 }
 
 function reset(): void {
@@ -50,7 +53,7 @@ describe('Seedcord host', () => {
     beforeEach(reset);
     afterEach(reset);
 
-    it('installs no signal handlers while only constructed', () => {
+    it("doesn't install signal handlers while only constructed", () => {
         const base = [process.listenerCount('SIGTERM'), process.listenerCount('SIGINT')];
 
         // eslint-disable-next-line no-new -- construction is the behavior under test
@@ -66,9 +69,9 @@ describe('Seedcord host', () => {
             }
         }
 
-        const seedcord = new Seedcord(testConfig()).attach('healthCheck', Probe);
+        const seedcord = new Seedcord(testConfig()).attach('hmrManager', Probe);
 
-        expect(seedcord.healthCheck).toBeInstanceOf(Probe);
+        expect(seedcord.hmrManager).toBeInstanceOf(Probe);
     });
 
     it('exposes the discord.js client REST as core.rest', () => {
@@ -77,16 +80,54 @@ describe('Seedcord host', () => {
         expect(seedcord.rest).toBe(seedcord.bot.client.rest);
     });
 
-    it('registers the health server by default', () => {
-        const seedcord = new Seedcord(testConfig());
+    it("serves a plugin's route on its server and answers 404 to any other path", async () => {
+        await using seedcord = new Seedcord(testConfig({ server: ANY_PORT })).attach('page', Page);
+        readyOnLogin(seedcord);
+        await seedcord.start();
 
-        expect(shutdownOf(seedcord).removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(true);
+        const page = await get(seedcord, '/page');
+        const other = await get(seedcord, '/other');
+
+        expect([await page.text(), other.status]).toEqual(['page', 404]);
     });
 
-    it('healthCheck: false skips the health server', () => {
-        const seedcord = new Seedcord(testConfig({ healthCheck: false }));
+    it('holds a shutdown open for a log sink that a plugin route started', async () => {
+        const routeLog = 'answered from the route';
+        class Logs extends Plugin {
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
 
-        expect(shutdownOf(seedcord).removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(false);
+            public override fetch(): Response {
+                this.logger.info(routeLog);
+                return new Response('logged');
+            }
+        }
+        const release = Promise.withResolvers<undefined>();
+        await using seedcord = new Seedcord(testConfig()).attach('logs', Logs);
+        readyOnLogin(seedcord);
+        await seedcord.start();
+        using _sink = LoggerChannelRegistry.instance.installSink({
+            kind: 'capture',
+            onLog: ({ message }) => (message === routeLog ? release.promise : undefined)
+        });
+
+        await seedcord.fetch(new Request('http://bot.test/page'));
+        const closing = shutdownOf(seedcord)
+            .run(0, false)
+            .then(() => 'closed');
+        const whileSinkRuns = await Promise.race([closing, sleep(STILL_OPEN_MS).then(() => 'still open')]);
+        release.resolve(undefined);
+
+        expect([whileSinkRuns, await closing]).toEqual(['still open', 'closed']);
+    });
+
+    it("doesn't open a server with health: false unless a plugin has fetch", async () => {
+        await using seedcord = new Seedcord(testConfig({ server: { ...ANY_PORT, health: false } }));
+        readyOnLogin(seedcord);
+        await seedcord.start();
+
+        expect(seedcord.port).toBeUndefined();
     });
 
     it('rejects a restart after a failed start', async () => {
@@ -98,7 +139,7 @@ describe('Seedcord host', () => {
         expect(() => new Seedcord(testConfig())).not.toThrow();
     });
 
-    it('a stale host retrying start leaves the live host alone', async () => {
+    it("a stale host retrying start doesn't replace the live host", async () => {
         const dead = new Seedcord(testConfig());
         dead.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boom')));
         await expect(dead.start()).rejects.toThrow();
@@ -142,37 +183,6 @@ describe('Seedcord host', () => {
         expect(seen).not.toEqual([]);
     });
 
-    it('answers the health path only once every plugin is ready', async () => {
-        const port = await freePort();
-        const { promise: readyStarted, resolve: markReadyStarted } = Promise.withResolvers<undefined>();
-        const { promise: readyGate, resolve: finishReady } = Promise.withResolvers<undefined>();
-        class SlowReady extends Plugin {
-            public init(): Promise<void> {
-                return Promise.resolve();
-            }
-
-            public override ready(): Promise<void> {
-                markReadyStarted(undefined);
-                return readyGate;
-            }
-        }
-        await using seedcord = new Seedcord(testConfig({ healthCheck: { port } })).attach('slow', SlowReady);
-        vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
-        // the mock client never connects. login waits on ClientReady
-        const client = seedcord.bot.client as unknown as { once: Mock };
-        client.once.mockImplementation((event: Events, onReady: () => void) => {
-            if (event === Events.ClientReady) onReady();
-        });
-
-        const starting = seedcord.start();
-        await readyStarted;
-        const whileReadying = await healthStatusWithin(port, 200);
-        finishReady(undefined);
-        await starting;
-
-        expect([whileReadying, await healthStatusWithin(port, 1000)]).toEqual(['refused', 200]);
-    });
-
     it('disposes a plugin whose init() finishes after startup was aborted', async () => {
         const { promise: initStarted, resolve: markInitStarted } = Promise.withResolvers<undefined>();
         const { promise: initGate, resolve: finishInit } = Promise.withResolvers<undefined>();
@@ -185,7 +195,7 @@ describe('Seedcord host', () => {
 
             public override dispose = dispose;
         }
-        const seedcord = new Seedcord(testConfig({ healthCheck: false })).attach('db', SlowConnect);
+        const seedcord = new Seedcord(testConfig()).attach('db', SlowConnect);
 
         // the steps DevSession.stop takes on r or q
         const starting = seedcord.start().catch(() => undefined);

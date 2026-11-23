@@ -1,5 +1,13 @@
 # @seedcord/cli-prompts
 
+## 0.0.4-next.0
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
+
 ## 0.0.3
 
 ### 🩹 Patch

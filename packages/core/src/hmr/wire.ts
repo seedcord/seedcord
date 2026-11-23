@@ -4,11 +4,12 @@ import { isPlainObject } from '@seedcord/utils/internal';
 
 import type { LogLevel, LogRecord } from '@seedcord/types';
 import type { WireError } from '@seedcord/types/internal';
+import type { Except } from 'type-fest';
 
 // each arg is either an Error or a JSON-safe value
 type WireArg = { error: WireError } | { value: unknown };
 
-interface WireLogRecord extends Omit<LogRecord, 'args'> {
+interface WireLogRecord extends Except<LogRecord, 'args'> {
     args?: WireArg[] | undefined;
 }
 

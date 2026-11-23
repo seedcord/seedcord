@@ -1,82 +1,54 @@
-import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
-import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { captureLogs } from '@seedcord/logger/internal';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { publishResponse } from '#reply/responseReport';
-import { DispatchContext } from '#src/dispatch/DispatchContext';
-import { Bus } from '#subscribers/Bus';
-
-import type { CoreBase } from '#interfaces/CoreBase';
-import type { LogRecord } from '@seedcord/types';
-
-// justified: the Bus only stores core, no member is read during publish
-function stubBus(): Bus {
-    return new Bus({} as unknown as CoreBase);
-}
-
-function traceSpy(): MockInstance<Logger['trace']> {
-    return vi.spyOn(Logger.prototype, 'trace').mockImplementation(() => undefined);
-}
+import { TestSender } from './helpers';
 
 afterEach(() => {
     vi.restoreAllMocks();
-    LoggerChannelRegistry.instance.configure({});
 });
 
 describe('reply timing', () => {
-    it('puts the line on the interactions channel at trace', () => {
-        const records: LogRecord[] = [];
-        LoggerChannelRegistry.instance.configure({ level: 'trace', sinks: [] });
-        using _capture = LoggerChannelRegistry.instance.installSink({
-            kind: 'capture',
-            onLog: (record) => records.push(record)
-        });
+    it('puts the line on the interactions channel at trace', async () => {
+        using logs = captureLogs();
 
-        publishResponse(
-            { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
-            { method: 'reply', startedAt: performance.now(), outcome: 'sent', messageId: 'm1' }
-        );
+        await new TestSender().defer();
 
-        expect(records.find((record) => record.label === 'Reply')).toMatchObject({
+        expect(logs.records.find((record) => record.label === 'Reply')).toMatchObject({
             channel: 'interactions',
             level: 'trace'
         });
     });
 
-    it('traces the route, the verb, the outcome, and the elapsed write', () => {
-        const trace = traceSpy();
+    it('traces the route, the verb, the outcome, and the elapsed write', async () => {
+        using logs = captureLogs();
+        const sender = new TestSender();
         let clock = 1000;
         vi.spyOn(performance, 'now').mockImplementation(() => clock);
-        const startedAt = performance.now();
-        clock += 88;
+        sender.beforeWrite = () => {
+            clock += 88;
+            return Promise.resolve();
+        };
 
-        publishResponse(
-            { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
-            { method: 'reply', startedAt, outcome: 'sent', messageId: 'm1' }
-        );
+        await sender.reply('hi');
 
-        expect(trace).toHaveBeenCalledTimes(1);
-        const message = trace.mock.calls[0]?.[0] ?? '';
-        expect(message).toContain('slash:ban');
+        const traces = logs.at('trace');
+        expect(traces).toHaveLength(1);
+        const [message] = traces;
+        expect(message).toContain('slash:ping');
         expect(message).toContain('reply');
         expect(message).toContain('sent');
         expect(message).toContain('88ms');
     });
 
-    it('traces a failed write with its outcome', () => {
-        const trace = traceSpy();
+    it('traces a failed write with its outcome', async () => {
+        using logs = captureLogs();
+        const sender = new TestSender();
+        sender.beforeWrite = () => Promise.reject(new Error('discord said no'));
 
-        publishResponse(
-            { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
-            {
-                method: 'respond',
-                startedAt: performance.now(),
-                outcome: 'failed',
-                error: new Error('discord said no')
-            }
-        );
+        await expect(sender.defer()).rejects.toThrow('discord said no');
 
-        const message = trace.mock.calls[0]?.[0] ?? '';
-        expect(message).toContain('respond');
+        const [message] = logs.at('trace');
+        expect(message).toContain('defer');
         expect(message).toContain('failed');
     });
 });

@@ -2,8 +2,9 @@ import 'reflect-metadata';
 
 import { emptyRouteMaps, interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
+import { routesOf } from '#src/dispatch/resolve';
 import { InteractionEngine } from '#src/InteractionEngine';
 import { testCore } from '#tests/helpers/core';
 import { createSigner } from '#tests/helpers/ed25519';
@@ -24,7 +25,7 @@ async function published(payload: object): Promise<SubscriptionData<'anyInteract
 
     const engine = new InteractionEngine(
         core,
-        emptyRouteMaps(),
+        routesOf(emptyRouteMaps()),
         new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware),
         signer.publicKeyHex
     );
@@ -44,7 +45,7 @@ describe('anyInteraction from the http engine', () => {
         expect(seen[0]?.interaction).toMatchObject({ id: 'int-1', type: 2 });
     });
 
-    it('publishes nothing for a ping', async () => {
+    it('skips the publish for a ping', async () => {
         expect(await published({ type: 1, id: 'ping-1', application_id: 'app-1', token: 'tok' })).toHaveLength(0);
     });
 });

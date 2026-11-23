@@ -9,10 +9,11 @@ export class TestPluginHost<BotT extends Transport = 'gateway', BotRt extends Ru
     BotT,
     BotRt
 > {
-    // justified: attach reads nothing off config
+    // justified: attach never reads config
     public readonly config = {} as Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
+    public readonly url = new URL('https://bot.test/');
 
     constructor(transport?: BotT, runtime?: BotRt, driver?: Config['kv']) {
         // justified: the fallbacks are the class's default type arguments

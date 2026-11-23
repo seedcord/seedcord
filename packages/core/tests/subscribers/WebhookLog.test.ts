@@ -1,8 +1,9 @@
 import { REST } from '@discordjs/rest';
-import { Logger } from '@seedcord/logger';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { captureLogs } from '@seedcord/logger/internal';
 import { ComponentType } from 'discord-api-types/v10';
 import { Envapter, FileSource, PortableSource } from 'envapt';
-import { afterAll, afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
 import { PublishDefault } from '#src/subscribers/publishDefault';
 import { WebhookLog } from '#subscribers/bases/WebhookLog';
@@ -16,7 +17,7 @@ import type { WebhookReport } from '#subscribers/bases/WebhookLog';
 import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
-// envapt snapshots process.env on its first read, before any test runs
+// envapt snapshots process.env on its first read before any test runs
 const WEBHOOK_ENV = vi.hoisted(() => {
     const env = {
         REPORTER_WEBHOOK_URL: 'https://discord.com/api/webhooks/77/tok-en'
@@ -85,7 +86,7 @@ describe('WebhookLog', () => {
         expect(options.body.username).toBe('NamedReporter');
     });
 
-    it('sends the avatar url only when the report carries one', async () => {
+    it('sends the avatar url only when the report has one', async () => {
         @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class Faced extends WebhookLog<'unknownException', CoreBase> {
@@ -120,11 +121,33 @@ describe('WebhookLog', () => {
         }
 
         post.mockRejectedValueOnce(new Error('down'));
-        const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        using logs = captureLogs();
 
         await expect(new FailingReporter(data, core, 'unknownException').execute()).resolves.toBeUndefined();
-        expect(errorSpy).toHaveBeenCalled();
-        errorSpy.mockRestore();
+        expect(logs.at('error')).toEqual(['Webhook report failed']);
+    });
+
+    it('logs which component failed and why when the card fails to serialize', async () => {
+        @Subscribe(['unknownException'])
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class BrokenCard extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                const broken = {
+                    toJSON: (): APIMessageTopLevelComponent => {
+                        throw new Error('missing content');
+                    }
+                };
+                return { components: [broken] };
+            }
+        }
+        using logs = captureLogs();
+
+        await new BrokenCard(data, freshCore(), 'unknownException').execute();
+
+        const logged = logs.argsAt('error').find((arg) => Error.isError(arg));
+        expect(post).not.toHaveBeenCalled();
+        expect(logged).toMatchObject({ code: SeedcordErrorCode.ReplyComponentSerialization });
+        expect(logged?.message).toContain('webhook:BrokenCard');
     });
 
     it('warns once at registration and never registers a reporter whose env var is unset', () => {
@@ -136,19 +159,17 @@ describe('WebhookLog', () => {
             }
         }
 
-        const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        using logs = captureLogs();
         const bus = new Bus(core);
 
         bus[RegisterSubscriber](UnsetReporter);
         bus[PublishDefault]('unknownException', data);
 
-        expect(warnSpy).toHaveBeenCalledOnce();
-        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('UnsetReporter'));
+        expect(logs.at('warn')).toEqual([expect.stringContaining('UnsetReporter')]);
         expect(post).not.toHaveBeenCalled();
-        warnSpy.mockRestore();
     });
 
-    it('sends every event when the reporter leaves the throttle key unset', async () => {
+    it("sends every event when the reporter doesn't set a throttle key", async () => {
         @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class Chatty extends WebhookLog<'unknownException', CoreBase> {
@@ -203,7 +224,7 @@ describe('WebhookLog', () => {
         }
 
         const own = freshCore();
-        const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        using _logs = captureLogs();
         post.mockRejectedValueOnce(new Error('down'));
 
         vi.useFakeTimers();
@@ -215,10 +236,9 @@ describe('WebhookLog', () => {
 
         const sent = post.mock.calls.map(([, options]) => (options as SentBody).body.username);
         expect(sent).toEqual(['n=0', 'n=2']);
-        errorSpy.mockRestore();
     });
 
-    it('counts a card that report threw on, so the next one carries it', async () => {
+    it('counts a card that report threw on, so the next one includes it', async () => {
         let calls = 0;
 
         @Subscribe(['unknownException'])
@@ -236,7 +256,7 @@ describe('WebhookLog', () => {
         }
 
         const own = freshCore();
-        const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        using _logs = captureLogs();
 
         vi.useFakeTimers();
         await new Flaky(data, own, 'unknownException').execute();
@@ -246,7 +266,56 @@ describe('WebhookLog', () => {
 
         const sent = post.mock.calls.map(([, options]) => (options as SentBody).body.username);
         expect(sent).toEqual(['n=1']);
-        errorSpy.mockRestore();
+    });
+
+    it('sends the report to the url a function returns', async () => {
+        const settings = { banWebhook: 'https://discord.com/api/webhooks/88/fn-tok' };
+
+        @Subscribe(['unknownException'])
+        @WebhookUrl(() => settings.banWebhook)
+        class FromSettings extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                return { components: [component] };
+            }
+        }
+
+        await new FromSettings(data, freshCore(), 'unknownException').execute();
+
+        const [route] = post.mock.calls[0] as [string];
+        expect(route).toBe('/webhooks/88/fn-tok');
+    });
+
+    it('warns at registration and skips a reporter whose url function returns undefined', () => {
+        @Subscribe(['unknownException'])
+        @WebhookUrl(() => undefined)
+        class NoUrl extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                return { components: [] };
+            }
+        }
+
+        using logs = captureLogs();
+        const bus = new Bus(core);
+
+        bus[RegisterSubscriber](NoUrl);
+        bus[PublishDefault]('unknownException', data);
+
+        expect(logs.at('warn')).toEqual([expect.stringContaining('NoUrl')]);
+        expect(post).not.toHaveBeenCalled();
+    });
+
+    it('throws at registration when the url function returns something that is not a webhook url', () => {
+        @Subscribe(['unknownException'])
+        @WebhookUrl(() => 'https://example.com/hook')
+        class BadUrl extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                return { components: [] };
+            }
+        }
+
+        expect(() => new Bus(core)[RegisterSubscriber](BadUrl)).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CoreWebhookUrlInvalid })
+        );
     });
 
     it('throws at execute when the decorator is missing', async () => {
@@ -262,12 +331,20 @@ describe('WebhookLog', () => {
     });
 });
 
-describe('WebhookLog.urlOf', () => {
+describe('WebhookLog.targetOf', () => {
     afterEach(() => Envapter.useSource(new FileSource()));
+
+    @Subscribe(['unknownException'])
+    @WebhookUrl('URL_UNDER_TEST')
+    class EnvReporter extends WebhookLog<'unknownException', CoreBase> {
+        report(): WebhookReport {
+            return { components: [] };
+        }
+    }
 
     const urlFor = (value: string): string | null => {
         Envapter.useSource(new PortableSource({ URL_UNDER_TEST: value }));
-        return WebhookLog.urlOf('URL_UNDER_TEST');
+        return WebhookLog.targetOf(EnvReporter).url;
     };
 
     it.each(['', '   '])('returns null for %j', (value) => {

@@ -1,6 +1,6 @@
 import { or, OwnerOnly } from '@seedcord/core';
 import { NeedsAny } from '@seedcord/core/internal';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { Nsfw } from '#bot/gates/catalog';
 import { NotNsfw } from '#bot/notices';
@@ -9,7 +9,7 @@ import type { InteractionGateContext } from '#bot/gates';
 import type { NonModalInteraction } from '#src/handlers/interactionTypes';
 
 function nsfwCtx(channel: unknown): InteractionGateContext<NonModalInteraction> {
-    // the gate reads only interaction.channel, so a minimal cast stands in
+    // a minimal cast stands in because the gate reads only interaction.channel
     return { interaction: { channel } } as unknown as InteractionGateContext<NonModalInteraction>;
 }
 
@@ -26,7 +26,7 @@ describe('Nsfw', () => {
         await expect(Nsfw().check(nsfwCtx({ isThread: () => true, parent: { nsfw: true } }))).resolves.toBeUndefined();
     });
 
-    it('refuses with no channel', async () => {
+    it('refuses without a channel', async () => {
         await expect(Nsfw().check(nsfwCtx(null))).rejects.toBeInstanceOf(NotNsfw);
     });
 

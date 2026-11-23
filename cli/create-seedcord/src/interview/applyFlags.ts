@@ -14,7 +14,7 @@ function flagAnswer({ flag }: AnyStep, raw: Record<string, string | boolean>): u
 
     if (turnedOff && value !== undefined) {
         throw new SeedcordTypeError(SeedcordErrorCode.CreateBadUsage, [
-            `Pass --${flag.name} or --${noName}, not both.`
+            `Pass only one of --${flag.name} and --${noName}.`
         ]);
     }
 

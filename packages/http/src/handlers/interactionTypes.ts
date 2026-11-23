@@ -5,6 +5,7 @@ import type {
     APIMessageComponentInteraction,
     APIModalSubmitInteraction
 } from 'discord-api-types/v10';
+import type { ExcludeStrict } from 'type-fest';
 
 export type ValidInteractionTypes =
     | APIChatInputApplicationCommandInteraction
@@ -13,4 +14,4 @@ export type ValidInteractionTypes =
     | APIModalSubmitInteraction
     | APIApplicationCommandAutocompleteInteraction;
 
-export type Repliables = Exclude<ValidInteractionTypes, APIApplicationCommandAutocompleteInteraction>;
+export type Repliables = ExcludeStrict<ValidInteractionTypes, APIApplicationCommandAutocompleteInteraction>;

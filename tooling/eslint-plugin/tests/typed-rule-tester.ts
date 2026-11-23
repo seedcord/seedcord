@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 
 import { RuleTester } from '@typescript-eslint/rule-tester';
-import { describe, it } from 'vitest';
+import { describe, it } from 'vite-plus/test';
 
 // RuleTester's afterAll clears the parser caches. the next test file then rebuilds the whole typed program
 // that clear releases file watchers. the project service stubs those

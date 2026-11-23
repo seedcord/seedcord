@@ -1,8 +1,8 @@
 'use client';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { cn } from 'cn';
 
-import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 
 import type { ComponentPropsWithoutRef, ReactElement } from 'react';
@@ -29,7 +29,7 @@ export const PopoverAnchor = PopoverPrimitive.Anchor;
 export const PopoverClose = PopoverPrimitive.Close;
 
 interface PopoverContentProps extends ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> {
-    // portal target. pass a modal Dialog's content node so the popover lands inside its
+    // portal target. pass a modal Dialog's content node so the popover renders inside its
     // react-remove-scroll region. otherwise the body portal can't scroll inside the dialog
     container?: HTMLElement | null;
 }

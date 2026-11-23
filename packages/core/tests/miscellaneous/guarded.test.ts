@@ -1,5 +1,5 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
 
@@ -31,7 +31,7 @@ describe('guardedAccessor', () => {
 
     // a command or emoji can legitimately be named `constructor`
     it('throws for a key inherited from Object.prototype', () => {
-        // a plain store, so Object.prototype is actually in the chain
+        // a plain store puts Object.prototype in the chain
         const accessor = guardedAccessor('Commands', {});
 
         for (const inherited of ['constructor', 'toString', 'valueOf', 'hasOwnProperty']) {

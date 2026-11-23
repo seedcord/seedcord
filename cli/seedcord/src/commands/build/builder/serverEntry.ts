@@ -3,7 +3,7 @@ import { ENV_BOOTSTRAP_ID } from '#core/modules/envBootstrap';
 import { builtFilesSource, loadListedFiles, PLACEHOLDER_ROOT } from './builtFiles';
 
 import type { EntryPlugins } from './builtFiles';
-import type { TypedOmit } from '@seedcord/types';
+import type { Except } from 'type-fest';
 import type { Plugin } from 'vite';
 
 export const ENTRY_ID = 'seedcord:entry';
@@ -15,7 +15,7 @@ const ROOT_EXPRESSION = `import.meta.dirname ?? ${JSON.stringify(PLACEHOLDER_ROO
 const ONLY_EXPORTS_WARNING =
     "This build only exports your bot, so running it doesn't start your bot. Set build.start in seedcord.config.ts and build again, or import this file from your app.";
 
-type EntryBuiltFiles = TypedOmit<Parameters<typeof builtFilesSource>[0], 'rootExpression' | 'sourcePaths'>;
+type EntryBuiltFiles = Except<Parameters<typeof builtFilesSource>[0], 'rootExpression' | 'sourcePaths'>;
 
 export function isServerEntry(moduleId: string | null | undefined): boolean {
     return moduleId === RESOLVED_ENTRY_ID;

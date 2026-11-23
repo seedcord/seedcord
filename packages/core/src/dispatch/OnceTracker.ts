@@ -5,7 +5,7 @@ interface Registered {
     readonly frequency: EventFrequency;
 }
 
-// keyed by class so an hmr rollback stays spent and a save runs again
+// keyed by class so a class that an hmr rollback restores is still spent and a save runs again
 export class OnceTracker {
     // weak so an unloaded class can be collected
     private readonly spent = new WeakMap<object, Set<string>>();

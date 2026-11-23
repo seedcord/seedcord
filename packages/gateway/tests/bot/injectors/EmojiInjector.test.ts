@@ -1,7 +1,8 @@
 import { ButtonBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { setBuiltFiles } from '@seedcord/utils/internal';
 import { Collection } from 'discord.js';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { EmojiInjector, Emojis } from '#bot/injectors/EmojiInjector';
 
@@ -10,7 +11,7 @@ import type { Core } from '#interfaces/Core';
 
 type EmojiArgument = Parameters<ButtonBuilder['setEmoji']>[0];
 
-// a real GuildEmoji carries client, guild, roles, and more. setEmoji rejects every one of them.
+// a real GuildEmoji has client, guild, roles, and more. setEmoji rejects every one of them.
 interface EmojiStub {
     id: string;
     name: string;
@@ -51,7 +52,19 @@ function stubCore(opts: StubOptions): Core {
     } as unknown as Core;
 }
 
-// the global is typed by the (empty in tests) EmojiMap, so read runtime values through a plain record
+function builtWithDot(): Disposable {
+    return setBuiltFiles({
+        root: process.cwd(),
+        listed: [],
+        skippedFolders: [],
+        folders: [],
+        modules: {},
+        listedFiles: {},
+        emojis: [{ key: 'Dot', name: 'dot' }]
+    });
+}
+
+// read runtime values through a plain record because the global is typed by the (empty in tests) EmojiMap
 const stored = Emojis as Record<string, unknown>;
 
 async function initError(core: Core): Promise<Error | null> {
@@ -86,13 +99,33 @@ describe('EmojiInjector', () => {
         expect(() => new ButtonBuilder().setCustomId('c').setEmoji(stored.Confirm as EmojiArgument)).not.toThrow();
     });
 
+    it('resolves an emoji that only the emojis folder has', async () => {
+        using _built = builtWithDot();
+        const dot: EmojiStub = { id: '5', name: 'dot' };
+
+        await new EmojiInjector(stubCore({ emojis: {}, appEmojis: [dot] })).init();
+
+        expect((stored.Dot as GatewayEmoji).source).toBe(dot);
+    });
+
+    it('gives the push command when the application is missing a folder emoji', async () => {
+        using _built = builtWithDot();
+
+        const error = await initError(stubCore({ emojis: {}, appEmojis: [] }));
+
+        expect(error).toMatchObject({
+            code: SeedcordErrorCode.ConfigEmojiNotFound,
+            message: expect.stringContaining('seedcord emojis push') as string
+        });
+    });
+
     it('resolves a tuple emoji from its guild', async () => {
         const wave: EmojiStub = { id: '9', name: 'wave' };
         await new EmojiInjector(stubCore({ emojis: { Wave: ['wave', 'g1'] }, guilds: { g1: [wave] } })).init();
         expect((stored.Wave as GatewayEmoji).source).toBe(wave);
     });
 
-    it('collects every unresolvable emoji into one error rather than throwing on the first', async () => {
+    it('collects every unresolvable emoji into one error', async () => {
         const error = await initError(stubCore({ emojis: { Confirm: 'check', Cancel: 'cross' }, appEmojis: [] }));
 
         expect(error).toMatchObject({
@@ -123,7 +156,7 @@ describe('EmojiInjector', () => {
     });
 
     it('reports a config value that is neither a name nor a tuple', async () => {
-        // fixture: a non-string, non-tuple value to exercise the invalid-value branch
+        // fixture: a non-string, non-tuple value to hit the invalid-value branch
         const error = await initError(stubCore({ emojis: { Bad: 42 as unknown as string } }));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.ConfigEmojiInvalid });
@@ -132,7 +165,7 @@ describe('EmojiInjector', () => {
     it('fetches a guild before reading its emoji cache', async () => {
         const wave: EmojiStub = { id: '9', name: 'wave' };
         const cache = new Collection<string, EmojiStub>();
-        // the emoji only appears after fetch, so dropping the fetch leaves the cache empty and resolution fails
+        // without the fetch the cache is empty, and resolution fails because the emoji only appears after fetch
         const guild = {
             emojis: {
                 fetch: vi.fn(() => {

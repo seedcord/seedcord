@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { useRovingList } from '#src/lib/useRovingList';
 
@@ -94,7 +94,7 @@ describe('useRovingList', () => {
         expect(result.current.active).toBe('x');
     });
 
-    it('goes back to the first row for a new query, even when the old row is still listed', () => {
+    it('returns to the first row for a new query, even when the old row is still listed', () => {
         const groups = one(ITEMS);
         const { result, rerender } = renderHook(({ query }) => useRovingList({ query, groups, onSelect: vi.fn() }), {
             initialProps: { query: 'co' }
@@ -175,7 +175,7 @@ describe('useRovingList', () => {
         expect(result.current.active).toBe('a');
     });
 
-    it('marks a row the pointer picked, until a key moves the selection', () => {
+    it('marks the row that the pointer picked until a key moves the selection', () => {
         const { result } = renderHook(() => useRovingList({ query: 'q', groups: one(ITEMS), onSelect: vi.fn() }));
 
         act(() => result.current.pointAt('c'));

@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, ChannelType } from 'discord.js';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { silentLogger } from '#tests/silentLogger';
@@ -11,8 +11,7 @@ function tablesFor(
     ...commands: { toJSON: () => RESTPostAPIApplicationCommandsJSONBody }[]
 ): Record<string, RouteOptions> {
     const { slash } = new AugmentationBuilder(silentLogger).generate(
-        commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() })),
-        {}
+        commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() }))
     );
 
     return Object.fromEntries(Object.entries(slash).map(([route, row]) => [route, row.options]));

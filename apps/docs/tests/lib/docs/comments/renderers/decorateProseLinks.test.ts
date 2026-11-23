@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { decorateProseLinks } from '#lib/docs/comments/renderers/decorateProseLinks';
 
 describe('decorateProseLinks', () => {
-    it('leaves a same-package internal link untouched', () => {
+    it("doesn't decorate a same-package internal link", () => {
         const html = '<p><a href="/docs/packages/seedcord/latest/classes/Seedcord"><code>Seedcord</code></a></p>';
         expect(decorateProseLinks(html, 'seedcord')).toBe(html);
     });

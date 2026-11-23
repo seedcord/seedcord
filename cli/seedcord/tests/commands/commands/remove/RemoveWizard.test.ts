@@ -3,7 +3,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { KEY, PromptTerminal } from '@seedcord/cli-prompts/testing';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { askClean } from '#commands/commands/clean/CleanMode';
 import { askPurge } from '#commands/commands/purge/PurgeMode';
@@ -64,7 +64,7 @@ function wizard(
 }
 
 describe('RemoveWizard with the clean questions', () => {
-    it('leaves only the steps, the preview and the outcome once the picked duplicates are gone', async () => {
+    it('leaves only the steps, the preview and the outcome once the picked duplicates are deleted', async () => {
         using terminal = new PromptTerminal();
         const { deleted, done } = wizard(terminal);
 
@@ -96,7 +96,7 @@ describe('RemoveWizard with the clean questions', () => {
         );
     });
 
-    it('prints cancelled and deletes nothing when a prompt is cancelled', async () => {
+    it('prints cancelled and keeps every command when a prompt is cancelled', async () => {
         using terminal = new PromptTerminal();
         const { deleted, done } = wizard(terminal);
 
@@ -107,7 +107,7 @@ describe('RemoveWizard with the clean questions', () => {
         expect(await terminal.screen()).toBe('  cancelled');
     });
 
-    it('deletes nothing and says so when the delete is declined', async () => {
+    it('keeps every command and says so when the delete is declined', async () => {
         using terminal = new PromptTerminal();
         const { deleted, done } = wizard(terminal);
 
@@ -145,14 +145,14 @@ describe('RemoveWizard with the clean questions', () => {
         expect(await terminal.screen()).toContain(line);
     });
 
-    it('warns about a command it could not delete, then throws CliCommandsNotDeleted', async () => {
+    it('warns about a command it could not delete, then throws CliSomeFailed', async () => {
         using terminal = new PromptTerminal();
         const { done } = wizard(terminal, {
             '/applications/app-1/guilds/g1/commands/11': new Error('Unknown Command')
         });
 
         await terminal.press(KEY.enter, KEY.tab, KEY.down, KEY.tab, KEY.enter, 'y', KEY.enter);
-        await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsNotDeleted });
+        await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliSomeFailed });
 
         const screen = await terminal.screen();
         const warning = stripVTControlCharacters(levelMark('warn'));

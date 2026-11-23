@@ -1,5 +1,5 @@
 import { CustomId, ButtonRoute, RoleMenuRoute, UserMenuRoute } from '@seedcord/core';
-import { describe, expectTypeOf, it } from 'vitest';
+import { describe, expectTypeOf, it } from 'vite-plus/test';
 
 import { ButtonHandler, UserMenuHandler } from '#handlers/interaction/components';
 
@@ -73,7 +73,7 @@ class WrongField extends ButtonHandler<[typeof Approve]> {
     }
 }
 
-// this.params is never on a multi-route handler, so authors are pushed to match.
+// authors are pushed to match because this.params is `never` on a multi-route handler.
 @ButtonRoute(Approve, Deny)
 class MultiParams extends ButtonHandler<[typeof Approve, typeof Deny]> {
     async execute(): Promise<void> {

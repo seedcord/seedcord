@@ -1,6 +1,6 @@
 import { ESLint } from 'eslint';
 import tseslint from 'typescript-eslint';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import createConfig, { type SeedcordConfigOptions } from '#src/index';
 
@@ -37,18 +37,18 @@ describe('registerTypescriptConfigs', () => {
         expect(severity(rules, SYNTAX_ONLY)).toBe(2);
     });
 
-    it('keeps the parser project on no-type-checked, because the seedcord rules read types', async () => {
+    it('keeps the project service on no-type-checked because the seedcord rules read types', async () => {
         const config = await resolveConfig(
             { registerTypescriptConfigs: 'no-type-checked', registerSeedcordPlugin: true },
             'src/example.ts'
         );
 
-        const parserOptions = config.languageOptions?.parserOptions as { project?: string[] } | undefined;
-        expect(parserOptions?.project).toEqual(['./tsconfig.json']);
+        const parserOptions = config.languageOptions?.parserOptions as { projectService?: boolean } | undefined;
+        expect(parserOptions?.projectService).toBe(true);
         expect(config.rules?.['@seedcord/no-djs-builder-import']).toBeDefined();
     });
 
-    it('leaves no typescript-eslint rule switched on for false', async () => {
+    it('leaves zero typescript-eslint rules switched on for false', async () => {
         const { rules = {} } = await resolveConfig({ registerTypescriptConfigs: false }, 'src/example.ts');
         // eslint-config-prettier still sets a few of them to off
         const enabled = Object.keys(rules).filter(

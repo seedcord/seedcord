@@ -1,33 +1,29 @@
 {
     "name": "@seedcord/guide",
-    "version": "0.0.3",
-    "type": "module",
-    "engines": {
-        "node": "^24.22.1 || >=26.12.1"
-    },
+    "version": "0.0.4-next.1",
     "private": true,
+    "type": "module",
     "scripts": {
         "dev": "cross-env TWOSLASH=0 next dev",
         "dev:twoslash": "cross-env NODE_OPTIONS=--max-old-space-size=8192 next dev",
         "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 next build && node -e \"require('node:fs').copyFileSync('_headers', 'dist/_headers')\"",
-        "start": "pnpm dlx serve dist",
+        "start": "vp dlx serve dist",
         "preview": "wrangler dev",
         "deploy": "wrangler deploy",
         "types": "wrangler types workerd/worker-configuration.d.ts",
         "postinstall": "wrangler types workerd/worker-configuration.d.ts",
         "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' --cache --no-error-on-unmatched-pattern",
         "tc": "fumadocs-mdx && tsgo --noEmit && tsgo -p workerd --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev"
+        "test": "vp test run",
+        "test:watch": "vp test dev"
     },
     "dependencies": {
         "@seedcord/brand": "workspace:^",
         "@seedcord/docs-engine": "workspace:^",
         "@seedcord/docs-search": "workspace:^",
         "@seedcord/errors": "workspace:^",
+        "@seedcord/plugin-oauth": "workspace:^",
         "@seedcord/ui": "workspace:^",
         "@shikijs/twoslash": "^4.5.0",
         "discord-component-embed": "workspace:^",
@@ -42,7 +38,8 @@
         "takumi-js": "catalog:deps",
         "twoslash": "0.3.9",
         "twoslash-protocol": "0.3.9",
-        "type-fest": "catalog:deps"
+        "type-fest": "catalog:deps",
+        "zod": "catalog:deps"
     },
     "devDependencies": {
         "@discordjs/builders": "catalog:peer",
@@ -52,21 +49,26 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/gateway": "workspace:^",
         "@seedcord/http": "workspace:^",
-        "@seedcord/plugin-kysely-postgres": "workspace:^",
+        "@seedcord/plugin-i18n": "workspace:^",
+        "@seedcord/plugin-kysely": "workspace:^",
         "@seedcord/plugin-mongoose": "workspace:^",
+        "@seedcord/plugin-tasks": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",
         "@testing-library/dom": "catalog:test",
         "@testing-library/jest-dom": "catalog:test",
         "@testing-library/react": "catalog:test",
         "@testing-library/user-event": "catalog:test",
+        "@types/better-sqlite3": "catalog:deps",
         "@types/hast": "catalog:deps",
         "@types/mdast": "catalog:deps",
         "@types/mdx": "catalog:deps",
-        "@types/pg": "catalog:deps",
+        "@types/pg": "^8.23.1",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
+        "better-sqlite3": "catalog:deps",
         "cross-env": "catalog:deps",
         "db0": "catalog:deps",
         "discord-api-types": "catalog:deps",
@@ -83,7 +85,7 @@
         "mdast-util-mdx": "^3.0.0",
         "mdast-util-to-markdown": "catalog:deps",
         "mongoose": "catalog:peer",
-        "pg": "catalog:peer",
+        "pg": "^8.22.0",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "remark-mdx": "^3.1.1",
         "remark-parse": "^11.0.0",
@@ -95,5 +97,8 @@
         "vfile": "catalog:deps",
         "vitest": "catalog:test",
         "wrangler": "catalog:peer"
+    },
+    "engines": {
+        "node": "^24.22.1 || >=26.12.1"
     }
 }

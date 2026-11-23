@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { DEFAULT_GENERATED_DIR, MANIFEST_FILENAME, resolveGeneratedDir, resolveManifestPath } from '#src/constants';
 

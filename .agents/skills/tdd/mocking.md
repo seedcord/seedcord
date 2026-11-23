@@ -18,7 +18,7 @@ At a boundary, design the interface so it is easy to stand in for.
 
 **1. Inject the dependency**
 
-Pass the external dependency in rather than constructing it inside.
+Pass the external dependency in through the constructor or a parameter.
 
 ```typescript
 // Easy to substitute
@@ -50,4 +50,4 @@ const rest = {
 };
 ```
 
-The specific approach means each stub returns one known shape, the test setup has no branching, and you can see which calls a test exercises.
+The specific approach means each stub returns one known shape, the test setup doesn't branch, and you can see which calls a test makes.

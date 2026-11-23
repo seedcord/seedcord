@@ -1,5 +1,5 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, token } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
 import { indexById } from '#src/commands/linkCommands';
@@ -34,7 +34,7 @@ export async function readCommandsAt(
                 : [
                       `the commands deployed to guild ${paint.sky(scope)}`,
                       reason,
-                      `Check that ${paint.bold('DISCORD_BOT_TOKEN')} is still valid and that the bot is in that guild.`
+                      `Check that ${token()} is still valid and that the bot is in that guild.`
                   ],
             { cause: error }
         );

@@ -20,7 +20,7 @@ export class ProjectFetchError extends Error {
     }
 }
 
-/** Thrown when a `(package, version)` selection has no entry in the index. */
+/** Thrown when a `(package, version)` selection doesn't have an entry in the index. */
 export class PackageVersionNotFoundError extends Error {
     constructor(
         public readonly packageName: string,

@@ -1,5 +1,5 @@
 import { InteractionType } from 'discord-api-types/v10';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { InteractionMiddleware } from '#handlers/interaction';
 
@@ -32,7 +32,7 @@ void SlashOnly;
 class TwoKinds extends InteractionMiddleware<InteractionKind.Button | InteractionKind.Modal> {
     public execute(): Promise<void> {
         expectTypeOf(this.event).toEqualTypeOf<APIMessageComponentButtonInteraction | APIModalSubmitInteraction>();
-        // the raw payload carries no guards
+        // the raw payload doesn't carry guards
         if (this.event.type === InteractionType.ModalSubmit) {
             expectTypeOf(this.event).toEqualTypeOf<APIModalSubmitInteraction>();
         }
@@ -43,7 +43,7 @@ void TwoKinds;
 
 class Catchall extends InteractionMiddleware {
     public execute(): Promise<void> {
-        // every repliable kind carries the base interaction fields
+        // every repliable kind has the base interaction fields
         expectTypeOf(this.event.id).toEqualTypeOf<string>();
         if (this.event.type === InteractionType.ModalSubmit) {
             expectTypeOf(this.event).toEqualTypeOf<APIModalSubmitInteraction>();
@@ -53,7 +53,7 @@ class Catchall extends InteractionMiddleware {
 }
 void Catchall;
 
-// autocomplete carries no reply target
+// autocomplete doesn't carry a reply target
 // @ts-expect-error Autocomplete is not a middleware kind
 class NotAutocomplete extends InteractionMiddleware<InteractionKind.Autocomplete> {
     public execute(): Promise<void> {

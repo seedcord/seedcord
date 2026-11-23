@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { afterEach, assert, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, assert, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
@@ -73,7 +73,7 @@ async function writeEntry(root: string, specifier: string): Promise<string> {
 }
 
 describe('openModuleLoader', () => {
-    it('opens no hmr websocket while another process holds its port', async () => {
+    it("doesn't open an hmr websocket while another process holds its port", async () => {
         await holdViteHmrPort();
         const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
         const root = await project();
@@ -84,7 +84,7 @@ describe('openModuleLoader', () => {
         expect(logged).not.toHaveBeenCalled();
     });
 
-    it("writes nothing to the project's vite cache", async () => {
+    it("doesn't create the project's vite cache", async () => {
         const root = await project();
 
         await using modules = await openModuleLoader(root, SERVER, 'development', BOT_CODE);
@@ -175,7 +175,7 @@ describe('openModuleLoader', () => {
         await expect(modules.importModule(entry)).rejects.toMatchObject({ code: SeedcordErrorCode.CliPathHasHash });
     });
 
-    it('resolves a relative import with no paths declared', async () => {
+    it('resolves a relative import without paths declared', async () => {
         const root = await project();
         const entry = await writeEntry(root, './lib/greeting');
 

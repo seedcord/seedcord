@@ -30,7 +30,7 @@ export interface EventMiddlewareMetadata {
 /**
  * Registers an event middleware. It runs before the handlers for every event it lists.
  *
- * @param options - The events this middleware runs on and its ordering.
+ * @param options - The events that this middleware runs on and its ordering.
  * @decorator
  *
  * @example

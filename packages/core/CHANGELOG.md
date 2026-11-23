@@ -1,5 +1,73 @@
 # @seedcord/core
 
+## 0.14.0-next.1
+
+### 💥 Breaking
+
+- Your bot now reads the `emojis` folder beside `seedcord.config.ts` when it starts, and stops if a file in it isn't uploaded to your application. If you already keep other files in a folder with that name, move them, or point `emojis.dir` in `seedcord.config.ts` at an empty folder. ([#474](https://github.com/seedcord/seedcord/pull/474))
+- A gateway bot now has the `port` and `fetch()` members that an http bot already had, and every bot has the new `url`. Rename any plugin attached under one of those keys. ([#472](https://github.com/seedcord/seedcord/pull/472))
+- `port` and `healthCheck` are now one `server` block on gateway and node http bots, like `server: { port: 8080, health: '/healthz' }`. `healthCheck: false` becomes `server: { health: false }`, and `port: false` becomes `server: { port: false }`. A gateway bot's server now listens on port 3000 by default, where it used 6967. ([#472](https://github.com/seedcord/seedcord/pull/472))
+
+### ✨ Minor
+
+- Added `core.url`, which gives a plugin the address people reach the bot at, from the new `server.url` config key. Under `seedcord dev`, a bot without `server.url` gets its localhost address, and an http bot whose `dev.tunnel` is a URL gets that URL. ([#472](https://github.com/seedcord/seedcord/pull/472))
+- Added `seedcord emojis` to upload the images in an `emojis` folder beside `seedcord.config.ts` to your application, and to list, download and delete the emojis already there. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else. ([#474](https://github.com/seedcord/seedcord/pull/474))
+- Added `interactionDispatching`, which the bus publishes when an interaction dispatch starts. `unhandledInteractionError` now includes the `interactionId`, and `unhandledEventError` now includes the event `name`. ([#469](https://github.com/seedcord/seedcord/pull/469))
+- Plugins can now answer web requests with a `fetch(request)` method, like a webhook from another service. seedcord calls each plugin's `fetch` in attach order before the interactions engine. A gateway bot serves those routes on the same server as its health path. ([#472](https://github.com/seedcord/seedcord/pull/472))
+- `responseAttempted` now includes a `body` with what the write sent, like the components of a reply or the modal from `showModal`, so a subscriber can log what Discord rejected. ([#469](https://github.com/seedcord/seedcord/pull/469))
+- In development, seedcord now logs a warning if an interaction still hasn't been answered 2.5 seconds after Discord created it. Discord fails the interaction at 3 seconds. ([#469](https://github.com/seedcord/seedcord/pull/469))
+- `@WebhookUrl` now also takes a function that returns the url, like `@WebhookUrl(() => settings.banLogWebhook)`, for a url you keep outside the environment. ([#468](https://github.com/seedcord/seedcord/pull/468))
+
+### 🩹 Patch
+
+- The bot now reads its token from `BOT_TOKEN` when `DISCORD_BOT_TOKEN` is unset, so a bot moving to seedcord can keep its old variable name. ([`fa309a1`](https://github.com/seedcord/seedcord/commit/fa309a101b75c102a50fd189ad05e9cda52b934c))
+- Fixed three checks on a gateway bot that missed Discord's errors because discord.js loads a different build of `@discordjs/rest` than seedcord does. A deleted log webhook now stops startup with `ConfigWebhookNotFound`, a refused command deploy points at the token or the command fields, and error reports show the interaction's timestamps. ([`9c7fb58`](https://github.com/seedcord/seedcord/commit/9c7fb583b077c0e7bddaabd07969597b250b3517))
+- Fixed `kv.update()` hanging on Cloudflare Workers when a handler started it without awaiting it. Because Workers freezes that update once the request ends, every later update to the same key waited on it forever in that isolate. ([`0342967`](https://github.com/seedcord/seedcord/commit/03429678c73b800a01e59904b64102e7ccce86e3))
+- Fixed `WebhookLog` logging discord.js's raw validation error when a card has a broken component. It now logs which component failed and why, the same as a reply does. ([#469](https://github.com/seedcord/seedcord/pull/469))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
+- `@seedcord/types` 0.17.0-next.0 → 0.17.0-next.1
+- `@seedcord/utils` 0.10.0-next.0 → 0.10.0-next.1
+- `@seedcord/logger` 0.6.2-next.0 → 0.7.0-next.1
+
+## 0.14.0-next.0
+
+### 💥 Breaking
+
+- Fixed `Cooldown(NaN)` and `Cooldown(Infinity)` building a gate that never blocked. They now throw `InvalidDuration`, the same as `Cooldown(0)`. ([#434](https://github.com/seedcord/seedcord/pull/434), thanks [@camdzic](https://github.com/camdzic))
+- Fixed an error card posting publicly after `defer({ ephemeral: false })`. When a `send()` or `followUp()` passes a different `ephemeral` than the defer, seedcord now deletes the placeholder and sends a new message with that value. ([`3cfdb6d`](https://github.com/seedcord/seedcord/commit/3cfdb6d6ac81409786146a6a4d440040bd47c7ac))
+- `FolderExports`, `Generated` and `PluginTypes` moved from the `@seedcord/core` root to `@seedcord/core/plugin`, so update any import from the root. ([#456](https://github.com/seedcord/seedcord/pull/456))
+- Fixed a second `send()` after `defer()` replacing the first one. The first call fills the placeholder, and every `send()` after it now sends a new message, the same as after `reply()`. ([`3cfdb6d`](https://github.com/seedcord/seedcord/commit/3cfdb6d6ac81409786146a6a4d440040bd47c7ac))
+
+### ✨ Minor
+
+- `Cooldown('1.5h')`, `Cooldown('0s')`, and any other duration literal that the parser rejects now fail to compile. They used to throw when `Cooldown()` ran, which for a `@Gated` handler is when its module loads. ([#434](https://github.com/seedcord/seedcord/pull/434), thanks [@camdzic](https://github.com/camdzic))
+- `seedcord codegen` now leaves the members that only seedcord calls, like `init()`, out of `this.core.<key>`, so `this.core.db.init()` no longer compiles in a handler. If you pass `this.core.db` to your own function, type that parameter as `AttachedPlugin<Mongoose>`. ([#456](https://github.com/seedcord/seedcord/pull/456))
+- Added the `Storable` type to the public exports. A plugin can type a parameter with it, so a value that `KvCollection` can't store as JSON fails to compile. ([#434](https://github.com/seedcord/seedcord/pull/434), thanks [@camdzic](https://github.com/camdzic))
+- Added the `Stored` type to the public exports. It describes a record after a `KvCollection` reads it back, so a plugin that stores a record can type the value that it gets back. ([#434](https://github.com/seedcord/seedcord/pull/434), thanks [@camdzic](https://github.com/camdzic))
+- `FolderExports` now has `scan()`, which returns the exports that `is` accepts without registering them. Call it from a plugin's `codegen()`, which runs without `init()`. ([#465](https://github.com/seedcord/seedcord/pull/465))
+- Added `bot.interactions.ephemeral`. Set it to `false` to make replies public by default. ([#459](https://github.com/seedcord/seedcord/pull/459), thanks [@camdzic](https://github.com/camdzic))
+- A plugin can now set `dispatchMembers`, an object of functions that seedcord runs once for each interaction or event. Each result becomes `this.<name>` on handlers and middleware, and as `ctx.<name>` in gates and `Notice.render`. ([#456](https://github.com/seedcord/seedcord/pull/456))
+- A plugin can now define `prepareCommands` to edit commands before seedcord sends them to Discord, like setting `name_localizations`. A started bot runs it before it deploys, and so do `seedcord codegen`, a Workers build, `seedcord commands deploy`, and `seedcord commands list`. ([#456](https://github.com/seedcord/seedcord/pull/456))
+- Added `registerCommandFiles` to `Plugin`. Under `seedcord dev`, saving a file that its glob patterns match shows the refresh prompt. A `!` pattern excludes the files it matches. ([#464](https://github.com/seedcord/seedcord/pull/464))
+
+### 🩹 Patch
+
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
+- Fixed the error webhook cutting off the cause when the error's stack trace was long. ([#380](https://github.com/seedcord/seedcord/pull/380), thanks [@SerenModz21](https://github.com/SerenModz21))
+- Replaced hand-written types and helpers with the ones from `type-fest` and `es-toolkit`. ([#453](https://github.com/seedcord/seedcord/pull/453))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
+- `@seedcord/types` 0.16.2 → 0.17.0-next.0
+- `@seedcord/custom-id` 0.3.1 → 0.3.2-next.0
+- `@seedcord/event-emitter` 0.2.1 → 0.2.2-next.0
+- `@seedcord/logger` 0.6.1 → 0.6.2-next.0
+- `@seedcord/utils` 0.9.2 → 0.10.0-next.0
+
 ## 0.13.0
 
 ### 💥 Breaking

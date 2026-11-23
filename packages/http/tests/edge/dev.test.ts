@@ -1,11 +1,11 @@
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
-import { fromDevLogLine, setDevChannel } from '@seedcord/core/internal';
+import { DEV_URL_HEADER, fromDevLogLine, setDevChannel } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { Seedcord } from '#src/edge/Seedcord';
 import { BUILT_ROOT, clearBuiltFiles, registerBuiltFiles } from '#tests/helpers/builtFiles';
@@ -15,6 +15,7 @@ import { capturingCtx } from '#tests/helpers/interactions';
 
 import type { HttpEdgeConfig } from '#interfaces/Config';
 import type { Signer } from '#tests/helpers/ed25519';
+import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { DeployedHashes } from '@seedcord/types/internal';
 
@@ -32,7 +33,7 @@ interface FakeCli {
     save(event: HmrUpdateEvent): void;
 }
 
-// the channel seedcord dev opens to the worker. it answers a read with `deployed`
+// the channel that seedcord dev opens to the worker. it answers a read with `deployed`
 function connectCli(deployed?: DeployedHashes): FakeCli {
     const sent: [string, unknown][] = [];
     const handlers = new Map<string, (data: unknown) => void>();
@@ -48,7 +49,7 @@ function connectCli(deployed?: DeployedHashes): FakeCli {
     return {
         sent,
         events: () => sent.map(([event]) => event),
-        start: () => handlers.get('seedcord:start')?.({ colorLevel: 0 }),
+        start: () => handlers.get('seedcord:start')?.({ colorLevel: 0, url: 'http://localhost:3000' }),
         save: (event) => handlers.get('seedcord:hmr')?.(event)
     };
 }
@@ -106,6 +107,36 @@ describe('the edge Seedcord under seedcord dev', () => {
         await vi.waitFor(() => expect(cli.sent).toContainEqual(['seedcord:started', { username: 'wave-bot' }]));
         const response = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
         expect(response.status).toBe(200);
+        expect(seedcord.url.href).toBe('http://localhost:3000/');
+    });
+
+    it.each([
+        ['//other.test/page?x=1', 'http://127.0.0.1:3000/page?x=1'],
+        // the first parse turns /./ into a path that starts with two slashes
+        ['/.//other.test/page?x=1', 'http://127.0.0.1:3000//other.test/page?x=1']
+    ])('keeps its own origin when the dev header is %s', async (header, expected) => {
+        const seen: string[] = [];
+        class Recorder extends Plugin {
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
+
+            public override fetch(request: Request): Response {
+                seen.push(request.url);
+                return new Response('ok');
+            }
+        }
+        const cli = connectCli();
+        await liveEnv();
+        const seedcord = new Seedcord(config).attach('recorder', Recorder);
+        stubDiscord(seedcord);
+        cli.start();
+        await vi.waitFor(() => expect(cli.events()).toContain('seedcord:started'));
+
+        const headers = { [DEV_URL_HEADER]: header };
+        await seedcord.fetch(new Request('http://127.0.0.1:3000/', { headers }), undefined, capturingCtx());
+
+        expect(seen).toEqual([expected]);
     });
 
     it('deploys the commands from the bot files when it starts', async () => {
@@ -140,7 +171,7 @@ describe('the edge Seedcord under seedcord dev', () => {
         expect(put).toHaveBeenCalledWith(Routes.applicationCommands(APP_ID), expect.anything());
     });
 
-    it('reads the ids and deploys nothing when the CLI passes the hashes of an unchanged deploy', async () => {
+    it('reads the ids and skips the deploy when the CLI passes the hashes of an unchanged deploy', async () => {
         @RegisterCommand('global')
         class Ping extends BuilderComponent<'command'> {
             constructor() {
@@ -241,6 +272,40 @@ describe('the edge Seedcord under seedcord dev', () => {
         cli.save({ file: '/bot/config/cache.json', type: 'update' });
 
         await vi.waitFor(() => expect(saved).toEqual(['/bot/config/cache.json']));
+    });
+
+    it("prompts a commands refresh for a file that a plugin's registerCommandFiles matches", async () => {
+        @RegisterCommand('global')
+        class Ping extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                this.instance.setName('ping').setDescription('Replies with pong');
+            }
+        }
+        class Descriptions extends Plugin {
+            public constructor(host: CoreBase) {
+                super(host);
+                this.registerCommandFiles([`${BUILT_ROOT}/descriptions/*.txt`]);
+            }
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
+        }
+        registerBuiltFiles({ '/commands/Ping.ts': { Ping } });
+        const cli = connectCli();
+        await liveEnv();
+        const seedcord = new Seedcord({
+            ...config,
+            bot: { ...config.bot, commands: { path: `${BUILT_ROOT}/commands` } }
+        }).attach('descriptions', Descriptions);
+        stubDiscord(seedcord);
+        Object.assign(seedcord.rest, { put: vi.fn().mockResolvedValue([]) });
+        cli.start();
+        await vi.waitFor(() => expect(cli.events()).toContain('seedcord:started'));
+
+        cli.save({ file: `${BUILT_ROOT}/descriptions/ping.txt`, type: 'update' });
+
+        await vi.waitFor(() => expect(cli.events()).toContain('seedcord:commands-update-prompt'));
     });
 
     it('writes each log to the console for the CLI as it happens', async () => {

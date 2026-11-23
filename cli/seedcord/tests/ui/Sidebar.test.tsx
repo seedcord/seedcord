@@ -1,8 +1,9 @@
 import { settled } from '@seedcord/cli-prompts/testing';
+import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
 import { Box, Text, useBoxMetrics } from 'ink';
 import { render } from 'ink-testing-library';
 import React, { useRef } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { version } from '#core/version';
 import { Sidebar } from '#ui/components/primitives/Sidebar';
@@ -19,24 +20,6 @@ import type { DevState } from '#ui/stores/DevStore';
 import type { LogRecord } from '@seedcord/types';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
-
-// every channel the framework logs on, which is the tallest the chip list gets without plugins
-const FRAMEWORK_CHANNELS = [
-    'default',
-    'bot',
-    'lifecycle',
-    'health',
-    'interactions',
-    'events',
-    'commands',
-    'subscribers',
-    'errors',
-    'gates',
-    'plugins',
-    'hmr',
-    'cli',
-    'tsc'
-];
 
 function runningState(): DevState {
     const store = new DevStore();
@@ -154,7 +137,7 @@ describe('Sidebar', () => {
         return frame;
     }
 
-    // the tier thresholds are authored constants, and this is what keeps them honest as the rail changes
+    // this keeps the tier thresholds, which are authored constants, honest as the rail changes
     it('fits the open rail inside the full tier', async () => {
         const { rows } = await measure(sidebar('always'));
 
@@ -202,7 +185,7 @@ describe('Sidebar', () => {
         slim.unmount();
     });
 
-    it('leaves both rows out on a gateway run', () => {
+    it("doesn't show both rows on a gateway run", () => {
         const frame = frameFor(RUNNING);
 
         expect(frame).not.toContain('port');

@@ -1,10 +1,10 @@
 'use client';
 
+import { cn } from 'cn';
 import { Check } from 'lucide-react';
 import { Fragment, useId, useState } from 'react';
 
 import { CaretTrigger } from './CaretTrigger';
-import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 import { Popover, PopoverContent, PopoverTrigger } from './Popover';
 

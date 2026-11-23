@@ -18,7 +18,7 @@ export async function buildClassLikeEntity<Kind extends 'class' | 'interface'>(
     const methodNodes: DocNode[] = [];
 
     for (const child of node.children) {
-        // an @internal member stays reachable by its direct link
+        // an @internal member is still reachable by its direct link
         if (child.flags.isInternal) continue;
         if (PROPERTY_KINDS.has(child.kindLabel)) propertyNodes.push(child);
         else if (child.kindLabel === CONSTRUCTOR_KIND) constructorNodes.push(child);

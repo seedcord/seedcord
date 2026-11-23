@@ -20,7 +20,7 @@ function matchesKind(node: DocNode, kind: EntityTone | null): boolean {
         return true;
     }
 
-    // strict: a non-entity kind (accessor, constructor) resolves to null and matches no tone filter.
+    // strict: a non-entity kind (accessor, constructor) resolves to null and doesn't match any tone filter.
     // the non-strict resolver defaults null to 'class' instead.
     return resolveEntityToneStrict(kindName(node.kind)) === kind;
 }

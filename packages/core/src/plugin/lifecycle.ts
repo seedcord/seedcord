@@ -19,7 +19,7 @@ import type { TaskShutdownPhase } from '#src/lifecycle/phases';
 export interface PluginLifecycleSpec {
     /**
      * Defaults to `StartupPhase.Configuration` and 15000ms. Set the phase to `Ready` and `init()`
-     * runs ahead of every plugin's `ready()`.
+     * runs before every plugin's `ready()`.
      */
     init?: { phase?: StartupPhase; timeout?: number };
     /** `ready()` always runs in `StartupPhase.Ready`. Defaults to a 15000ms timeout. */

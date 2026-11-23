@@ -9,7 +9,7 @@ The maintainer opens a second Claude session and gives it a name, like "guide he
 - Make each job message stand alone. The helper has none of this session's context, so the message lists the skills to load, where ground truth is, the rules, the batches, and the report format. [PROMPTS.md](PROMPTS.md#readme-batches) has a full example.
 - Split a long job into batches. The helper stops after each batch and waits for a go, so you can review it before the next batch builds on it.
 - Tell every helper and every writer to spawn no subagents or workflows, and to skip the review step in `guide-voice`'s loop. The main session runs every review. Skills they load, like `guide-voice` and `code-quality`, tell them to start agents, and those agents never show up in your count. One helper on the Vite release started five.
-- Every helper works in its own worktree when it changes code, or in named files of the shared worktree when it writes docs. Tell it which folders the main session is using, so it stays out of them.
+- Every helper works in its own worktree when it changes code, or in named files of the shared worktree when it writes docs. Tell it which folders the main session is using, so it doesn't touch them.
 
 ## Subagents
 

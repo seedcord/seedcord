@@ -38,7 +38,7 @@ export default function createConfig(options: SeedcordConfigOptions = {}): FlatC
     const { registerDiscordjsPlugin = false, registerSeedcordPlugin = false, userConfigs = [], ...rest } = options;
 
     // injected through userConfigs so the blocks follow the shared rule blocks, and consumer
-    // overrides still win because their configs come after them
+    // overrides still apply because their configs come after them
     const pluginBlocks: FlatConfigItem[] = [
         ...(registerDiscordjsPlugin ? [pluginPreset(discordjsRecommended)] : []),
         ...(registerSeedcordPlugin ? [pluginPreset(seedcordRecommended)] : [])

@@ -1,12 +1,19 @@
-/* eslint-disable max-lines -- the satisfies check below covers every code only while all messages are in one map */
 import { PRODUCTION_SITES } from '@seedcord/brand';
 
 import { SeedcordErrorCode } from './ErrorCodes';
-import { deployFix, listedFolderProblems, placeText, token, vitePluginFix } from './messageParts';
-import { allOf, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
+import {
+    deployFix,
+    emojiFileProblems,
+    listedFolderProblems,
+    loginNeededBecause,
+    placeText,
+    token,
+    vitePluginFix
+} from './messageParts';
+import { allOf, capitalized, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
 import { paint } from './palette';
 
-import type { VitePluginPlace } from './messageParts';
+import type { LoginNeededReason, VitePluginPlace } from './messageParts';
 
 /** @internal */
 const messages = {
@@ -14,8 +21,8 @@ const messages = {
         `${paint.iris(count)} configured emojis could not be resolved. Each one is listed below.`,
     [SeedcordErrorCode.ConfigEmojiInvalid]: (key: string) =>
         `The emoji ${paint.sky(key)} in ${paint.bold('bot.emojis')} has a value seedcord cannot read. Set it to the emoji's name, or to a ${paint.bold('[name, guildId]')} pair for a guild emoji.`,
-    [SeedcordErrorCode.ConfigEmojiNotFound]: (key: string, name: string, where: string) =>
-        `The emoji ${paint.sky(key)} points at ${paint.bold(name)}, but ${where} has no emoji with that name. Check the spelling, or upload the emoji there.`,
+    [SeedcordErrorCode.ConfigEmojiNotFound]: (key: string, name: string, where: string, fix: string) =>
+        `The emoji ${paint.sky(key)} points at ${paint.bold(name)}, but ${where} doesn't have an emoji with that name. ${fix}`,
     [SeedcordErrorCode.ConfigEmojiSourceUnreadable]: (
         key: string,
         name: string,
@@ -25,9 +32,9 @@ const messages = {
     ) =>
         `Could not read the emojis in ${where} to resolve ${paint.sky(key)} (${paint.bold(name)}). ${reasonThen(reason, fix)}`,
     [SeedcordErrorCode.ConfigWebhookNotFound]: (envKey: string) =>
-        `Discord has no webhook at the URL in ${paint.bold(envKey)}. Someone deleted it, or the id or token in the URL is wrong. Create a webhook and copy its URL.`,
-    [SeedcordErrorCode.ConfigMissingEnv]: (name: string) =>
-        `${paint.bold(name)} is not set. Add it to your environment or your .env file.`,
+        `Discord can't find a webhook at the URL in ${paint.bold(envKey)}. Someone deleted it, or the id or token in the URL is wrong. Create a webhook and copy its URL.`,
+    [SeedcordErrorCode.ConfigMissingEnv]: (name: string, whereToFindIt?: string) =>
+        `${paint.bold(name)} is not set.${whereToFindIt ? ` ${whereToFindIt}` : ''} Add it to your environment or your .env file.`,
     [SeedcordErrorCode.ConfigInvalidEnv]: (name: string, expected: string, why?: string) =>
         `${paint.bold(name)} has a value seedcord cannot use.${why ? ` ${why}` : ''} Set it to ${expected}.`,
     [SeedcordErrorCode.MissingGuildsIntent]: (commands: readonly string[]) =>
@@ -38,6 +45,10 @@ const messages = {
         `Remove ${paint.sky(`bot.restOptions.${key}`)} from your edge config. A sweeper interval starts a timer at the worker's global scope, where workerd throws.`,
     [SeedcordErrorCode.PortInUse]: (port: number, setting: string, configFile?: string) =>
         `Another process already listens on port ${port}. Stop it, or set ${paint.bold(setting)} in ${configFile ? paint.path(configFile) : 'your Seedcord config'} to a free port.`,
+    [SeedcordErrorCode.ConfigEmojiFileUnusable]: (file: string, problem: keyof typeof emojiFileProblems) =>
+        `${paint.path(file)} can't be an emoji. ${emojiFileProblems[problem]}`,
+    [SeedcordErrorCode.ConfigEmojiFolderInvalid]: (count: number) =>
+        `Your emojis folder has ${paint.iris(count)} problems. Each one is listed below.`,
 
     [SeedcordErrorCode.LifecycleTaskChangeRejected]: (action: 'add' | 'remove', startup: 'running' | 'finished') =>
         `${startup === 'running' ? 'Startup is running, so its tasks cannot change.' : 'Startup already finished, so this task would never run.'} ${action === 'add' ? 'Add' : 'Remove'} startup tasks before you call ${paint.bold('start()')}.`,
@@ -59,7 +70,7 @@ const messages = {
     [SeedcordErrorCode.CorePluginKeyExists]: (key: string) =>
         `A plugin is already attached at ${paint.sky(key)}. Attach this one under another key.`,
     [SeedcordErrorCode.CoreBotRoleMissing]: (guildId?: string) =>
-        `The role cache of ${guildId ? `guild ${paint.sky(guildId)}` : 'this guild'} has no role for the bot. discord.js fills that cache through the Guilds intent, so check that clientOptions.intents includes GatewayIntentBits.Guilds.`,
+        `The role cache of ${guildId ? `guild ${paint.sky(guildId)}` : 'this guild'} doesn't have a role for the bot. discord.js fills that cache through the Guilds intent, so check that clientOptions.intents includes GatewayIntentBits.Guilds.`,
     [SeedcordErrorCode.CoreControllerPathMissing]: (controllerName: string, pathKind: string) =>
         `${paint.sky(controllerName)} was constructed without a ${pathKind} path. This is a bug in seedcord.`,
     [SeedcordErrorCode.CoreImportFailed]: (file: string, reason: string) =>
@@ -80,23 +91,35 @@ const messages = {
     [SeedcordErrorCode.CoreDirectoryRootUnknown]: (dir: string) =>
         `${paint.path(dir)} is relative to ${paint.bold('root')}, but nothing set ${paint.bold('root')} in this process. The ${paint.bold('seedcord')} CLI sets it, but a plain script or a test doesn't. Pass an absolute path instead, like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}. If you ran a file from your build folder, run ${paint.path('index.mjs')} from that folder instead.`,
     [SeedcordErrorCode.CoreDirectoryNotBuilt]: (dir: string, root: string) =>
-        `When ${paint.bold('seedcord build')} ran, ${paint.path(dir)} was neither a folder under ${paint.bold('root')} (${paint.path(root)}) nor one listed in ${paint.bold('files')}, so the build holds none of its files. Create the folder, then build again.`,
+        `When ${paint.bold('seedcord build')} ran, ${paint.path(dir)} was neither a folder under ${paint.bold('root')} (${paint.path(root)}) nor one listed in ${paint.bold('files')}, so its files aren't in the build. Create the folder, then build again.`,
     [SeedcordErrorCode.CoreDirectoryNotListed]: (dir: string) =>
         `${paint.bold('readFiles')} was called on ${paint.path(dir)}, which is outside every folder that ${paint.bold('files')} lists in seedcord.config.ts. ${paint.bold('seedcord build')} bundles non-code files from only those folders. Add it to ${paint.bold('files')}, like ${paint.sky("files: ['./locales']")}.`,
     [SeedcordErrorCode.CoreDirectorySkipped]: (dir: string) =>
-        `${paint.path(dir)} is in a folder ${paint.bold('seedcord build')} skips, so a built bot holds none of its files. The build skips dot-folders, node_modules, outDir, the logs folder beside seedcord.config.ts, and project files like package.json. Move the files to a folder outside those.`,
+        `${paint.path(dir)} is in a folder ${paint.bold('seedcord build')} skips, so its files aren't in a built bot. The build skips dot-folders, node_modules, outDir, the logs folder beside seedcord.config.ts, and project files like package.json. Move the files to a folder outside those.`,
     [SeedcordErrorCode.CoreKvKeysUnsupported]: () =>
         `${paint.bold('collection.entries()')} reads the key list of the Keyv store in ${paint.bold('config.kv')}, but that store can't list its keys. Cache adapters like ${paint.bold('@keyv/memcache')} never can. Pass an adapter that can, like ${paint.bold('@keyv/redis')} or ${paint.bold('@keyv/sqlite')}.`,
     [SeedcordErrorCode.CoreKvDriverFailed]: (operation: 'read' | 'write' | 'delete' | 'list', key: string) =>
         `The driver in ${paint.bold('config.kv')} failed to ${operation} ${paint.sky(key)}. Check that the storage it connects to is reachable.`,
     [SeedcordErrorCode.CoreKvUnserializable]: (key: string, reason: string) =>
-        `The record for ${paint.sky(key)} can't be stored, because ${paint.bold('JSON.stringify')} threw: ${reason}. ${paint.bold('config.kv')} stores every record as JSON. Remove the circular reference, or convert the value to a type that JSON supports, like a ${paint.bold('bigint')} to a string.`,
+        `The record for ${paint.sky(key)} can't be stored because ${paint.bold('JSON.stringify')} threw: ${reason}. ${paint.bold('config.kv')} stores every record as JSON. Remove the circular reference, or convert the value to a type that JSON supports, like a ${paint.bold('bigint')} to a string.`,
     [SeedcordErrorCode.CoreBotMemberMissing]: (guildId: string) =>
         `The member cache of guild ${paint.sky(guildId)} doesn't hold the bot's member, so seedcord can't read the bot's permissions there. If ${paint.bold('clientOptions.makeCache')} limits ${paint.bold('GuildMemberManager')}, keep the bot's member with ${paint.sky('keepOverLimit: (member) => member.id === member.client.user.id')}.`,
     [SeedcordErrorCode.CoreBuiltModuleRanDirectly]: () =>
         `A module from your build read its path from ${paint.bold('import.meta')}, but nothing set that path because ${paint.path('index.mjs')} didn't run first. Run ${paint.path('index.mjs')} instead of the module, like ${paint.bold('node dist/index.mjs')}.`,
     [SeedcordErrorCode.CorePluginKvOutsideAttach]: (plugin: string) =>
         `${paint.bold(plugin)} read ${paint.bold('this.kv')} on an instance that ${paint.bold('attach()')} didn't build. ${paint.bold('this.kv')} stores a plugin's records under its attach key, which only ${paint.bold('attach()')} gives it. Attach the class with ${paint.bold(`seedcord.attach('key', ${plugin})`)}.`,
+    [SeedcordErrorCode.CorePluginMemberReserved]: (member: string, plugin: string) =>
+        `${plugin} uses ${paint.sky(member)} in ${paint.bold('dispatchMembers')}, but seedcord already uses that name on handlers, gates, or error cards. Rename the key in the plugin.`,
+    [SeedcordErrorCode.CorePluginMemberThrew]: (member: string, plugin: string, reason: string) =>
+        `${plugin} threw from its ${paint.bold('dispatchMembers')} function ${paint.sky(member)}, so the handler didn't run. ${sentence(reason)} Fix ${paint.sky(member)} in the plugin, or catch the error inside it.`,
+    [SeedcordErrorCode.CorePluginAttachedTwice]: (plugin: string, firstKey: string, secondKey: string) =>
+        `${paint.bold(plugin)} is attached at both ${paint.sky(firstKey)} and ${paint.sky(secondKey)}, and each copy adds the same ${paint.bold('dispatchMembers')}. Attach it once.`,
+    [SeedcordErrorCode.CorePluginFetchReadBody]: (plugin: string, path: string) =>
+        `${plugin} read or locked the body of a request to ${paint.path(path)} without answering it. The steps after it can't read that body again. Check the path in ${paint.bold('fetch')} before you touch the body.`,
+    [SeedcordErrorCode.CoreServerUrlUnset]: () =>
+        `A plugin or your code read ${paint.bold('core.url')}, but ${paint.bold('server.url')} isn't set. Add ${paint.bold("server: { url: 'https://your-bot.example.com' }")} to the config you pass to ${paint.bold('new Seedcord()')}, with the address people reach your bot at.`,
+    [SeedcordErrorCode.CoreServerUrlInvalid]: (url: string) =>
+        `${paint.bold('server.url')} is ${paint.path(url)}, which isn't an http or https address. Write the whole address, like ${paint.path('https://your-bot.example.com')}.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.bold(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>
@@ -112,11 +135,11 @@ const messages = {
     [SeedcordErrorCode.CoreApplicationUnavailable]: () =>
         "The bot's application id resolves during startup. You read it before that. Read it inside a handler, inside a plugin's ready(), or after start() resolves. An edge bot resolves it on its first request.",
     [SeedcordErrorCode.CoreEdgeUnbuilt]: () =>
-        `This worker has no public key or command ids. ${paint.bold('seedcord build')} reads them from Discord and writes them into the worker it builds. Deploy that build.`,
+        `This worker doesn't have a public key and command ids. ${paint.bold('seedcord build')} reads them from Discord and writes them into the worker it builds. Deploy that build.`,
     [SeedcordErrorCode.CoreFetchBeforeStart]: () =>
         `${paint.bold('fetch()')} ran before ${paint.bold('start()')}. Call ${paint.bold('await seedcord.start()')} before your server passes requests to ${paint.bold('fetch()')}.`,
     [SeedcordErrorCode.CoreAccessorUnresolved]: (accessor: string, key: string) =>
-        `${paint.sky(`${accessor}.${key}`)} has no value yet. ${accessor} fills during startup, but a read at the top of a file runs before that. Read it inside a handler, or after start() resolves.`,
+        `${paint.sky(`${accessor}.${key}`)} doesn't have a value yet. ${accessor} fills during startup, but a read at the top of a file runs before that. Read it inside a handler, or after start() resolves.`,
     [SeedcordErrorCode.CoreLifecycleUnavailable]: () =>
         `core.shutdown.addTask() does not work on an edge bot. Cloudflare doesn't run a shutdown hook when it stops an isolate, so a shutdown task would never run. To use shutdown tasks, run the bot on node with new Seedcord(config).start().`,
     [SeedcordErrorCode.CoreBusEmitUnavailable]: (event: string) =>
@@ -152,7 +175,7 @@ const messages = {
     [SeedcordErrorCode.DecoratorInvalidMiddlewarePriority]: (className: string, priority: string) =>
         `${paint.sky(className)} sets its middleware priority to ${priority}. Pass a finite number.`,
     [SeedcordErrorCode.DecoratorWebhookUrlMissing]: (className: string) =>
-        `${paint.sky(className)} extends WebhookLog without a ${paint.bold('@WebhookUrl')} decorator. Add one with the name of the env var that holds the webhook URL.`,
+        `${paint.sky(className)} extends WebhookLog without a ${paint.bold('@WebhookUrl')} decorator. Pass it the name of the env var that holds the webhook URL, or a function that returns the URL.`,
     [SeedcordErrorCode.DecoratorEmptyMiddlewareFilter]: (className: string, key: string) =>
         `${paint.sky(className)} passes an empty array as ${paint.bold(key)}. Remove the key to run the middleware on everything.`,
     [SeedcordErrorCode.DecoratorDuplicateKey]: (decorator: string, className: string, key: string, fix: string) =>
@@ -172,14 +195,14 @@ const messages = {
     [SeedcordErrorCode.ReplyUpdateWithoutSource]: (method: string, routeId: string) =>
         `${paint.sky(`${method}()`)} was called on a modal that a command opened. That modal doesn't have a source message.\nUse reply() or defer(). (route ${paint.mute(routeId)})`,
     [SeedcordErrorCode.ReplyCallbackMissingMessage]: (method: string, routeId: string) =>
-        `Discord's interaction callback for ${paint.sky(`${method}()`)} returned no message. (route ${paint.mute(routeId)})`,
+        `Discord's interaction callback for ${paint.sky(`${method}()`)} didn't return a message. (route ${paint.mute(routeId)})`,
 
     [SeedcordErrorCode.CustomIdInvalidPrefix]: (prefix: string) =>
         `The customId prefix ${quoted(prefix)} is empty or holds a colon or a control character. Pick a prefix without them.`,
     [SeedcordErrorCode.CustomIdReservedFieldName]: (field: string) =>
         `The customId field name ${quoted(field)} looks like an integer. JS reorders integer keys, which would scramble the field order. Give it a name that is not a number.`,
     [SeedcordErrorCode.CustomIdEmptyChoices]: (field: string, method: string) =>
-        `The customId field ${quoted(field)} uses ${method}() with no choices. Give it at least one choice, or make the field nullable.`,
+        `The customId field ${quoted(field)} uses ${method}() without choices. Give it at least one choice, or make the field nullable.`,
     [SeedcordErrorCode.CustomIdInvalidBounds]: (field: string, min: number, max: number) =>
         `The customId field ${quoted(field)} has min ${min}, which is greater than max ${max}. Swap them, or fix the one that is wrong.`,
     [SeedcordErrorCode.CustomIdValueRejected]: (field: string, expected: string, value: string) =>
@@ -191,26 +214,28 @@ const messages = {
     [SeedcordErrorCode.MatchCaseMissing]: (handler: string, kind: string, value: string) =>
         `${paint.bold(handler)}'s match() doesn't have a case for the ${kind} ${quoted(value)}. Add one to the object you pass to match().`,
     [SeedcordErrorCode.AutocompleteNoFocusedOption]: () =>
-        'Discord sent an autocomplete payload with no focused option.',
+        'Discord sent an autocomplete payload without a focused option.',
     [SeedcordErrorCode.ModalFieldNotFound]: (customId: string) =>
-        `The submitted modal carries no field with the custom id ${quoted(customId)}. Check it against the id you gave the component when you built the modal.`,
+        `The submitted modal doesn't have a field with the custom id ${quoted(customId)}. Check it against the id you gave the component when you built the modal.`,
     [SeedcordErrorCode.ModalFieldWrongKind]: (customId: string, kind: string, getter?: string) =>
         getter
             ? `The modal field ${quoted(customId)} holds ${kind}. Read it with ${paint.bold(`${getter}()`)}.`
             : `The modal field ${quoted(customId)} holds ${kind}, but none of the getters read that kind.`,
     [SeedcordErrorCode.ModalFieldEmpty]: (customId: string) =>
-        `The modal field ${quoted(customId)} has nothing picked. Build the component as required, or read it without the required argument.`,
+        `The modal field ${quoted(customId)} doesn't have a value picked. Build the component as required, or read it without the required argument.`,
     [SeedcordErrorCode.ModalFieldChannelType]: (customId: string, picked: string, allowed: readonly string[]) =>
         `The modal field ${quoted(customId)} picked a ${picked} channel, but this read allows ${oneOf.format(allowed)}. Give the channel select the same channel types.`,
     [SeedcordErrorCode.CustomIdWireStale]: (prefix: string) =>
-        `The customId ${quoted(prefix)} was encoded under an older shape of this definition, because adding, removing, changing, or moving a field changes its layout hash.`,
+        `The customId ${quoted(prefix)} was encoded under an older shape of this definition because adding, removing, changing, or moving a field changes its layout hash.`,
     [SeedcordErrorCode.CustomIdWireInvalid]: (detail: string) =>
         `The customId could not be decoded. ${sentence(detail)}`,
     [SeedcordErrorCode.DispatchStateMissing]: (key: string) =>
         `Nothing set ${paint.sky(key)} on this dispatch. Check that the middleware writing it is registered and that its filter covers this dispatch.`,
 
-    [SeedcordErrorCode.GateInvalidCooldownDuration]: (input: string) =>
-        `The cooldown duration ${quoted(input)} is not valid. Pass a positive number of seconds, or a duration string like '30m', '24h', or '500ms'.`,
+    [SeedcordErrorCode.InvalidDuration]: (where: string, input: string | number) =>
+        typeof input === 'number'
+            ? `${where} got ${paint.iris(input)} seconds. Pass a finite number above 0, or a duration string like ${paint.sky("'30m'")}.`
+            : `${where} got ${quoted(input)}, which isn't a duration. Write a whole number above 0 and a unit (ms, s, m, h or d), like ${paint.sky("'90s'")} or ${paint.sky("'2h'")}.`,
     [SeedcordErrorCode.PaginationInvalidPerPage]: (perPage: number) =>
         `perPage is ${perPage}. Pass a positive integer.`,
     [SeedcordErrorCode.PaginationControlCount]: (count: number, max: number) =>
@@ -231,15 +256,15 @@ const messages = {
         `${paint.bold('WinstonFileSink')} got ${paint.path(filename)} as its ${paint.bold('filename')}, which has a folder in it. File logs always go in ${paint.path(logsFolder)}. Pass only the file name, like ${paint.sky("'bot-{date}.log'")}.`,
 
     [SeedcordErrorCode.PluginOptionsRejected]: (pluginName: string, reason: string) =>
-        `${paint.sky(pluginName)} rejected its options. ${sentence(reason.charAt(0).toUpperCase() + reason.slice(1))}`,
+        `${paint.sky(pluginName)} rejected its options. ${sentence(capitalized(reason))}`,
     [SeedcordErrorCode.PluginDisposeFailures]: (count: number) =>
         `${paint.iris(count)} plugins failed to dispose. Each one is listed below.`,
     [SeedcordErrorCode.PluginServiceDecoratorMissing]: (decorator: string, className: string) =>
         `${paint.sky(className)} is missing ${paint.bold(decorator)}. Add it to the class to register the service.`,
-    [SeedcordErrorCode.PluginServicesNotReady]: (pluginName: string) =>
-        `${paint.sky(`${pluginName}.services`)} was read before the plugin finished ${paint.bold('init()')}. Read it inside a handler, or after start() resolves.`,
-    [SeedcordErrorCode.PluginConnectionFailed]: (service: string, target?: string) =>
-        `Could not connect to ${paint.bold(service)}${target ? ` (${paint.sky(target)})` : ''}. Check that it is running and that the connection string is right.`,
+    [SeedcordErrorCode.PluginNotReady]: (pluginName: string, member: string) =>
+        `${paint.sky(`${pluginName}.${member}`)} was read before the plugin finished ${paint.bold('init()')} or after ${paint.bold('dispose()')}. Read it inside a handler, which runs after start() resolves and before the bot shuts down.`,
+    [SeedcordErrorCode.PluginConnectionFailed]: (service: string, reason: string, option: string, target?: string) =>
+        `Could not connect to ${paint.bold(service)}${target ? ` (${paint.sky(target)})` : ''}: ${reason}. Check that the database is running and that ${paint.bold(option)} points at it.`,
     [SeedcordErrorCode.PluginDisconnectFailed]: (service: string) =>
         `Could not close the ${paint.bold(service)} connection cleanly during shutdown.`,
 
@@ -249,7 +274,7 @@ const messages = {
         `${paint.sky(className)} passes an empty model name to ${paint.bold('@RegisterMongooseService()')}. Pass a non-empty modelName.`,
 
     [SeedcordErrorCode.PluginKyselyServiceTableMissing]: (className: string) =>
-        `${paint.sky(className)} has no table. Pass one to ${paint.bold('@RegisterKyselyService()')}.`,
+        `${paint.sky(className)} doesn't have a table. Pass one to ${paint.bold('@RegisterKyselyService()')}.`,
     [SeedcordErrorCode.PluginKyselyInvalidStepCount]: (steps: number) =>
         `The migration step count is ${steps}. Pass zero or a positive integer.`,
     [SeedcordErrorCode.PluginKyselyUnknownDirection]: (direction: unknown) =>
@@ -258,15 +283,61 @@ const messages = {
         `${paint.path(filePath)} needs an up function because it is in the migrations folder. Export up, and down if you need it, by name or on a default export object. If the file is a helper, move it out of the folder.`,
     [SeedcordErrorCode.PluginKyselyNonErrorFailure]: (message: string) =>
         `A migration failed with a value that is not an Error: ${message}.`,
-    [SeedcordErrorCode.PluginKyselyBootstrapFailed]: (databaseName: string) =>
-        `Could not create the database ${paint.sky(databaseName)}. Check that the database user may create databases, or create it yourself.`,
+
+    [SeedcordErrorCode.PluginTasksNotLoaded]: (key: string, path: string) =>
+        `${paint.sky(key)} is not a loaded task. Export it from a file under ${paint.path(path)} with ${paint.bold('@RegisterTask')}.`,
+    [SeedcordErrorCode.PluginTasksInvalidPattern]: (key: string, file: string, pattern: string, reason: string) =>
+        `The task ${paint.sky(key)} in ${paint.path(file)} has the cron pattern ${paint.sky(pattern)}, which croner can't parse. ${reasonThen(capitalized(reason), 'Fix that part of the pattern.')}`,
+    [SeedcordErrorCode.PluginTasksInvalidOption]: (option: string, value: string, fix: string) =>
+        `${option} is ${quoted(value)}. ${fix}`,
+    [SeedcordErrorCode.PluginTasksPatternMissing]: (key: string) =>
+        `${paint.sky(key)} doesn't have a cron pattern. Pass one to ${paint.bold('@RegisterTask')} to pause, resume, or read its next run.`,
+    [SeedcordErrorCode.PluginTasksAtTooEarly]: (key: string, at: number) =>
+        `${paint.bold('schedule()')} got ${paint.iris(at)} as ${paint.bold('at')} for ${paint.sky(key)}, which is before the year 2000. A number that small is usually a timestamp in seconds, or a missing value read as ${paint.iris(0)}. Pass milliseconds, like ${paint.sky('Date.now() + 60_000')}.`,
+    [SeedcordErrorCode.PluginTasksDurationTooLong]: (key: string, duration: string) =>
+        `${paint.bold('schedule()')} got ${quoted(duration)} for ${paint.sky(key)}, which ends after the last date a JavaScript ${paint.bold('Date')} can hold, in the year 275760. Pass a shorter duration as ${paint.bold('in')}.`,
+    [SeedcordErrorCode.PluginTasksKeyTaken]: (key: string, loadedFrom: string) =>
+        `${paint.sky(key)} is the key of a different class, loaded from ${paint.path(loadedFrom)}. Pass that class, or give one of them its own ${paint.bold('key')}.`,
+    [SeedcordErrorCode.PluginI18nSyntax]: (place: string, detail: string) =>
+        `Fluent can't parse ${paint.path(place)}: ${detail}. Fix the syntax on that line.`,
+    [SeedcordErrorCode.PluginI18nNotALocale]: (file: string, like: readonly string[]) => {
+        const extension = file.slice(file.lastIndexOf('.'));
+        return `${paint.path(file)} isn't named after a Discord locale code. Rename it to ${like.length > 0 ? oneOf.format(like.map((locale) => paint.path(`${locale}${extension}`))) : `a code from Discord's locale list, like ${paint.path(`en-US${extension}`)}`}.`;
+    },
+    [SeedcordErrorCode.PluginI18nNotInBase]: (place: string, what: string, baseFile: string) =>
+        `${paint.path(place)} has ${what}, but ${paint.path(baseFile)} doesn't. ${paint.bold('t()')} only accepts the keys and variables in the base file. Add it to ${paint.path(baseFile)} first, or remove it here.`,
+    [SeedcordErrorCode.PluginI18nOutOfDate]: (key: string) =>
+        `${paint.bold(`t('${key}')`)} isn't in any locale file. Run ${paint.bold('seedcord codegen')} to update what ${paint.bold('t()')} accepts, then fix the calls that TypeScript reports.`,
+    [SeedcordErrorCode.PluginI18nCommandProblems]: (count: number) =>
+        `${paint.iris(count)} problems in the command translation files need fixing. Each one is listed below.`,
+    [SeedcordErrorCode.PluginI18nFormatFailed]: (key: string, file: string, reason: string) =>
+        `${paint.bold(`t('${key}')`)} couldn't format the text in ${paint.path(file)}: ${reason}. Pass every variable that the message and the messages it uses need.`,
+    [SeedcordErrorCode.PluginI18nUnknownCommand]: (file: string, path: string) =>
+        `${paint.path(file)} translates ${paint.sky(path)}, but none of your commands has it. Fix the name. Running ${paint.bold('seedcord codegen')} and a type-check finds these before a deploy.`,
+    [SeedcordErrorCode.PluginI18nNotTranslations]: (file: string) =>
+        `${paint.path(file)} doesn't export command translations. Make its default export ${paint.bold('commandTranslations({ ... })')}.`,
+    [SeedcordErrorCode.PluginI18nDiscordRejects]: (file: string, path: string, value: string, accepts: string) =>
+        `${paint.path(file)} sets ${paint.sky(path)} to ${quoted(value)}, but Discord only accepts ${accepts}. Change the translation to fit.`,
+    [SeedcordErrorCode.PluginI18nMissingReference]: (place: string, reference: string) =>
+        `${paint.path(place)} uses ${paint.sky(reference)}, but that file doesn't define it. Define ${paint.sky(reference)} in this file too. Fluent formats each file on its own.`,
+    [SeedcordErrorCode.PluginI18nBaseMissing]: (dir: string, baseFile: string) =>
+        `${paint.path(dir)} doesn't have ${paint.path(baseFile)}, the file that lists every message. Add it, or set ${paint.bold('base')} to a locale that has a file.`,
+
+    [SeedcordErrorCode.PluginOAuthLoginNeeded]: (userId: string, why: LoginNeededReason) =>
+        `The user ${paint.sky(userId)} has to log in with Discord. ${loginNeededBecause(why)} Send them to the login link.`,
+    [SeedcordErrorCode.PluginOAuthIdentifyMissing]: () =>
+        `Discord didn't return the user who logged in because the authorize link didn't request the ${paint.bold('identify')} scope. Build the link with ${paint.bold('authorizeUrl()')}, which always adds it.`,
+    [SeedcordErrorCode.PluginOAuthTokensInMemory]: (plugin: string) =>
+        `${paint.sky(plugin)} saves each user's tokens in ${paint.bold('kv')}, and this bot's ${paint.bold('kv')} keeps everything in memory. A restart would delete the tokens. Set ${paint.bold('kv')} in your bot's config to a driver that saves to a file or a database.`,
+    [SeedcordErrorCode.PluginOAuthSecretRefused]: () =>
+        `Discord refused the client secret. Copy it again from your application's OAuth2 page in the Developer Portal. The OAuth plugin reads it from ${paint.bold('DISCORD_CLIENT_SECRET')}, and ${paint.sky('OAuthClient')} takes it as ${paint.bold('clientSecret')}.`,
 
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 
     [SeedcordErrorCode.CliConfigInvalidExport]: () =>
         `The seedcord config file must export an object as its default, like ${paint.bold('export default defineConfig({ ... })')}.`,
     [SeedcordErrorCode.CliConfigNotFound]: (baseDir: string, candidates: readonly string[]) =>
-        `Searched ${paint.path(baseDir)} for ${oneOf.format(candidates)} and found none. Run the command from your bot's folder, or create a ${paint.sky('seedcord.config.ts')} there.`,
+        `Searched ${paint.path(baseDir)} for ${oneOf.format(candidates)} and didn't find one. Run the command from your bot's folder, or create a ${paint.sky('seedcord.config.ts')} there.`,
     [SeedcordErrorCode.CliConfigInvalidField]: (field: string, expected: string) =>
         `${paint.bold(field)} in the seedcord config must be ${expected}.`,
     [SeedcordErrorCode.CliFileNotFound]: (path: string, field: string) =>
@@ -290,23 +361,23 @@ const messages = {
     [SeedcordErrorCode.CliProblems]: (count: number) =>
         `${paint.iris(count)} problems need fixing. Each one is listed below.`,
     [SeedcordErrorCode.CliEdgeCommandsNotDeployed]: (lines: readonly string[]) =>
-        `${paint.iris(lines.length)} ${isOne(lines.length) ? 'command is' : 'commands are'} in your code with no deployed id on Discord, so the build cannot link ${isOne(lines.length) ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands deploy')}, then build again.\n${lines.join('\n')}`,
+        `${paint.iris(lines.length)} ${isOne(lines.length) ? 'command is' : 'commands are'} in your code without a deployed id on Discord, so the build cannot link ${isOne(lines.length) ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands deploy')}, then build again.\n${lines.join('\n')}`,
     [SeedcordErrorCode.CliDevRuntimeNotRunning]: (method: string) =>
         `${paint.bold('seedcord dev')} called ${paint.bold(method)} while the dev runtime was not running. This is a bug in seedcord.`,
     [SeedcordErrorCode.CliDeployNoCommandsFolder]: (instance: string) =>
         `${paint.path(instance)} sets ${paint.bold('bot.commands.path')} to ${paint.bold('null')}. Point it at the folder that holds your commands to deploy them.`,
-    [SeedcordErrorCode.CliDeployNeedsYes]: () =>
-        `${paint.bold('seedcord commands deploy')} asks before it deploys, but it can only ask in a terminal with ${paint.bold('CI')} unset. Pass ${paint.bold('--yes')} to deploy without asking.`,
+    [SeedcordErrorCode.CliNeedsYes]: (command: string, action: string) =>
+        `${paint.bold(command)} asks before it ${action}, but it can only ask in a terminal with ${paint.bold('CI')} unset. Pass ${paint.bold('--yes')} to skip the question.`,
     [SeedcordErrorCode.CliNoScopeGiven]: (flags: readonly string[], note?: string) =>
         `No scope given. Pass ${oneOf.format(flags.map((flag) => paint.bold(flag)))}.${note ? ` ${note}` : ''}`,
     [SeedcordErrorCode.CliCommandConstructorThrew]: (name: string, file: string, reason: string) =>
         `${paint.sky(name)} threw while seedcord constructed it. Fix its constructor in ${paint.path(file)}. ${reason}`,
     [SeedcordErrorCode.CliCommandNotACommand]: (name: string, file: string) =>
         `${paint.bold(name)} in ${paint.path(file)} carries ${paint.bold('@RegisterCommand')}, but its component is not a slash command or a context menu. Extend ${paint.bold("BuilderComponent<'command'>")} or ${paint.bold("BuilderComponent<'context_menu'>")}.`,
-    [SeedcordErrorCode.CliCommandsNotDeleted]: () =>
-        'Some commands could not be deleted. The warnings above give the reason for each one.',
+    [SeedcordErrorCode.CliSomeFailed]: (things: string, action: string) =>
+        `Some ${things} could not be ${action}. The warnings above give the reason for each one.`,
     [SeedcordErrorCode.CliEdgeOnBun]: () =>
-        `seedcord loads ${paint.path('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node by leaving out ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
+        `seedcord loads ${paint.path('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node without ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
     [SeedcordErrorCode.CliEdgeNoWorker]: (cloudflareConfig: string) =>
         `${paint.path(cloudflareConfig)} doesn't set ${paint.bold('worker')}. Set ${paint.bold('worker')} to your worker's ${paint.bold('name')} and ${paint.bold('compatibilityDate')}.`,
     [SeedcordErrorCode.CliNotProjectInstall]: (cliDir: string, projectInstall: string) =>
@@ -333,6 +404,15 @@ const messages = {
         `${wait} You can read the guide at ${paint.sky(guide)} in the meantime.`,
     [SeedcordErrorCode.CliAskFailed]: (reason: string, guide: string) =>
         `The guide search failed. ${reason}. Try again, or read the guide at ${paint.sky(guide)}.`,
+    [SeedcordErrorCode.CliHostContractMismatch]: (transport: string) =>
+        `This version of ${paint.bold('seedcord')} can't load a bot built with your version of ${paint.bold(transport)}. Update ${paint.bold('seedcord')} and ${paint.bold(transport)} together to their latest versions.`,
+    [SeedcordErrorCode.CliEmojiNameUnknown]: (name: string, where: string, fix: string) =>
+        `${where} doesn't have an emoji with the name ${paint.bold(name)}. ${fix}`,
+    [SeedcordErrorCode.CliEmojiDownloadFailed]: (status: number) => `Discord's CDN answered ${status}`,
+    [SeedcordErrorCode.CliEmojiRollbackFailed]: (reason: string, parked: string) =>
+        `${reason}, and the old emoji is still on Discord as ${paint.bold(parked)}. Delete it with ${paint.bold(`seedcord emojis remove ${parked}`)}, then push again`,
+    [SeedcordErrorCode.CliPickerNeedsTerminal]: (opener: string, skipWith: string, example: string) =>
+        `${paint.bold(opener)} without ${skipWith} opens a picker, but a picker only opens in a terminal with ${paint.bold('CI')} unset. Pass ${skipWith}, as in ${paint.bold(example)}.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>
@@ -396,7 +476,7 @@ const messages = {
     [SeedcordErrorCode.MakeNeedsTerminal]: () =>
         `${paint.bold('seedcord make')} asks for a template, a name and each value in a terminal. Run it from a terminal with ${paint.bold('CI')} unset.`,
     [SeedcordErrorCode.MakeNoTemplates]: (folder: string) =>
-        `Found no templates in ${paint.path(folder)} or in the installed plugins. Each folder inside ${paint.path(folder)} is one template. ${paint.sky(PRODUCTION_SITES.guide.at('tooling/make'))} shows how to write one and where to copy the starters from.`,
+        `Couldn't find templates in ${paint.path(folder)} or in the installed plugins. Each folder inside ${paint.path(folder)} is one template. ${paint.sky(PRODUCTION_SITES.guide.at('tooling/make'))} shows how to write one and where to copy the starters from.`,
     [SeedcordErrorCode.MakePathTaken]: (path: string, takenByTemplate?: string) =>
         takenByTemplate === undefined
             ? `${paint.path(path)} already exists. Pick another name, or delete that file first.`

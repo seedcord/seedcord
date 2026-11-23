@@ -4,7 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { splitPluginKey } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { HostPluginKeys, type SeedcordInstance } from '@seedcord/types/internal';
+import { HostPlugins, type SeedcordInstance } from '@seedcord/types/internal';
 import { asError, importSpecifier, isInside, isPlainObject } from '@seedcord/utils/internal';
 
 import { isReferable, ModuleExports } from '#core/modules/ModuleExports';
@@ -64,9 +64,9 @@ export class PluginTypesCollector {
         root: string
     ): Promise<PluginTypeTable> {
         const collector = new PluginTypesCollector();
-        for (const key of instance[HostPluginKeys]) await collector.add(key, codegenPluginAt(instance, key));
+        for (const key of instance[HostPlugins].keys) await collector.add(key, codegenPluginAt(instance, key));
 
-        // built after every codegen(), since codegen() imports the files it reads
+        // built after every codegen() since codegen() imports the files it reads
         const index = await ExportIndex.create(modules, root, collector.classes(), collector.problems);
         const types = new Map(
             collector.entries
@@ -228,10 +228,14 @@ class ExportIndex {
     }
 }
 
-function codegenPluginAt(instance: SeedcordInstance, key: string): CodegenPlugin | undefined {
+function attachedAt(instance: SeedcordInstance, key: string): unknown {
     const { head, leaf } = splitPluginKey(key);
     const top: unknown = Reflect.get(instance, head);
-    const value: unknown = leaf === undefined || !isReferable(top) ? top : Reflect.get(top, leaf);
+    return leaf === undefined || !isReferable(top) ? top : Reflect.get(top, leaf);
+}
+
+function codegenPluginAt(instance: SeedcordInstance, key: string): CodegenPlugin | undefined {
+    const value = attachedAt(instance, key);
     return hasCodegen(value) ? value : undefined;
 }
 
@@ -250,7 +254,7 @@ function describeValue(value: unknown): string {
     if (typeof value === 'function') return `the function ${value.name || '(anonymous)'}`;
     if (isReferable(value)) {
         const Class: unknown = Reflect.get(value, 'constructor');
-        return typeof Class === 'function' ? `a ${Class.name}` : 'an object with no class';
+        return typeof Class === 'function' ? `a ${Class.name}` : 'an object without a class';
     }
     if (typeof value === 'bigint' || typeof value === 'symbol') return `a ${typeof value}`;
     return String(value);

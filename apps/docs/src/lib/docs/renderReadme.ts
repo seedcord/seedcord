@@ -28,7 +28,7 @@ function resolveAgainst(folderUrl: string, token: Tokens.Link | Tokens.Image): v
 // a separate marked instance keeps readme rendering independent of the shiki-configured global marked
 // in renderParagraphs.ts.
 function readmeMarked(folderUrl: string | undefined): Marked {
-    // one per readme, since it numbers repeated headings
+    // one per readme since it numbers repeated headings
     const slugger = new GithubSlugger();
 
     return new Marked({
@@ -42,7 +42,7 @@ function readmeMarked(folderUrl: string | undefined): Marked {
             await highlightCodeToken(token);
         },
         renderer: {
-            // marked leaves the id off a heading
+            // marked doesn't put an id on a heading
             heading({ tokens, depth }: Tokens.Heading): string {
                 const text = this.parser.parseInline(tokens);
                 const id = slugger.slug(this.parser.parseInline(tokens, visibleText));
@@ -74,7 +74,7 @@ function themeWordmarkPictures(html: string): string {
 export async function renderReadme(markdown: string, folderUrl?: string): Promise<string> {
     const html = await readmeMarked(folderUrl).parse(markdown);
     const themed = themeWordmarkPictures(html);
-    // the first README image is the hero banner and the page's LCP element, so fetch it at high priority.
+    // fetch the first README image at high priority because it's the hero banner and the page's LCP element.
     const prioritized = themed.replace(/<img\b/, '<img fetchpriority="high"');
     return sanitizeHtml(prioritized);
 }

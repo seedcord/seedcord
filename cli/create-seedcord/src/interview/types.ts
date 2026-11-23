@@ -36,7 +36,7 @@ export interface Step<Key extends keyof Answers> {
     key: Key;
     label: string;
     flag: Answers[Key] extends boolean ? SwitchFlag : ValueFlag<Key>;
-    // a skipped step leaves its key unset
+    // a skipped step doesn't set its key
     skip?: (answers: Partial<Answers>) => boolean;
     answerWithoutTerminal?: Answers[Key];
     ask: (answers: Partial<Answers>, prompter: Prompter) => Promise<Answers[Key]>;

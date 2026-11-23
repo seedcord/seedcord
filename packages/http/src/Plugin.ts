@@ -3,17 +3,17 @@ import { Plugin as CorePlugin } from '@seedcord/core/plugin';
 
 import type { Core } from '#interfaces/Core';
 import type { PluginOptions } from '@seedcord/core/plugin';
-import type { TypedOmit } from '@seedcord/types';
+import type { OverrideProperties } from 'type-fest';
 
 /** The options an HTTP plugin declares, narrowed to the transports this base serves. */
-export type HttpPluginOptions = TypedOmit<PluginOptions, 'transport'> & { transport?: 'http' };
+export type HttpPluginOptions = OverrideProperties<PluginOptions, { transport?: 'http' }>;
 
 const HTTP_SCOPE = { transport: 'http' } as const;
 
 /**
  * Base class for an HTTP plugin, binding `this.core` to the HTTP {@link Core}.
  *
- * To run on either transport, extend the base from `@seedcord/core/plugin`. Its `this.core` carries
+ * To run on either transport, extend the base from `@seedcord/core/plugin`. Its `this.core` has
  * only the shared members.
  *
  * @typeParam Opts - The transport and runtime the plugin declares.

@@ -1,0 +1,44 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' stands in for what actually happens. Write who does what, like 'the build writes it' or 'load() registers it once'."
+level: error
+ignorecase: true
+tokens:
+  - '(?<!-)(?:lives?|living) (?:in|on|inside)'
+  - 'sits? (?:on|in|inside)'
+  - 'lands?'
+  - 'landed'
+  - 'landing'
+  - 'surviv(?:e|es|ed|ing)'
+  - 'stays'
+  - 'stayed'
+  # instruction to the reader
+  - '(?<=\w )stay'
+  - 'remains?'
+  - 'remained'
+  - 'fires?'
+  - 'fired'
+  - 'firing'
+  - 'goes'
+  - 'gone'
+  # "going" before a quote is someone speaking, as in going "huh"
+  - 'going(?!\s+["“])'
+  - 'go (?:through|away)'
+  - 'can go'
+  - '(?:dis)?agrees?'
+  # a hyphenated term like drop-shadow or last-wins is a noun
+  - 'drops?(?!-)'
+  - 'dropped'
+  - 'dropping'
+  - '(?<!-)(?<!(?:\ba|\ban|quick|big|easy|small) )wins?(?!-)'
+  # an imperative "leave it out" is the reader acting, and "work out" is a different verb
+  - '(?:leaves|leaving)\s+(?:(?!(?:work|figure)\b)\S+\s+){0,3}?(?:out|off)'
+  - 'left\s+out'
+  # a count before "leaves" makes it the plural of leaf
+  - '(?<!\b(?:no|zero|one|two|three|four|five|six|seven|eight|nine|ten|\d+) )(?:leaves|leaving)\s+(?:\S+\s+){0,4}?(?:empty|open|unchanged|untouched|intact|unset|blank|undefined|alone|behind|stale|dangling)\b'
+  # the plural noun is legal, and a determiner after it marks the verb
+  - 'names\s+(?:the|a|an|that|this|these|those|your|its|their|our|every|each|both|it|them|which|what)'
+  # left out on purpose: "only names" and "names you" are usually the noun
+  - '(?:it|this|also|still|never|then) names'
+  # the bare verb opens a sentence or follows a word that takes one, like "so name each file"
+  - '(?<=^|[.!?:]\s|\b(?:to|so|and|or|then|you|can|should|must|will|please)\s)name\s+(?:the|a|an|that|this|these|those|your|its|their|our|every|each|both|it|them|one|any)'

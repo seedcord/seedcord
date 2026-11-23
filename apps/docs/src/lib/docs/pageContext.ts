@@ -3,10 +3,11 @@ import { notFound } from 'next/navigation';
 import { findPackageVersion } from './catalog';
 
 import type { CatalogContext } from './catalog';
+import type { Arrayable } from 'type-fest';
 
-export type PageParams = Record<string, string | string[] | undefined>;
+export type PageParams = Record<string, Arrayable<string> | undefined>;
 
-function decodeParam(value: string | string[] | undefined): string {
+function decodeParam(value: Arrayable<string> | undefined): string {
     if (!value) return '';
     const raw = Array.isArray(value) ? value[0] : value;
     const safe = raw ?? '';

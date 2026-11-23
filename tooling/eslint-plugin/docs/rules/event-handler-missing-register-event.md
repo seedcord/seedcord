@@ -2,7 +2,7 @@
 
 Require `@RegisterEvent` on every concrete event handler.
 
-A class that extends `EventHandler` registers only when it carries `@RegisterEvent`. Without it the handler loads without error and never registers, so it never runs when discord.js emits the event.
+A class that extends `EventHandler` registers only when it has `@RegisterEvent`. Without it the handler loads without error and never registers, so it never runs when discord.js emits the event.
 
 The base class must be imported from `seedcord` or a `@seedcord/*` package, and an `abstract` intermediate base is skipped.
 

@@ -6,6 +6,7 @@ import { getCatalogContext } from './pageContext';
 
 import type { PageParams } from './pageContext';
 import type { EntityModel, PackageCatalogEntry, PackageVersionCatalog } from './types';
+import type { Arrayable } from 'type-fest';
 
 export interface ResolvedEntity {
     entry: PackageCatalogEntry;
@@ -14,7 +15,7 @@ export interface ResolvedEntity {
     segments: string[];
 }
 
-function normalizeSegments(raw: string | string[] | undefined): string[] {
+function normalizeSegments(raw: Arrayable<string> | undefined): string[] {
     if (Array.isArray(raw)) return raw;
     if (typeof raw === 'string') return [raw];
     return [];
@@ -27,9 +28,9 @@ export async function resolveEntity(params: PageParams): Promise<ResolvedEntity 
     const parsed = parseEntityPathSegments(segments);
     if (!parsed.slug) return null;
 
-    // this keeps one engine instance for setVersion and the lookup. og route handlers skip react's
-    // per-request cache() dedup that a page render gets, so a second getDocsEngine() call would read
-    // a version that was never set.
+    // this keeps one engine instance for setVersion and the lookup because og route handlers skip
+    // react's per-request cache() dedup that a page render gets, and a second getDocsEngine() call
+    // would read a version that was never set.
     const engine = await getDocsEngine();
     try {
         await engine.setVersion(entry.id, version.id);

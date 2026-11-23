@@ -24,11 +24,23 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     },
     '@seedcord/plugin-mongoose': {
         displayName: 'plugin-mongoose',
-        aliases: ['plugin-mongoose', 'mongoose', 'mongo']
+        aliases: ['plugin-mongoose', 'mongoose', 'mongo', 'mongodb']
     },
-    '@seedcord/plugin-kysely-postgres': {
-        displayName: 'plugin-kysely-postgres',
-        aliases: ['plugin-kysely-postgres', 'kysely', 'postgres', 'pg']
+    '@seedcord/plugin-kysely': {
+        displayName: 'plugin-kysely',
+        aliases: ['plugin-kysely', 'kysely', 'sql', 'sqlite', 'postgres', 'pg', 'mysql']
+    },
+    '@seedcord/plugin-tasks': {
+        displayName: 'plugin-tasks',
+        aliases: ['plugin-tasks', 'tasks', 'cron', 'scheduler']
+    },
+    '@seedcord/plugin-i18n': {
+        displayName: 'plugin-i18n',
+        aliases: ['plugin-i18n', 'i18n', 'translations', 'fluent', 'localization']
+    },
+    '@seedcord/plugin-oauth': {
+        displayName: 'plugin-oauth',
+        aliases: ['plugin-oauth', 'oauth', 'oauth2', 'login', 'tokens']
     },
     '@seedcord/types': {
         displayName: 'types',
@@ -122,7 +134,7 @@ export function formatDisplayPackageName(manifestName: string): string {
     return override ?? manifestName;
 }
 
-// the R2 index.json is additive. A folder published once stays, so removed and mis-keyed folders linger.
+// removed and mis-keyed folders linger because the R2 index.json is additive and publishing never deletes a folder.
 // a scoped key here needs a displayName matching its folder.
 const DOCUMENTED_PACKAGE_FOLDERS: ReadonlySet<string> = new Set(
     Object.keys(PACKAGE_OVERRIDES).map((name) => formatDisplayPackageName(name))

@@ -2,7 +2,7 @@ import { runInNewContext } from 'node:vm';
 
 import { BAKED_IDS_KEY } from '@seedcord/core/internal';
 import { BotLayout } from '@seedcord/utils/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { workerEntry } from '#commands/build/builder/workerEntry';
 
@@ -11,7 +11,7 @@ import type { BakedIds } from '@seedcord/core/internal';
 function bakedIdsRun(ids: BakedIds): BakedIds {
     const [plugin] = workerEntry({
         layout: BotLayout.openAt('/bot'),
-        folders: [],
+        lists: { folders: [], emojis: [] },
         instanceKey: '/bot.ts',
         functionExports: () => Promise.resolve([]),
         rootKey: '/',

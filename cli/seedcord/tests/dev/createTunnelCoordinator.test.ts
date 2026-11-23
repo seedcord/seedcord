@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { createTunnelCoordinator, missingCloudflaredHint } from '#commands/dev/tunnel/createTunnelCoordinator';
 import { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';
@@ -10,11 +10,11 @@ import type { SeedcordInstance } from '@seedcord/types/internal';
 const INSTANCE = {} as SeedcordInstance;
 
 describe('createTunnelCoordinator', () => {
-    it('builds nothing when the tunnel is off', () => {
+    it('returns undefined when the tunnel is off', () => {
         expect(createTunnelCoordinator(silentLogger, () => undefined, { mode: 'off' })).toBeUndefined();
     });
 
-    it('builds nothing when a quick tunnel needs cloudflared and it is absent', () => {
+    it('returns undefined when a quick tunnel needs cloudflared and it is absent', () => {
         expect(
             createTunnelCoordinator(
                 silentLogger,
@@ -63,7 +63,7 @@ describe('createTunnelCoordinator', () => {
 });
 
 describe('missingCloudflaredHint', () => {
-    it('carries the platform install command', () => {
+    it('gives the install command for the platform', () => {
         expect(missingCloudflaredHint('darwin')).toContain('brew install cloudflared');
     });
 

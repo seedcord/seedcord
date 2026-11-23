@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, vi } from 'vitest';
+import { afterEach, describe, expect, vi } from 'vite-plus/test';
 
 import { Seedcord } from '#src/Seedcord';
 import { dispatcherOf } from '#tests/utils/dispatcherOf';
@@ -117,7 +117,7 @@ describe('eventDispatched', () => {
         expect(published[0]?.handlers).toEqual([]);
     });
 
-    it('pairs with eventDispatching once a spent once-handler leaves nothing to run', async ({ testEnv }) => {
+    it('pairs with eventDispatching after the only once-handler is spent', async ({ testEnv }) => {
         await testEnv.createFile(`${EVENTS_DIR}/Once.ts`, ONCE);
 
         await using seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath(EVENTS_DIR) }));
@@ -132,7 +132,8 @@ describe('eventDispatched', () => {
         seedcord.bus.on('eventDispatched', (payload) => ends.push(payload));
 
         const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
-            ((...args: unknown[]) => void) | undefined;
+            | ((...args: unknown[]) => void)
+            | undefined;
         expect(fire).toBeDefined();
 
         fire?.({ reply: vi.fn() });
@@ -163,7 +164,7 @@ describe('eventDispatched', () => {
         expect(ends[0]?.dispatchId).toBe(starts[0]?.dispatchId);
     });
 
-    it('stays quiet for an event no handler registered', async ({ testEnv }) => {
+    it('skips the report for an event without a registered handler', async ({ testEnv }) => {
         await testEnv.createFile(`${EVENTS_DIR}/Ok.ts`, OK);
 
         await using seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath(EVENTS_DIR) }));

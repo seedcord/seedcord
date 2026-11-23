@@ -1,6 +1,6 @@
-import { Options } from 'prettier';
+import type { Options } from 'prettier';
 
-export const PRETTIER_CONFIG: Options = {
+export const PRETTIER_CONFIG = {
     tabWidth: 4,
     semi: true,
     singleQuote: true,
@@ -13,4 +13,4 @@ export const PRETTIER_CONFIG: Options = {
     quoteProps: 'as-needed',
     bracketSameLine: false,
     proseWrap: 'never'
-};
+} as const satisfies Options;

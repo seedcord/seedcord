@@ -1,7 +1,7 @@
 import type { InteractionDispatch } from '#src/dispatch/DispatchContext';
 import type { InteractionKind } from '#src/metadataKeys';
 import type { InteractionFaultSource } from '#subscribers/types/Subscriptions';
-import type { TypedOmit } from '@seedcord/types';
+import type { Except } from 'type-fest';
 
 type FaultKind = InteractionFaultSource['interactionKind'];
 
@@ -22,7 +22,7 @@ const FAULT_KINDS: Record<`${InteractionKind}`, FaultKind | null> = {
 
 export function interactionFaultSource(
     dispatch: InteractionDispatch,
-    fields: TypedOmit<InteractionFaultSource, 'kind' | 'interactionKind' | 'command'>
+    fields: Except<InteractionFaultSource, 'kind' | 'interactionKind' | 'command'>
 ): InteractionFaultSource | null {
     const interactionKind = FAULT_KINDS[dispatch.kind];
     if (interactionKind === null) return null;

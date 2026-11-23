@@ -1,4 +1,4 @@
-// next's trailingSlash gives usePathname a trailing slash that no href carries
+// next's trailingSlash gives usePathname a trailing slash that every href lacks
 function trimSlash(href: string): string {
     return href.length > 1 && href.endsWith('/') ? href.slice(0, -1) : href;
 }

@@ -3,8 +3,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
-import { posixRelative } from '@seedcord/utils/internal';
-import { minimatch } from 'minimatch';
+import { isInside } from '@seedcord/utils/internal';
 
 import { viteEnvFiles } from '#core/modules/viteEnvFiles';
 
@@ -14,13 +13,14 @@ import type { FSWatcher } from 'node:fs';
 
 const logger = new Logger('HMR', { channel: 'hmr' });
 
-type RestartConfig = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'instance' | 'viteMode' | 'hmr'>;
+type RestartConfig = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'instance' | 'viteMode' | 'hmr' | 'emojis'>;
 
-// every file whose save asks for a dev restart
+// every file whose save triggers a dev restart
 export class RestartFiles {
     private readonly configDir: string;
     private readonly hiddenNames: Set<string>;
-    private readonly patterns = new Set<string>();
+    // hmr.restart and each registerCriticalFiles call get a group because a ! pattern only excludes from its own group
+    private readonly patternGroups: (readonly string[])[] = [];
 
     // targetFiles are the edge target's cloudflare.config.ts and .dev.vars files
     public constructor(
@@ -43,15 +43,13 @@ export class RestartFiles {
 
     public needsRestart(file: string): boolean {
         if (this.hiddenFromVite(file) || this.layout.isProjectFile(file) || file === this.config.instance) return true;
-        const fromRoot = posixRelative(this.config.root, file);
-        return [...this.patterns].some((pattern) => minimatch(fromRoot, pattern));
+        // the bot only reads the emojis folder at startup
+        if (isInside(this.config.emojis.dir, file)) return true;
+        return this.patternGroups.some((patterns) => this.layout.matchesFiles(file, patterns));
     }
 
-    // a relative pattern resolves against root
     public addPatterns(patterns: readonly string[]): void {
-        const { root } = this.config;
-        // minimatch reads a windows separator as an escape
-        for (const pattern of patterns) this.patterns.add(posixRelative(root, resolve(root, pattern)));
+        this.patternGroups.push(patterns);
     }
 
     // fs.watch on a file stops once an atomic save replaces it

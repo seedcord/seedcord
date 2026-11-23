@@ -1,32 +1,27 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
-import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
-import { HostPluginKeys } from '@seedcord/types/internal';
+import { FRAMEWORK_CHANNELS, LoggerChannelRegistry } from '@seedcord/logger';
+import { HOST_CONTRACT, HostContract, HostPlugins } from '@seedcord/types/internal';
 
 import { Kv } from '#src/kv/Kv';
 import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { KvRateLimiter } from '#src/rateLimiter/KvRateLimiter';
+import { keepRequestOpenFor } from '#src/requestScope';
 import { Bus } from '#subscribers/Bus';
 
-import { constructAttached, declaredScopeOf, extendsThisCorePlugin, resolvedLifecycleSpecOf } from './Plugin';
+import { extendsThisCorePlugin } from './Plugin';
+import { PluginRegistry } from './PluginRegistry';
+import { constructAttached, declaredScopeOf, resolvedLifecycleSpecOf } from './pluginSlots';
 import { splitPluginKey } from './splitPluginKey';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { ResolvedPluginLifecycleSpec } from './lifecycle';
 import type { DeclaredScope, Runtime, Transport } from './options';
 import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from './Plugin';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
 
-export interface Attachment {
-    readonly key: string;
-    readonly instance: PluginLike;
-    readonly spec: ResolvedPluginLifecycleSpec;
-}
-
 const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 
-const attachmentsSlot = Symbol('seedcord:host:attachments');
 const sealSlot = Symbol('seedcord:host:seal');
 
 /** Base class for a plugin host. */
@@ -34,6 +29,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     public abstract readonly config: Config;
     public abstract readonly rest: REST;
     public abstract readonly applicationId: string;
+    public abstract readonly url: URL;
 
     /** @see {@link Bus} */
     public readonly bus: Bus;
@@ -43,31 +39,27 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     public readonly rateLimiter: IRateLimiter;
 
     #sealed = false;
-    readonly #attachments: Attachment[] = [];
     readonly #groups = new Map<string, Record<string, PluginLike>>();
     readonly #scope: { readonly transport: BotT; readonly runtime: BotRt };
+
+    /** @internal */
+    public readonly [HostPlugins] = new PluginRegistry();
+
+    /** @internal */
+    public readonly [HostContract] = HOST_CONTRACT;
 
     constructor(transport: BotT, runtime: BotRt, driver: Config['kv']) {
         this.#scope = { transport, runtime };
         this.bus = new Bus(this);
+        LoggerChannelRegistry.instance.trackSinkRuns(keepRequestOpenFor);
         const kvDriver = driver ?? new MemoryDriver();
         this.kv = new Kv(kvDriver, 'app');
         this.rateLimiter = new KvRateLimiter(new Kv(kvDriver, 'seedcord'));
     }
 
     /** @internal */
-    public get [attachmentsSlot](): readonly Attachment[] {
-        return this.#attachments;
-    }
-
-    /** @internal */
     public [sealSlot](): void {
         this.#sealed = true;
-    }
-
-    /** @internal codegen reads this to emit the `Core` augmentation */
-    public get [HostPluginKeys](): readonly string[] {
-        return this.#attachments.map((attachment) => attachment.key);
     }
 
     /**
@@ -84,11 +76,13 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
      * Take `CoreBase` as your constructor's first parameter. `attach()` passes it, so you don't.
      * A narrower one fails to compile here.
      *
-     * @param key - Also the channel the plugin logs on, dots included.
+     * @param key - Also the channel that the plugin logs on, dots included.
      * @param args - Whatever your constructor takes after the host.
      * @throws A **SeedcordError** when you attach after the bot has started.
      * @throws A **SeedcordTypeError** when `key` is taken, reserved, or malformed.
      * @throws A **SeedcordTypeError** when the plugin extends `Plugin` from another copy of `@seedcord/core`.
+     * @throws A **SeedcordTypeError** when another plugin uses a key from this plugin's `dispatchMembers`.
+     * @throws A **SeedcordTypeError** when seedcord already uses a key from this plugin's `dispatchMembers`.
      * @throws A **SeedcordTypeError** when the plugin's `transport` or `runtime` differs from this host and the types were bypassed.
      * @example
      * ```ts
@@ -133,7 +127,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         const kv = new Kv(this.kv.driver, 'plugins', key);
         const instance = constructAttached(key, kv, () => new Plugin(this, ...args));
         this.#assertScope(Plugin.name, declaredScopeOf(instance));
-        this.#attachments.push({ key, instance, spec: resolvedLifecycleSpecOf(instance) });
+        this[HostPlugins].add({ key, instance, spec: resolvedLifecycleSpecOf(instance) });
 
         if (leaf === undefined) {
             return Object.assign(this, { [key]: instance }) as this & Attached<Key, InstanceType<Ctor>>;
@@ -182,12 +176,6 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         Object.assign(this, { [head]: group });
         return group;
     }
-}
-
-export function attachmentsOf(
-    host: Pick<PluginHost<Transport, Runtime>, typeof attachmentsSlot>
-): readonly Attachment[] {
-    return host[attachmentsSlot];
 }
 
 export function sealAttachments(host: Pick<PluginHost<Transport, Runtime>, typeof sealSlot>): void {

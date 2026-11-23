@@ -1,5 +1,5 @@
 import { BuilderComponent } from '@seedcord/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { serverConfig } from '#tests/helpers/nodeHost';

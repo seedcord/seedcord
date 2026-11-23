@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { claimTarget } from '#scaffold/target';
 import { thrownBy } from '#tests/thrownBy';
@@ -21,7 +21,7 @@ describe('claimTarget', () => {
         expect(claimTarget(target)).toEqual({ existed: false });
     });
 
-    it('reports an existing empty directory, which the cleanup leaves behind', async () => {
+    it("reports an existing empty directory, which the cleanup doesn't remove", async () => {
         const target = join(await scratch(), 'my-bot');
         await mkdir(target);
 

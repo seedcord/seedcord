@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import {
     isPrerelease,
@@ -83,7 +83,7 @@ describe('servedPrerelease', () => {
         expect(servedPrerelease(CORE)).toBeNull();
     });
 
-    it('serves the prerelease of a package with no stable release', () => {
+    it('serves the prerelease of a package without a stable release', () => {
         expect(servedPrerelease({ ...CORE, stable: null })).toBe('0.2.1-next.0');
     });
 });

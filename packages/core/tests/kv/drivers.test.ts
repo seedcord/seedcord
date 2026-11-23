@@ -8,7 +8,7 @@ import { createStorage } from 'unstorage';
 import fsDriver from 'unstorage/drivers/fs';
 import { createStorage as createStorageV1 } from 'unstorage-v1';
 import fsDriverV1 from 'unstorage-v1/drivers/fs';
-import { afterAll, afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { KeyvDriver } from '#src/kv/KeyvDriver';
 import { Kv } from '#src/kv/Kv';
@@ -128,7 +128,7 @@ describe.each(cases)('$name', ({ open, persists }) => {
         expect(await counts.get('runs')).toBe(5);
     });
 
-    it('keeps a delete that lands while an update runs', async () => {
+    it('keeps a delete that arrives while an update runs', async () => {
         const counts = new Kv(open()).collection<number>('race');
         await counts.set('k', 5);
 
@@ -158,7 +158,7 @@ describe.each(cases)('$name', ({ open, persists }) => {
             expect(await Array.fromAsync(driver.entries('ttl:'))).toEqual([]);
         });
 
-        it('keeps a set that lands while a read deletes the expired record', async () => {
+        it('keeps a set that arrives while a read deletes the expired record', async () => {
             const kv = new Kv(open()).collection<string>('ttl-race');
             await kv.set('k', 'old', 1000);
             vi.setSystemTime(Date.now() + 1000);
@@ -268,7 +268,7 @@ describe('a record that JSON cannot hold', () => {
 });
 
 describe('a driver that writes in two steps', () => {
-    it('reads the finished record when a get or an entries call lands during a set', async () => {
+    it('reads the finished record when a get or an entries call arrives during a set', async () => {
         const records = new Map<string, string>();
         const writeStarted = Promise.withResolvers<undefined>();
         const finishWrite = Promise.withResolvers<undefined>();
@@ -282,7 +282,7 @@ describe('a driver that writes in two steps', () => {
                 records.set(key, value);
             },
             delete: (key) => void records.delete(key),
-            // holds each value it read until the test lets it go, so a write can finish in between
+            // holds each value it read until the test lets it go, to let a write finish in between
             entries: async function* () {
                 for (const [key, value] of records) {
                     await yieldListed.promise;

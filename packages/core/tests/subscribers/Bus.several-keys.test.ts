@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { Subscribe } from '#subscribers/decorators/Subscribe';
 import { PublishDefault } from '#subscribers/publishDefault';
@@ -16,7 +16,10 @@ const unknown: AllSubscriptions['unknownException'] = {
     error: new Error('unknown boom'),
     origin: 'slash:probe'
 };
-const unhandled: AllSubscriptions['unhandledInteractionError'] = { error: new Error('unhandled boom') };
+const unhandled: AllSubscriptions['unhandledInteractionError'] = {
+    error: new Error('unhandled boom'),
+    interactionId: 'i-1'
+};
 
 describe('a subscriber on several keys', () => {
     it("runs the case for the published key, with that key's payload", async () => {

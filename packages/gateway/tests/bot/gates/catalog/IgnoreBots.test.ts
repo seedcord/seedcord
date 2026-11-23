@@ -1,12 +1,12 @@
 import { Silence } from '@seedcord/core';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { IgnoreBots } from '#bot/gates/catalog';
 
 import type { EventGateContext } from '#bot/gates';
 
 function actorCtx(isBot: boolean): EventGateContext {
-    // the gate reads only the event actor's bot flag, so a minimal cast stands in
+    // a minimal cast stands in because the gate reads only the event actor's bot flag
     return { user: { bot: isBot } } as unknown as EventGateContext;
 }
 
@@ -15,7 +15,7 @@ describe('IgnoreBots', () => {
         await expect(IgnoreBots.check(actorCtx(false))).resolves.toBeUndefined();
     });
 
-    it('drops a bot actor with a Silence', async () => {
+    it('stops a bot actor with a Silence', async () => {
         await expect(IgnoreBots.check(actorCtx(true))).rejects.toBeInstanceOf(Silence);
     });
 });

@@ -124,7 +124,7 @@ export async function resolveDocEntryPoints(packageDir: string, manifest: Packag
     for (const [subpath, condition] of Object.entries(manifest.exports ?? {})) {
         if (INTERNAL_SUBPATH.test(subpath)) continue;
 
-        // a package like @seedcord/tsconfig exports json presets and declares no types at all
+        // a package like @seedcord/tsconfig exports json presets and doesn't declare types at all
         const declared = declarationOf(condition);
         if (declared) entries.push(await entryPointFor(packageDir, manifest.name, { subpath, declared }));
 
@@ -141,7 +141,7 @@ export async function resolveDocEntryPoints(packageDir: string, manifest: Packag
         }
     }
 
-    // a stable sort keeps each default entry ahead of its runtime conditions
+    // a stable sort keeps each default entry before its runtime conditions
     return entries.sort((a, b) => a.subpath.localeCompare(b.subpath));
 }
 

@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Workspace } from '#src/lib/Workspace';
 
@@ -41,7 +41,7 @@ describe('Workspace', () => {
         ]);
     });
 
-    it('omits the root path when the workspace has no root package', () => {
+    it('omits the root path when the workspace is missing a root package', () => {
         const rootless = { rootDir: '/repo', packages: snapshot.packages };
 
         expect(new Workspace(rootless).packageJsonPaths()).toEqual([

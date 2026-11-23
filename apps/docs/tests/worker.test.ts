@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 // eslint-disable-next-line no-restricted-imports -- the app root has no alias
 import handler from '../worker';
@@ -206,7 +206,7 @@ describe('the docs worker', () => {
         ).resolves.toBe('');
     });
 
-    it('answers with an error when the assets binding fails with no body', async () => {
+    it('answers with an error when the assets binding fails without a body', async () => {
         const env: Env = { BUILD_ID, ASSETS: { fetch: () => Promise.resolve(new Response(null, { status: 500 })) } };
 
         await expect(get('/packages/core/latest', env)).rejects.toThrow(/500/);

@@ -1,3 +1,5 @@
+import { delay } from 'es-toolkit';
+
 import type { GitHubApi } from '#src/lib/GitHubApi';
 
 const APPS = [
@@ -20,6 +22,7 @@ type App = (typeof APPS)[number];
 const ROLES_ALLOWED_TO_PREVIEW = new Set(['triage', 'write', 'maintain', 'admin']);
 const WORKFLOW = 'site-preview.yml';
 const TRUSTED_REF = 'next';
+const BUILD_POLL_MS = 15_000;
 
 interface PreviewPlan {
     sha: string;
@@ -63,12 +66,26 @@ export class PreviewPlanner {
             throw new Error(`#${String(this.pull)} is ${state}. /preview only works on an open pull request.`);
         }
 
-        const artifactRun = await this.api.lastSuccessfulPullRequestRun(WORKFLOW, sha);
-        if (artifactRun === undefined) {
-            throw new Error(`${sha} doesn't have a successful ${WORKFLOW} run. Approve or re-run its workflow first.`);
+        const run = await this.finishedBuild(sha);
+        if (run === undefined) {
+            throw new Error(
+                `${sha} doesn't have a ${WORKFLOW} run yet. Wait for its build to start, then /preview again.`
+            );
+        }
+        if (run.conclusion !== 'success') {
+            throw new Error(
+                `${sha}'s ${WORKFLOW} run ended as ${String(run.conclusion)}. Approve or re-run it, then /preview again.`
+            );
         }
 
-        const artifacts = new Set(await this.api.artifactNames(artifactRun));
-        return { sha, apps: appsWhere(({ name }) => artifacts.has(name)), artifactRun, workerRef: TRUSTED_REF };
+        const artifacts = new Set(await this.api.artifactNames(run.id));
+        return { sha, apps: appsWhere(({ name }) => artifacts.has(name)), artifactRun: run.id, workerRef: TRUSTED_REF };
+    }
+
+    private async finishedBuild(sha: string): ReturnType<GitHubApi['lastPullRequestRun']> {
+        const run = await this.api.lastPullRequestRun(WORKFLOW, sha);
+        if (run === undefined || run.status === 'completed') return run;
+        await delay(BUILD_POLL_MS);
+        return this.finishedBuild(sha);
     }
 }

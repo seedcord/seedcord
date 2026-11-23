@@ -3,13 +3,13 @@ import { throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 
 import { StartupPhase } from '#src/lifecycle/phases';
-import { pluginLoggerOf } from '#src/plugin/Plugin';
+import { pluginLoggerOf } from '#src/plugin/pluginSlots';
 
 import { withTimeout } from './withTimeout';
 
 import type { ShutdownTasks } from '#node/Lifecycle/CoordinatedShutdown';
 import type { TaskShutdownPhase } from '#src/lifecycle/phases';
-import type { Attachment } from '#src/plugin/PluginHost';
+import type { Attachment } from '#src/plugin/PluginRegistry';
 import type { StartupTasks } from './CoordinatedStartup';
 import type { Promisable } from 'type-fest';
 
@@ -41,7 +41,7 @@ export class PluginLifecycle {
         const groups = Map.groupBy(this.attachments, (attachment) => attachment.spec.init.phase);
 
         for (const [phase, group] of groups) {
-            // Ready inits run in the combined Ready task, before the ready hooks
+            // Ready inits run in the combined Ready task before the ready hooks
             if (phase === StartupPhase.Ready) continue;
             const budget = group.reduce((sum, a) => sum + a.spec.init.timeout, 0);
             this.startup.addTask(phase, 'plugins-init', () => this.runInits(group), budget);

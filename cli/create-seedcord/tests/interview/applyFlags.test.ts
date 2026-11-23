@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { applyFlags } from '#interview/applyFlags';
 import { BOT_TOKEN } from '#tests/token';
@@ -48,7 +48,7 @@ describe('applyFlags', () => {
         });
     });
 
-    it('leaves a key out when its flag is absent', () => {
+    it("doesn't set a key when its flag is absent", () => {
         expect(applyFlags([directory, capabilities], { dir: 'my-bot' })).toEqual({ directory: 'my-bot' });
     });
 
@@ -65,11 +65,11 @@ describe('applyFlags', () => {
         expect(applyFlags([install], { 'no-install': true })).toEqual({ install: false });
     });
 
-    it('leaves the key out when the --no- flag is false', () => {
+    it("doesn't set the key when the --no- flag is false", () => {
         expect(applyFlags([token], { 'no-token': false })).toEqual({});
     });
 
-    it('reads no --no- flag for a step that cannot wait', () => {
+    it('ignores the --no- flag for a step that cannot wait', () => {
         expect(applyFlags([directory], { 'no-dir': true })).toEqual({});
     });
 });

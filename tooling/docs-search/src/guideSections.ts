@@ -1,4 +1,5 @@
 import type { StructuredData } from 'fumadocs-core/mdx-plugins';
+import type { Except } from 'type-fest';
 
 export interface GuideSection {
     path: string;
@@ -22,7 +23,7 @@ interface GuidePage {
     structuredData: StructuredData;
 }
 
-type Collecting = Omit<GuideSection, 'text'> & { lines: string[] };
+type Collecting = Except<GuideSection, 'text'> & { lines: string[] };
 
 export function guideSections({ path, tab, title, description, structuredData }: GuidePage): GuideSection[] {
     const intro: Collecting = { path, tab, page: title, lines: description ? [description] : [] };

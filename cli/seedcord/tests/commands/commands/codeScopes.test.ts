@@ -1,8 +1,8 @@
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { GLOBAL_ID } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { loadCodeScopes, loadInstance } from '#commands/commands/codeScopes';
+import { loadCodeScopes } from '#commands/commands/codeScopes';
 import { quietSteps } from '#core/output/quietSteps';
 import { fakeProject } from '#tests/commands/commands/fakeBot';
 
@@ -32,17 +32,9 @@ describe('loadCodeScopes', () => {
         expect(names(scopes?.get('111'))).toEqual(['config']);
     });
 
-    it('sends a command with no scope to the configured guilds and leaves global out', async () => {
+    it('sends a command without a scope to the configured guilds only', async () => {
         const { scopes } = await scopesOf(await fakeProject({ commands: [Help], guilds: ['111', '222'] }));
 
         expect([...(scopes?.keys() ?? [])]).toEqual(['111', '222']);
-    });
-});
-
-describe('loadInstance', () => {
-    it('keeps the project open until the bot has loaded', async () => {
-        const instance = await loadInstance({ projectLoader: await fakeProject() }, '');
-
-        expect(instance.config.bot.commands.path).toBe('./commands');
     });
 });

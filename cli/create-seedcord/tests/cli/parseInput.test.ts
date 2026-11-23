@@ -1,5 +1,5 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { parseInput, wantsHelp, wantsVerbose, wantsVersion } from '#cli/parseInput';
 import { thrownBy } from '#tests/thrownBy';
@@ -61,7 +61,7 @@ describe('parseInput', () => {
         const thrown = thrownBy(() => parseInput(['--token', TOKEN, '--no-token']));
 
         expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateBadUsage)).toBe(true);
-        expect((thrown as Error).message).toContain('--token or --no-token');
+        expect((thrown as Error).message).toContain('--token and --no-token');
     });
 
     it('quotes an unknown flag and points at the help', () => {
@@ -128,7 +128,7 @@ describe('wantsVersion', () => {
         expect(wantsVersion(['my-bot', '--no-git'])).toBe(false);
     });
 
-    it('leaves a directory called version alone', () => {
+    it("doesn't read a directory called version as a flag", () => {
         expect(wantsVersion(['version'])).toBe(false);
     });
 });

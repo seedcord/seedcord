@@ -1,5 +1,5 @@
 import { Plugin } from '@seedcord/core/plugin';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import type { Seedcord as EdgeSeedcord } from '#src/edge/Seedcord';
 import type { Seedcord } from '#src/node/Seedcord';
@@ -78,7 +78,7 @@ function probeEdgeRejects(bot: EdgeSeedcord): void {
     // @ts-expect-error GatewayOnly declares transport 'gateway'
     bot.attach('gw', GatewayOnly);
     // @ts-expect-error ServerOnly declares runtime 'server'
-    bot.attach('server', ServerOnly);
+    bot.attach('serverOnly', ServerOnly);
 }
 
 void probeServerAccepts;

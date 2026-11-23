@@ -1,6 +1,6 @@
 import { opensInNewTab } from '#lib/docs/crossPackage';
 
-// marked's default renderer emits `<a href="...">` with href first and no class or target.
+// marked's default renderer emits `<a href="...">` with href first and without a class or target.
 // this must run before sanitize. otherwise DOMPurify strips the target/rel/class it adds.
 const ANCHOR_OPEN = /<a\s+href="([^"]*)"([^>]*)>/g;
 

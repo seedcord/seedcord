@@ -1,7 +1,7 @@
 import { Collection } from '@discordjs/collection';
 import { CustomId } from '@seedcord/core';
 import { DispatchContext } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import {
     ChannelMenuHandler,
@@ -36,7 +36,7 @@ const core = {} as unknown as Core;
 
 const ada: APIUser = { id: 'u1', username: 'ada', discriminator: '0', global_name: 'ada', avatar: null };
 
-// justified: each fixture carries only the fields the assertions read
+// justified: each fixture has only the fields the assertions read
 const boss = { nick: 'boss', roles: [], permissions: '0' } as unknown as APIInteractionDataResolvedGuildMember;
 const mods = { id: 'r1', name: 'mods' } as unknown as APIRole;
 const general = { id: 'c1', name: 'general', type: 0, permissions: '0' } as APIInteractionDataResolvedChannel;
@@ -106,7 +106,7 @@ describe('a payload carrying no values key', () => {
     });
 });
 
-// discord omits resolved when a menu resolved nothing, which discord.js guards against too
+// discord omits resolved for an empty menu, which discord.js guards against too
 describe('a payload carrying no resolved key', () => {
     it('reads every user menu member as an empty collection', async () => {
         let users: unknown;
@@ -217,7 +217,7 @@ describe('user select', () => {
         expect(members).toEqual(new Collection([['u1', boss]]));
     });
 
-    it('returns an empty collection when the guild resolved no member', async () => {
+    it('returns an empty collection when the guild resolved zero members', async () => {
         let members: unknown;
 
         @UserMenuRoute(AssignId)

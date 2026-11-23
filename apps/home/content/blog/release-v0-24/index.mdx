@@ -1,0 +1,227 @@
+---
+title: 'v0.24: plugins for everyone'
+description: Four new plugins for tasks, translations, Discord OAuth, and any SQL database, plus web routes from plugins and a command that uploads your emojis.
+authors: [materwelonDhruv]
+created: 2026-11-22
+cover:
+    src: ./cover.webp
+    alt: A green cereal box called Plugin Crunch with a 4 free plugins burst, a bowl of cereal with smiley face marshmallows, and a Plugin Facts label listing the new plugins, web routes, emoji uploads, and a few breaking changes
+thumbnail: ./thumbnail.webp
+keywords: [release, plugins, web routes, cron, emojis, i18n, oauth, tasks, kysely]
+---
+
+Four new plugins in the box this time. Tasks, translations, Discord OAuth, and Kysely on any database. Plugins can also answer web requests on your bot's own server now, and `seedcord emojis` manages all your bot's emojis from one folder in your repo, with a typed key for each.
+
+81 changes since v0.23, and 21 of them are breaking. Don't worry though, most of those only touch one API. I'll go through the ones you'll actually notice at the end.
+
+Anyway, here's what's new.
+
+---
+
+## Four new plugins
+
+### Tasks
+
+Some work doesn't start from a command, like a digest every morning or a cleanup every hour. That used to be a `setInterval` in `bot.ts` that you started after login, stopped before exit, and just hoped never overlapped itself.
+
+[`@seedcord/plugin-tasks`](https://seedcord.org/guide/plugins/tasks/) runs a folder of task classes on a cron pattern:
+
+```ts title="src/tasks/Heartbeat.ts"
+@RegisterTask('*/5 * * * *')
+export class Heartbeat extends Task {
+    public async execute(): Promise<void> {
+        const { size } = this.core.bot.client.guilds.cache;
+        this.logger.info(`Serving ${size} servers`);
+    }
+}
+```
+
+The pattern is typed btw, so `'61 * * * *'` doesn't compile, and the error says which field is wrong.
+
+It also [runs a task once at a later time](https://seedcord.org/guide/plugins/tasks-scheduling/), like an unban a day after a tempban:
+
+```ts
+await this.core.tasks.schedule(Unban, {
+    in: '1d',
+    data: { guildId, userId }
+});
+```
+
+The job goes into your `kv` store first, so it's still there after a restart if your driver saves to disk or a database. And of course, none of this runs on its own under `seedcord dev` until you pass `runInDev: true`. Nobody wants a cleanup job firing every time they save a file.
+
+Huge thanks to [camdzic](https://github.com/camdzic) for writing this whole plugin.
+
+### i18n
+
+Discord sends the language each user picked with every interaction, and [`@seedcord/plugin-i18n`](https://seedcord.org/guide/plugins/i18n/) replies in it. Your strings go in [Fluent](https://projectfluent.org/) files, one per language:
+
+```ftl title="src/locales/en-US.ftl"
+items =
+    { $count ->
+        [one] You have { $count } item
+       *[other] You have { $count } items
+    }
+```
+
+Every handler gets `this.t`:
+
+```ts
+await this.reply(this.t('items', { count: 3 }));
+```
+
+`seedcord codegen` types every key and its variables from the base file. So a typo in a key or a missing `count` is a compile error now. Before, a user would just see the wrong message. The plural rules go in the Fluent file, so you call `t` the same way for Arabic's six forms as for English's two.
+
+And it can [translate your command names and descriptions](https://seedcord.org/guide/plugins/i18n-commands/) before each deploy as well.
+
+### OAuth
+
+`@seedcord/plugin-oauth` adds Discord OAuth to your bot. Once someone logs in, your bot can call Discord as them, like listing the servers they're in:
+
+```ts
+const guilds = await this.core.oauth.as(this.user.id).guilds();
+```
+
+It serves the login routes itself, keeps every user's tokens encrypted in your `kv` store, and refreshes them before they expire. On top of that, the scopes you pass to `OAuth.with({ scopes: ['guilds'] })` decide which calls are typed, so calling anything outside your scopes doesn't compile.
+
+It works on gateway, http, and Workers. [OAuth](https://seedcord.org/guide/plugins/oauth/) has the setup, including the redirect URL you have to add in the developer portal (Discord won't let a bot add it for you, sadly).
+
+### Kysely, on any database
+
+`@seedcord/plugin-kysely-postgres` is just [`@seedcord/plugin-kysely`](https://seedcord.org/guide/plugins/kysely/) now. It takes any Kysely dialect, so SQLite, MySQL, Postgres, and the community ones all work. _Who knew other databases existed, heh._
+
+```ts title="src/bot.ts"
+seedcord.attach('db', Kysely, {
+    path: './services',
+    dialect: () => new SqliteDialect({ database: new Database('bot.db') }),
+    migrations: { path: './migrations' }
+});
+```
+
+And if you'd like the `node:sqlite` that ships with Node, there's a `nodeSqlite()` helper for that.
+
+---
+
+## Plugins can answer web requests
+
+Some plugins need a URL of their own, like a route that GitHub posts webhooks to. Before, you'd have to run a second web server next to your bot just for a route or two.
+
+Now a plugin can [define `fetch()`](https://seedcord.org/guide/writing-plugins/web-requests/). It gets a web `Request` and returns a `Response`, or `undefined` to pass it on:
+
+```ts title="src/plugins/Status.ts"
+const STATUS = new URLPattern({ pathname: '/status' });
+
+export class Status extends Plugin {
+    public async init(): Promise<void> {}
+
+    public override fetch(request: Request): Response | undefined {
+        if (!STATUS.test(request.url)) return undefined;
+
+        return Response.json({ guilds: this.core.bot.client.guilds.cache.size });
+    }
+}
+```
+
+This works on both transports, and a gateway bot serves these routes on the same server as its health check. The OAuth plugin above is actually built on this.
+
+Already have a web server, like a Hono API or a Next.js site? Set `port` to `false` in your `server` config and seedcord stays off every port. Your server passes requests to `bot.fetch()`, and the plugin routes answer from there. And yep, gateway bots can do this now, same as http bots. [Inside your own server](https://seedcord.org/guide/build/embed/) shows it with Hono, Next.js, and Express.
+
+---
+
+## `seedcord emojis`
+
+Application emojis belong to one application, so every test bot needed the same images uploaded again by hand in the developer portal. Then you'd copy each emoji's id into your code, and redo the whole thing for the next bot. Yeah that gets really old really fast.
+
+So now your emojis just live in an `emojis` folder next to `seedcord.config.ts`. Commit it, and everyone on your team gets the same emojis on their own test bot:
+
+```sh
+pnpm exec seedcord emojis push
+```
+
+`push` uploads whatever your application doesn't have yet. Every file becomes a typed key, so `party_parrot.png` is `Emojis.PartyParrot` in your code, with the right id for whichever bot is running. No more copying ids around.
+
+There's [a lot more](https://seedcord.org/guide/tooling/emojis/) to it:
+
+- `list` compares the folder with what's on Discord. With `--check`, it exits 1 if a file isn't uploaded yet, so you can run it in CI before a deploy.
+- `pull` downloads the emojis that only exist on Discord into the folder. With `--guild`, it grabs a server's emojis, and the next `push` puts them on your bot.
+- `remove` deletes from Discord, and `--delete-file` takes the file with it.
+- `push --replace` sends an image again after you edit it.
+- Your bot checks the folder when it starts. If a file isn't uploaded yet, it stops and tells you to run `push`.
+
+Oh and a little trick Discord's docs don't mention: a lossy AVIF or an animated GIF of 256 KiB or less keeps its full size, while most uploads get shrunk to 128 pixels.
+
+---
+
+## More for plugin authors
+
+The four plugins above needed some [new hooks](https://seedcord.org/guide/writing-plugins/), so of course they're yours to use:
+
+- **`dispatchMembers`** runs once per interaction or event, and each result shows up as `this.<name>` on handlers. That's how `this.t` from i18n gets there.
+- **`prepareCommands`** edits your commands before they go to Discord, like adding `name_localizations`.
+- **`registerCommandFiles`** takes globs, and saving a matching file in `seedcord dev` shows the refresh prompt.
+- **`Storable` and `Stored`** type what goes into and comes back out of `kv`, so the compiler rejects any value that JSON can't store.
+
+---
+
+## Smaller things I really like
+
+**Public replies by default.** Set `bot.interactions.ephemeral` to `false` if most of your replies should be public.
+
+**A reply for buttons with no handler.** A command or button without one now says "This doesn't do anything right now." Pass your own handler as `interactions.unhandled` to change it.
+
+**A warning before Discord gives up.** In dev, seedcord warns you when an interaction still hasn't been answered 2.5 seconds after Discord created it. Discord fails it at 3, so you'll know before your users do.
+
+**`@WebhookUrl` takes a function** now, for a log webhook URL you keep outside the environment.
+
+**`BOT_TOKEN` works** when `DISCORD_BOT_TOKEN` isn't set, so a bot moving to seedcord can keep its old variable name.
+
+**Bad cooldowns don't compile.** `Cooldown('1.5h')` and `Cooldown('0s')` used to throw when the handler loaded.
+
+And if you're moving a bot over from plain discord.js, there's a [new guide page](https://seedcord.org/guide/coming-from-discordjs/) just for that.
+
+---
+
+## Fixes
+
+18 this time. Here are a few you might have hit:
+
+- A second `send()` after `defer()` replaced the first message when it should've sent a new one.
+- After `defer({ ephemeral: false })`, an error card meant only for the user posted publicly.
+- On gateway, a deleted log webhook and a refused command deploy didn't get caught.
+- On Workers, if a handler didn't await a `kv.update()`, every later update to that key hung forever.
+- If a restart pattern had a `!` in it, `seedcord dev` restarted on almost every save.
+- On Windows, `create-seedcord` and a few CLI prompts waited for Enter before exiting.
+
+---
+
+## Updating
+
+```sh
+pnpm update --latest seedcord @seedcord/gateway # or @seedcord/http
+pnpm exec seedcord codegen
+```
+
+Don't forget your seedcord plugins. If you used `@seedcord/plugin-kysely-postgres`, switch to `@seedcord/plugin-kysely`. Its class is `Kysely` now, and it takes a `dialect` function. `pool` and `connectionString` are gone.
+
+Your compiler catches most of the 21 breaking changes (the nutrition label did warn you). These are the ones to know about up front:
+
+- `tunnel`, `hmr`, `idleAnimation`, and an edge bot's `port` moved under `dev` in `seedcord.config.ts`.
+- `port` and `healthCheck` are now one `server` block. **A gateway bot now listens on port 3000 by default**, where it used 6967, so check your host's port settings.
+
+    ```ts
+    server: { port: 8080, health: '/healthz' }
+    ```
+
+- Your bot reads the `emojis` folder next to `seedcord.config.ts` when it starts, and if a file in there isn't uploaded, it stops. If you already keep other stuff in a folder with that name, move it or point `emojis.dir` at an empty folder.
+- After a `defer()`, every `send()` past the first one now sends a new message. Nothing warns you about this one.
+- An http bot answers anything that isn't a POST with a 404, where it used to send a 405. Update any uptime check that expects the 405.
+- An edge bot needs `@cloudflare/vite-plugin@2.0.0-rc.0` and `cf@1.0.0-rc.0`.
+
+[The changelog](https://github.com/seedcord/seedcord/releases) has everything else.
+
+---
+
+v1 is getting close, so if something in the API bugs you, now's the time to tell us.
+
+Thanks to [camdzic](https://github.com/camdzic) for the tasks plugin, the ephemeral default, and the Windows prompt fix, and to [SerenModz21](https://github.com/SerenModz21) for moving the repo to Vite+ and keeping our dependencies up to date!
+
+New to seedcord? [Start here](https://seedcord.org/guide/), and come say hi in [the Discord server](https://seedcord.org/chat)!

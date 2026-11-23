@@ -15,14 +15,6 @@
             "discord-component-embed/jsx-dev-runtime": ["./src/jsx-dev-runtime.ts"]
         }
     },
-    "include": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "tests/**/*.ts",
-        "tests/**/*.tsx",
-        "eslint.config.ts",
-        "tsdown.config.ts",
-        "vitest.config.ts"
-    ],
+    "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx", "eslint.config.ts", "vite.config.ts"],
     "exclude": ["node_modules", "dist"]
 }

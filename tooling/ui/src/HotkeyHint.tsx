@@ -1,9 +1,9 @@
 'use client';
 
 import { Slot } from '@radix-ui/react-slot';
+import { cn } from 'cn';
 
 import { ariaKeyshortcuts, HotkeyKeys } from './HotkeyKeys';
-import { cn } from './lib/cn';
 import { useIsMac } from './lib/useIsMac';
 import { Tooltip } from './Tooltip';
 

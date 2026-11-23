@@ -1,11 +1,11 @@
 import { stripVTControlCharacters } from 'node:util';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { CreateOutput } from '#cli/output';
 import { CommandFailed } from '#scaffold/exec';
 
-// the selector after ✔ takes no column on screen
+// the selector after ✔ is zero columns wide on screen
 const TEXT_STYLE = String.fromCodePoint(0xfe_0e);
 
 function captured(): { stdout: { write: (text: string) => boolean; isTTY: false }; text: () => string } {
@@ -82,7 +82,7 @@ describe('CreateOutput', () => {
         expect(text()).toMatch(/✘ deps .*\n\s+│ pnpm add envapt\n\s+│ ERR_PNPM_FETCH_404\n$/);
     });
 
-    it('prints a failed step as a warning when there are no rows', async () => {
+    it('prints a failed step as a warning when the row list is empty', async () => {
         const { stdout, text } = captured();
         const failing = new CreateOutput(['deps'], stdout)
             .plainSteps()

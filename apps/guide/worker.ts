@@ -14,7 +14,7 @@ const NOT_FOUND = 404;
 
 const PRODUCTION_HOST = new URL(PRODUCTION_ORIGIN).hostname;
 
-// cloudflare serves the extension-less files next writes here with no content-type at all
+// cloudflare serves the extension-less files next writes here without a content-type
 const TYPED_PATHS: Record<string, string> = {
     '/icon': 'image/png',
     '/apple-icon': 'image/png'
@@ -26,7 +26,7 @@ function at(request: Request, pathname: string): Request {
     return new Request(url, request);
 }
 
-// a real file in public/ wins over a page's generated card or twin
+// a real file in public/ takes precedence over a page's generated card or twin
 async function fromAssets(env: GuideEnv, request: Request, page: string): Promise<Response> {
     // only a page has a twin. every other url falls through to the file itself
     if (wantsMarkdown(request)) {

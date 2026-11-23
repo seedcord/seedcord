@@ -1,3 +1,5 @@
+import type { ExcludeStrict } from 'type-fest';
+
 /**
  * Startup phases, in run order.
  */
@@ -30,4 +32,4 @@ export enum ShutdownPhase {
 }
 
 // the phases a bot's shutdown task or a plugin's dispose() can run in
-export type TaskShutdownPhase = Exclude<ShutdownPhase, ShutdownPhase.Release>;
+export type TaskShutdownPhase = ExcludeStrict<ShutdownPhase, ShutdownPhase.Release>;

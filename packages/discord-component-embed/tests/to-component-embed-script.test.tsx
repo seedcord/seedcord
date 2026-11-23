@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import { createElement } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Container, TextDisplay, toComponentEmbedScript } from '#src/index';
 

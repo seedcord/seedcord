@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
 import { memoryRateLimiter } from '#tests/utils/memoryRateLimiter';
 
@@ -6,7 +6,7 @@ describe('KvRateLimiter retryAfterMs and resetAt math', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());
 
-    it('shrinks retryAfterMs as time passes while resetAt stays fixed', async () => {
+    it('shrinks retryAfterMs as time passes while resetAt is fixed', async () => {
         const limiter = memoryRateLimiter();
         const window = { windowMs: 1000 };
         const start = Date.now();

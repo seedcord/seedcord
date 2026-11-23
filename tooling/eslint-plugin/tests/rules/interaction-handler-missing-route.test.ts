@@ -109,7 +109,7 @@ ruleTester.run('interaction-handler-missing-route', rule, {
             errors: [{ messageId: 'missingRoute', data: { base: 'SlashHandler', decorator: 'SlashRoute' } }]
         },
         {
-            // a same-named route decorator from another module satisfies nothing
+            // a same-named route decorator from another module doesn't count
             code: dedent`
                 import { SlashHandler } from 'seedcord';
                 import { SlashRoute } from 'some-other-lib';

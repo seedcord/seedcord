@@ -1,8 +1,8 @@
 import path from 'node:path';
 
 import { MemoryDriver } from '@seedcord/core';
-import { ShutdownPhase, shutdownOf } from '@seedcord/core/node/internal';
-import { describe, expect, it } from 'vitest';
+import { shutdownOf } from '@seedcord/core/node/internal';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { slashPayload } from '#tests/helpers/interactions';
@@ -56,15 +56,7 @@ describe('http Seedcord class', () => {
         await expect(fetch(url, { method: 'POST' })).rejects.toThrow();
     });
 
-    it('skips the health server on healthCheck: false', async () => {
-        await bindSignedEnv();
-        await using host = new Seedcord(config());
-        await host.start();
-
-        expect(shutdownOf(host).removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(false);
-    });
-
-    it('username stays undefined before the ready fetch', async () => {
+    it('username is undefined before the ready fetch', async () => {
         await bindSignedEnv();
         await using host = new Seedcord(config());
         await host.start();

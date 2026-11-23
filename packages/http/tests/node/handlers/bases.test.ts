@@ -1,7 +1,7 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
 import { DispatchContext } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
@@ -51,7 +51,7 @@ function baseEvent(): { application_id: string; id: string; token: string; type:
     return { application_id: 'app-1', id: 'int-1', token: 'tok', type: 2 };
 }
 
-// justified: each fixture carries only the app-id, id, and token the sender ref reads
+// justified: each fixture has only the app-id, id, and token the sender ref reads
 function slashEvent(): APIChatInputApplicationCommandInteraction {
     return baseEvent() as unknown as APIChatInputApplicationCommandInteraction;
 }

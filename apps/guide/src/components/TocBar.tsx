@@ -79,7 +79,7 @@ function useReadProgress(target: RefObject<HTMLElement | null>): void {
         write();
         window.addEventListener('scroll', schedule, { passive: true });
         window.addEventListener('resize', schedule, { passive: true });
-        // this bar outlives a route change and arriving at scroll 0 fires no scroll event
+        // this bar outlives a route change, and arriving at scroll 0 doesn't send a scroll event
         const grew = new ResizeObserver(schedule);
         grew.observe(document.documentElement);
         return () => {

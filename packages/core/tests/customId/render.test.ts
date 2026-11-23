@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { InvalidCustomId, StaleCustomId } from '#customId/Errors';
 import { cardJson } from '#tests/utils/cardText';

@@ -7,11 +7,11 @@ import { settleWithin } from '#src/lifecycle/withTimeout';
 
 import type { LifecycleTask } from '#src/lifecycle/LifecycleTypes';
 import type { TaskShutdownPhase } from '#src/lifecycle/phases';
-import type { Tail } from '@seedcord/types';
+import type { ArrayTail } from 'type-fest';
 
 /** Adds work to a node bot's shutdown, in any phase before `ShutdownPhase.Release`. */
 export interface ShutdownTasks {
-    addTask(phase: TaskShutdownPhase, ...rest: Tail<Parameters<CoordinatedShutdown['addTask']>>): void;
+    addTask(phase: TaskShutdownPhase, ...rest: ArrayTail<Parameters<CoordinatedShutdown['addTask']>>): void;
 }
 
 const PHASE_ORDER: ShutdownPhase[] = [
@@ -27,7 +27,7 @@ const SHUTDOWN_SIGNALS: NodeJS.Signals[] = ['SIGTERM', 'SIGINT'];
 // gives the logger's file sink time to flush before process.exit
 const LOG_FLUSH_DELAY_MS = 3000;
 
-// 25s plus LOG_FLUSH_DELAY_MS stays under kubernetes' 30s SIGKILL window
+// 25s plus LOG_FLUSH_DELAY_MS is under kubernetes' 30s SIGKILL window
 const DEFAULT_SHUTDOWN_DEADLINE_MS = 25_000;
 
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
@@ -60,7 +60,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         for (const phase of PHASE_ORDER) {
             // set first so the deadline log shows this phase
             this.#runningPhase = phase;
-            // runPhases keeps going after settleWithin stops waiting on it
+            // runPhases continues after settleWithin stops waiting on it
             if (performance.now() >= this.#phasesExpireAt) return;
             try {
                 await this.runPhase(phase);

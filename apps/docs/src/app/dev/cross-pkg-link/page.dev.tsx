@@ -13,7 +13,7 @@ import type { ReactElement } from 'react';
 const CURRENT_PACKAGE = 'seedcord';
 const EMPTY_ANCHOR = /<a\b[^>]*>\s*<\/a>/g;
 
-// marked renders a markdown `[label](href)` link as `<a href><code>label</code></a>`, so this mirrors that shape
+// this mirrors how marked renders a markdown `[label](href)` link: `<a href><code>label</code></a>`
 const RAW_PROSE =
     '<p>Returns a <a href="/packages/seedcord/latest/classes/Seedcord"><code>Seedcord</code></a> instance ' +
     '(same package, in-tab, no icon), wraps <a href="/packages/utils/latest/functions/clamp"><code>clamp</code></a> ' +
@@ -22,7 +22,7 @@ const RAW_PROSE =
 
 // adversarial case, the function name `getClient` contains the substring Client. the real engine
 // assigns the ref offset through a sentinel marker (pretty-formatter substituteRefs) so only the
-// return-type token links. going through that real path catches the earlier `getClient` mislink
+// return-type token links. using that real path catches the earlier `getClient` mislink
 // that a faked offset would miss
 const SIGNATURE: RenderedSignature = {
     name: [{ kind: 'text', text: 'getClient' }],

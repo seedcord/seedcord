@@ -1,15 +1,16 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { loadInstance } from '#commands/commands/codeScopes';
 import { DiscordSession } from '#commands/commands/DiscordSession';
-import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
 import { commandCount } from '#commands/commands/scope';
+import { defaultRunnerDeps } from '#core/discord/runnerDeps';
+import { loadBot } from '#core/modules/loadBot';
+import { quietSteps } from '#core/output/quietSteps';
 
 import { deletedNote, scanNote } from './removeSteps';
 
-import type { RunnerDeps } from '#commands/commands/runnerDeps';
 import type { GuildTargets } from '#commands/commands/scope';
+import type { RunnerDeps } from '#core/discord/runnerDeps';
 import type { RemoveMode } from './RemoveMode';
 import type { RemovePresenter } from './RemovePresenter';
 import type { Selection } from './removeSteps';
@@ -23,7 +24,7 @@ export interface RemoveDeps extends Pick<RunnerDeps, 'openDiscord'> {
 interface RemovePlan {
     mode: RemoveMode;
     guilds: GuildTargets;
-    // false prints what would go and deletes nothing
+    // false prints what it would delete without deleting anything
     apply: boolean;
 }
 
@@ -33,10 +34,10 @@ export class RemoveRunner {
     constructor(private readonly deps: RemoveDeps) {}
 
     public static create(): RemoveRunner {
-        const deps = defaultRunnerDeps();
+        const { openDiscord, projectLoader } = defaultRunnerDeps();
         return new RemoveRunner({
-            openDiscord: deps.openDiscord,
-            loadInstance: () => loadInstance(deps, process.cwd())
+            openDiscord,
+            loadInstance: () => loadBot(quietSteps, projectLoader, process.cwd()).then(({ instance }) => instance)
         });
     }
 
@@ -80,7 +81,9 @@ export class RemoveRunner {
             result,
             selected.some(({ scope }) => scope.kind === 'global')
         );
-        if (result.failed.length > 0) throw new SeedcordError(SeedcordErrorCode.CliCommandsNotDeleted);
+        if (result.failed.length > 0) {
+            throw new SeedcordError(SeedcordErrorCode.CliSomeFailed, ['commands', 'deleted']);
+        }
     }
 
     // the wizard's guild list and the run share one session

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { REST } from '@discordjs/rest';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { Notice } from '#stops/Notice';
 import { HandledException } from '#subscribers/default/HandledException';

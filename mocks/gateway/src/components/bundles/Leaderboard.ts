@@ -9,7 +9,7 @@ export interface LeaderboardEntry {
     score: number;
 }
 
-/** the headless path has no components-v2 flag. */
+/** the headless path doesn't have a components-v2 flag. */
 export class LeaderboardCard extends BuilderComponent<'embed'> {
     constructor(view: PageView<LeaderboardEntry>) {
         super('embed');

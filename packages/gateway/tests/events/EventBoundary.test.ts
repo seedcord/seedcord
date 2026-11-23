@@ -2,7 +2,7 @@ import { Silence, Fault } from '@seedcord/core';
 import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { handleEventFault as boundary } from '#bot/handleEventFault';
 import { TestNotice } from '#tests/utils/TestNotice';
@@ -27,7 +27,7 @@ function deadResourceError(): DiscordAPIError {
 }
 
 function stringCodedError(): DiscordAPIError {
-    // djs puts the code the boundary reads in the second constructor argument. some of them are strings.
+    // djs puts the code that the boundary reads in the second constructor argument. some of them are strings.
     return new DiscordAPIError(
         { code: 0, message: 'Unknown command' },
         'SLASH_COMMAND_UNKNOWN',
@@ -75,7 +75,7 @@ describe('handleEventFault', () => {
         expect(payload.metadata).toMatchObject({ eventName: 'guildMemberRemove', handler: 'Farewell' });
     });
 
-    it('stays quiet for a Silence', () => {
+    it('skips the publish for a Silence', () => {
         handleEventFault(new Silence('filtered'), 'guildMemberAdd', 'Welcome', [{}], mockCore(publish));
 
         expect(publish).not.toHaveBeenCalled();
@@ -104,7 +104,7 @@ describe('handleEventFault', () => {
         debug.mockRestore();
     });
 
-    it('leaves the compact fault log without a cause line when the error has no Error cause', () => {
+    it('leaves the compact fault log without a cause line when the error is missing an Error cause', () => {
         const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
         handleEventFault(new Error('plain boom'), 'messageCreate', 'PingPong', [{}], mockCore(publish));
@@ -113,19 +113,19 @@ describe('handleEventFault', () => {
         errorLog.mockRestore();
     });
 
-    it('stays quiet for a non-reporting denial', () => {
+    it('skips the publish for a non-reporting denial', () => {
         handleEventFault(new TestNotice(), 'voiceStateUpdate', 'Tracker', [{}], mockCore(publish));
 
         expect(publish).not.toHaveBeenCalled();
     });
 
-    it('reports a dead-resource api code by default, since ignoreEventApiCodes is empty', () => {
+    it('reports a dead-resource api code by default since ignoreEventApiCodes is empty', () => {
         handleEventFault(deadResourceError(), 'messageReactionAdd', 'ReactionRole', [{}], mockCore(publish));
 
         expect(publish).toHaveBeenCalledWith('unknownException', expect.anything());
     });
 
-    it('swallows an api code listed in ignoreEventApiCodes with no report', () => {
+    it('swallows an api code listed in ignoreEventApiCodes without a report', () => {
         // justified: the fixture implements only the Core surface the event boundary reads.
         const core = {
             bus: { [PublishDefault]: publish },

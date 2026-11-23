@@ -1,5 +1,5 @@
 import { Prompter } from '@seedcord/cli-prompts';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { parseInput } from '#cli/parseInput';
 import { runFlow } from '#interview/runFlow';
@@ -33,7 +33,7 @@ describe('the testing guilds step', () => {
         expect(parseInput(['my-bot', '--testing-guilds', '']).testingGuilds).toEqual([]);
     });
 
-    it('deploys globally when there is no terminal to ask on', async () => {
+    it('deploys globally when it cannot ask on a terminal', async () => {
         const answers = await runFlow([testingGuildsStep], {}, { interactive: false });
 
         expect(answers.testingGuilds).toEqual([]);

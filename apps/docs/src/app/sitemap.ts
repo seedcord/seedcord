@@ -5,7 +5,7 @@ import type { MetadataRoute } from 'next';
 
 export const dynamic = 'force-static';
 
-// a versioned page carries a canonical to its latest url
+// a versioned page has a canonical pointing to its latest url
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return (await docsRoutes()).reduce<MetadataRoute.Sitemap>(
         (entries, route) => {

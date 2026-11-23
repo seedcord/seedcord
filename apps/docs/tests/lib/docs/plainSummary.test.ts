@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { plainSummary } from '#lib/docs/plainSummary';
 
@@ -7,7 +7,7 @@ describe('plainSummary', () => {
         expect(plainSummary('see [the handler](/packages/x/1.0.0/classes/handler) now')).toBe('see the handler now');
     });
 
-    it('drops inline-code backticks', () => {
+    it('removes inline-code backticks', () => {
         expect(plainSummary('pass `ApplicationCommandType.User` here')).toBe('pass ApplicationCommandType.User here');
     });
 
@@ -21,7 +21,7 @@ describe('plainSummary', () => {
         expect(plainSummary('first line.\n\nsecond   line.')).toBe('first line. second line.');
     });
 
-    it('leaves a fenced block out of the prose', () => {
+    it("doesn't include a fenced block in the prose", () => {
         expect(plainSummary('Reads a wire.\n\n```ts\nconst a = 1;\n```\nThen throws.')).toBe(
             'Reads a wire. Then throws.'
         );

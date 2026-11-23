@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { docsFrontPreview, packagePreview, symbolPreview } from '#lib/docs/linkPreview';
 
@@ -39,7 +39,7 @@ const categories = (counts: [EntityTone, number][]): NavigationCategory[] =>
     counts.map(([tone, count]) => ({ tone, items: list(count) })) as unknown as NavigationCategory[];
 
 describe('symbolPreview', () => {
-    it('counts the members of a class and leaves out the empty groups', () => {
+    it("counts the members of a class and doesn't list the empty groups", () => {
         const card = symbolPreview(
             resolved({ kind: 'class', constructors: list(1), properties: list(3), methods: list(0) }),
             undefined
@@ -84,13 +84,13 @@ describe('symbolPreview', () => {
         expect(card.breadcrumb).toEqual(['docs', '@seedcord/core', 'v0.8.0']);
     });
 
-    it('links an old version to the latest package page when the latest version has no such symbol', () => {
+    it("links an old version to the latest package page when the latest version doesn't have that symbol", () => {
         const card = symbolPreview(resolved({ kind: 'type' }, OLD), undefined);
 
         expect(card.latestVersion?.url).toBe('https://seedcord.org/docs/packages/core/latest');
     });
 
-    it('leaves the latest link off the latest version', () => {
+    it("doesn't add the latest link to the latest version", () => {
         expect(symbolPreview(resolved({ kind: 'type' }), undefined).latestVersion).toBeUndefined();
     });
 
@@ -145,7 +145,7 @@ describe('symbolPreview', () => {
         );
     });
 
-    it('leaves out the source link for a symbol with no source', () => {
+    it("doesn't add a source link for a symbol without a source", () => {
         const labels = symbolPreview(resolved({ kind: 'type' }), undefined).links.map(({ label }) => label);
 
         expect(labels).toEqual(['Markdown']);

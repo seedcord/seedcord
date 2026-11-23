@@ -1,4 +1,4 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import type { DispatchResult, EventDispatchResult, HandlerOutcome, HandlerResult } from '#src/dispatch/dispatchResult';
 import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
@@ -34,6 +34,6 @@ if (perHandler.outcome !== 'handled') {
 
 const published = {} as HandlerOutcome;
 
-// the thrown value stays off the bus whichever way HandlerResult grows
+// HandlerOutcome never includes the thrown value, whichever way HandlerResult grows
 expectTypeOf(published).not.toHaveProperty('caught');
 expectTypeOf<HandlerOutcome['outcome']>().toEqualTypeOf<DispatchOutcome>();

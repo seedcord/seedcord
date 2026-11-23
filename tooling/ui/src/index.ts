@@ -44,7 +44,6 @@ export * from './ThemeProvider';
 export * from './ThemeToggle';
 export * from './Tooltip';
 export * from './lib/activeHref';
-export * from './lib/cn';
 export * from './lib/motion';
 export * from './lib/navLink';
 export * from './lib/tw';
@@ -53,5 +52,8 @@ export * from './lib/useIsMac';
 export * from './lib/useNavigateAndClose';
 export * from './lib/useRovingList';
 export * from './lib/useSiteHotkeys';
+export * from './lib/useStoredItem';
 export * from './lib/useTimedToggle';
 export type { CodeRepresentation } from './types/CodeRepresentation';
+
+export { cn } from 'cn';

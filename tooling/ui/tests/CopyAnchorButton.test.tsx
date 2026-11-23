@@ -1,6 +1,6 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { clickCopyAnchor, CopyAnchorButton } from '#src/CopyAnchorButton';
 
@@ -22,7 +22,7 @@ describe('CopyAnchorButton', () => {
         });
     });
 
-    it('copies the page url when it has no anchor', async () => {
+    it('copies the page url when no anchor is given', async () => {
         const writeText = stubClipboard();
         render(<CopyAnchorButton label="Commands" />);
 

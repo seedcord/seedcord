@@ -1,10 +1,9 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
 import { ComponentType } from 'discord-api-types/v10';
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
 import { WebhookSender } from '#subscribers/bases/WebhookSender';
-
-import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
+import { CommonJsDiscordAPIError } from '#tests/utils/commonJsRest';
 
 let postMock: MockInstance<REST['post']>;
 let getMock: MockInstance<REST['get']>;
@@ -28,9 +27,7 @@ describe('WebhookSender', () => {
         await sender.send({
             flags: 32_768,
             username: 'Unknown Exception',
-            components: [
-                { toJSON: (): APIMessageTopLevelComponent => ({ type: ComponentType.Container, components: [] }) }
-            ],
+            components: [{ type: ComponentType.Container, components: [] }],
             files: [{ name: 'metadata.json', description: 'error metadata', data: Buffer.from('{}') }]
         });
 
@@ -71,6 +68,13 @@ describe('WebhookSender.verify', () => {
     it('resolves missing on a 404 from discord', async () => {
         getMock.mockRejectedValueOnce(
             new DiscordAPIError({ message: 'Unknown Webhook', code: 10_015 }, 10_015, 404, 'GET', 'url', {})
+        );
+        await expect(sender().verify()).resolves.toBe('missing');
+    });
+
+    it("resolves missing on a 404 from a gateway bot's rest", async () => {
+        getMock.mockRejectedValueOnce(
+            new CommonJsDiscordAPIError({ message: 'Unknown Webhook', code: 10_015 }, 10_015, 404, 'GET', 'url', {})
         );
         await expect(sender().verify()).resolves.toBe('missing');
     });

@@ -2,11 +2,15 @@
 // Run `seedcord codegen` after changing your commands, plugins, or emoji config.
 
 import type Bot from './bot';
+import type { AttachedPlugin } from '@seedcord/http';
+
+type Fits<Plugin extends { codegen(): Promise<unknown> }, Row extends Awaited<ReturnType<Plugin['codegen']>>> = Row;
 
 // prettier-ignore
 declare module '@seedcord/http' {
     interface Core {
-        pings: (typeof Bot)['pings'];
+        i18n: AttachedPlugin<(typeof Bot)['i18n']>;
+        pings: AttachedPlugin<(typeof Bot)['pings']>;
     }
     interface SlashRegistry {
         ping: { options: { detailed: { kind: 'boolean'; required: false } }; cache: 'cached' };
@@ -18,7 +22,14 @@ declare module '@seedcord/http' {
 
     }
     interface EmojiMap {
-
+        Cancel: 'application';
+        Confirm: 'application';
+    }
+    interface PluginTypes {
+        '@seedcord/plugin-i18n': Fits<(typeof Bot)['i18n'], { messages: { 'isolate-pings': { count: 'text' }; pong: {}; roundtrip: { ms: 'number' }; 'total-pings': { count: 'text' } } }>;
+    }
+    interface DispatchMemberValues {
+        t: Awaited<ReturnType<(typeof Bot)['i18n']['dispatchMembers']['t']>>;
     }
 }
 

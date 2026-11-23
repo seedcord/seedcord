@@ -3,7 +3,7 @@ import type { KvCollection } from '#src/kv/KvCollection';
 import type { EpochMs, IRateLimiter, RateLimitResult, RateLimitWindow } from '@seedcord/types';
 
 function limitedResult(live: readonly number[], now: number): RateLimitResult {
-    // a reduce, because spreading into Math.min throws past the argument cap
+    // a reduce because spreading into Math.min throws past the argument cap
     const resetAt = live.reduce((earliest, exp) => Math.min(earliest, exp), Number.POSITIVE_INFINITY) as EpochMs;
     return { limited: true, resetAt, remaining: 0, retryAfterMs: resetAt - now };
 }
@@ -35,7 +35,7 @@ export class KvRateLimiter implements IRateLimiter {
         await this.uses.update(
             key,
             (stored) => {
-                // read here, since this callback can wait in the queue behind other charges
+                // read here since this callback can wait in the queue behind other charges
                 const now = Date.now();
                 const live = liveUses(stored, now);
                 const limited = live.length >= limit;

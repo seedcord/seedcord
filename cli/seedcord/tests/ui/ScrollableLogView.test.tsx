@@ -3,7 +3,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { LEVEL_COLOR } from '@seedcord/logger';
 import { render } from 'ink-testing-library';
 import React from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { NO_ROOM, ScrollableLogView } from '#ui/components/primitives/ScrollableLogView';
 import { formatClock } from '#ui/format';
@@ -39,7 +39,7 @@ describe('ScrollableLogView', () => {
         expect(frame).toContain('connected');
     });
 
-    it('leaves the clock off a narrow pane', () => {
+    it("doesn't show the clock on a narrow pane", () => {
         const frame = frameOf([entry({ text: 'connected' })], LogLayout.fit(50, 12, 'auto'));
 
         expect(frame).not.toContain(formatClock(0, 'minutes'));
@@ -84,7 +84,7 @@ describe('ScrollableLogView', () => {
         expect(lines.some((line) => line.includes('Loaded handlers') && line.includes('─'))).toBe(false);
     });
 
-    it('carries a long message onto a second line with no second prefix', () => {
+    it('wraps a long message onto a second line without a second prefix', () => {
         const layout = LogLayout.fit(LogLayout.fit(0, 3, 'auto').messageColumn + 20, 3, 'auto');
         const lines = linesOf(
             frameOf([entry({ text: 'alpha bravo charlie delta echo foxtrot golf hotel india' })], layout)
@@ -95,7 +95,7 @@ describe('ScrollableLogView', () => {
         expect(lines.at(-1)).toContain('india');
     });
 
-    it('renders nothing until measured', () => {
+    it('waits for a measurement before it renders', () => {
         const { lastFrame } = render(
             <ScrollableLogView visible={[]} layout={WIDE} viewportHeight={10} measured={false} />
         );

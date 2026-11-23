@@ -8,17 +8,17 @@ export enum SeedcordErrorCode {
     ConfigEmojiUnresolved = 1001,
     /** A configured emoji is neither a name nor a `[name, guildId]` pair. */
     ConfigEmojiInvalid = 1002,
-    /** The application or guild a configured emoji points at has no emoji with that name. */
+    /** The application or guild a configured emoji points at doesn't have an emoji with that name. */
     ConfigEmojiNotFound = 1003,
     /** Reading the emojis of the application or guild a configured emoji points at failed. */
     ConfigEmojiSourceUnreadable = 1004,
-    /** Discord has no webhook at a configured URL, because it was deleted or the id or token is wrong. */
+    /** Discord can't find a webhook at a configured URL because it was deleted or the id or token is wrong. */
     ConfigWebhookNotFound = 1005,
     /** A required environment variable is unset. */
     ConfigMissingEnv = 1006,
     /** An environment variable is set to a value seedcord cannot use. */
     ConfigInvalidEnv = 1007,
-    /** A command that runs in guilds is registered without the `Guilds` intent, so discord.js caches no guild. */
+    /** A command that runs in guilds is registered without the `Guilds` intent, which discord.js needs to cache guilds. */
     MissingGuildsIntent = 1008,
     /** The running Node or Bun is older than the range seedcord declares in `engines`. */
     UnsupportedRuntimeVersion = 1009,
@@ -26,6 +26,10 @@ export enum SeedcordErrorCode {
     ConfigEdgeRestSweeper = 1010,
     /** Another process already listens on the port seedcord tries to listen on. */
     PortInUse = 1011,
+    /** A file in the emojis folder can't become an emoji. */
+    ConfigEmojiFileUnusable = 1012,
+    /** The emojis folder has two or more problems, like a file that can't become an emoji or two files with one name. */
+    ConfigEmojiFolderInvalid = 1013,
 
     /** A startup task was added or removed while startup ran, or added after it finished. */
     LifecycleTaskChangeRejected = 1101,
@@ -58,7 +62,7 @@ export enum SeedcordErrorCode {
     CorePluginReservedChannel = 1208,
     /** The application id was read before startup resolved it. */
     CoreApplicationUnavailable = 1209,
-    /** A generated accessor like `Emojis` or `Commands` was read for a key that has no value yet. */
+    /** A generated accessor like `Emojis` or `Commands` was read for a key without a value yet. */
     CoreAccessorUnresolved = 1210,
     /** A shutdown task was added on an edge bot. Cloudflare stops an isolate without a shutdown hook. */
     CoreLifecycleUnavailable = 1211,
@@ -92,13 +96,13 @@ export enum SeedcordErrorCode {
     CoreDirectoryNotBuilt = 1225,
     /** A webhook sender was constructed with a URL that is not a Discord webhook URL. */
     CoreWebhookUrlInvalid = 1226,
-    /** Reading from Discord with `DISCORD_BOT_TOKEN` failed, like the application, its public key, or its commands. */
+    /** Reading from Discord with the bot token failed, like the application, its public key, or its commands. */
     CoreDiscordReadFailed = 1227,
-    /** Two routes, commands, migrations, or customId fields have the same name, or two code files build to the same file. */
+    /** Two routes, commands, migrations, customId fields, or dispatch members have the same name, or two code files build to the same file. */
     CoreDuplicateName = 1228,
     /** A Vite plugin from `vitePlugins` threw while Vite started or loaded a file, or failed when seedcord called `vitePlugins`. */
     CoreVitePluginThrew = 1229,
-    /** `readFiles` read a folder that `files` in `seedcord.config.ts` leaves out. */
+    /** `readFiles` read a folder that `files` in `seedcord.config.ts` doesn't list. */
     CoreDirectoryNotListed = 1230,
     /** A folder is inside one that `seedcord build` skips, like a dot-folder, `node_modules`, `outDir` or the logs folder. */
     CoreDirectorySkipped = 1231,
@@ -114,8 +118,20 @@ export enum SeedcordErrorCode {
     CoreBuiltModuleRanDirectly = 1236,
     /** `JSON.stringify` threw on a record passed to a kv collection's `set()` or `update()`, like one with a circular reference. */
     CoreKvUnserializable = 1237,
+    /** A plugin's `dispatchMembers` has a key that seedcord uses too, like `reply`. */
+    CorePluginMemberReserved = 1238,
+    /** The handler didn't run because a function in a plugin's `dispatchMembers` threw. */
+    CorePluginMemberThrew = 1239,
+    /** A plugin that has `dispatchMembers` is attached twice, and both copies add the same members. */
+    CorePluginAttachedTwice = 1240,
+    /** A plugin's `fetch` read or locked the request body without answering the request. */
+    CorePluginFetchReadBody = 1241,
+    /** `core.url` was read while `server.url` is unset. */
+    CoreServerUrlUnset = 1242,
+    /** `server.url` isn't an http or https address. */
+    CoreServerUrlInvalid = 1243,
 
-    /** A command class carries `@RegisterCommand` twice. */
+    /** A command class has `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,
     /** `@RegisterCommand('global')` was given guild ids. */
     DecoratorCommandGlobalWithGuilds = 1302,
@@ -136,16 +152,16 @@ export enum SeedcordErrorCode {
     ReplyComponentSerialization = 1502,
     /** `edit()` got a message that the interaction did not send. */
     ReplyForeignEditTarget = 1503,
-    /** `update()` or `deferUpdate()` was called on a modal that has no source message. */
+    /** `update()` or `deferUpdate()` was called on a modal that doesn't have a source message. */
     ReplyUpdateWithoutSource = 1504,
-    /** Discord's response to a `withResponse` callback has no message in it. */
+    /** Discord's response to a `withResponse` callback doesn't include a message. */
     ReplyCallbackMissingMessage = 1505,
 
     /** A customId prefix is empty, or holds a colon or a control character. */
     CustomIdInvalidPrefix = 1601,
     /** A customId field name looks like an integer. JS reorders integer keys. */
     CustomIdReservedFieldName = 1602,
-    /** A `oneOf()` or `someOf()` field was declared with no choices. */
+    /** A `oneOf()` or `someOf()` field was declared without choices. */
     CustomIdEmptyChoices = 1603,
     /** An `int()` field was declared with a min greater than its max. */
     CustomIdInvalidBounds = 1604,
@@ -157,13 +173,13 @@ export enum SeedcordErrorCode {
     CustomIdHandlerRouteMissing = 1607,
     /** A handler's `match()` doesn't have a case for the current route, field, event, or command. */
     MatchCaseMissing = 1608,
-    /** Discord sent an autocomplete payload with no focused option. */
+    /** Discord sent an autocomplete payload without a focused option. */
     AutocompleteNoFocusedOption = 1610,
-    /** The submitted modal has no field with the requested custom id. */
+    /** The submitted modal doesn't have a field with the requested custom id. */
     ModalFieldNotFound = 1611,
     /** A modal field getter was called on a field of another kind. */
     ModalFieldWrongKind = 1612,
-    /** A modal field read as required has nothing picked. */
+    /** A modal field read as required doesn't have a value picked. */
     ModalFieldEmpty = 1613,
     /** A channel select returned a channel whose type the `getSelectedChannels()` call excludes. */
     ModalFieldChannelType = 1614,
@@ -174,12 +190,12 @@ export enum SeedcordErrorCode {
     /** `dispatch.require()` was called for a key that nothing set on this dispatch. */
     DispatchStateMissing = 1617,
 
-    /** A `Cooldown` gate got a duration that doesn't parse, or one of zero or less. */
-    GateInvalidCooldownDuration = 1701,
+    /** A duration string doesn't parse, or a duration is zero, negative, or not finite. */
+    InvalidDuration = 1701,
 
     /** A paginator got a `perPage` that is not a positive integer. */
     PaginationInvalidPerPage = 1801,
-    /** A control row has no controls, or more than the five buttons Discord allows. */
+    /** A control row is empty or holds more than the five buttons Discord allows. */
     PaginationControlCount = 1802,
     /** A control row lists the same control twice. Its two buttons would share a custom_id. */
     PaginationDuplicateControls = 1803,
@@ -203,8 +219,8 @@ export enum SeedcordErrorCode {
     PluginDisposeFailures = 2002,
     /** A plugin service class is missing the decorator that registers it. */
     PluginServiceDecoratorMissing = 2003,
-    /** A plugin's `services` was read before the plugin finished `init()`. */
-    PluginServicesNotReady = 2004,
+    /** A plugin member, like `services` or `connection`, was read before `init()` finished or after `dispose()`. */
+    PluginNotReady = 2004,
     /** A plugin could not connect to the service it wraps. */
     PluginConnectionFailed = 2005,
     /** A plugin could not close its connection cleanly during shutdown. */
@@ -215,18 +231,65 @@ export enum SeedcordErrorCode {
     /** A mongoose service was registered with an empty model name. */
     PluginMongooseModelNameMissing = 2102,
 
-    /** A kysely service class has no table. */
+    /** A kysely service class doesn't have a table. */
     PluginKyselyServiceTableMissing = 2201,
     /** A migration run got a step count that is not a non-negative integer. */
     PluginKyselyInvalidStepCount = 2202,
     /** A migration run got a direction other than `up` or `down`. */
     PluginKyselyUnknownDirection = 2203,
-    /** A file in the migrations folder has no `up` function. */
+    /** A file in the migrations folder doesn't export an `up` function. */
     PluginKyselyInvalidMigrationModule = 2204,
     /** A migration failed with a thrown value that is not an `Error`. */
     PluginKyselyNonErrorFailure = 2205,
-    /** Creating the target Postgres database failed. */
-    PluginKyselyBootstrapFailed = 2206,
+
+    /** A `Tasks` method got a task class that its `path` did not load. */
+    PluginTasksNotLoaded = 2301,
+    /** croner rejected a task's cron pattern. */
+    PluginTasksInvalidPattern = 2302,
+    /** A task option, the plugin's `timezone`, or the `at` passed to `schedule` has a value that the plugin can't use. */
+    PluginTasksInvalidOption = 2303,
+    /** `pause`, `resume`, or `nextRun` got a task without a cron pattern. */
+    PluginTasksPatternMissing = 2304,
+    /** `schedule` got an `at` number from before 2000, which is likely seconds or a missing value. */
+    PluginTasksAtTooEarly = 2305,
+    /** `schedule` got an `in` that ends past the last date a `Date` can hold. */
+    PluginTasksDurationTooLong = 2306,
+    /** A `Tasks` method got a class whose task key belongs to a different loaded class. */
+    PluginTasksKeyTaken = 2307,
+    /** A `.ftl` file under the i18n plugin's `dir` has a line Fluent can't parse. */
+    PluginI18nSyntax = 2401,
+    /** A locale file's name under the i18n plugin's `dir` isn't one of Discord's locale codes. */
+    PluginI18nNotALocale = 2402,
+    /** A locale file has a message, variable, or attribute that the base locale's file doesn't have. */
+    PluginI18nNotInBase = 2403,
+    /** The i18n plugin's `dir` doesn't have a file for its base locale. */
+    PluginI18nBaseMissing = 2404,
+    /** A `t()` call has a key that no `.ftl` file has, usually because codegen hasn't run since the files changed. */
+    PluginI18nOutOfDate = 2405,
+    /** A locale's command translations have a name that isn't on any command, option, choice, or menu. */
+    PluginI18nUnknownCommand = 2406,
+    /** A `.ts` file under the i18n plugin's `dir` doesn't export `commandTranslations(...)` as its default. */
+    PluginI18nNotTranslations = 2407,
+    /** A translated command name, description, or choice name breaks one of Discord's rules for it. */
+    PluginI18nDiscordRejects = 2408,
+    /**
+     * A locale's `.ftl` file uses a term like `{ -brand }`, or another message,
+     * without defining it in that file. A definition in another locale's file doesn't count.
+     */
+    PluginI18nMissingReference = 2409,
+    /** Fluent threw while `t()` formatted a message, like for a variable that the call didn't pass. */
+    PluginI18nFormatFailed = 2410,
+    /** Two or more command translation files have problems. Each one is in the error's `errors`. */
+    PluginI18nCommandProblems = 2411,
+
+    /** A call as a user needs that user to log in with Discord again. */
+    PluginOAuthLoginNeeded = 2501,
+    /** Discord didn't return a user for a finished login because its authorize link didn't request `identify`. */
+    PluginOAuthIdentifyMissing = 2502,
+    /** The OAuth plugin started on a bot whose `kv` keeps everything in memory. */
+    PluginOAuthTokensInMemory = 2503,
+    /** Discord refused the client secret on a token call. */
+    PluginOAuthSecretRefused = 2504,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,
@@ -241,7 +304,7 @@ export enum SeedcordErrorCode {
     CliInstanceInvalid = 3104,
     /** The bot threw during startup. */
     CliStartFailed = 3105,
-    /** `build.tsconfig` points at a missing file, or it is unset and the config's folder has no `tsconfig.json`. */
+    /** `build.tsconfig` points at a missing file, or it is unset and the config's folder doesn't have a `tsconfig.json`. */
     CliTsconfigNotFound = 3106,
     /** `seedcord build` found type errors. */
     CliBuildFailed = 3107,
@@ -279,9 +342,9 @@ export enum SeedcordErrorCode {
     CliConfigFileUnreadable = 3123,
     /** The CLI could not start the TypeScript compiler. */
     CliTypescriptNotStarted = 3124,
-    /** A config file sets a field this bot can't set, like `entrypoint` in an edge bot's `cloudflare.config.ts`. */
+    /** A config file sets a field that this bot can't set, like `entrypoint` in an edge bot's `cloudflare.config.ts`. */
     CliConfigFieldUnused = 3125,
-    /** An edge bot's `compatibilityDate` is older than Cloudflare's Node compat default, and no flag turns it on. */
+    /** An edge bot's `compatibilityDate` is older than Cloudflare's Node compat default, and the config doesn't set a flag that turns it on. */
     CliEdgeCompatDateTooOld = 3126,
     /** An edge bot sets `no_nodejs_compat`. */
     CliEdgeNodeCompatOff = 3127,
@@ -289,21 +352,21 @@ export enum SeedcordErrorCode {
     CliEdgeBootFailed = 3128,
     /** An edge bot's `root` holds its seedcord config. */
     CliEdgeRootHoldsConfig = 3129,
-    /** An edge build found commands in code that have no deployed id on Discord. */
+    /** An edge build found commands in code that don't have a deployed id on Discord. */
     CliEdgeCommandsNotDeployed = 3130,
     /** Something called the dev runtime before `start()` finished or after `stop()`. This is a bug in seedcord. */
     CliDevRuntimeNotRunning = 3131,
     /** `seedcord commands deploy` ran on a bot whose `commands.path` is `null`. */
     CliDeployNoCommandsFolder = 3132,
-    /** `seedcord commands deploy` ran without `--yes` where it cannot ask first. */
-    CliDeployNeedsYes = 3133,
+    /** A command that asks first ran without `--yes`, outside a terminal or with `CI` set. */
+    CliNeedsYes = 3133,
     /** A class carrying `@RegisterCommand` builds a component that is not a command or a context menu. */
     CliCommandNotACommand = 3134,
-    /** `seedcord commands clean` or `purge` could not delete some of the commands it picked. */
-    CliCommandsNotDeleted = 3135,
+    /** A command failed on some of its items and warned about each one. */
+    CliSomeFailed = 3135,
     /** The CLI ran on Bun for an edge bot. */
     CliEdgeOnBun = 3136,
-    /** An edge bot's `cloudflare.config.ts` sets no `worker`. */
+    /** An edge bot's `cloudflare.config.ts` doesn't set `worker`. */
     CliEdgeNoWorker = 3137,
     /** The running `seedcord` is a different install from the project's own. */
     CliNotProjectInstall = 3138,
@@ -329,10 +392,20 @@ export enum SeedcordErrorCode {
     CliAskHasToWait = 3148,
     /** The guide search failed for a reason other than a search limit. */
     CliAskFailed = 3149,
+    /** The bot comes from a version of `@seedcord/gateway` or `@seedcord/http` that this CLI can't load. */
+    CliHostContractMismatch = 3150,
+    /** `seedcord emojis` got a name that the emojis folder or Discord doesn't have. */
+    CliEmojiNameUnknown = 3151,
+    /** A flag or command that opens a picker ran without a terminal, or with `CI` set. */
+    CliPickerNeedsTerminal = 3152,
+    /** Discord's CDN didn't send an emoji's image to `seedcord emojis pull`. */
+    CliEmojiDownloadFailed = 3153,
+    /** A replace in `seedcord emojis push` failed, and putting the old emoji back failed too. */
+    CliEmojiRollbackFailed = 3154,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,
-    /** A flag has a value its question rejects. */
+    /** A flag has a value that its question rejects. */
     CreateInvalidAnswer = 3202,
     /** The command line did not parse. */
     CreateBadUsage = 3203,
@@ -353,10 +426,10 @@ export enum SeedcordErrorCode {
     MakeLookupDynamicKey = 3305,
     /** `seedcord make` ran without a terminal to ask its questions in. */
     MakeNeedsTerminal = 3306,
-    /** `seedcord make` found no templates in the bot or its plugins. */
+    /** `seedcord make` didn't find templates in the bot or its plugins. */
     MakeNoTemplates = 3307,
     /** A path `seedcord make` would write to is taken, by a file on disk or by another file of the same template. */
     MakePathTaken = 3308,
-    /** A template's partial calls itself, so `seedcord make` can't tell how many levels to ask for. */
+    /** A template's partial calls itself. `seedcord make` can't tell how many levels to ask for. */
     MakePartialCallsItself = 3309
 }

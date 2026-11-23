@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { awaitReachable } from '#commands/dev/tunnel/probe';
 
@@ -19,7 +19,7 @@ describe('awaitReachable', () => {
         expect(fetch).toHaveBeenCalledOnce();
     });
 
-    it('posts to the url with no signature headers', async () => {
+    it('posts to the url without signature headers', async () => {
         const fetch = vi.fn<ProbeDeps['fetch']>().mockResolvedValue(new Response(null, { status: 401 }));
 
         await awaitReachable(URL_UNDER_TEST, deps(fetch), RUNNING);

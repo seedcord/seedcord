@@ -1,10 +1,10 @@
 'use client';
 
+import { cn } from 'cn';
 import { ArrowUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { Button } from './Button';
-import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 
 import type { ReactElement } from 'react';

@@ -20,7 +20,7 @@ export function paginate(data: readonly (readonly string[])[], options: PagedTab
     let current: (readonly string[])[] = [];
 
     for (const row of body) {
-        // an empty page always takes the row, since a page smaller than one body row cannot exist
+        // an empty page always takes the row since a page smaller than one body row cannot exist
         if (current.length === 0 || render([...current, row]).length <= budget) {
             current.push(row);
             continue;

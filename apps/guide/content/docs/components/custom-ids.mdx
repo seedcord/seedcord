@@ -1,13 +1,13 @@
 ---
 title: Custom IDs
-description: Declare what a component's custom id carries with CustomId, so a click arrives with typed values and you skip parsing strings.
+description: Declare what a component's custom id holds with CustomId, so a click arrives with typed values and you skip parsing strings.
 ---
 
 Discord hands a component's `custom_id` back when someone clicks a button, picks from a select menu, or submits a modal. It's always a plain string, so whatever your handler reads later has to be inside it.
 
-Written by hand, that's a string like `ticket:184580573574955008:close:true` that you build in one file and split apart in another. Every value comes back as text, so turning `'true'` back into a boolean is your job too. The two sides agree on the order only because you kept them matching by hand. Add a field to one side and the other reads the wrong piece, with no error until someone clicks.
+Written by hand, that's a string like `ticket:184580573574955008:close:true` that you build in one file and split apart in another. Every value comes back as text, so turning `'true'` back into a boolean is your job too. The two sides use the same order only because you kept them matching by hand. Add a field to one side and the other reads the wrong piece, without an error until someone clicks.
 
-[`CustomId`](ref:custom-id/CustomId) declares what the string carries, once. The component that encodes it and the handler that decodes it both read that one declaration, so a field you add reaches both sides. The `AppealId` on the button from [building components](/components) is one of these.
+[`CustomId`](ref:custom-id/CustomId) declares what the string holds once. The component that encodes it and the handler that decodes it both read that one declaration, so a field you add reaches both sides. The `AppealId` on the button from [building components](/components) is one of these.
 
 ```ts twoslash hovers title="src/components/TicketActions.ts"
 import { CustomId } from '@seedcord/gateway';
@@ -38,9 +38,9 @@ export const TicketAction = new CustomId('ticket')
 
 <Callout type="warning">
 
-Each method returns a new `CustomId` and leaves the original untouched. A call whose result you don't keep adds nothing, which is why every declaration on this page is one chain.
+Each method returns a new `CustomId` without changing the original, which is why every declaration on this page is one chain.
 
-```ts
+```ts plain
 const Broken = new CustomId('ticket');
 // the result goes nowhere and Broken keeps zero fields
 Broken.snowflake('ownerId');
@@ -97,7 +97,7 @@ TicketAction.encode({ ownerId: '123', action: '
 //                                             ^|
 ```
 
-`'archive'` below isn't one of the choices, so the build stops, and leaving out a field like `notify` stops it too.
+`'archive'` below isn't one of the choices, so the build stops, and a missing field like `notify` stops it too.
 
 ```ts twoslash
 // @errors: 2322
@@ -113,9 +113,25 @@ TicketAction.encode({ ownerId: '123', action: 'archive' });
 
 The type can't check a value's range or format. `900` compiles against `int('page', 1, 50)`, and so does `'abc'` for a `snowflake`. `encode` throws on both when it runs.
 
+### Two ids with the same fields
+
+Accept and decline buttons often carry the same values. To give a second id the same fields under its own prefix, pass the first id's `shape` as the second argument to `new CustomId`.
+
+```ts twoslash title="src/components/ChallengeActions.ts"
+import { CustomId } from '@seedcord/gateway';
+
+export const Accept = new CustomId('accept')
+    .snowflake('challengerId')
+    .int('raceTo', 1, 15);
+
+export const Decline = new CustomId('decline', Accept.shape);
+```
+
+Each one routes to its own handler by its prefix. `encode` on either one takes `{ challengerId, raceTo }`.
+
 ## The field kinds
 
-The kind you pick sets the type your handler gets back and how many characters the value takes. Pick the narrowest kind that fits.
+The kind you pick sets the type that your handler gets back and how many characters the value takes. Pick the narrowest kind that fits.
 
 {/* prettier-ignore-start */}
 
@@ -146,7 +162,7 @@ const { choice } = Vote.decode('...');
 //      ^?
 ```
 
-`someOf` carries any subset of its list, which suits a select menu that allows several picks.
+`someOf` holds any subset of its list, which suits a select menu that allows several picks.
 
 ```ts twoslash
 import { CustomId } from '@seedcord/gateway';
@@ -180,7 +196,7 @@ const { roleId } = Board.decode('...');
 //      ^?
 ```
 
-When the caller leaves the role out, pass `roleId: null` to `encode`. Each button then decodes `roleId` as `null`, which your handler reads as no filter.
+When the caller doesn't pick a role, pass `roleId: null` to `encode`. Each button then decodes `roleId` as `null`, which your handler reads as no filter.
 
 <Callout type="warning">
 
@@ -243,13 +259,13 @@ const { prefix, params } = decodeFor([TicketAction, Poll], wire);
 
 [`decodeFor`](ref:custom-id/decodeFor) tries each id in the array against the string. It returns the `prefix` that matched with that id's own `params`, and checking `prefix` narrows `params` to match.
 
-<Callout type="danger">
+<Callout type="warning">
 
 A custom id you write by hand compiles. `setCustomId('ticket:123')` skips the shape hash `encode` adds, so seedcord reads that prefix as `tic`. No handler matches the click. Mint every id through `encode`.
 
 </Callout>
 
-<Callout type="danger">
+<Callout type="warning">
 
 `CustomId` ships in `@seedcord/custom-id`, and your transport package re-exports it. Import it from `@seedcord/gateway` or `@seedcord/http`. Adding `@seedcord/custom-id` to your own dependencies can resolve a second copy. A decode failure from that copy skips the [rendered notices](/components/stale) seedcord provides.
 
@@ -257,7 +273,7 @@ A custom id you write by hand compiles. `setCustomId('ticket:123')` skips the sh
 
 ## Clicks the router should skip
 
-A discord.js collector you opened yourself answers the clicks it waits for. seedcord's router gets those same clicks too. With no handler registered for them, it answers with its unhandled reply. Discord then rejects whichever answer comes second. List the id under `ignoreCustomIds` to make the router return before it answers.
+A discord.js collector you opened yourself answers the clicks it waits for. seedcord's router gets those same clicks too. Without a handler registered for them, it answers with its unhandled reply. Discord then rejects whichever answer comes second. List the id under `ignoreCustomIds` to make the router return before it answers.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -281,7 +297,7 @@ export const seedcord = new Seedcord({
 });
 ```
 
-A click whose prefix `Poll` owns never reaches a handler. The list takes `CustomId` values. A raw string fails to compile, since seedcord matches each entry by calling `owns`.
+A click whose prefix `Poll` owns never reaches a handler. The list takes `CustomId` values. A raw string fails to compile since seedcord matches each entry by calling `owns`.
 
 <Callout type="transport" only="gateway">
     An http bot does not read `ignoreCustomIds`. Discord posts every

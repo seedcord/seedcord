@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import type { CodeRepresentation } from '@seedcord/ui';
 import type { DocNode, VersionedDocsEngine } from '@seedcord/docs-engine';

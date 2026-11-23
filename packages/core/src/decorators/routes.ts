@@ -16,11 +16,10 @@ import type {
     SlashRouteBrand
 } from './brands';
 import type { AnyCustomId } from '@seedcord/custom-id';
-import type { TypedExtract } from '@seedcord/types';
-import type { Constructor, LiteralUnion } from 'type-fest';
+import type { ExtractStrict, Constructor, LiteralUnion } from 'type-fest';
 
-// Extract over Exclude so a kind added to the enum stays out until someone gives it a decorator
-type ComponentBrand = TypedExtract<
+// Extract over Exclude so the union doesn't include a kind added to the enum until someone gives it a decorator
+type ComponentBrand = ExtractStrict<
     InteractionKind,
     | InteractionKind.Button
     | InteractionKind.Modal
@@ -94,7 +93,7 @@ type AssertNames<
     ? SameSet<Names, Declared> extends true
         ? TCtor
         : Mismatch<`${Decorator} does not match the ${Handler} generic`, Names, Declared>
-    : Constructor<[`${Decorator} lists a command that is not registered`, Exclude<Names, Registered>]>;
+    : Constructor<[`${Decorator} lists an unregistered command`, Exclude<Names, Registered>]>;
 
 type AssertSlashRoute<Route extends string, TCtor extends AnyHandlerCtor> = AssertNames<
     Route,
@@ -125,7 +124,7 @@ type AssertComponentRoute<
     TCtor extends AnyHandlerCtor
 > =
     SameSet<Brand, ComponentOf<TCtor>> extends true
-        ? // only one assignability direction, since a bidirectional check would reject const-inferred readonly tuples
+        ? // only one assignability direction since a bidirectional check would reject const-inferred readonly tuples
           [DefsOf<TCtor>] extends [Defs]
             ? TCtor
             : Mismatch<'the customId definitions do not match the handler generic', Defs, DefsOf<TCtor>>
@@ -161,7 +160,7 @@ export function SlashRoute<const Route extends LiteralUnion<keyof SlashRegistry,
  *
  * Pass the same command route string(s) as the handler's generic. One command branches with `this.match`
  * over its autocompletable fields, several commands share one handler whose cases span every command's
- * fields. Listing fewer or more commands than the handler declares is a compile error, since the
+ * fields. Listing fewer or more commands than the handler declares is a compile error since the
  * decorator routes and the generic must match exactly.
  *
  * @param routes - The command route string(s) this handler serves, e.g. `'search'` or `'search', 'find'`.
@@ -242,9 +241,9 @@ export function MessageContextMenuRoute<
  * Routes button interactions to handler classes.
  *
  * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
- * generic. Passing different definitions to the decorator and the generic is a compile error. Routing
- * matches the stable prefix, so a wire minted from an older shape still reaches the handler, where
- * reading this.params throws StaleCustomId and the controller boundary turns it into a reply.
+ * generic. Passing different definitions to the decorator and the generic is a compile error. A wire
+ * minted from an older shape still reaches the handler because routing matches the stable prefix.
+ * Reading this.params there throws StaleCustomId, and the controller boundary turns it into a reply.
  *
  * @param defs - The customId definition(s) this handler decodes, one per route.
  * @decorator

@@ -12,6 +12,7 @@ import type { CommandAction } from './types';
 import type { RovingList } from '@seedcord/ui';
 import type { CommandPaletteController } from './useCommandPaletteController';
 import type { ReactElement } from 'react';
+import type { Except } from 'type-fest';
 
 function optionId(id: string): string {
     return `command-option-${id}`;
@@ -89,11 +90,11 @@ function CommandListContent({
 function deriveListProps(
     searchState: ReturnType<typeof useCommandPaletteSearch>,
     normalizedSearch: string
-): Omit<CommandListContentProps, 'roving' | 'onSelect'> {
+): Except<CommandListContentProps, 'roving' | 'onSelect'> {
     const showInitialHint = normalizedSearch.length < MIN_SEARCH_QUERY_LENGTH;
     const isSearching = searchState.status === 'loading';
     const resolvedError =
-        searchState.status === 'error' ? (searchState.error ?? 'Search failed. Please try again.') : undefined;
+        searchState.status === 'error' ? (searchState.error ?? 'Search failed. Try again.') : undefined;
     return {
         showInitialHint,
         isSearching,

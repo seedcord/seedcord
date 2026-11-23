@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { ShellMode } from '#src/core/ShellMode';
 
@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 describe('ShellMode', () => {
-    it('returns the default when the shell sets none of ENVIRONMENT, ENV, NODE_ENV and MODE', async () => {
+    it("returns the default when the shell doesn't set any of ENVIRONMENT, ENV, NODE_ENV and MODE", async () => {
         const dir = await configDir();
 
         expect(readShell({}).applyMode('production', dir)).toBe('production');

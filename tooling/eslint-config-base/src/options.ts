@@ -23,7 +23,7 @@ export interface CreateConfigOptions {
     userConfigs?: FlatConfigItem[];
 
     /**
-     * How much of the `eslint-plugin-import-x` rule set to run. Drop to `'fast'` when lint time
+     * How much of the `eslint-plugin-import-x` rule set to run. Switch to `'fast'` when lint time
      * matters more than catching import cycles and deprecated imports.
      *
      * @defaultValue `'all'`
@@ -55,7 +55,7 @@ export interface CreateConfigOptions {
     /**
      * Toggle registration of TypeScript ESLint configs. `'no-type-checked'` keeps the presets and
      * turns off the rules that read the type checker, the slowest ones in a run. The parser keeps
-     * its `project` either way, since the seedcord and discordjs rules read types of their own.
+     * its `projectService` either way since the seedcord and discordjs rules read types of their own.
      *
      * `'rules-only'` applies seedcord's TypeScript rules without the typescript-eslint presets. Use it
      * when another config in the array already loads the `@typescript-eslint` plugin, like
@@ -66,8 +66,8 @@ export interface CreateConfigOptions {
     registerTypescriptConfigs?: TypescriptConfigsLevel;
 
     /**
-     * Toggle registration of the `eslint-plugin-unicorn` plugin. unicorn requires eslint >=10.4, so
-     * consumers still on eslint 9 must set this to `false`.
+     * Toggle registration of the `eslint-plugin-unicorn` plugin. Consumers still on eslint 9 must set
+     * this to `false` because unicorn requires eslint >=10.4.
      *
      * @defaultValue `true`
      */

@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import createConfig from '@seedcord/eslint-config';
+import { proseConfig } from '@seedcord/prose';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 
 export default createConfig({
@@ -12,6 +13,7 @@ export default createConfig({
     registerUnicornPlugin: false,
     tailwindEntryPoint: path.resolve(import.meta.dirname, 'src/app/globals.css'),
     userConfigs: [
+        ...proseConfig,
         ...nextVitals,
 
         // react-doctor already covers the jsx-a11y strict set
@@ -44,9 +46,6 @@ export default createConfig({
             ],
             rules: { 'import/no-default-export': 'off' }
         },
-
-        // workerd/tsconfig.json leaves out the DOM lib, which clashes with cloudflare's types
-        { files: ['workerd/**/*.ts'], languageOptions: { parserOptions: { project: ['./workerd/tsconfig.json'] } } },
 
         {
             ignores: [

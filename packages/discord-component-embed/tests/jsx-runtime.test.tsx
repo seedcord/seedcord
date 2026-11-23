@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ActionRow, Container, LinkButton, Section, TextDisplay, h, toComponentEmbed } from '#src/index';
 
@@ -62,7 +62,7 @@ describe('jsx-runtime', () => {
         ]);
     });
 
-    it('keeps a key out of your component props, before or after a spread', () => {
+    it('keeps a key out of your component props before or after a spread', () => {
         const received: unknown[] = [];
         function Title(props: { text: string }): EmbedElement {
             received.push(props);

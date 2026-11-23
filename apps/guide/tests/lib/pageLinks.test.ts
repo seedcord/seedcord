@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { compileGuideMdx } from '#tests/mdxPipeline';
 
@@ -21,7 +21,7 @@ describe('a link to another guide page', () => {
         expect(code).toContain('href="/checks/cooldown/"');
     });
 
-    it('stays as written when it already ends in a slash', async () => {
+    it('keeps the written link when it already ends in a slash', async () => {
         const code = await compileGuideMdx('Back to [the start](/).');
 
         expect(code).toContain('href="/"');
@@ -35,7 +35,7 @@ describe('a link to another guide page', () => {
             '[docs](https://seedcord.org/docs/packages/core)',
             'href="https://seedcord.org/docs/packages/core"'
         ]
-    ])('leaves a link to %s alone', async (_what, source, href) => {
+    ])("doesn't change a link to %s", async (_what, source, href) => {
         expect(await compileGuideMdx(source)).toContain(href);
     });
 });

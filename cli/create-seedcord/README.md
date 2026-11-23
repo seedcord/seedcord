@@ -23,9 +23,9 @@
 
 ## About
 
-`create-seedcord` sets up a new seedcord bot. It asks a few questions, writes the project, and can install its dependencies and make the first git commit. You run it once, when you start a new bot.
+`create-seedcord` sets up a new seedcord bot. It asks a few questions, writes the project, and can install its dependencies and make the first git commit. You run it once when you start a new bot.
 
-seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Usage
 
@@ -35,7 +35,7 @@ pnpm create seedcord my-bot
 
 `npm create seedcord`, `yarn create seedcord`, and `bun create seedcord` work too, and the project uses that package manager.
 
-It asks whether your bot is a gateway or an http bot, where an http bot runs, what a gateway bot reacts to, your bot token, and the servers to test your commands in. The [first bot guide](https://seedcord.org/guide/first-bot) walks through each question.
+It asks whether your bot is a gateway or an http bot, where an http bot runs, and what a gateway bot reacts to. It also asks for your bot token and the servers to test your commands in. The [first bot guide](https://seedcord.org/guide/first-bot) walks through each question.
 
 Every question has a flag, and `--help` prints them all. npm passes flags on only after a `--`:
 

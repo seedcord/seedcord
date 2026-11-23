@@ -1,7 +1,8 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
-import { describe, expect, it, vi } from 'vitest';
+import { WORKER_PROBE } from '@seedcord/core/internal';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { probeWorker } from '#commands/build/builder/probeWorker';
 
@@ -25,8 +26,11 @@ async function serve(listener: RequestListener): Promise<AsyncDisposable & { url
 }
 
 describe('probeWorker', () => {
-    it('passes a worker that answers 405', async () => {
-        await using worker = await serve((_request, response) => response.writeHead(405).end());
+    it("passes a worker that answers seedcord's probe header", async () => {
+        await using worker = await serve((request, response) => {
+            const probed = request.headers[WORKER_PROBE.header] !== undefined;
+            response.writeHead(probed ? WORKER_PROBE.status : 404).end();
+        });
 
         await expect(probeWorker(worker.url)).resolves.toBeUndefined();
     });
@@ -70,7 +74,7 @@ describe('probeWorker', () => {
             using fetchSpy = vi
                 .spyOn(globalThis, 'fetch')
                 .mockRejectedValueOnce(connectTimedOut)
-                .mockResolvedValueOnce(new Response(null, { status: 405 }));
+                .mockResolvedValueOnce(new Response(null, { status: WORKER_PROBE.status }));
 
             await expect(probeWorker(PROBE_URL)).resolves.toBeUndefined();
             expect(fetchSpy).toHaveBeenCalledTimes(2);

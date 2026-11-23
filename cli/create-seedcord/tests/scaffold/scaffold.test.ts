@@ -2,7 +2,7 @@ import { mkdir, mkdtempDisposable, readdir, readFile, writeFile } from 'node:fs/
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { PackageManager } from '#cli/PackageManager';
 import { scaffold } from '#scaffold/scaffold';
@@ -26,7 +26,7 @@ const TEMPLATES = resolve(import.meta.dirname, '../../templates');
 const STARTERS = resolve(import.meta.dirname, '../../starters');
 
 const BUILT_IN = new Set(['node']);
-// the binary a script calls, against the package that ships it
+// the binary that a script calls, against the package that ships it
 const PACKAGE_OF: Record<string, string> = {
     eslint: 'eslint',
     prettier: 'prettier',
@@ -63,7 +63,7 @@ const SEEDCORD_CLI = resolve(import.meta.dirname, '../../../seedcord');
 
 async function seedcordTestedVersion(name: string): Promise<string> {
     const manifest = await readFile(join(SEEDCORD_CLI, 'node_modules', name, 'package.json'), 'utf8');
-    // justified: a package manifest carries its version
+    // justified: a package manifest has its version
     return (JSON.parse(manifest) as { version: string }).version;
 }
 
@@ -286,7 +286,7 @@ describe('scaffold', () => {
     });
 
     it('installs the next releases when the scaffolder is a prerelease', async () => {
-        // version.ts reads the version once, when it loads
+        // version.ts reads the version once when it loads
         vi.stubEnv('PACKAGE_VERSION', '0.6.0-next.0');
         vi.resetModules();
         const { scaffold: prereleaseScaffold } = await import('#scaffold/scaffold');
@@ -366,7 +366,7 @@ describe('scaffold', () => {
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
-    it('skips format and codegen, then keeps going to git and the summary, when the install fails', async () => {
+    it('skips format and codegen, then continues to git and the summary when the install fails', async () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder('-D');
         const { steps, seen } = stepRecorder();
@@ -384,7 +384,7 @@ describe('scaffold', () => {
         expect(spoken.some((args) => args.includes('codegen'))).toBe(false);
     });
 
-    it('carries on through format and codegen when the install only reports a skipped build', async () => {
+    it('continues through format and codegen when the install only reports a skipped build', async () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder(undefined, '-D');
 
@@ -399,7 +399,7 @@ describe('scaffold', () => {
         expect(spoken.some((args) => args.includes('codegen'))).toBe(true);
     });
 
-    it('keeps going past a failed format', async () => {
+    it('continues past a failed format', async () => {
         const target = await scratchTarget();
         // the dev install lists prettier too
         const { runner, calls } = recorder('prettier --write');
@@ -467,7 +467,7 @@ describe('scaffold cleanup', () => {
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
-    it('removes the directory it created and reports nothing created when writing fails', async () => {
+    it('removes the directory it created and reports created false when writing fails', async () => {
         const target = await scratchTarget();
         const { runner } = recorder();
         const { steps, seen } = stepRecorder();
@@ -482,7 +482,7 @@ describe('scaffold cleanup', () => {
         await expect(readdir(target)).rejects.toThrow();
     });
 
-    it('leaves a pre-existing empty directory standing when writing fails', async () => {
+    it("doesn't remove a pre-existing empty directory when writing fails", async () => {
         const target = await scratchTarget();
         await mkdir(target, { recursive: true });
         const { runner } = recorder();

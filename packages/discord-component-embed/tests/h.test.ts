@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ActionRow, Container, LinkButton, Section, TextDisplay, h, toComponentEmbed } from '#src/index';
 
@@ -45,7 +45,7 @@ describe('h', () => {
         expectEmbedError(() => toComponentEmbed(inContainer(nestedText)), '<TextDisplay> only takes text.');
     });
 
-    it('rejects children on a component that takes none, in TypeScript', () => {
+    it("rejects children on a component that doesn't take any, in TypeScript", () => {
         function Title(): EmbedElement {
             return h(TextDisplay, null, 'hi');
         }

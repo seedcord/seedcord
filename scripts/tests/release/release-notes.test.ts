@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ReleaseEntries } from '#src/release/ReleaseEntries';
 import { ReleaseNotes } from '#src/release/ReleaseNotes';
@@ -70,7 +70,7 @@ describe('ReleaseNotes', () => {
         ).toBe(true);
     });
 
-    it('leaves the links off when no release came before', () => {
+    it('skips the links for the first release', () => {
         expect(notes()).not.toContain('See what changed');
     });
 
@@ -306,7 +306,7 @@ describe('ReleaseNotes', () => {
         expect(headings).toEqual(expected.map((name) => `### \`${name}\``));
     });
 
-    it('files a patch that fixes nothing under changed', () => {
+    it('files a patch that is not a fix under changed', () => {
         const reworded = {
             name: '@seedcord/logger',
             version: '0.4.4',
@@ -324,12 +324,12 @@ describe('ReleaseNotes', () => {
         expect(body).toContain('**🔧 Changed**\n\n- Reworded the README.');
     });
 
-    it('throws on a package in a folder with no section heading', () => {
+    it('throws on a package in a folder without a section heading', () => {
         const unknown = {
-            name: '@seedcord/vitest-config',
+            name: '@seedcord/vite-config',
             version: '0.2.1',
             directory: 'configs/vitest-config',
-            changelog: '# @seedcord/vitest-config\n'
+            changelog: '# @seedcord/vite-config\n'
         };
 
         expect(
@@ -469,7 +469,7 @@ describe('ReleaseNotes', () => {
         );
     });
 
-    it('turns a commit link that carries a short sha into the bare sha', () => {
+    it('turns a commit link that has a short sha into the bare sha', () => {
         const linked = {
             name: '@seedcord/utils',
             version: '0.8.12',

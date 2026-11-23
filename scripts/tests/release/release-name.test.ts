@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { ReleaseName } from '#src/release/ReleaseName';
 
@@ -12,7 +12,7 @@ describe('ReleaseName', () => {
         expect(name.title).toBe('September 11, 2026');
     });
 
-    it('adds a letter when the day already carries a release', () => {
+    it('adds a letter when the day already has a release', () => {
         const name = ReleaseName.next(AT, ['release-2026.09.11']);
 
         expect(name.tag).toBe('release-2026.09.11a');
@@ -79,7 +79,7 @@ describe('ReleaseName', () => {
         );
     });
 
-    it('finds no previous release when none came before', () => {
+    it("doesn't find a previous release when none came before", () => {
         const name = ReleaseName.fromTag('release-2026.09.11');
 
         expect(name.previousIn(['release-2026.09.11', 'release-2026.09.12', '@seedcord/core@0.7.0'])).toBeUndefined();

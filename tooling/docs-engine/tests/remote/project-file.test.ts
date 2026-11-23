@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { deserializeProject, serializeProject, validateProjectFile } from '#remote/project-file';
 import { getMockPackage } from '#tests/utils/test-helpers';
@@ -6,7 +6,7 @@ import { getMockPackage } from '#tests/utils/test-helpers';
 const FOLDER = 'https://github.com/seedcord/seedcord/blob/next/packages/core';
 
 describe('a published project.json', () => {
-    it('carries the readme, the changelog, and the folder the readme links resolve against', async () => {
+    it('includes the readme, the changelog, and the folder that the readme links resolve against', async () => {
         const model = await getMockPackage();
         const manifest = {
             ...model.manifest,

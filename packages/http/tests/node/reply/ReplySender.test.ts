@@ -3,7 +3,7 @@ import { TextDisplayBuilder } from '@discordjs/builders';
 import { DispatchContext, AckTrace, serializeReply } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MessageFlags } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { ReplySender } from '#reply/ReplySender';
 import { stubBus } from '#tests/helpers/fixtures';
@@ -45,7 +45,7 @@ const ref: InteractionRef = { application_id: APP_ID, id: INTERACTION_ID, token:
 
 // justified: the fixture implements only the REST surface ReplySender reads.
 function senderFor(rest: RestMock): ReplySender {
-    return new ReplySender(ref, rest as unknown as REST, new DispatchContext('slash', 'ban'), stubBus());
+    return new ReplySender(ref, rest as unknown as REST, new DispatchContext('slash', 'ban'), stubBus(), true);
 }
 
 const reply: ReplyResponse = { components: [new TextDisplayBuilder().setContent('hi')] };
@@ -72,9 +72,15 @@ interface WebhookOptions {
     files?: { name: string; data: Buffer }[];
 }
 
-// justified: vitest types mock.calls as unknown[], so the tuple cast reads the wire route and body the sender passed
+// justified: the tuple cast reads the wire route and body the sender passed because vitest types mock.calls as unknown[]
 function postCall(rest: RestMock, index = 0): { route: string; options: PostOptions } {
     const [route, options] = rest.post.mock.calls[index] as [string, PostOptions];
+    return { route, options };
+}
+
+// a followUp posts the message fields as the body, and the callback wraps them in type and data
+function followUpCall(rest: RestMock, index = 0): { route: string; options: WebhookOptions } {
+    const [route, options] = rest.post.mock.calls[index] as [string, WebhookOptions];
     return { route, options };
 }
 
@@ -109,7 +115,7 @@ describe('ReplySender.reply', () => {
         await expect(senderFor(rest).reply(reply)).resolves.toBe(message);
     });
 
-    it('throws ReplyCallbackMissingMessage when the callback carries no message', async () => {
+    it('throws ReplyCallbackMissingMessage when the callback is missing its message', async () => {
         const rest = restMock();
         rest.post.mockResolvedValueOnce({ resource: null });
 
@@ -118,7 +124,7 @@ describe('ReplySender.reply', () => {
         );
     });
 
-    it('advances to replied when the callback acked but carried no message, so a followUp works', async () => {
+    it('advances to replied when the callback acked without a message, so a followUp works', async () => {
         const rest = restMock();
         rest.post.mockResolvedValueOnce({ resource: null });
         const sender = senderFor(rest);
@@ -129,7 +135,7 @@ describe('ReplySender.reply', () => {
         expect(postCall(rest, 1).route).toBe(WEBHOOK_ROUTE);
     });
 
-    it('drops the ephemeral flag when ephemeral is false, keeping v2', async () => {
+    it('clears the ephemeral flag when ephemeral is false, keeping v2', async () => {
         const rest = restMock();
 
         await senderFor(rest).reply(reply, { ephemeral: false });
@@ -170,7 +176,7 @@ describe('ReplySender.reply', () => {
         expect(rest.post).toHaveBeenCalledTimes(1);
     });
 
-    it('carries the first ack as the cause on a double reply', async () => {
+    it('uses the first ack as the cause on a double reply', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.reply(reply);
@@ -198,7 +204,7 @@ describe('ReplySender.defer', () => {
         expect(options.body).toEqual({ type: 5, data: { flags: MessageFlags.Ephemeral } });
     });
 
-    it('drops the ephemeral flag on defer({ ephemeral: false })', async () => {
+    it('clears the ephemeral flag on defer({ ephemeral: false })', async () => {
         const rest = restMock();
 
         await senderFor(rest).defer({ ephemeral: false });
@@ -229,7 +235,7 @@ describe('ReplySender.defer', () => {
 });
 
 describe('ReplySender.deferUpdate', () => {
-    it('POSTs a callback type 6 with no data and no with_response', async () => {
+    it('POSTs a callback type 6 without data or with_response', async () => {
         const rest = restMock();
 
         await senderFor(rest).deferUpdate();
@@ -344,16 +350,16 @@ describe('ReplySender.followUp', () => {
         expect(postCall(rest).options.query?.get('wait')).toBe('true');
     });
 
-    it('posts the webhook route after a defer', async () => {
+    it('fills @original when it follows up a defer', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.defer();
         rest.post.mockClear();
-        rest.post.mockResolvedValue(message);
 
         await sender.followUp(reply);
 
-        expect(postCall(rest).route).toBe(WEBHOOK_ROUTE);
+        expect(patchCall(rest).route).toBe(ORIGINAL_ROUTE);
+        expect(rest.post).not.toHaveBeenCalled();
     });
 
     it('posts the webhook route after a deferUpdate without a PATCH', async () => {
@@ -369,7 +375,7 @@ describe('ReplySender.followUp', () => {
         expect(rest.patch).not.toHaveBeenCalled();
     });
 
-    it('returns the webhook message directly, not off a resource', async () => {
+    it('returns the webhook message directly', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.reply(reply);
@@ -576,7 +582,7 @@ describe('ReplySender.send', () => {
         expect(rest.patch).toHaveBeenCalledWith(ORIGINAL_ROUTE, expect.anything());
     });
 
-    it('follows up after a deferUpdate, leaving the source message untouched', async () => {
+    it('follows up after a deferUpdate, without editing the source message', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.deferUpdate();
@@ -609,27 +615,48 @@ describe('ReplySender.send', () => {
         expect(postCall(rest).options.body.data?.flags).toBe(V2);
     });
 
-    it('overwrites @original on a second send after a deferred reply', async () => {
+    it('follows up on a second send once the first one fills the deferred reply', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.defer();
+        rest.post.mockClear();
+        rest.post.mockResolvedValue(message);
 
         await sender.send(reply);
         await sender.send(reply);
 
-        expect(patchCall(rest, 0).route).toBe(ORIGINAL_ROUTE);
-        expect(patchCall(rest, 1).route).toBe(ORIGINAL_ROUTE);
+        expect(rest.patch).toHaveBeenCalledOnce();
+        expect(postCall(rest).route).toBe(WEBHOOK_ROUTE);
     });
 
-    it('drops send opts when the deferred-reply path edits', async () => {
+    it('follows up once a bare delete removes the deferred reply', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.defer();
+        await sender.delete();
+        rest.post.mockClear();
+        rest.post.mockResolvedValue(message);
+
+        await sender.send(reply);
+
+        expect(postCall(rest).route).toBe(WEBHOOK_ROUTE);
+        expect(rest.patch).not.toHaveBeenCalled();
+    });
+
+    it('deletes the deferred reply and follows up when send passes a different visibility', async () => {
+        const rest = restMock();
+        const sender = senderFor(rest);
+        await sender.defer();
+        rest.post.mockClear();
+        rest.post.mockResolvedValue(message);
 
         await sender.send(reply, { ephemeral: false });
 
-        expect(patchCall(rest).route).toBe(ORIGINAL_ROUTE);
-        expect(patchCall(rest).options.body.flags).toBe(V2);
+        expect(rest.patch).not.toHaveBeenCalled();
+        expect(deleteRoute(rest)).toBe(ORIGINAL_ROUTE);
+        expect(rest.delete).toHaveBeenCalledBefore(rest.post);
+        expect(followUpCall(rest).route).toBe(WEBHOOK_ROUTE);
+        expect(followUpCall(rest).options.body.flags).toBe(V2);
     });
 });
 

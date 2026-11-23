@@ -5,7 +5,7 @@ import { asError } from '@seedcord/utils/internal';
 
 import { AskPresenter } from './AskPresenter';
 
-import type { PresenterOutput } from '#commands/commands/StepsPresenter';
+import type { PresenterOutput } from '#core/output/StepsPresenter';
 import type { AskFormat, AskStep } from './AskPresenter';
 import type { SiteAddress } from '@seedcord/brand';
 import type { GuideResult, GuideSearch, Question } from '@seedcord/docs-search';

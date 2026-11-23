@@ -40,7 +40,7 @@ export abstract class RepliableHandler<
         return this.sender.defer(opts);
     }
 
-    /** Send a new message once the interaction is acknowledged. */
+    /** Send a new message once the interaction is acknowledged. After {@link defer}, the first one fills the placeholder. */
     protected followUp(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         return this.sender.followUp(response, opts);
     }
@@ -58,7 +58,7 @@ export abstract class RepliableHandler<
         return this.sender.edit(targetOrResponse as TMessage, maybeResponse);
     }
 
-    /** Routes to reply, followUp, or edit based on the current ack state. */
+    /** Calls {@link reply} if nothing went out yet and {@link followUp} after that. */
     protected send(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         return this.sender.send(response, opts);
     }

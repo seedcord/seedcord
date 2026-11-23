@@ -1,7 +1,7 @@
 import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandOptionType, ApplicationCommandType } from 'discord-api-types/v10';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { UserContextMenuHandler, MessageContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
@@ -50,7 +50,7 @@ const user: APIUser = { id: 'u1', username: 'dhruv', discriminator: '0', global_
 function coreMock(): { core: Core; post: ReturnType<typeof vi.fn> } {
     const post = vi.fn().mockResolvedValue(undefined);
     // justified: these tests reach only core.rest.post
-    // justified: a real Core always carries a bus, respond publishes through it
+    // justified: a real Core always has a bus, respond publishes through it
     const bus = { [PublishDefault]: () => undefined };
     return { core: { rest: { post } as unknown as REST, bus } as unknown as Core, post };
 }
@@ -140,7 +140,7 @@ describe('SlashHandler options and match', () => {
         );
     });
 
-    it('throws MatchCaseMissing for a route with no case', async () => {
+    it('throws MatchCaseMissing for a route without a case', async () => {
         class Ban extends SlashHandler<'hbBan'> {
             async execute(): Promise<void> {
                 await this.match({ hbBan: () => undefined });
@@ -155,7 +155,7 @@ describe('SlashHandler options and match', () => {
         );
     });
 
-    it('throws MatchCaseMissing for a prototype-named route with no case', async () => {
+    it('throws MatchCaseMissing for a prototype-named route without a case', async () => {
         class Ban extends SlashHandler<'hbBan'> {
             async execute(): Promise<void> {
                 await this.match({ hbBan: () => undefined });
@@ -233,7 +233,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         expect(route).toBe('hbSearch');
     });
 
-    it('throws MatchCaseMissing for a focused field with no case', async () => {
+    it('throws MatchCaseMissing for a focused field without a case', async () => {
         class Search extends AutocompleteHandler<'hbSearch'> {
             async execute(): Promise<void> {
                 await this.match({

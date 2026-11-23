@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { SeedcordErrorCode } from '#src/index';
 import { validateDiscordToken } from '#src/internal.index';

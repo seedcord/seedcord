@@ -1,21 +1,28 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { checkAckLegality, sendTarget } from './ackLegality';
+import { checkAckLegality } from './ackLegality';
 import { AckTrace } from './AckTrace';
-import { attemptWrite, publishResponse } from './responseReport';
-import { serializeReply } from './serializeReply';
-import { translateSerializationError } from './translateSerialization';
+import { deferFlags, sendFlags } from './flags';
+import { messageBody } from './responseReport';
+import { serializeModal, serializeReply } from './serializeReply';
+import { WriteAttempt } from './WriteAttempt';
 
 import type { AckState, ReplyMethod } from './ackLegality';
-import type { ReplyTelemetry } from './responseReport';
+import type { MessageMethod, ReplyTelemetry, SentFile, SentWrite } from './responseReport';
 import type { SerializedReply } from './serializeReply';
-import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
+import type { DeferOpts, ReplyFile, ReplyResponse, SendOpts } from '@seedcord/types';
 import type { APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
+import type { ExtractStrict } from 'type-fest';
 
 /** The shape djs modal builders emit from `toJSON()`. */
 export interface ModalLike {
     toJSON(): APIModalInteractionResponseCallbackData;
+}
+
+interface PreparedMessage<TNative> {
+    readonly reply: SerializedReply<TNative>;
+    readonly sent: ExtractStrict<SentWrite, { method: MessageMethod }>;
 }
 
 /**
@@ -29,11 +36,12 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     private state: AckState;
     // the only ids a targeted edit accepts
     private readonly sent = new Set<string>();
-    // the cause carries the first ack's stack so a double-ack reports both lines
+    // the cause holds the first ack's stack so a double-ack reports both lines
     private ackedBy?: AckTrace;
 
     protected constructor(
         private readonly telemetry: ReplyTelemetry,
+        private isEphemeralByDefault: boolean, // defer() overwrites it with its own visibility
         initialState: AckState = 'unacked'
     ) {
         this.state = initialState;
@@ -43,73 +51,87 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         return this.telemetry.dispatch.routeId;
     }
 
-    // anything that threw already reported through attemptWrite
-    private report(method: ReplyMethod, startedAt: number, messageId: string | null): void {
-        publishResponse(this.telemetry, { method, startedAt, outcome: 'sent', messageId });
-    }
-
-    private async attempt<Result>(
-        method: ReplyMethod,
-        startedAt: number,
-        write: () => Promise<Result>
-    ): Promise<Result> {
-        return await attemptWrite(this.telemetry, method, startedAt, write);
+    // inside the attempt so the report covers a builder's throw too
+    private async prepare(
+        method: MessageMethod,
+        write: WriteAttempt,
+        response: ReplyResponse<TNative> | string
+    ): Promise<PreparedMessage<TNative>> {
+        return await write.run({ method, body: null }, () => {
+            const reply = serializeReply(response, this.routeId);
+            return {
+                reply,
+                sent: { method, body: messageBody(reply, (file) => this.describeFile(file)) }
+            };
+        });
     }
 
     public async reply(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         this.checkLegality('reply');
-        const startedAt = performance.now();
-        const created = await this.attempt('reply', startedAt, () => this.writeReply(response, opts));
-        // the callback already acked discord, so record replied before the message guard can throw
+        const write = new WriteAttempt(this.telemetry);
+        const { reply, sent } = await this.prepare('reply', write, response);
+        const created = await write.run(sent, () => this.writeReply(reply, this.replyFlags(opts)));
+        // record replied before the message guard can throw because the callback has already acked discord
         this.transition('reply', 'replied');
         const message = this.remember(this.requireMessage(created, 'reply'));
-        this.report('reply', startedAt, message.id);
+        write.sent(sent, message.id);
         return message;
     }
 
     public async defer(opts?: DeferOpts): Promise<void> {
         this.checkLegality('defer');
-        const startedAt = performance.now();
-        await this.attempt('defer', startedAt, () => this.writeDefer(opts));
+        const write = new WriteAttempt(this.telemetry);
+        const ephemeral = this.ephemeral(opts);
+        const sent = { method: 'defer', body: null } as const;
+        await write.run(sent, () => this.writeDefer(deferFlags(ephemeral)));
+        this.isEphemeralByDefault = ephemeral;
         this.transition('defer', 'deferred-reply');
-        this.report('defer', startedAt, null);
+        write.sent(sent, null);
     }
 
     public async deferUpdate(): Promise<void> {
         this.checkLegality('deferUpdate');
-        const startedAt = performance.now();
-        await this.attempt('deferUpdate', startedAt, () => this.writeDeferUpdate());
+        const write = new WriteAttempt(this.telemetry);
+        const sent = { method: 'deferUpdate', body: null } as const;
+        await write.run(sent, () => this.writeDeferUpdate());
         this.transition('deferUpdate', 'deferred-update');
-        this.report('deferUpdate', startedAt, null);
+        write.sent(sent, null);
     }
 
     /**
-     * After a deferUpdate the state stays deferred-update. Calling this again rewrites. The returned message
+     * After a deferUpdate the state is still deferred-update. Calling this again rewrites. The returned message
      * is the source message, editable only through a bare `update` or `edit`. A targeted `edit` or `delete`
      * of it throws the foreign-target error.
      */
     public async update(response: ReplyResponse<TNative> | string): Promise<TMessage> {
         this.checkLegality('update');
-        const startedAt = performance.now();
-        // in deferred-update the source message is @original and the ack-legality check above already passed
+        const write = new WriteAttempt(this.telemetry);
+        const { reply, sent } = await this.prepare('update', write, response);
+        // in deferred-update the source message is @original and the ack-legality check above has already passed
         if (this.state === 'deferred-update') {
-            const edited = await this.attempt('update', startedAt, () => this.editOriginal(response));
-            this.report('update', startedAt, edited.id);
+            const edited = await write.run(sent, () => this.editOriginal(reply));
+            write.sent(sent, edited.id);
             return edited;
         }
-        const created = await this.attempt('update', startedAt, () => this.writeUpdate(response));
+        const created = await write.run(sent, () => this.writeUpdate(reply));
         this.transition('update', 'replied');
         const message = this.remember(this.requireMessage(created, 'update'));
-        this.report('update', startedAt, message.id);
+        write.sent(sent, message.id);
         return message;
     }
 
     public async followUp(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         this.checkLegality('followUp');
-        const startedAt = performance.now();
-        const created = await this.attempt('followUp', startedAt, () => this.writeFollowUp(response, opts));
+        if (this.state === 'deferred-reply') {
+            // discord edits the loading message for a followUp here anyway and ignores its ephemeral flag
+            if (this.ephemeral(opts) === this.isEphemeralByDefault) return await this.edit(response);
+            await this.delete();
+        }
+        const write = new WriteAttempt(this.telemetry);
+        const { reply, sent } = await this.prepare('followUp', write, response);
+        const created = await write.run(sent, () => this.writeFollowUp(reply, this.replyFlags(opts)));
         const message = this.remember(created);
-        this.report('followUp', startedAt, message.id);
+        write.sent(sent, message.id);
         return message;
     }
 
@@ -120,13 +142,13 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         maybeResponse?: ReplyResponse<TNative> | string
     ): Promise<TMessage> {
         this.checkLegality('edit');
-        const startedAt = performance.now();
+        const write = new WriteAttempt(this.telemetry);
         if (maybeResponse === undefined) {
             // justified: the overloads narrow targetOrResponse to a response once maybeResponse is absent
-            const edited = await this.attempt('edit', startedAt, () =>
-                this.editOriginal(targetOrResponse as ReplyResponse<TNative> | string)
-            );
-            this.report('edit', startedAt, edited.id);
+            const response = targetOrResponse as ReplyResponse<TNative> | string;
+            const { reply, sent } = await this.prepare('edit', write, response);
+            const edited = await write.run(sent, () => this.editOriginal(reply));
+            write.sent(sent, edited.id);
             return edited;
         }
         // justified: the overloads narrow targetOrResponse to a target message once maybeResponse is defined
@@ -134,9 +156,10 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         if (!this.sent.has(target.id)) {
             throw new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, ['edit', target.id, this.routeId]);
         }
-        const written = await this.attempt('edit', startedAt, () => this.writeEditTarget(target.id, maybeResponse));
+        const { reply, sent } = await this.prepare('edit', write, maybeResponse);
+        const written = await write.run(sent, () => this.writeEditTarget(target.id, reply));
         const message = this.remember(written);
-        this.report('edit', startedAt, message.id);
+        write.sent(sent, message.id);
         return message;
     }
 
@@ -144,26 +167,26 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     public delete(target: TMessage): Promise<void>;
     public async delete(target?: TMessage): Promise<void> {
         this.checkLegality('delete');
-        const startedAt = performance.now();
+        const write = new WriteAttempt(this.telemetry);
+        const sent = { method: 'delete', body: null } as const;
         if (target === undefined) {
-            await this.attempt('delete', startedAt, () => this.writeDeleteOriginal());
-            this.report('delete', startedAt, null);
+            await write.run(sent, () => this.writeDeleteOriginal());
+            this.settleDefer();
+            write.sent(sent, null);
             return;
         }
         if (!this.sent.has(target.id)) {
             throw new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, ['delete', target.id, this.routeId]);
         }
-        await this.attempt('delete', startedAt, () => this.writeDeleteTarget(target.id));
+        await write.run(sent, () => this.writeDeleteTarget(target.id));
         // evict so a later targeted edit of this id throws foreign
         this.sent.delete(target.id);
-        this.report('delete', startedAt, null);
+        write.sent(sent, null);
     }
 
-    /** Routes to the verb the current ack state permits. Every state has a route, so the illegal-ack throw is unreachable. */
+    /** Calls {@link reply} if nothing went out yet and {@link followUp} after that. */
     public async send(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
-        const target = sendTarget(this.state);
-        if (target === 'reply') return await this.reply(response, opts);
-        if (target === 'edit') return await this.edit(response);
+        if (this.state === 'unacked') return await this.reply(response, opts);
         return await this.followUp(response, opts);
     }
 
@@ -171,22 +194,12 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     public async showModal(modal: ModalLike): Promise<void> {
         this.checkLegality('showModal');
         this.guardModalSource();
-        let data: APIModalInteractionResponseCallbackData;
-        try {
-            data = modal.toJSON();
-        } catch (error) {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- a null-prototype modal has no constructor at runtime
-            const name = modal.constructor?.name;
-            throw translateSerializationError(error, !name || name === 'Object' ? 'modal' : name, 0, this.routeId);
-        }
-        const startedAt = performance.now();
-        await this.attempt('showModal', startedAt, () => this.writeModal(data));
+        const write = new WriteAttempt(this.telemetry);
+        const data = await write.run({ method: 'showModal', body: null }, () => serializeModal(modal, this.routeId));
+        const sent = { method: 'showModal', body: data } as const;
+        await write.run(sent, () => this.writeModal(data));
         this.transition('showModal', 'replied');
-        this.report('showModal', startedAt, null);
-    }
-
-    protected serialize(response: ReplyResponse<TNative> | string): SerializedReply<TNative> {
-        return serializeReply(response, this.routeId);
+        write.sent(sent, null);
     }
 
     protected remember(created: TMessage): TMessage {
@@ -194,17 +207,31 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         return created;
     }
 
-    // a with_response callback always returns the created message. this only trips if the wire says otherwise
+    // a with_response callback always returns the created message. this only trips if the wire response differs
     private requireMessage(created: TMessage | undefined, method: 'reply' | 'update'): TMessage {
         if (!created) throw new SeedcordError(SeedcordErrorCode.ReplyCallbackMissingMessage, [method, this.routeId]);
         return created;
     }
 
-    private async editOriginal(response: ReplyResponse<TNative> | string): Promise<TMessage> {
-        const edited = await this.writeEditOriginal(response);
+    private async editOriginal(reply: SerializedReply<TNative>): Promise<TMessage> {
+        const edited = await this.writeEditOriginal(reply);
         // after a deferUpdate the source message is @original, which this interaction did not send
         if (this.state !== 'deferred-update') this.remember(edited);
+        this.settleDefer();
         return edited;
+    }
+
+    // once the loading message is filled or deleted, a send makes a new message the same way it does after a reply
+    private settleDefer(): void {
+        if (this.state === 'deferred-reply') this.state = 'replied';
+    }
+
+    private ephemeral(opts: SendOpts | DeferOpts | undefined): boolean {
+        return opts?.ephemeral ?? this.isEphemeralByDefault;
+    }
+
+    private replyFlags(opts: SendOpts | undefined): number {
+        return sendFlags({ ...opts, ephemeral: this.ephemeral(opts) });
     }
 
     private checkLegality(method: ReplyMethod): void {
@@ -219,17 +246,16 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     // gateway overrides this to reject a modal-submit source
     protected guardModalSource(): void {}
 
-    protected abstract writeReply(
-        response: ReplyResponse<TNative> | string,
-        opts?: SendOpts
-    ): Promise<TMessage | undefined>;
-    protected abstract writeDefer(opts?: DeferOpts): Promise<void>;
+    protected abstract writeReply(reply: SerializedReply<TNative>, flags: number): Promise<TMessage | undefined>;
+    protected abstract writeDefer(flags: number): Promise<void>;
     protected abstract writeDeferUpdate(): Promise<void>;
-    protected abstract writeUpdate(response: ReplyResponse<TNative> | string): Promise<TMessage | undefined>;
-    protected abstract writeFollowUp(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage>;
-    protected abstract writeEditOriginal(response: ReplyResponse<TNative> | string): Promise<TMessage>;
-    protected abstract writeEditTarget(targetId: string, response: ReplyResponse<TNative> | string): Promise<TMessage>;
+    protected abstract writeUpdate(reply: SerializedReply<TNative>): Promise<TMessage | undefined>;
+    protected abstract writeFollowUp(reply: SerializedReply<TNative>, flags: number): Promise<TMessage>;
+    protected abstract writeEditOriginal(reply: SerializedReply<TNative>): Promise<TMessage>;
+    protected abstract writeEditTarget(targetId: string, reply: SerializedReply<TNative>): Promise<TMessage>;
     protected abstract writeDeleteOriginal(): Promise<void>;
     protected abstract writeDeleteTarget(targetId: string): Promise<void>;
     protected abstract writeModal(data: APIModalInteractionResponseCallbackData): Promise<void>;
+    // returns the name, alt text, and title that the transport's client uploads the file with
+    protected abstract describeFile(file: ReplyFile | TNative): SentFile;
 }

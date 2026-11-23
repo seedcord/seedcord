@@ -4,10 +4,10 @@
  *
  * - `InvalidStructure`: a wrong root, a component in the wrong place, a parent with the wrong number of children, an
  *   empty {@link TextDisplay}, text outside one, or a Vue VNode. From {@link fromPayload}, also JSON where a component
- *   or gallery item isn't an object, a type a component embed doesn't take, or a button that isn't a link button.
+ *   or gallery item isn't an object, a type that a component embed doesn't take, or a button that isn't a link button.
  *
  * - `InvalidProp`: a prop with the wrong type or value, like a `spacing` of `'medium'` or a URL with a bad scheme. From
- *   {@link fromPayload}, also a key a component doesn't take, a bad `id`, or a list, `content`, `media`, or `emoji`
+ *   {@link fromPayload}, also a key that a component doesn't take, a bad `id`, or a list, `content`, `media`, or `emoji`
  *   with the wrong shape.
  *
  * - `OverLimit`: a length, count, or byte limit Discord sets.
@@ -18,7 +18,11 @@
  *   `cause`.
  */
 export type ComponentEmbedErrorCode =
-    'InvalidStructure' | 'InvalidProp' | 'OverLimit' | 'UnsupportedComponent' | 'ReadFailed';
+    | 'InvalidStructure'
+    | 'InvalidProp'
+    | 'OverLimit'
+    | 'UnsupportedComponent'
+    | 'ReadFailed';
 
 /**
  * Thrown when a component tree breaks a rule of Discord's component embed format, or when your own code throws while

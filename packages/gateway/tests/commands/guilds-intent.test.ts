@@ -1,22 +1,31 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { GatewayIntentBits, InteractionContextType } from 'discord.js';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { assertGuildsIntent } from '#miscellaneous/assertGuildsIntent';
 
-import type { BitFieldResolvable, GatewayIntentsString } from 'discord.js';
+import type {
+    BitFieldResolvable,
+    GatewayIntentsString,
+    RESTPostAPIChatInputApplicationCommandsJSONBody
+} from 'discord.js';
 
 const guildOnly = new SlashCommandBuilder()
     .setName('ban')
     .setDescription('d')
-    .setContexts(InteractionContextType.Guild);
+    .setContexts(InteractionContextType.Guild)
+    .toJSON();
 
-const dmOnly = new SlashCommandBuilder().setName('help').setDescription('d').setContexts(InteractionContextType.BotDM);
+const dmOnly = new SlashCommandBuilder()
+    .setName('help')
+    .setDescription('d')
+    .setContexts(InteractionContextType.BotDM)
+    .toJSON();
 
 function check(
     intents: BitFieldResolvable<GatewayIntentsString, number>,
-    ...commands: SlashCommandBuilder[]
+    ...commands: RESTPostAPIChatInputApplicationCommandsJSONBody[]
 ): () => void {
     return () => {
         assertGuildsIntent(intents, commands);
@@ -45,7 +54,7 @@ describe('assertGuildsIntent', () => {
         expect(check([], dmOnly)).not.toThrow();
     });
 
-    it('leaves a bot with no commands alone', () => {
+    it("doesn't throw for a bot without commands", () => {
         expect(check([])).not.toThrow();
     });
 });

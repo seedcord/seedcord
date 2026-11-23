@@ -1,5 +1,40 @@
 # @seedcord/utils
 
+## 0.10.0-next.1
+
+### 🩹 Patch
+
+- Added `seedcord emojis` to upload the images in an `emojis` folder beside `seedcord.config.ts` to your application, and to list, download and delete the emojis already there. Each file becomes a typed `Emojis` key, like `Emojis.PartyParrot` for `party_parrot.png`, without a `bot.emojis` entry. Set `emojis.dir` in the config to keep the folder somewhere else. ([#474](https://github.com/seedcord/seedcord/pull/474))
+- Fixed three checks on a gateway bot that missed Discord's errors because discord.js loads a different build of `@discordjs/rest` than seedcord does. A deleted log webhook now stops startup with `ConfigWebhookNotFound`, a refused command deploy points at the token or the command fields, and error reports show the interaction's timestamps. ([`9c7fb58`](https://github.com/seedcord/seedcord/commit/9c7fb583b077c0e7bddaabd07969597b250b3517))
+- Fixed `seedcord dev` on Windows not restarting when you save `package.json`, a lockfile, or a `tsconfig` file. ([#469](https://github.com/seedcord/seedcord/pull/469))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.16.0-next.0 → 0.16.0-next.1
+- `@seedcord/types` 0.17.0-next.0 → 0.17.0-next.1
+
+## 0.10.0-next.0
+
+### 💥 Breaking
+
+- Removed `fyShuffle` and `capitalize` because `es-toolkit` already ships both. Use its `shuffle` and `capitalize`, which behave the same. ([`59dd26a`](https://github.com/seedcord/seedcord/commit/59dd26aa7f9d11a59140715d3377a07f12ae1a5f))
+
+### ✨ Minor
+
+- `importFiles` and `readFiles` now take a `filter` option. If `filter` returns `false` for a file, that file is never imported or read. ([#464](https://github.com/seedcord/seedcord/pull/464))
+- `readFiles` and `importFiles` now give each file a `pathInDir`, its path inside the folder you passed, like `nested/faq.md`. ([#464](https://github.com/seedcord/seedcord/pull/464))
+- `ValidDuration` now takes the literal as a type argument, like `ValidDuration<TText>`, and rejects a literal that `parseDuration` would return `null` for, like `'0s'` or `'1.5h'`. ([#434](https://github.com/seedcord/seedcord/pull/434), thanks [@camdzic](https://github.com/camdzic))
+
+### 🩹 Patch
+
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
+- Replaced hand-written types and helpers with the ones from `type-fest` and `es-toolkit`. ([#453](https://github.com/seedcord/seedcord/pull/453))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
+- `@seedcord/types` 0.16.2 → 0.17.0-next.0
+
 ## 0.9.2
 
 ### 🩹 Patch

@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { readFiles, importFiles } from '#src/files/readers';
 import { setDevFiles } from '#src/files/slots';
@@ -27,18 +27,12 @@ afterAll(async () => {
 });
 
 describe('importFiles', () => {
-    it('visits every ts file under the directory, sorted by path', async () => {
+    it('visits every ts file under the directory, sorted by path, with its path inside the directory', async () => {
         const seen: string[] = [];
 
-        for await (const { fullPath } of importFiles(path.join(FIXTURES, 'walk'))) {
-            seen.push(path.relative(FIXTURES, fullPath));
-        }
+        for await (const { pathInDir } of importFiles(path.join(FIXTURES, 'walk'))) seen.push(pathInDir);
 
-        expect(seen).toEqual([
-            path.join('walk', 'aGood.ts'),
-            path.join('walk', 'b', 'bGood.ts'),
-            path.join('walk', 'cGood.ts')
-        ]);
+        expect(seen).toEqual(['aGood.ts', 'b/bGood.ts', 'cGood.ts']);
     });
 
     it('skips hidden files and folders, the same as a built bot', async () => {
@@ -64,6 +58,19 @@ describe('importFiles', () => {
         for await (const { fullPath } of importFiles(dir)) seen.push(path.relative(dir, fullPath));
 
         expect(seen).toEqual(['A.ts', 'B.tsx', 'C.mts', 'D.js', 'E.jsx', 'F.mjs']);
+    });
+
+    it('imports a file only when `filter` returns true for it', async () => {
+        const dir = path.join(scratch, 'filtered');
+        await mkdir(path.join(dir, 'helpers'), { recursive: true });
+        await writeFile(path.join(dir, 'Keep.ts'), 'export {};\n');
+        await writeFile(path.join(dir, 'helpers', 'Throws.ts'), "throw new Error('imported');\n");
+        const seen: string[] = [];
+
+        const kept = importFiles(dir, { filter: ({ pathInDir }) => !pathInDir.includes('/') });
+        for await (const { pathInDir } of kept) seen.push(pathInDir);
+
+        expect(seen).toEqual(['Keep.ts']);
     });
 
     it('reports the file whose module failed to import, keeping the original as the cause', async () => {
@@ -151,7 +158,15 @@ describe('a folder on disk under seedcord dev', () => {
         expect(seen).toEqual([path.join(FIXTURES, 'text', 'nested', 'faq.md')]);
     });
 
-    it('throws CoreDirectoryNotListed for a folder files leaves out', async () => {
+    it('gives each file its path inside the folder it read, with forward slashes', async () => {
+        const seen: string[] = [];
+
+        for await (const { pathInDir } of readFiles('./text')) seen.push(pathInDir);
+
+        expect(seen).toEqual(['en.json', 'nested/faq.md']);
+    });
+
+    it("throws CoreDirectoryNotListed for a folder files doesn't list", async () => {
         const error = await rejection(readFiles('./walk'));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryNotListed });
@@ -185,7 +200,7 @@ describe('a listed folder beside root, under seedcord dev', () => {
     });
 });
 
-describe('the folders and files the build leaves out, under seedcord dev', () => {
+describe("the folders and files the build doesn't include, under seedcord dev", () => {
     const root = path.join(scratch, 'project');
 
     beforeAll(async () => {
@@ -194,6 +209,7 @@ describe('the folders and files the build leaves out, under seedcord dev', () =>
         await mkdir(path.join(root, 'handlers'), { recursive: true });
         await writeFile(path.join(root, 'seedcord.config.ts'), 'export {};\n');
         await writeFile(path.join(root, 'package.json'), '{}\n');
+        await writeFile(path.join(root, 'tsconfig.build.json'), '{}\n');
         await writeFile(path.join(root, 'dist', 'index.js'), 'export {};\n');
         await writeFile(path.join(root, 'logs', 'today.log'), 'line\n');
         await writeFile(path.join(root, 'handlers', 'Ping.ts'), 'export {};\n');
@@ -270,7 +286,7 @@ describe('a folder seedcord build skips, under seedcord dev', () => {
     });
 });
 
-describe('a relative folder with no root', () => {
+describe('a relative folder without a root', () => {
     it('throws for importFiles with the path it was given', async () => {
         const error = await rejection(importFiles('./walk'));
 
@@ -307,6 +323,15 @@ describe('readFiles', () => {
         const seen: string[] = [];
 
         for await (const { fullPath } of readFiles(dir)) seen.push(path.relative(dir, fullPath));
+
+        expect(seen).toEqual(['en.json']);
+    });
+
+    it('reads a file only when `filter` returns true for it', async () => {
+        const seen: string[] = [];
+
+        const kept = readFiles(path.join(FIXTURES, 'text'), { filter: ({ pathInDir }) => pathInDir.endsWith('.json') });
+        for await (const { pathInDir } of kept) seen.push(pathInDir);
 
         expect(seen).toEqual(['en.json']);
     });

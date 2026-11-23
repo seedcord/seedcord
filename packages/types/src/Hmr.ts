@@ -1,4 +1,5 @@
 import type { HmrUpdateEvent } from './Types/Hmr';
+import type { EmptyObject } from 'type-fest';
 
 // how a bot in workerd sends a thrown error to the CLI
 export interface WireError {
@@ -24,15 +25,16 @@ export interface SeedcordFrameworkEvents {
     'seedcord:start-failed': { error: WireError };
     'seedcord:read-deployed': { applicationId: string };
     'seedcord:commands-deployed': DeployedHashes;
-    'seedcord:full-reload': Record<string, never>;
+    'seedcord:full-reload': EmptyObject;
 }
 
 // the CLI sends these back
 export interface SeedcordCliEvents {
     'seedcord:hmr': HmrUpdateEvent;
     'seedcord:refresh-commands': { shouldRefresh: boolean };
+    // core.url falls back to url when server.url is unset
     // eslint-disable-next-line no-magic-numbers -- chalk's ColorSupportLevel for the CLI's terminal, copied to keep chalk out of types
-    'seedcord:start': { colorLevel: 0 | 1 | 2 | 3 };
+    'seedcord:start': { colorLevel: 0 | 1 | 2 | 3; url: string };
     'seedcord:last-deploy': { deployed: DeployedHashes | undefined };
     // vite sends this one, right before it reloads every module
     'vite:beforeFullReload': unknown;

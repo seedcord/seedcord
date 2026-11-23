@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Container, TextDisplay, toComponentEmbedScript } from '#src/index';
 import { ComponentEmbed } from '#src/react.index';

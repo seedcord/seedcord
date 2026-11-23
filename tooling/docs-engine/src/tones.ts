@@ -1,5 +1,5 @@
-// Node-free, so this is exported from the client subset. The consuming app defines presentation
-// (icons, Tailwind classes).
+// This is exported from the client subset because it is Node-free. The consuming app defines
+// presentation (icons, Tailwind classes).
 export type EntityTone = 'class' | 'interface' | 'type' | 'function' | 'enum' | 'variable';
 
 const TONE_DIRECTORY_MAP = {
@@ -65,8 +65,8 @@ function buildToneCandidates(value: string): string[] {
 }
 
 // Returns null when the input doesn't match an entity tone. resolveEntityTone defaults that to 'class' for
-// URL assembly. Membership and parse callers use this strict form, so a non-entity kind (method,
-// accessor, namespace) does not silently collapse into the 'class' bucket.
+// URL assembly. Membership and parse callers use this strict form because a non-entity kind (method,
+// accessor, namespace) would otherwise silently collapse into the 'class' bucket.
 export function resolveEntityToneStrict(input?: string | null): EntityTone | null {
     if (!input) return null;
 

@@ -57,7 +57,7 @@ ruleTester.run('no-conflicting-button-props', rule, {
                 .setStyle(ButtonStyle.Link)
                 .setCustomId('x');
         `,
-        // a style only known at runtime stays unflagged
+        // a style only known at runtime isn't flagged
         dedent`
             import { ButtonBuilder, ButtonStyle } from 'discord.js';
             declare const style: ButtonStyle;
@@ -85,7 +85,7 @@ ruleTester.run('no-conflicting-button-props', rule, {
             }
             new NavButton({ url: 'https://example.com', custom_id: 'x' });
         `,
-        // the last setStyle wins, and it moves the button off the Link style
+        // the last setStyle moves the button off the Link style
         dedent`
             import { ButtonBuilder, ButtonStyle } from 'discord.js';
             new ButtonBuilder()
@@ -142,7 +142,7 @@ ruleTester.run('no-conflicting-button-props', rule, {
             ]
         },
         {
-            // constructor data carries the same state as the setters
+            // constructor data has the same state as the setters
             code: dedent`
                 import { ButtonBuilder } from 'discord.js';
                 new ButtonBuilder({ custom_id: 'x', label: 'y' })
@@ -183,7 +183,7 @@ ruleTester.run('no-conflicting-button-props', rule, {
             errors: [{ messageId: 'skuIdWithProp', data: { prop: 'customId' } }]
         },
         {
-            // the chained setStyle runs after the constructor and wins
+            // the chained setStyle runs after the constructor and overrides its style
             code: dedent`
                 import { ButtonBuilder, ButtonStyle } from 'discord.js';
                 new ButtonBuilder({ style: ButtonStyle.Primary })

@@ -6,7 +6,7 @@ type BroadListener = (...args: readonly unknown[]) => void;
 
 interface Registration {
     readonly call: BroadListener;
-    // off() matches by original, so off(userListener) removes a once registration whose call is the wrapper
+    // off() matches on this field because a once registration's call is a wrapper, and off(userListener) has to find it
     readonly original: BroadListener;
 }
 
@@ -121,7 +121,7 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
         return true;
     }
 
-    /** Removes every listener for an event, or for all events when no event is given. */
+    /** Removes every listener for an event, or for all events when you don't pass one. */
     public removeAllListeners(event?: EventKey<TEvents>): this {
         if (event === undefined) this.registrations.clear();
         else this.registrations.delete(event);

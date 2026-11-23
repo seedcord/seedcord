@@ -1,5 +1,5 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { mockInteraction, senderFor } from './utils/senderMock';
 
@@ -16,7 +16,7 @@ describe('ReplySender.showModal', () => {
         expect(mock.showModal).toHaveBeenCalledWith({ title: 'Feedback', custom_id: 'fb', components: [] });
     });
 
-    it('throws ReplyIllegalAckState after a defer, before any djs call', async () => {
+    it('throws ReplyIllegalAckState after a defer before any djs call', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.defer();
@@ -27,7 +27,7 @@ describe('ReplySender.showModal', () => {
         expect(mock.showModal).not.toHaveBeenCalled();
     });
 
-    it('throws ReplyIllegalAckState after a deferUpdate, before any djs call', async () => {
+    it('throws ReplyIllegalAckState after a deferUpdate before any djs call', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.deferUpdate();
@@ -40,7 +40,7 @@ describe('ReplySender.showModal', () => {
 
     it('labels a null-prototype modal as modal in the translated error', async () => {
         const mock = mockInteraction();
-        // justified: a null-prototype object has no constructor, the label fallback path under test
+        // justified: a null-prototype object doesn't have a constructor, the label fallback path under test
         const modal = Object.create(null) as { toJSON(): never };
         modal.toJSON = () => {
             throw new RangeError('Modal title must be 1-45 characters.');

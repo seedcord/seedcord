@@ -1,14 +1,14 @@
-const REPLAY_WINDOW_MS = 300_000; // compared in both directions, clock skew stays inside the window
+const REPLAY_WINDOW_MS = 300_000; // a clock up to 5 min fast or slow passes because the window is compared in both directions
 const SWEEP_GAP_MS = 60_000;
 const MS_PER_SECOND = 1000;
 const TIMESTAMP_PATTERN = /^\d+$/;
 
-// the seen map is per-isolate on edge, so a fresh isolate rejects a replay on freshness alone
+// a fresh isolate rejects a replay on freshness alone because the seen map is per-isolate on edge
 export class ReplayGuard {
     private readonly seen = new Map<string, number>();
     private lastSweep = Date.now();
 
-    // the parsed value feeds unseen(), which only ever sees timestamps this already accepted
+    // the parsed value feeds unseen(), which only ever receives timestamps that this has already accepted
     public fresh(timestampHeader: string): number | null {
         if (!TIMESTAMP_PATTERN.test(timestampHeader)) return null;
         const timestampMs = Number(timestampHeader) * MS_PER_SECOND;

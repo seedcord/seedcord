@@ -1,19 +1,19 @@
 import { REST } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandOptionType, Routes } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { listingJson } from '#commands/commands/list/listingJson';
 import { ListPresenter } from '#commands/commands/list/ListPresenter';
 import { LIST_STEPS, ListRunner } from '#commands/commands/list/ListRunner';
-import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
+import { defaultRunnerDeps } from '#core/discord/runnerDeps';
 import { quietSteps } from '#core/output/quietSteps';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { bindEnv } from '#tests/bindEnv';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
-import { APP_ID, fakeDiscord, fakeProject, pipedTerminal, slash } from '#tests/commands/commands/fakeBot';
+import { APP_ID, fakeDiscord, fakeProject, slash } from '#tests/commands/commands/fakeBot';
 import { fakeDiscordApi } from '#tests/fakeDiscordApi';
-import { silentLogger } from '#tests/silentLogger';
+import { fakeTerminal } from '#tests/fakeTerminal';
 
 import type { ListScope } from '#commands/commands/list/ListRunner';
 import type { ProjectOpener } from '#core/config/openProjectWithSteps';
@@ -24,11 +24,11 @@ interface ListOptions {
 }
 
 function runnerFor(project: ProjectOpener, rest: REST): ListRunner {
-    return new ListRunner({ projectLoader: project, openDiscord: () => rest, logger: silentLogger });
+    return new ListRunner({ projectLoader: project, openDiscord: () => rest });
 }
 
 async function list(project: ProjectOpener, rest: REST, { verbose = false, scope }: ListOptions = {}): Promise<string> {
-    const stdout = pipedTerminal();
+    const stdout = fakeTerminal();
     const printer = new StepPrinter({ command: 'commands', labels: LIST_STEPS, verbose, stdout, stderr: stdout });
     await runnerFor(project, rest).run(new ListPresenter(printer, verbose), scope);
     return stdout.text();
@@ -56,7 +56,7 @@ describe('ListRunner', () => {
         expect(output).toContain('  global  2 commands\n      /ping  ping-id\n      /legacy  legacy-id\n');
     });
 
-    it('lists only the global scope for a bot with no commands folder', async () => {
+    it('lists only the global scope for a bot without a commands folder', async () => {
         const { rest } = fakeDiscord(ON_DISCORD);
 
         const output = await list(await fakeProject({ commandsPath: null }), rest);
@@ -99,7 +99,7 @@ describe('ListRunner', () => {
         expect(discord.routes).toContain(Routes.applicationCommands(APP_ID));
     });
 
-    it('lists every guild the bot is in with --all-guilds and reads no guild names one by one', async () => {
+    it("lists every guild the bot is in with --all-guilds and doesn't read guild names one by one", async () => {
         const { rest, gets } = fakeDiscord({
             ...ON_DISCORD,
             [Routes.userGuilds()]: [

@@ -8,7 +8,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { stripAnsi } from '@seedcord/utils';
 import { setBuiltFiles, setDevFiles } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { LoggerChannelRegistry } from '#src/LoggerChannelRegistry';
 import {
@@ -103,6 +103,7 @@ function asBuiltBot({ root, configFile }: { root: string; configFile: string }):
         listed: [],
         skippedFolders: [],
         folders: [],
+        emojis: [],
         modules: {},
         listedFiles: {}
     });
@@ -114,7 +115,7 @@ const registry = LoggerChannelRegistry.instance;
 afterEach(() => registry.reset());
 
 describe('formatPretty', () => {
-    it('interpolates args and carries level, label, and message', () => {
+    it('interpolates args and sets level, label, and message', () => {
         const line = plain(formatPretty(record({ message: 'user %s scored %d', args: ['bob', 42] })));
         expect(line).toContain('info');
         expect(line).toContain('Bot');
@@ -219,7 +220,7 @@ describe('winston sinks', () => {
     });
 
     it('the console sink stops writing once its stdout closes', async () => {
-        const child = spawn(process.execPath, ['--import', 'tsx', LOGS_TO_STDOUT], {
+        const child = spawn(process.execPath, ['--import', 'vite-plus/register', LOGS_TO_STDOUT], {
             stdio: ['ignore', 'pipe', 'pipe']
         });
         await once(child.stdout, 'data');
@@ -241,7 +242,7 @@ describe('winston sinks', () => {
         expect(content).toContain('events');
     });
 
-    it('the json sink stamps the record timestamp as ISO, not the format-time now', async () => {
+    it('the json sink stamps the record timestamp as ISO', async () => {
         using folder = workingFolder();
         using sink = new WinstonFileSink({ filename: 'ts.log', format: 'json' });
 
@@ -405,13 +406,13 @@ describe('installNodeDefaults', () => {
         expect(plain(consoleOutputOf({ message: 'task' }))).toContain('[info');
     });
 
-    it('creates no log file until a record is logged, so repeated bootstraps leave no orphans', async () => {
+    it("doesn't create a log file until a record is logged, so repeated bootstraps leave zero orphans", async () => {
         using _dev = inDevelopment();
         using folder = workingFolder();
 
         installNodeDefaults();
         installNodeDefaults();
-        // the eager File transport opens its stream on the next tick, so wait past it before asserting
+        // wait past the next tick before asserting because the eager File transport opens its stream then
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         expect(existsSync(folder.logs) ? readdirSync(folder.logs) : []).toEqual([]);

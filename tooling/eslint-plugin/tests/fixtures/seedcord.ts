@@ -64,8 +64,7 @@ export abstract class RowComponent<Key extends RowType> {
     }
 }
 
-// the rule reads this.event's djs type, so event carries the matching interaction
-
+// event has the matching interaction because the rule reads this.event's djs type
 type Repliable =
     | ChatInputCommandInteraction
     | ButtonInteraction
@@ -114,7 +113,7 @@ export abstract class ChannelMenuHandler<Defs> extends SelectMenuHandler<Defs> {
 
 export abstract class MentionableMenuHandler<Defs> extends SelectMenuHandler<Defs> {}
 
-// AutocompleteHandler extends BaseHandler directly, so it never passes the InteractionHandler gate.
+// AutocompleteHandler never passes the InteractionHandler gate. it extends BaseHandler directly.
 export abstract class AutocompleteHandler<Route extends string> extends BaseHandler<AutocompleteInteraction> {
     declare protected readonly route: Route;
     protected respond(): Promise<void> {
@@ -126,7 +125,7 @@ export abstract class InteractionMiddleware<Event extends Repliable = Repliable>
 
 export abstract class EventMiddleware<Event = unknown> extends BaseHandler<Event> {}
 
-// plugins and framework classes reach a logger they inherit, so the call site never imports Logger
+// the call site never imports Logger since plugins and framework classes reach a logger they inherit
 export declare abstract class PluginBase {
     protected readonly logger: Logger;
 }

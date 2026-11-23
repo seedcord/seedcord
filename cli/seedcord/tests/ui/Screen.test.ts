@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { COMPACT_ROWS, FULL_ROWS, Screen } from '#ui/Screen';
 
@@ -28,7 +28,7 @@ describe('Screen.fit', () => {
         expect(Screen.fit(40, 79, false)).toMatchObject(BAND);
     });
 
-    it('drops to the one-line status on a short terminal at any width', () => {
+    it('switches to the one-line status on a short terminal at any width', () => {
         expect(Screen.fit(19, 120, false)).toMatchObject(LINE);
     });
 

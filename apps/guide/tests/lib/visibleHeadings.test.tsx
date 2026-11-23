@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { useVisibleHeadingIds } from '#lib/visibleHeadings';
 
@@ -16,7 +16,7 @@ interface FakeEntryInput {
     intersectionRatio?: number;
 }
 
-// jsdom ships no IntersectionObserver
+// jsdom doesn't ship an IntersectionObserver
 class FakeIntersectionObserver {
     public static instances: FakeIntersectionObserver[] = [];
     private readonly targets = new Set<Element>();
@@ -81,14 +81,14 @@ describe('useVisibleHeadingIds', () => {
         });
         expect(new Set(result.current)).toEqual(new Set(['the-options']));
 
-        // a second, unrelated heading crossing the threshold must not drop the first
+        // a second, unrelated heading crossing the threshold must keep the first
         act(() => {
             observer.emit([{ target: replacing, isIntersecting: true }]);
         });
         expect(new Set(result.current)).toEqual(new Set(['the-options', 'replacing-the-prompt']));
     });
 
-    it('drops a heading once its own entry reports it left the viewport', () => {
+    it('removes a heading once its own entry reports it left the viewport', () => {
         const { result } = renderHook(() => useVisibleHeadingIds(ITEMS));
         const [observer] = FakeIntersectionObserver.instances;
         if (!observer) throw new Error('no observer created');
@@ -128,7 +128,7 @@ describe('useVisibleHeadingIds', () => {
         expect(result.current.has('the-options')).toBe(false);
     });
 
-    it('drops a heading that falls below the threshold while still on screen', () => {
+    it('removes a heading that falls below the threshold while still on screen', () => {
         const { result } = renderHook(() => useVisibleHeadingIds(ITEMS));
         const [observer] = FakeIntersectionObserver.instances;
         if (!observer) throw new Error('no observer created');

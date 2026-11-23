@@ -27,7 +27,7 @@
 
 Both seedcord transports depend on it and re-export it, and every handler, subscriber, and plugin in a bot has a `this.logger`. Install it directly to use the same logger in a script or a tool outside a bot.
 
-seedcord is pre-1.0, so a minor version can break your code. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your code. Each release's changelog says what changed and how to update.
 
 ## Installation
 

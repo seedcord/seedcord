@@ -1,11 +1,18 @@
-import { Seedcord, WinstonConsoleSink, WinstonFileSink } from '@seedcord/http';
+import { Seedcord, UnstorageDriver, WinstonConsoleSink, WinstonFileSink } from '@seedcord/http';
+import { I18n } from '@seedcord/plugin-i18n';
+import { Kysely } from '@seedcord/plugin-kysely';
+import { OAuth } from '@seedcord/plugin-oauth';
+import Database from 'better-sqlite3';
 import { Converters, Envapter } from 'envapt';
+import { SqliteDialect } from 'kysely';
+import { createStorage } from 'unstorage';
+import fsDriver from 'unstorage/drivers/fs';
 
-import { I18n } from './plugins/I18n';
 import { PingCounter } from './plugins/PingCounter';
 import { Uptime } from './plugins/Uptime';
 
 export const seedcord = new Seedcord({
+    kv: new UnstorageDriver(createStorage({ driver: fsDriver({ base: './.kv' }) })),
     bot: {
         interactions: {
             path: './handlers',
@@ -20,7 +27,7 @@ export const seedcord = new Seedcord({
         path: null
     },
     botColor: '#fe565a',
-    port: 6967,
+    server: { url: 'http://localhost:6967', port: 6967 },
     logger: {
         sinks: [
             new WinstonConsoleSink({ format: 'json' }),
@@ -30,6 +37,12 @@ export const seedcord = new Seedcord({
 })
     .attach('stats.uptime', Uptime)
     .attach('stats.pings', PingCounter)
-    .attach('i18n', I18n, './locales');
+    .attach('db', Kysely, {
+        path: './services',
+        dialect: () => new SqliteDialect({ database: new Database(':memory:') }),
+        migrations: { path: './migrations' }
+    })
+    .attach('i18n', I18n, { path: './locales' })
+    .attach('oauth', OAuth.with({ scopes: ['guilds'] }));
 
 export default seedcord;

@@ -95,7 +95,7 @@ function siblingsIn(node: EmbedNode, path: Path): EmbedElement[] {
     if (!isElement(node)) {
         throw new ComponentEmbedError(
             'InvalidStructure',
-            `Got ${describeValue(node)} where only components can go. Wrap text in a <TextDisplay> and put that in a <Container> or a <Section>.`,
+            `Got ${describeValue(node)} where only components are allowed. Wrap text in a <TextDisplay> and put that in a <Container> or a <Section>.`,
             { path }
         );
     }

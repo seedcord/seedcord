@@ -2,9 +2,9 @@ import { errorCodeQuestion, QUESTION_LENGTH } from '@seedcord/docs-search';
 import { paint } from '@seedcord/errors';
 import { TWIN } from '@seedcord/ui/PageAsset';
 
-import { StepsPresenter } from '#commands/commands/StepsPresenter';
+import { StepsPresenter } from '#core/output/StepsPresenter';
 
-import type { PresenterOutput } from '#commands/commands/StepsPresenter';
+import type { PresenterOutput } from '#core/output/StepsPresenter';
 import type { SiteAddress } from '@seedcord/brand';
 import type { CodeMentions, GuideResult } from '@seedcord/docs-search';
 

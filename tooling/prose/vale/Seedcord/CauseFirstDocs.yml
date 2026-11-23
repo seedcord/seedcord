@@ -1,0 +1,9 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/code-commenting-guidelines/SKILL.md
+message: "', so' puts the background first. If the 'so' clause is what the reader came for, open with it and give the reason after. Keep it when it follows from a setup."
+level: suggestion
+scope: comment.block
+ignorecase: true
+nonword: true
+tokens:
+  - ',\s+so\b(?![-\w])(?!\s+(?:far|on|long|much|many)\b)'

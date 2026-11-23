@@ -8,40 +8,54 @@ turbo gen package
 turbo gen package --args <name> "<one-line description>" <dir>
 ```
 
-It prompts for the npm name, a description, and the workspace folder, then writes `package.json`, `tsconfig.json`, `tsdown.config.ts`, `eslint.config.ts`, `tsdoc.json`, `README.md`, `LICENSE`, `src/index.ts`, `tests/.gitkeep`, and `vitest.config.ts` from the templates in `templates/`.
+It prompts for the npm name, a description, and the workspace folder, then writes `package.json`, `tsconfig.json`, `vite.config.ts`, `eslint.config.ts`, `tsdoc.json`, `README.md`, `LICENSE`, `src/index.ts`, and `tests/.gitkeep` from the templates in `templates/`.
 
-`<folder>` is the npm name without `@seedcord/`, so `@seedcord/core` scaffolds into `packages/core/`. Under `plugins/` the folder also omits the `plugin-` prefix, so `@seedcord/plugin-mongoose` scaffolds into `plugins/mongoose/`. The prefix earns its place on npm, where a package name carries no parent folder.
+`<folder>` is the npm name without `@seedcord/`, so `@seedcord/core` scaffolds into `packages/core/`. Under `plugins/` the folder also omits the `plugin-` prefix: `@seedcord/plugin-mongoose` scaffolds into `plugins/mongoose/`. The prefix earns its place on npm, where a package name doesn't have a parent folder.
 
-Every tool that walks the workspace reads each package's name from its `package.json`, so the folder name stays a human-facing label. The globs below are the exception and name the folder directly.
+Every tool that walks the workspace reads each package's name from its `package.json`, so the folder name is only a label for people. The globs below are the exception and match the folder name directly.
 
-A new workspace root (a sibling of `packages/`, `plugins/`, `cli/`, and `tooling/`) goes in `pnpm-workspace.yaml` first. Docs extraction and the catalog check both read the package roots from there, and docs extraction skips every package marked `private`.
+Add a new workspace root (a sibling of `packages/`, `plugins/`, `cli/`, and `tooling/`) to `pnpm-workspace.yaml` first. Docs extraction and the catalog check both read the package roots from there, and docs extraction skips every package marked `private`.
 
-A minimal published scoped package, `version` `0.0.0`, no runtime dependencies, only the three internal config devDeps plus the `typescript` peer (`catalog:peer`), a single `.` export with one tsdown entry, `publishConfig` access public with provenance, tsconfig extending `@seedcord/tsconfig/node`, tsdown via `createTsdownConfig`, and the `version` export line.
+The generated package is a minimal published scoped package:
+
+- `version` `0.0.0`, without runtime dependencies
+- five devDeps, the four config packages (`eslint-config`, `tsconfig`, `tsdown-config`, `vite-config`) and `@seedcord/prose`, plus the `typescript` peer (`catalog:peer`)
+- a single `.` export with one tsdown entry
+- `publishConfig` with public access and provenance
+- a tsconfig that extends `@seedcord/tsconfig/node`, tsdown through `createTsdownConfig`, and the `version` export line
 
 ## This needs separate wiring after generating
 
-Finish these after generating, none of them are automated.
+Finish these after generating. None of them are automated.
 
-1. `.github/labeler.yml`, add a `'📦 <name>'` glob block matching `<dir>/<folder>/**`. Labels drop the `@seedcord/` scope.
+1. `.github/labeler.yml`, add a `'📦 <name>'` glob block matching `<dir>/<folder>/**`. Label names leave out the `@seedcord/` scope.
 2. `.github/labels.yml`, add the `📦 <name>` label entry (name, a muted color).
-3. `knip.json`, add `"<dir>/<folder>": {}` to the `workspaces` map.
-4. `turbo.json`, add `"<name>#build"` to the `dependsOn` list on `//#docs:extract` (skip for a private package). The extractor reads every published package's built declarations. A published package that stays off the docs site sets `"seedcordDocs": { "skip": true }` in its `package.json` and skips this step and step 5.
-5. `tooling/docs-engine/src/packages/identity.ts`, add a `PACKAGE_OVERRIDES` entry (`displayName` plus any `aliases`) for `<name>`. Without it the docs site renders the full scoped name. The override sets the short display name (`core`) and extra search aliases. Skip for a package with no documented entry point, it never shows in the docs site.
+3. `knip.ts`, add the package to the `workspaces` map only when it needs its own `entry`, `project`, or `ignore`. Knip gives every unlisted workspace its defaults.
+4. `turbo.json`, add `"<name>#build"` to the `dependsOn` list on `//#docs:extract` (skip for a private package). The extractor reads every published package's built declarations. To keep a published package off the docs site, set `"seedcordDocs": { "skip": true }` in its `package.json`, and skip this step and step 5.
+5. `tooling/docs-engine/src/packages/identity.ts`, add a `PACKAGE_OVERRIDES` entry for `<name>`, with any search `aliases`. The docs site only lists a package that has an entry here. For a scoped package, set `displayName` to the name without `@seedcord/`, like `core`, since it has to match the package's docs folder. Skip this for a package without a documented entry point.
 6. `pnpm-workspace.yaml` catalogs, move any dependency now used by two or more packages into the matching catalog bucket (`deps`, `peer`, `test`, `react`) and reference it as `catalog:<bucket>`. `check:catalog` gates prePush on this.
-7. The package's own `package.json`, set the real `version`, add runtime `dependencies` (`catalog:deps` or `workspace:*`), any extra `peerDependencies` with `peerDependenciesMeta` (for example `discord.js` as `catalog:peer`), extra `devDependencies`, and the `./internal` export block plus a second tsdown entry plus `src/internal.index.ts` if the package ships an internal surface.
-8. For a private package, drop `publishConfig`, add `"private": true`, and skip step 4, 9, and 10. For a public package, set the `version` first (the changeset pre-mode flow, or by hand), build, then publish from the package folder.
+7. The package's own `package.json`, set the real `version` and add runtime `dependencies` (`catalog:deps` or `workspace:*`). Add any extra `peerDependencies` with `peerDependenciesMeta` (for example `discord.js` as `catalog:peer`), and any extra `devDependencies`. If the package ships an internal surface, add the `./internal` export block, a second tsdown entry, and `src/internal.index.ts`.
+8. For a private package, remove `publishConfig`, add `"private": true`, and skip step 4, 9, and 10. For a public package, set the `version` first (the changeset pre-mode flow, or by hand), build, then publish from the package folder.
 9. Bootstrap the package on npm by publishing it once by hand. Only `@materwelonDhruv` can do this.
 
     ```sh
     # set "version": "0.0.1" in <dir>/<folder>/package.json first, then:
-    pnpm -C <dir>/<folder> build
+    vp -C <dir>/<folder> run build
     cd <dir>/<folder>
     # latest first, a bare publish defaults to the latest tag, no provenance locally
-    npm publish --access public --no-provenance
+    # --no-git-checks because the package isn't committed or on main yet
+    pnpm publish --no-provenance --no-git-checks
     # then point next at the same version
     npm dist-tag add <name>@0.0.1 next
-    # deprecate both tags in one go (since both are the same version)
-    npm deprecate <name>@0.0.1 "This is a bootstrap version, please use the next tag for development."
     ```
 
-10. Update OIDC trust for the `publish.yml` workflow for the new packages on the npm page. Only `@materwelonDhruv` can do this as well.
+    npm stages the first publish of a new package. It puts up a `0.0.0-stage` placeholder to hold the name, and `0.0.1` waits in Validating until npm's checks finish. Approve `0.0.1` with 2FA on the package page, then deprecate both versions. `npm deprecate` returns a 404 until you approve.
+
+    ```sh
+    npm deprecate <name>@0.0.1 "This is a bootstrap version, please use the next tag for development."
+    npm deprecate <name>@0.0.0-stage "Placeholder from npm's staged publishing. Use the next tag."
+    # latest and next should both show 0.0.1
+    npm view <name> dist-tags
+    ```
+
+10. Add `publish.yml` as the package's trusted publisher on npm. Only `@materwelonDhruv` can do this as well. Tick **Allow npm publish** because `changeset publish` runs a plain `npm publish`, which npm rejects without that box. Leave **Allow npm dist-tag** off because the workflow sets tags while it publishes.

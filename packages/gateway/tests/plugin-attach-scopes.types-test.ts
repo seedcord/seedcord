@@ -1,5 +1,5 @@
 import { Plugin } from '@seedcord/core/plugin';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import type { Seedcord } from '#src/Seedcord';
 import type { CoreBase } from '@seedcord/core';

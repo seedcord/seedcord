@@ -12,7 +12,7 @@ import { loadEnv } from 'vite';
 import { isPackageMissing } from './cloudflarePlugin';
 import { viteEnvFiles } from './viteEnvFiles';
 
-import type { ParsedInputWorkerConfig } from '@cloudflare/config';
+import type { ParsedWorkerConfig } from '@cloudflare/config';
 
 type LocalVars = Record<string, string | undefined>;
 
@@ -30,7 +30,7 @@ function unreadable(cloudflareConfig: string, problem: string, cause?: unknown):
     });
 }
 
-async function loadWorker(cloudflareConfig: string, mode: string): Promise<ParsedInputWorkerConfig> {
+async function loadWorker(cloudflareConfig: string, mode: string): Promise<ParsedWorkerConfig> {
     assertNotBun();
     // a gateway or node http bot never loads it
     const { loadAndParseConfig } = await import('@cloudflare/config');
@@ -66,7 +66,7 @@ export class WorkerEnv {
     private readonly devVarsFiles: readonly string[];
 
     private constructor(
-        private readonly worker: ParsedInputWorkerConfig,
+        private readonly worker: ParsedWorkerConfig,
         cloudflareConfig: string,
         private readonly mode: string
     ) {
@@ -83,7 +83,7 @@ export class WorkerEnv {
         stack.use(bindEnv(Envapter, merge(Envapter.source, new PortableSource(this.values())), this.envDir));
     }
 
-    // the plugin's resolveLocalBindings uses the same rules. kv, d1 and the other resources have no node stand-in
+    // the plugin's resolveLocalBindings uses the same rules. kv, d1 and the other resources don't have a node stand-in
     public values(): Record<string, unknown> {
         const local = this.localVars();
         const values: Record<string, unknown> = {};

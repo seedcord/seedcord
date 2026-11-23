@@ -11,7 +11,7 @@ const VISIBLE_THRESHOLD = 0.9;
 /**
  * Tracks which TOC headings are at least 90% visible in the viewport.
  *
- * fumadocs-core's `useActiveAnchors` can drop a heading that is still fully visible. Its
+ * fumadocs-core's `useActiveAnchors` can mark a heading inactive while it is still fully visible. Its
  * internal Observer keeps one "nearest heading" guess active whenever nothing crosses the
  * threshold. That guess can revert to inactive on the next unrelated intersection batch,
  * even when the heading never left the viewport. Two headings visible at once then collapse
@@ -28,7 +28,7 @@ export function useVisibleHeadingIds(items: readonly TOCItemType[]): ReadonlySet
                 .filter((entry): entry is [string, HTMLElement] => entry[1] !== null)
         );
 
-        // GuideShell only mounts this hook's callers once the page has a non-empty toc
+        // GuidePage only mounts this hook's callers once the page has a non-empty toc
         if (elements.size === 0) return;
 
         const intersecting = new Set<string>();
@@ -36,7 +36,7 @@ export function useVisibleHeadingIds(items: readonly TOCItemType[]): ReadonlySet
         const observer = new IntersectionObserver(
             (entries) => {
                 for (const entry of entries) {
-                    // threshold only decides when the observer fires. isIntersecting is true at any overlap
+                    // threshold only sets when the observer calls back. isIntersecting is true at any overlap
                     if (entry.isIntersecting && entry.intersectionRatio >= VISIBLE_THRESHOLD)
                         intersecting.add(entry.target.id);
                     else intersecting.delete(entry.target.id);

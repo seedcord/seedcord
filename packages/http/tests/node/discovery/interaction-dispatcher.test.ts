@@ -1,9 +1,10 @@
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { PluginRegistry } from '@seedcord/core/internal';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
-import { resolve } from '#src/dispatch/resolve';
+import { resolve, routesOf } from '#src/dispatch/resolve';
 
 import { ConfirmId } from './fixtures/handlers/ConfirmControls';
 
@@ -12,7 +13,7 @@ import type { APIInteraction } from 'discord-api-types/v10';
 const HANDLERS_DIR = path.resolve(__dirname, './fixtures/handlers');
 
 async function readyDispatcher(): Promise<InteractionDispatcher> {
-    const dispatcher = new InteractionDispatcher(HANDLERS_DIR);
+    const dispatcher = new InteractionDispatcher(new PluginRegistry(), HANDLERS_DIR);
     await dispatcher.init();
     return dispatcher;
 }
@@ -23,7 +24,7 @@ function slashPayload(name: string): APIInteraction {
 }
 
 function registeredClassName(dispatcher: InteractionDispatcher, payload: APIInteraction): string | null {
-    const match = resolve(dispatcher.maps, payload);
+    const match = resolve(routesOf(dispatcher.maps), payload);
     if (!match || match.fallback) return null;
     return match.ctor.name;
 }
@@ -79,16 +80,16 @@ describe('http InteractionDispatcher discovery', () => {
     it('an unregistered route resolves to the unhandled default', async () => {
         const dispatcher = await readyDispatcher();
 
-        const match = resolve(dispatcher.maps, slashPayload('missing'));
+        const match = resolve(routesOf(dispatcher.maps), slashPayload('missing'));
         expect(match?.fallback).toBe(true);
     });
 
-    it('drops every route a handler owned when its file goes away', async () => {
+    it('removes every route a handler owned when its file is deleted', async () => {
         const dispatcher = await readyDispatcher();
 
         await dispatcher.onHmr({ type: 'delete', file: path.join(HANDLERS_DIR, 'PingCommand.ts') });
 
-        const match = resolve(dispatcher.maps, slashPayload('ping'));
+        const match = resolve(routesOf(dispatcher.maps), slashPayload('ping'));
         expect(match?.fallback).toBe(true);
     });
 });

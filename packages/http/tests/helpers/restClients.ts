@@ -1,6 +1,6 @@
 import { REST } from '@discordjs/rest';
 
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 interface FakeRestClient {
     readonly post: Mock;

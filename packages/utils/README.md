@@ -27,7 +27,7 @@
 
 Both seedcord transports depend on it and re-export it, so a bot imports these from its transport. Install it directly for the helpers in a plugin or any other project.
 
-seedcord is pre-1.0, so a minor version can break your code. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your code. Each release's changelog says what changed and how to update.
 
 ## Installation
 
@@ -64,7 +64,6 @@ const table = renderTable([
 | `roundToDenomination(num, opts?)` | `1234` to `'1.2K'` |
 | `timestampFromSnowflake(id)` | the time a Discord snowflake was created, in epoch ms |
 | `toEpochSeconds(ms)` | epoch ms to epoch seconds, the unit Discord's `<t:...>` markup reads |
-| `capitalize(word)` | first letter uppercase, the rest lowercase |
 | `longestStringLength(arr)` | the length of the longest element |
 | `prettify(key, opts?)` | `camelCase`, `PascalCase`, `snake_case`, or `kebab-case` to spaced words |
 | `prettyDifference(before, after)` | the difference as a string, with `+` in front when positive |
@@ -75,7 +74,6 @@ const table = renderTable([
 | `keepDefined(source, ...keys)` | copies the keys whose values aren't `undefined` or `null` |
 | `assertNever(value)` | a `switch` default that fails to compile when a case is missing |
 | `formatFilePath(path, opts?)` | a path relative to the working directory, like `./src/Bot.ts` |
-| `fyShuffle(items)` | a shuffled copy of the array |
 | `importFiles(dir)` | imports every code file under a folder, one at a time in a `for await` loop |
 | `readFiles(dir)` | reads every other file under a folder as a `Buffer`, one at a time in a `for await` loop |
 

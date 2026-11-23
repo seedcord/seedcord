@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { captureLogs } from '@seedcord/logger/internal';
+import { describe, it, expect, vi, afterEach } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { ShutdownPhase } from '#src/lifecycle/phases';
@@ -9,7 +9,7 @@ import type { SeedcordError } from '@seedcord/errors/internal';
 
 const DEADLINE_MS = 60;
 const TASK_TIMEOUT_MS = 10_000;
-// longer than the deadline, so the loop reaches the next phase only after run() has returned
+// longer than the deadline, to make the loop reach the next phase only after run() has returned
 const HUNG_TASK_TIMEOUT_MS = 150;
 
 const never = (): Promise<void> => new Promise<void>(() => undefined);
@@ -21,7 +21,7 @@ afterEach(() => {
 
 // run(_, false) leaves the process alive
 describe('CoordinatedShutdown deadline', () => {
-    it('takes the deadline from the constructor, before any startup runs', async () => {
+    it('takes the deadline from the constructor before any startup runs', async () => {
         const shutdown = new CoordinatedShutdown(DEADLINE_MS);
         shutdown.removeSignalHandlers();
         shutdown.addTask(ShutdownPhase.Unbind, 'hangs', never, TASK_TIMEOUT_MS);
@@ -131,7 +131,7 @@ describe('CoordinatedShutdown deadline', () => {
     });
 
     it('reports a failure it collected before the deadline passed', async () => {
-        const errors = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        using logs = captureLogs();
         const shutdown = new CoordinatedShutdown();
         shutdown.removeSignalHandlers();
         shutdown.setDeadline(DEADLINE_MS);
@@ -146,12 +146,11 @@ describe('CoordinatedShutdown deadline', () => {
 
         await shutdown.run(1, false);
 
-        const reported = errors.mock.calls.some((call) => call.some((arg) => String(arg).includes('shutdown failed')));
-        expect(reported).toBe(true);
+        expect(logs.at('error')).toContainEqual(expect.stringContaining('shutdown failed'));
     });
 
     it('reports the phase that was running when the deadline passed', async () => {
-        const errors = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        using logs = captureLogs();
         const shutdown = new CoordinatedShutdown();
         shutdown.removeSignalHandlers();
         shutdown.setDeadline(DEADLINE_MS);
@@ -159,15 +158,11 @@ describe('CoordinatedShutdown deadline', () => {
 
         await shutdown.run(1, false);
 
-        const named = errors.mock.calls.some((call) =>
-            call.some((arg) => String(arg).includes('deadline') && String(arg).includes('Drain'))
-        );
-        expect(named).toBe(true);
+        expect(logs.at('error')).toContainEqual(expect.stringMatching(/deadline.*Drain/));
     });
 
     it('withholds the success line when the deadline cut the phases short', async () => {
-        vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
-        const info = vi.spyOn(Logger.prototype, 'info').mockImplementation(() => undefined);
+        using logs = captureLogs();
         const shutdown = new CoordinatedShutdown();
         shutdown.removeSignalHandlers();
         shutdown.setDeadline(DEADLINE_MS);
@@ -175,24 +170,18 @@ describe('CoordinatedShutdown deadline', () => {
 
         await shutdown.run(1, false);
 
-        const claimedSuccess = info.mock.calls.some((call) => call.some((arg) => String(arg).includes('completed')));
-        expect(claimedSuccess).toBe(false);
+        expect(logs.at('info')).not.toContainEqual(expect.stringContaining('completed'));
     });
 
-    it('reports the phases a slow startup left no time for', async () => {
-        const errors = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
-        const info = vi.spyOn(Logger.prototype, 'info').mockImplementation(() => undefined);
+    it('reports the phases a slow startup left zero time for', async () => {
+        using logs = captureLogs();
         const shutdown = new CoordinatedShutdown(DEADLINE_MS);
         shutdown.removeSignalHandlers();
         shutdown.gateOnStartup(never());
 
         await shutdown.run(1, false);
 
-        const claimedSuccess = info.mock.calls.some((call) => call.some((arg) => String(arg).includes('completed')));
-        const named = errors.mock.calls.some((call) =>
-            call.some((arg) => String(arg).includes('deadline') && String(arg).includes('Unbind'))
-        );
-        expect(claimedSuccess).toBe(false);
-        expect(named).toBe(true);
+        expect(logs.at('info')).not.toContainEqual(expect.stringContaining('completed'));
+        expect(logs.at('error')).toContainEqual(expect.stringMatching(/deadline.*Unbind/));
     });
 });

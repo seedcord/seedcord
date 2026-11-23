@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { PurgeMode } from '#commands/commands/purge/PurgeMode';
 import { GLOBAL_SCOPE } from '#commands/commands/scope';
@@ -20,7 +20,7 @@ const scan: Scan = {
 };
 
 describe('PurgeMode', () => {
-    it('throws CliNoScopeGiven with no guilds and no global', () => {
+    it('throws CliNoScopeGiven without guilds or global', () => {
         expect(() => new PurgeMode(false).assertTargets({ kind: 'none' })).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CliNoScopeGiven })
         );

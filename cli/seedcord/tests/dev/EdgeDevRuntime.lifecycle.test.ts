@@ -6,7 +6,7 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { posixRelative } from '@seedcord/utils/internal';
 import { bindings, exports } from 'cf/config';
 import { Envapter } from 'envapt';
-import { assert, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { assert, beforeAll, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { DevRunner } from '#commands/dev/DevRunner';
@@ -205,7 +205,7 @@ ${text}`
             lock: new DevLock(locks.path, silentLogger),
             codegen: CodegenRunner.create(quietSteps, silentLogger, new ShellMode()),
             codegenLogger: silentLogger,
-            // justified: tunnel mode off routes nothing
+            // justified: tunnel mode off never routes
             tunnel: { route: () => undefined, stop: () => Promise.resolve() } as unknown as TunnelRouter,
             // justified: edgeConfig sets an edge target
             runtime: (target) => new EdgeDevRuntime(target as ResolvedEdgeTarget)
@@ -367,7 +367,7 @@ ${text}`
         });
     }, 60_000);
 
-    it('throws CliStartFailed when the worker answers a GET with something other than 405', async () => {
+    it("throws CliStartFailed when the worker doesn't answer seedcord's probe", async () => {
         await using project = await edgeProject();
         await writeFile(
             join(project.projectDir, 'src/bot.ts'),
@@ -376,7 +376,7 @@ ${text}`
 
         await expect(startedRuntime(project.projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliStartFailed,
-            message: expect.stringContaining('answered a GET with 200') as string
+            message: expect.stringContaining("answered seedcord's probe with 200") as string
         });
     }, 60_000);
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { SeedcordErrorCode } from '#src/index';
 import { SeedcordError } from '#src/internal.index';
@@ -72,7 +72,7 @@ describe('reply surface error codes', () => {
 
         const message = stripAnsi(error.message);
         expect(message).toContain('reply()');
-        expect(message).toContain('no message');
+        expect(message).toContain("didn't return a message");
         expect(message).toContain('route slash:ban');
     });
 });

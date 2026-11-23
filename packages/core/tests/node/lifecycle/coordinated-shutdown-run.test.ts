@@ -1,22 +1,18 @@
 import { setTimeout as delay } from 'node:timers/promises';
 
-import { Logger } from '@seedcord/logger';
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { captureLogs } from '@seedcord/logger/internal';
+import { describe, it, expect, vi } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { ShutdownPhase } from '#src/lifecycle/phases';
 
+import type { CapturedLogs } from '@seedcord/logger/internal';
+
 const SLOW_TASK_MS = 30;
 
-// a second spyOn on an already-spied method returns the existing mock, so an unrestored spy
-// carries the previous test's calls into this one
-afterEach(() => {
-    vi.restoreAllMocks();
-});
-
-function failureReport(errors: { mock: { calls: unknown[][] } }): string {
-    const call = errors.mock.calls.find(([msg]) => String(msg).includes('Coordinated shutdown failed'));
-    return call ? call.slice(1).map(String).join('\n') : '<no shutdown-failed log>';
+function failureReport(logs: CapturedLogs): string {
+    const record = logs.records.find(({ message }) => message.includes('Coordinated shutdown failed'));
+    return record?.args?.map(String).join('\n') ?? '<no shutdown-failed log>';
 }
 
 // run(_, false) leaves the process alive (dev mode)
@@ -25,7 +21,7 @@ describe('CoordinatedShutdown.run re-entrancy', () => {
         const shutdown = new CoordinatedShutdown();
         shutdown.removeSignalHandlers();
 
-        // same phase as the rejector, so allSettled still runs survivor before the phase throws
+        // allSettled still runs survivor before the phase throws because it's in the same phase as the rejector
         const survivor = vi.fn(() => Promise.resolve());
         shutdown.addTask(ShutdownPhase.Unbind, 'reject', () => Promise.reject(new Error('boom')), 1000);
         shutdown.addTask(ShutdownPhase.Unbind, 'survivor', survivor, 1000);
@@ -70,19 +66,19 @@ describe('CoordinatedShutdown.run phase resilience', () => {
         shutdown.addTask(ShutdownPhase.Disconnect, 'disconnect', disconnect, 1000);
         shutdown.addTask(ShutdownPhase.Logout, 'logout', logout, 1000);
 
-        const errors = vi.spyOn(Logger.prototype, 'error');
+        using logs = captureLogs();
 
         await expect(shutdown.run(0, false)).resolves.toBeUndefined();
 
         expect(disconnect).toHaveBeenCalledTimes(1);
         expect(logout).toHaveBeenCalledTimes(1);
-        expect(failureReport(errors)).toContain('Drain');
+        expect(failureReport(logs)).toContain('Drain');
     });
 
     it('reports every phase failure on the shutdown-failed log line', async () => {
         const shutdown = new CoordinatedShutdown();
         shutdown.removeSignalHandlers();
-        const errors = vi.spyOn(Logger.prototype, 'error');
+        using logs = captureLogs();
 
         shutdown.addTask(ShutdownPhase.Drain, 'drain-fail', () => Promise.reject(new Error('drain-boom')), 1000);
         shutdown.addTask(
@@ -94,7 +90,7 @@ describe('CoordinatedShutdown.run phase resilience', () => {
 
         await shutdown.run(0, false);
 
-        const reported = failureReport(errors);
+        const reported = failureReport(logs);
         expect(reported).toContain('Drain');
         expect(reported).toContain('Disconnect');
     });

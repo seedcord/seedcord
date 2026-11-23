@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 // Each getDocsEngine call returns a fresh engine. This reproduces the OG route handler, where React
 // cache() does not dedupe the engine the way it does inside a page render. loadEntityModel only finds
-// the node when setVersion ran on the SAME engine it receives, so resolveEntity must use one instance.
+// the node when setVersion ran on the SAME engine it receives. resolveEntity must use one instance.
 const { getEngineStub } = vi.hoisted(() => ({
     getEngineStub: vi.fn(() => {
         const engine = {
@@ -33,7 +33,7 @@ vi.mock('#lib/docs/loadEntityModel', () => ({
 const { resolveEntity } = await import('#lib/docs/resolveEntity');
 
 describe('resolveEntity', () => {
-    it('sets the version and loads the model on one engine instance, with no cache dedup', async () => {
+    it('sets the version and loads the model on one engine instance, without cache dedup', async () => {
         const resolved = await resolveEntity({
             packageId: 'core',
             versionId: '1.0.0',

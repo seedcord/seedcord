@@ -3,17 +3,18 @@ import { EventEmitter } from 'node:events';
 import { DiscordAPIError, RESTEvents } from '@discordjs/rest';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { assert, describe, expect, it, vi } from 'vitest';
+import { assert, describe, expect, it, vi } from 'vite-plus/test';
 
 import { putCommands } from '#src/commands/putCommands';
 import { GLOBAL_ID } from '#src/commands/scopes';
+import { CommonJsDiscordAPIError } from '#tests/utils/commonJsRest';
 
 import type { CommandBody } from '#src/commands/putCommands';
 import type { ScopeId } from '#src/commands/scopes';
 import type { DeployResult } from '#src/commands/types';
 import type { RateLimitData, REST } from '@discordjs/rest';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 const APP = 'app-1';
 const PING = { name: 'ping', description: 'Replies with Pong!' };
@@ -53,7 +54,7 @@ function rateLimitedRest(limited: (route: string) => RateLimitData): FakeRest {
 }
 
 // the errors @discordjs/rest throws for a 401 and for a body that fails discord's validation
-function discordRefusal(status: 400 | 401): DiscordAPIError {
+function discordRefusal(status: 400 | 401, ApiError: typeof DiscordAPIError = DiscordAPIError): DiscordAPIError {
     const rawError =
         status === 401
             ? { message: '401: Unauthorized', code: 0 }
@@ -66,7 +67,7 @@ function discordRefusal(status: 400 | 401): DiscordAPIError {
                       }
                   }
               };
-    return new DiscordAPIError(rawError, rawError.code, status, 'PUT', 'https://discord.com/api/v10', {});
+    return new ApiError(rawError, rawError.code, status, 'PUT', 'https://discord.com/api/v10', {});
 }
 
 async function deployFailure(scope: ScopeId, refusal: DiscordAPIError): Promise<Error> {
@@ -100,7 +101,7 @@ describe('putCommands', () => {
         expect(result.get(GLOBAL_ID)?.get('123')?.name).toBe('ping');
     });
 
-    it('puts each guild to its own route and leaves the global scope alone when none is given', async () => {
+    it("puts each guild to its own route and doesn't touch the global scope when none is given", async () => {
         const put: Put = vi.fn().mockResolvedValue(deployedAs('g-1', 'config'));
 
         const result = await deploy([['111', [CONFIG]]], restWith(put)).deploying;
@@ -117,7 +118,7 @@ describe('putCommands', () => {
         expect(put).toHaveBeenCalledWith(Routes.applicationCommands(APP), { body: [], signal: undefined });
     });
 
-    it('puts nothing when no scope is given', async () => {
+    it('skips the put for an empty scope list', async () => {
         const put = vi.fn();
 
         const result = await deploy([], restWith(put)).deploying;
@@ -167,8 +168,11 @@ describe('putCommands', () => {
         expect(error.message).toContain('description and options');
     });
 
-    it('points at the token when discord rejects it during the global deploy', async () => {
-        const { message } = await deployFailure(GLOBAL_ID, discordRefusal(401));
+    it.each([
+        ['', DiscordAPIError],
+        [", from a gateway bot's rest", CommonJsDiscordAPIError]
+    ])('points at the token when discord rejects it during the global deploy%s', async (_rest, ApiError) => {
+        const { message } = await deployFailure(GLOBAL_ID, discordRefusal(401, ApiError));
 
         expect(message).toContain('401: Unauthorized');
         expect(message).toContain('DISCORD_BOT_TOKEN');

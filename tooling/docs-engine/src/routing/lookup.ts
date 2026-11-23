@@ -2,8 +2,8 @@ import type { GlobalId } from '#src/ids';
 import type { EntityTone } from '#src/tones';
 import type { DocNode, DocPackageModel } from '#src/types';
 
-// Callers keep the `getNodeByGlobalSlug(...) ?? getNodeBySlug(...)` fallback. The lazy engine aliases
-// the two, so either can return a node where the other returns null.
+// Callers keep the `getNodeByGlobalSlug(...) ?? getNodeBySlug(...)` fallback because the lazy engine
+// aliases the two, and either can return a node where the other returns null.
 export interface NodeLookup {
     getNodeByKey(key: GlobalId): DocNode | null;
     getNodeBySlug(packageName: string, slug: string): DocNode | null;
@@ -28,7 +28,7 @@ export interface PackageRegistry {
     // Ordered: hinted, then current, then the loaded set.
     candidatePackages(currentPackage: string, hinted?: string): string[];
     // Returns `slug`'s URL parts when its entity is listed in `fullName`'s index entry. A param or
-    // predicate slug returns null, since only real entities get indexed.
+    // predicate slug returns null since only real entities get indexed.
     crossPackageEntity(fullName: string, slug: string): CrossPackageEntity | null;
 }
 

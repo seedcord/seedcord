@@ -1,5 +1,5 @@
 import { CustomId, defineGate } from '@seedcord/core';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { Gated } from '#bDecorators/Gated';
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';

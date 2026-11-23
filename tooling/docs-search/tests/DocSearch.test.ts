@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { DocKind } from '#src/DocKind';
 import { DocSearch } from '#src/DocSearch';
@@ -20,11 +20,11 @@ function entry(name: string, overrides: Partial<DocSearchEntry> = {}): DocSearch
 }
 
 describe('DocSearch', () => {
-    it.each(['', ' \t ', 'zzzzzzzz'])('returns no results for %j', (query) => {
+    it.each(['', ' \t ', 'zzzzzzzz'])('returns zero results for %j', (query) => {
         expect(new DocSearch([entry('Bus')]).search(query)).toEqual([]);
     });
 
-    it('ranks exact names ahead of member and prefix matches', () => {
+    it('ranks exact names higher than member and prefix matches', () => {
         const prefix = entry('BusFactory');
         const exact = entry('Bus', { kind: DocKind.Interface });
         const member = entry('Bus', { kind: DocKind.Method, qualifiedName: 'Manager.Bus', slug: 'manager/bus' });

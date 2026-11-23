@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { buildIndex } from '#remote/index-builder';
 import { validateIndex } from '#remote/index-json';
@@ -43,7 +43,7 @@ describe('buildIndex', () => {
         expect(index.packages.x?.prerelease).toEqual({ latest: '1.0.0-next.1' });
     });
 
-    it('drops invalid version strings', () => {
+    it('skips invalid version strings', () => {
         const index = buildIndex([{ folder: 'x', fullName: '@s/x', versions: ['1.0.0', 'not-a-version', ''] }], {
             updatedAt: UPDATED_AT
         });
@@ -52,7 +52,7 @@ describe('buildIndex', () => {
         expect(index.packages.x?.prerelease).toBeNull();
     });
 
-    it('carries the entity slug -> tone map onto the entry', () => {
+    it('copies the entity slug -> tone map onto the entry', () => {
         const index = buildIndex(
             [{ folder: 'x', fullName: '@s/x', versions: ['1.0.0'], entities: { logger: 'class', core: 'interface' } }],
             { updatedAt: UPDATED_AT }
@@ -69,7 +69,7 @@ describe('buildIndex', () => {
         expect(index.packages.x?.entities).toBeUndefined();
     });
 
-    it('carries the package description onto the entry', () => {
+    it('copies the package description onto the entry', () => {
         const index = buildIndex(
             [{ folder: 'x', fullName: '@s/x', versions: ['1.0.0'], description: 'Utility helpers for seedcord.' }],
             { updatedAt: UPDATED_AT }
@@ -90,7 +90,7 @@ describe('buildIndex', () => {
             { updatedAt: UPDATED_AT }
         );
 
-        // eslint-disable-next-line unicorn/prefer-structured-clone -- exercises the JSON wire round-trip the remote docs format uses
+        // eslint-disable-next-line unicorn/prefer-structured-clone -- tests the JSON wire round-trip the remote docs format uses
         const reparsed = validateIndex(JSON.parse(JSON.stringify(built)));
         expect(reparsed.packages.x?.description).toBe('Survives serialize + re-read.');
     });

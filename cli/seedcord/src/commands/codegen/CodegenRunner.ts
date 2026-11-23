@@ -2,9 +2,10 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
+import { expectedEmojis } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { HostAugmentTarget, HostPluginKeys, type SeedcordInstance } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostPlugins, type SeedcordInstance } from '@seedcord/types/internal';
 import { importSpecifier } from '@seedcord/utils/internal';
 
 import { openProjectWithSteps } from '#core/config/openProjectWithSteps';
@@ -26,7 +27,8 @@ import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Steps } from '#core/output/Steps';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { ScannedCommand } from './AugmentationBuilder';
-import type { PluginTypeTable } from './renderAugmentation';
+import type { EmojiTags, PluginTypeTable } from './renderAugmentation';
+import type { ExpectedEmoji } from '@seedcord/core/internal';
 import type { ILogger } from '@seedcord/types';
 
 const OUTPUT_FILENAME = 'seedcord-gen.ts';
@@ -52,6 +54,10 @@ type CodegenStep = (typeof CODEGEN_STEPS)[number];
 interface CodegenResult {
     outputPath: string;
     changed: boolean;
+}
+
+function emojiTags(expected: readonly ExpectedEmoji[]): EmojiTags {
+    return Object.fromEntries(expected.map(({ key, kind }) => [key, kind]));
 }
 
 interface CodegenRunnerDeps {
@@ -94,7 +100,10 @@ export class CodegenRunner {
         const commandsPath = instance.config.bot.commands.path;
         const commands = await steps.step(
             'scan commands',
-            () => (commandsPath ? new CommandScanner(modules, files).scan(commandsPath) : Promise.resolve([])),
+            () =>
+                commandsPath
+                    ? new CommandScanner(modules, files, instance[HostPlugins]).scan(commandsPath)
+                    : Promise.resolve([]),
             (found) => paint.mute(plural(found.length, 'command'))
         );
 
@@ -103,27 +112,29 @@ export class CodegenRunner {
         );
 
         const outputPath = resolve(config.root, OUTPUT_FILENAME);
-        const render = (): string => this.render(config, instance, commands, types);
+        const render = (): Promise<string> => this.render(config, instance, commands, types);
         if (check) {
-            await steps.step('compare types', () => this.check(render(), outputPath));
+            await steps.step('compare types', async () => this.check(await render(), outputPath));
             return { outputPath, changed: false };
         }
 
-        const changed = await steps.step('write types', () => this.write(render(), outputPath));
+        const changed = await steps.step('write types', async () => this.write(await render(), outputPath));
         return { outputPath, changed };
     }
 
-    private render(
+    private async render(
         config: ResolvedSeedcordConfig,
         instance: SeedcordInstance,
         commands: ScannedCommand[],
         types: PluginTypeTable
-    ): string {
-        const emojis = instance.config.bot.emojis ?? {};
-        return renderAugmentation(this.deps.generator.generate(commands, emojis), instance[HostAugmentTarget], {
+    ): Promise<string> {
+        const tables = this.deps.generator.generate(commands);
+        const emojis = emojiTags(await expectedEmojis(instance.config.bot.emojis));
+        return renderAugmentation({ ...tables, emojis }, instance[HostAugmentTarget], {
             specifier: importSpecifier(config.root, config.instance),
-            keys: instance[HostPluginKeys],
-            types
+            keys: instance[HostPlugins].keys,
+            types,
+            members: instance[HostPlugins].members
         });
     }
 

@@ -1,9 +1,9 @@
 ---
 title: Components
-description: Build the components your bot sends, like buttons, rows, and containers, as classes over the discord.js builders, with your bot color and emojis by name.
+description: Build the components that your bot sends, like buttons, rows, and containers, as classes over the discord.js builders, with your bot color and emojis by name.
 ---
 
-A line of text needs nothing more than `this.reply('Banned.')`. A container with a heading, a body, and a row of buttons under it needs a discord.js builder. You put that builder in a class.
+A line of text needs only `this.reply('Banned.')`. A container with a heading, a body, and a row of buttons under it needs a discord.js builder. You put that builder in a class.
 
 Subclass [`BuilderComponent`](ref:core/BuilderComponent), name the builder you want in the generic and in the `super()` call, and build the thing in the constructor.
 
@@ -22,7 +22,7 @@ export class BanCard extends BuilderComponent<'container'> {
 }
 ```
 
-`'container'` appears twice up there, once in the generic and once in the `super()` call. The `super()` argument picks which builder gets constructed. The generic types `this.instance` as that builder. A `ContainerBuilder` declares no `setTitle`, so calling one stops the build.
+`'container'` appears twice up there, once in the generic and once in the `super()` call. The `super()` argument picks which builder gets constructed. The generic types `this.instance` as that builder. `ContainerBuilder` doesn't have `setTitle`, so calling it will stop the build.
 
 Write the two the same. The compiler rejects a mismatch.
 
@@ -30,7 +30,7 @@ Write the two the same. The compiler rejects a mismatch.
 
 To reword the card, you change one line in `BanCard.ts`. Every handler that sends one gets the new wording.
 
-`this.instance` stays protected, so your handler reads `.component` to get the builder out.
+`this.instance` is protected, so your handler reads `.component` to get the builder out.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -63,7 +63,7 @@ Reading `.component` also applies your [bot color](#your-bot-color). The color r
 
 seedcord imports your commands, handlers, events, and subscribers from the paths you set in your bot config. Your own code imports a component directly, so your config never mentions that folder. Make one anyway, at `src/components`, and think in building blocks.
 
-A container is a building block, and so is a text display or a row of buttons. A modal is a building block, and a row of inputs is another. Maybe you have a menu builder that dynamically creates its values, or you want to create items in one conditionally. Each one is a `BuilderComponent` subclass in that folder. Your handlers import the ones they send.
+A container is a building block, and so is a text display, a row of buttons, a modal, or a row of inputs. So is a menu builder that creates its values dynamically or adds items conditionally. Each one is a `BuilderComponent` subclass in that folder. Your handlers import the ones they send.
 
 For example, you put a `BanCard` and a `BanActions` row of buttons in that folder, and your `Ban` handler imports both.
 
@@ -81,7 +81,7 @@ src/
 
 ## A row of buttons
 
-`ActionRowBuilder` is generic over what goes inside it, so a row you build by hand writes the child builder into the type every time. [`RowComponent`](ref:core/RowComponent) takes a key and does that for you, typing `this.instance` to whatever the row holds. A row holds buttons or one select menu.
+`ActionRowBuilder` is generic over the components inside it, so a row you build by hand writes the child builder into the type every time. [`RowComponent`](ref:core/RowComponent) takes a key and does that for you, typing `this.instance` to whatever the row holds. A row holds buttons or one select menu.
 
 ```ts twoslash title="src/components/BanActions.ts"
 import { ButtonBuilder } from '@discordjs/builders';
@@ -112,7 +112,7 @@ Keep that declaration in the file with the component that encodes it. Both sides
 
 <Callout type="warning">
 
-Import every builder from `@discordjs/builders`. discord.js re-exports its own CJS copy of each one, so the two copies are always different classes. Nesting one inside the other is where that shows, because `instanceof` returns false and `toJSON` misbehaves.
+Import every builder from `@discordjs/builders`. discord.js re-exports its own CJS copy of each one, so the two copies are always different classes. Nesting one inside the other is where that shows because `instanceof` returns false and `toJSON` misbehaves.
 
 The `@seedcord/no-djs-builder-import` lint rule flags every runtime import of a builder from `discord.js`. A type-only import is erased before runtime so that one is safe.
 
@@ -167,9 +167,9 @@ export const seedcord = new Seedcord({
 });
 ```
 
-Reading `.component` applies it. An embed takes it as its color, and a container takes it as its accent. Every other builder gets nothing, since nothing else carries one.
+Reading `.component` applies it. An embed takes it as its color, and a container takes it as its accent. Every other builder is unaffected since nothing else has one.
 
-Set your own in the constructor, with `setColor` on an embed or `setAccentColor` on a container. The check only fills an empty color, so yours survives.
+Set your own in the constructor, with `setColor` on an embed or `setAccentColor` on a container. The check only fills an empty color without overwriting yours.
 
 ```ts twoslash title="src/components/MaintenanceEmbed.ts"
 import { BuilderComponent } from '@seedcord/gateway';
@@ -189,15 +189,28 @@ Discord forbids an embed on a ComponentsV2 message, which is what seedcord's rep
 
 `botColor` accepts a `#hex` string, a discord.js color name like `'Blurple'`, a raw integer, or an `[r, g, b]` tuple. Leave the key out for Discord's default.
 
-Your color might only be known after the bot exists, because it comes from a settings file one of your plugins loads. Assign it to `seedcord.config.botColor` then. From then on, every `.component` you read uses the new color.
+Your color might only be known after the bot exists because it comes from a settings file one of your plugins loads. Assign it to `seedcord.config.botColor` then. From then on, every `.component` you read uses the new color.
 
 ## Emojis by name
 
-You've gone hunting for an emoji id before. Copy `<:streak_flame:1872389747982323426>` out of the client, paste it into a constants file, then do the next one. From then on you keep that file in sync by hand.
+Discord takes a custom emoji in a message as `<:streak_flame:1872389747982323426>`. By hand, you'd copy each of those out of the client into a constants file and keep that file in sync yourself.
 
-A re-upload gives the emoji a new id, so every copy of the old one points at nothing. A rename leaves the name in your code out of step with the one in Discord. Some emojis come from your app and some from one guild, so each of those is its own lookup.
+A re-upload gives the emoji a new id, so every copy of the old one points at nothing. A rename leaves the name in your code out of step with the one in Discord. Some emojis come from your app and some from one guild, and each of those is its own lookup.
 
-seedcord does those lookups for you, once, while the bot starts. Name each custom emoji in your config, then read it back by that name.
+seedcord does those lookups for you once while the bot starts. Put your images in an `emojis` folder beside `seedcord.config.ts`. Once they're uploaded, you read each one by its file name.
+
+```txt
+emojis/
+├── confirm.png
+├── cancel.png
+└── reactions/
+    ├── 1up.png
+    └── party_parrot.gif
+```
+
+Run [`seedcord emojis push`](/tooling/emojis) to upload them to your application. A file's name is the emoji's name on Discord. Its key in your code is that name in PascalCase, so `confirm.png` gets `Emojis.Confirm` and `party_parrot.gif` gets `Emojis.PartyParrot`. A key that starts with a digit needs brackets, like `Emojis['1Up']` for `1up.png`. A subfolder's name isn't part of either one. The folder is `./emojis` unless [`emojis.dir`](/tooling/emojis#before-you-run-it) moves it.
+
+Some emojis can't come from a file, like one that belongs to a guild. Give those a key in `bot.emojis`. `seedcord emojis` doesn't upload these since it only reads the folder.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -218,17 +231,19 @@ export const seedcord = new Seedcord({
         ...shared,
         events: { path: null },
         emojis: {
-            Confirm: 'confirmation_check',
-            Cancel: 'confirmation_cross',
-            // or look up an emoji in a guild your bot is in
-            Streak: ['streak_flame', '1872389747982323426']
+            // an emoji in a guild your bot is in
+            Streak: ['streak_flame', '1872389747982323426'],
+            // a second key for the emoji that confirm.png uploads
+            Yes: 'confirm'
         }
     },
     subscribers: { path: null }
 });
 ```
 
-A plain string is the name of an application emoji, one you upload to your app in the developer portal. Run `seedcord codegen` after you change that block. It writes the key names into [`EmojiMap`](ref:types/EmojiMap), which types the [`Emojis`](ref:gateway/Emojis) accessor.
+With a `[name, guildId]` pair, seedcord looks the emoji up in that guild. A plain string is the name of an application emoji, under whatever key you like. One key can't come from both places, though. If the folder and this block both define `Confirm`, startup throws and shows you the key.
+
+Run `seedcord codegen` after you add a file or change that block. It writes the key names into [`EmojiMap`](ref:types/EmojiMap), which types the [`Emojis`](ref:gateway/Emojis) accessor.
 
 Your editor then offers those keys the moment you type the dot.
 
@@ -277,17 +292,17 @@ class ConfirmRow extends RowComponent<'button'> {
 }
 ```
 
-seedcord stops startup when a name won't resolve, and the error carries every failure at once. `Emojis` throws when you read a key before startup fills it.
+seedcord stops startup when a name won't resolve, and the error lists every failure at once. For a file you haven't uploaded yet, it tells you to run `seedcord emojis push`. An edge bot gets its ids at build time, so there `seedcord build` fails with the same error. [Workers](/build/workers) has the order. `Emojis` throws when you read a key before startup fills it.
 
 <Callout type="transport" only="gateway">
 
-A `[name, guildId]` emoji needs the `Guilds` intent, since seedcord reads that guild's emoji list off the discord.js client cache. Without it startup reports the guild as unavailable. On http the same tuple resolves over one REST call to that guild's emoji route.
+A `[name, guildId]` emoji needs the `Guilds` intent since seedcord reads that guild's emoji list off the discord.js client cache. Without it startup reports the guild as unavailable. On http the same tuple resolves over one REST call to that guild's emoji route.
 
 </Callout>
 
 <Callout type="transport">
 
-On gateway, each one is a [`GatewayEmoji`](ref:gateway/GatewayEmoji). In the example above, `Emojis.Streak` carries a `.source` holding the live discord.js `GuildEmoji` or `ApplicationEmoji`, typed per key from the tag codegen wrote. On http it is a plain [`ResolvedEmoji`](ref:core/ResolvedEmoji) with the name, the id, and the animated flag. Both stringify and both pass to `setEmoji`.
+On gateway, each one is a [`GatewayEmoji`](ref:gateway/GatewayEmoji). In the example above, `Emojis.Streak` has a `.source` holding the live discord.js `GuildEmoji` or `ApplicationEmoji`, typed per key from the tag codegen wrote. On http it is a plain [`ResolvedEmoji`](ref:core/ResolvedEmoji) with the name, the id, and the animated flag. Both stringify and both pass to `setEmoji`.
 
 </Callout>
 
@@ -299,4 +314,4 @@ Three things differ from a `BuilderComponent`:
 
 - **On Workers, keep renders out of the files that `bot.ts` imports.** Those files load at global scope, where Cloudflare blocks random values, and the renderer generates random ids. Handler files can render while they load.
 - **Set the color yourself.** `botColor` only applies when you read `.component`, so pass `accent_color` on each `Container`.
-- **Answer clicks with a [button handler](/components/buttons).** Set the button's `custom_id` with `encode()` from a [`CustomId`](ref:custom-id/CustomId), since the handler's route only matches those. `onClick` requires dressed's own callback handler, which seedcord doesn't run, so leave that out.
+- **Answer clicks with a [button handler](/components/buttons).** Set the button's `custom_id` with `encode()` from a [`CustomId`](ref:custom-id/CustomId) since the handler's route only matches those. `onClick` requires dressed's own callback handler, which seedcord doesn't run, so leave that out.

@@ -1,5 +1,5 @@
 import { buildIndex } from '@seedcord/docs-engine';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { buildUnionInputs, type EmittedEntry } from '#src/docs/union-inputs';
 
@@ -7,8 +7,8 @@ import type { IndexJson, PackageVersionsInput } from '@seedcord/docs-engine';
 
 const UPDATED_AT = '2026-06-06T00:00:00.000Z';
 
-// A real remote index is produced by buildIndex, so building the fixtures the same way exercises the
-// round-trip the additive merge relies on: heads -> versions -> heads.
+// building the fixtures through buildIndex, which produces a real remote index, tests the round-trip
+// the additive merge relies on: heads -> versions -> heads.
 function remoteWith(...packages: PackageVersionsInput[]): IndexJson {
     return buildIndex(packages, { updatedAt: UPDATED_AT });
 }
@@ -39,14 +39,14 @@ function versionSet(inputs: readonly PackageVersionsInput[], folder: string): Se
 }
 
 describe('buildUnionInputs', () => {
-    it('returns only the emitted versions when there is no remote index (first publish)', () => {
+    it('returns only the emitted versions when the remote index is missing (first publish)', () => {
         const inputs = buildUnionInputs(null, [emit('seedcord', '0.11.0-next.0')]);
 
         expect(inputs).toHaveLength(1);
         expect(inputs[0]).toMatchObject({ folder: 'seedcord', fullName: 'seedcord', versions: ['0.11.0-next.0'] });
     });
 
-    it('unions every remote line head with the newly emitted version, dropping nothing', () => {
+    it('unions every remote line head with the newly emitted version, keeping every remote version', () => {
         const remote = remoteWith({ folder: 'seedcord', fullName: 'seedcord', versions: ['0.8.7', '0.9.4', '0.10.6'] });
 
         const inputs = buildUnionInputs(remote, [emit('seedcord', '0.11.0-next.0')]);
@@ -121,7 +121,7 @@ describe('buildUnionInputs', () => {
         expect(inputs.find((input) => input.folder === 'seedcord')?.entities).toEqual({ fresh: 'interface' });
     });
 
-    it('adds a brand-new package that is absent from the remote index, leaving others untouched', () => {
+    it('adds a brand-new package that is absent from the remote index, without touching the others', () => {
         const remote = remoteWith({ folder: 'seedcord', fullName: 'seedcord', versions: ['0.10.6'] });
 
         const inputs = buildUnionInputs(remote, [
@@ -188,7 +188,7 @@ describe('buildUnionInputs', () => {
         expect(inputs.find((input) => input.folder === 'utils')?.workspace).toBe('packages');
     });
 
-    it('carries the emitted workspace through to the rebuilt index', () => {
+    it('passes the emitted workspace through to the rebuilt index', () => {
         const inputs = buildUnionInputs(null, [
             emit('mongoose', '0.1.0', { fullName: '@seedcord/plugin-mongoose', workspace: 'plugins' })
         ]);

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vite-plus/test';
 
 import { TypedEventEmitter } from '#src/TypedEventEmitter';
 
@@ -16,7 +16,7 @@ describe('TypedEventEmitter core', () => {
         expect(seen).toEqual([7]);
     });
 
-    it('emit returns false when the event has no listeners', () => {
+    it('emit returns false for an event without listeners', () => {
         const ee = new TypedEventEmitter<Events>();
         expect(ee.emit('pong')).toBe(false);
     });

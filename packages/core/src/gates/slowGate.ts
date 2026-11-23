@@ -1,11 +1,12 @@
 import { paint } from '@seedcord/errors';
 import { Envapter } from 'envapt';
 
+import { ACK_DEADLINE_MS } from '#reply/ackLegality';
 import { lazyLogger } from '#src/miscellaneous/lazyLogger';
 
 import type { GateObserver } from './runGates';
 
-// combined check time slower than this cuts into the 3s interaction-ack budget
+// past this total, the gate checks leave little of discord's ack deadline for the handler
 const SLOW_GATE_MS = 750;
 
 const logger = lazyLogger('Gates', { channel: 'gates' });
@@ -19,7 +20,7 @@ interface SlowGateMonitor {
     report(declaredRoute: string | null): void;
 }
 
-// undefined in production, so timedCheck skips the clock there. read per call, the environment binds late
+// undefined in production, where timedCheck skips the clock. read per call because the environment binds late
 export function slowGateMonitor(): SlowGateMonitor | undefined {
     if (Envapter.isProduction) return undefined;
     const readings: { name: string; ms: number }[] = [];
@@ -32,8 +33,8 @@ export function slowGateMonitor(): SlowGateMonitor | undefined {
                 .toSorted((a, b) => b.ms - a.ms)
                 .map((reading) => `${paint.sky.bold(reading.name)} ${paint.mute(`${Math.round(reading.ms)}ms`)}`);
             const route = declaredRoute === null ? '' : ` for ${paint.sky.bold(declaredRoute)}`;
-            const headline = `gates${route} took ${paint.amber(`${Math.round(total)}ms`)} of the 3s ack budget`;
-            logger().utils.block(headline, shares, 'warn', (text) => text);
+            const headline = `gates${route} took ${Math.round(total)}ms of the ${ACK_DEADLINE_MS / 1000}s ack budget`;
+            logger().utils.block(headline, shares, 'warn');
         }
     };
 }

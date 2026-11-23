@@ -13,7 +13,7 @@ export interface EmittedEntry {
 }
 
 // The index stores only line heads (stable.latest, latestByMinor/Major, prerelease.latest). For the pre-1.0
-// "latest patch per minor" axis those heads are the kept set, so remote heads plus emitted versions is the
+// "latest patch per minor" axis those heads are the kept set. Remote heads plus emitted versions is the
 // complete union.
 export function buildUnionInputs(remote: IndexJson | null, emitted: readonly EmittedEntry[]): PackageVersionsInput[] {
     const byFolder = new Map<
@@ -56,7 +56,7 @@ export function buildUnionInputs(remote: IndexJson | null, emitted: readonly Emi
         };
         current.versions.add(e.version);
         // the docs site reads this map as the symbols the newest stable version documents. a prerelease
-        // or a backport to an older minor leaves the remote map alone
+        // or a backport to an older minor doesn't replace the remote map
         if (e.version === newestStable([...current.versions])) current.entities = e.entities;
         current.description = e.description;
         current.workspace = e.workspace;

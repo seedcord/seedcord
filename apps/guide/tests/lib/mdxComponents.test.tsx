@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { mdxComponents } from '#lib/mdxComponents';
 import { MAPPED_TAGS } from '#lib/remarkNoMappedJsx';
@@ -38,13 +38,13 @@ describe('a fence', () => {
         expect(screen.getByText('src/commands/Ping.ts')).toBeInTheDocument();
     });
 
-    it('draws no caption when the fence gives no title', async () => {
+    it('omits the caption when the fence is untitled', async () => {
         await renderFence({ className: 'language-ts' });
 
         expect(screen.queryByText('src/commands/Ping.ts')).toBeNull();
     });
 
-    it('drops the copy button on a fence tagged as output', async () => {
+    it('removes the copy button from a fence tagged as output', async () => {
         await renderFence({ className: 'language-bash', 'data-output': '' });
 
         expect(screen.queryByRole('button', { name: /Copy/ })).toBeNull();
@@ -71,7 +71,7 @@ describe('a shell block', () => {
         expect(screen.getByRole('button', { name: /Copy/ })).toBeInTheDocument();
     });
 
-    it('refuses a block with no command', async () => {
+    it('refuses a block without a command', async () => {
         await expect(Shell({ before: 'cd my-bot' })).rejects.toThrow('at least one');
     });
 });
@@ -104,7 +104,7 @@ describe('a link', () => {
         expect(screen.getByRole('link')).toHaveAccessibleName('gateway or http');
     });
 
-    it('keeps the title a link in the guide carries', () => {
+    it("keeps a guide link's title", () => {
         render(
             <Link href="/gateway-or-http" title="Pick a transport">
                 gateway or http
@@ -116,7 +116,7 @@ describe('a link', () => {
 });
 
 describe('the image component', () => {
-    // a plain <img> gets no basePath from next
+    // next doesn't add the basePath to a plain <img>
     it('loads a file from public/ under the guide path', () => {
         render(<Image src="/portal-token.webp" alt="token" />);
 
@@ -132,7 +132,7 @@ describe('the image component', () => {
         );
     });
 
-    it('draws no border by default', () => {
+    it("doesn't draw the border by default", () => {
         render(<Image src="/logo.svg" alt="bare" />);
 
         expect(borderWidthOf('bare')).toBeUndefined();
@@ -185,7 +185,7 @@ describe('the image component', () => {
         expect(classesOf('classy')).toContain('test-only-marker');
     });
 
-    // mdx does not typecheck the props a page writes
+    // mdx doesn't typecheck the props that a page writes
     it.each(['frame', 'align'])('refuses an unknown %s', (prop) => {
         expect(() => render(<Image src="/logo.svg" alt="typo" {...{ [prop]: 'nonsense' }} />)).toThrow('nonsense');
     });

@@ -5,7 +5,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { posixRelative } from '@seedcord/utils/internal';
 import chalk from 'chalk';
-import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { fakeDiscordApi } from '#tests/fakeDiscordApi';
 
@@ -96,7 +96,7 @@ describe('EdgeDevRuntime hot reload', () => {
         ['dist', 'dist', 'written.js'],
         ['.seedcord', '.seedcord', 'written.js'],
         ['.cloudflare', '.cloudflare', 'written.js']
-    ])('leaves %s out of hot reload', async (_shown, folder, file) => {
+    ])("doesn't hot reload %s", async (_shown, folder, file) => {
         const handler = `src/handlers/Touched${folder.replaceAll(/\W/g, '')}.ts`;
 
         await mkdir(join(projectDir, folder), { recursive: true });
@@ -135,7 +135,7 @@ describe('EdgeDevRuntime logs', () => {
 
     it("writes the worker's logs to the session's log file after a server session reset the logger", async () => {
         asDevelopment();
-        // what ServerHost.reset leaves behind
+        // the logger state after ServerHost.reset
         LoggerChannelRegistry.instance.configure({});
         await using project = await edgeProject();
         const { projectDir } = project;

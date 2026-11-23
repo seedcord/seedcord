@@ -2,30 +2,15 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { paint } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { levelMark } from '#core/output/levelMark';
 import { StepPrinter } from '#core/output/StepPrinter';
+import { fakeTerminal } from '#tests/fakeTerminal';
 
-import type { Terminal } from '#core/output/terminal';
 import type { ILogSink, LogRecord } from '@seedcord/types';
 
-interface FakeTerminal extends Terminal {
-    readonly text: () => string;
-}
-
-function pipedTerminal(): FakeTerminal {
-    let written = '';
-    return {
-        isTTY: false,
-        columns: 80,
-        write: (chunk: string | Uint8Array) => {
-            written += String(chunk);
-            return true;
-        },
-        text: () => stripVTControlCharacters(written)
-    };
-}
+type FakeTerminal = ReturnType<typeof fakeTerminal>;
 
 class ConsoleSink implements ILogSink {
     public readonly kind = 'console';
@@ -45,8 +30,8 @@ function printer(verbose = false): StepPrinter<'config' | 'type check'> {
 }
 
 beforeEach(() => {
-    stdout = pipedTerminal();
-    stderr = pipedTerminal();
+    stdout = fakeTerminal();
+    stderr = fakeTerminal();
 });
 
 afterEach(() => {
@@ -140,7 +125,7 @@ describe('StepPrinter', () => {
         registry.reset();
         registry.configure({ level: 'trace', sinks: [new ConsoleSink()] });
         let raw = '';
-        stdout = { ...pipedTerminal(), isTTY: true, write: (chunk) => (raw += String(chunk)).length > 0 };
+        stdout = { ...fakeTerminal(80), write: (chunk) => (raw += String(chunk)).length > 0 };
 
         await printer().step('config', () => {
             new Logger('Bot').warn('cache is stale');

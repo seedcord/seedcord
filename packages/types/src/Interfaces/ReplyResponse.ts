@@ -1,8 +1,8 @@
 import type { UUID } from '#src/uuid';
-import type { DispatchBag } from './Dispatch';
+import type { DispatchBag, DispatchMemberValues } from './Dispatch';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
-/** A ComponentsV2 top-level component, as discord.js accepts it in a message's `components` field. */
+/** A ComponentsV2 top-level component as discord.js accepts it in a message's `components` field. */
 export interface V2Component {
     toJSON(): APIMessageTopLevelComponent;
 }
@@ -41,15 +41,15 @@ export interface ReplyFile {
 }
 
 /**
- * A ComponentsV2 reply. Discord's components-v2 flag forbids `content`, `embeds`, `stickers`, and `poll`,
- * so a reply carries only `components` plus the v2-compatible `allowedMentions` and `files`.
+ * A ComponentsV2 reply. A reply has only `components` plus the v2-compatible `allowedMentions` and
+ * `files` because Discord's components-v2 flag forbids `content`, `embeds`, `stickers`, and `poll`.
  *
  * @typeParam TNative - Extra file forms one transport accepts beyond {@link ReplyFile}. `@seedcord/gateway`
  * binds the discord.js file forms and exports that as `GatewayReplyResponse`. A reply built from
  * {@link ReplyFile} alone assigns to either transport.
  */
 export interface ReplyResponse<TNative = never> {
-    /** The component tree the reply renders from, as builders or as the raw json Discord's API takes. */
+    /** The component tree the reply renders from as builders or as the raw json Discord's API takes. */
     readonly components: (V2Component | APIMessageTopLevelComponent)[];
     /** Which mentions written inside the components resolve into real pings. */
     readonly allowedMentions?: ReplyAllowedMentions;
@@ -61,7 +61,7 @@ export interface ReplyResponse<TNative = never> {
  * Context passed into a denial's render. Built fresh per render so a reported fault's reply shows the same
  * uuid the framework logs and puts on the bus.
  */
-export interface RenderContext {
+export interface RenderContext extends DispatchMemberValues {
     readonly uuid: UUID;
     /** Contact name a generic fault reply points the user to, from `notifications.developerUsername`. */
     readonly developerUsername?: string;

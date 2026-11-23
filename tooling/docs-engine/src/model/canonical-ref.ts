@@ -30,7 +30,7 @@ function packageNameOf(ref: CanonicalReferenceLike): string | undefined {
     if (bang > 0) return key.slice(0, bang);
     // API Extractor encodes an external ambient-module import as a quoted module source after a
     // leading `!`, e.g. `!"\"node:stream\"".Stream.Writable:class` or `!"\"mongoose\"".Schema:class`.
-    // A bare `!Foo` (no quotes) is a TS lib / global, which has no owning package.
+    // A bare `!Foo` (no quotes) is a TS lib / global, which doesn't have an owning package.
     const ambient = /^!"\\"([^\\]+)\\""/.exec(key);
     return ambient?.[1];
 }

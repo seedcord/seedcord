@@ -1,30 +1,30 @@
 {
     "name": "@seedcord/home",
-    "version": "0.0.3",
-    "type": "module",
-    "engines": {
-        "node": "^24.22.1 || >=26.12.1"
-    },
+    "version": "0.0.4-next.0",
     "private": true,
+    "type": "module",
     "scripts": {
         "dev": "next dev",
         "build": "next build",
-        "start": "pnpm dlx serve dist",
+        "start": "vp dlx serve dist",
         "deploy": "wrangler deploy",
         "deploy:preview": "wrangler versions upload",
         "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev"
+        "test": "vp test run",
+        "test:watch": "vp test dev"
     },
     "dependencies": {
         "@fumari/image-size": "^0.1.1",
         "@seedcord/brand": "workspace:^",
+        "@seedcord/custom-id": "workspace:^",
+        "@seedcord/errors": "workspace:^",
+        "@seedcord/eslint-plugin": "workspace:^",
         "@seedcord/ui": "workspace:^",
         "discord-component-embed": "workspace:^",
+        "es-toolkit": "catalog:deps",
+        "eslint-plugin-discordjs": "workspace:^",
         "fumadocs-core": "catalog:deps",
         "fumadocs-mdx": "catalog:deps",
         "lucide-react": "catalog:deps",
@@ -34,13 +34,14 @@
         "react-dom": "catalog:react",
         "takumi-js": "catalog:deps",
         "unist-util-visit": "catalog:deps",
-        "zod": "^4.6.7"
+        "zod": "catalog:deps"
     },
     "devDependencies": {
         "@mdx-js/mdx": "catalog:deps",
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",
         "@types/hast": "catalog:deps",
         "@types/mdast": "catalog:deps",
@@ -57,9 +58,12 @@
         "prettier-plugin-tailwindcss": "catalog:deps",
         "schema-dts": "^2.1.0",
         "tailwindcss": "catalog:deps",
+        "type-fest": "catalog:deps",
         "typescript": "catalog:peer",
         "vfile": "catalog:deps",
-        "vitest": "catalog:test",
         "wrangler": "catalog:peer"
+    },
+    "engines": {
+        "node": "^24.22.1 || >=26.12.1"
     }
 }

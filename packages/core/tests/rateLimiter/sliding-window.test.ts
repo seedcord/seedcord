@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
 import { memoryRateLimiter } from '#tests/utils/memoryRateLimiter';
 
@@ -37,7 +37,7 @@ describe('KvRateLimiter sliding window', () => {
 
         const refull = await limiter.peek('user', window);
         expect(refull.limited).toBe(true);
-        // resetAt moved off the expired first slot to the next earliest, so the window slid
+        // the window slid because resetAt moved off the expired first slot to the next earliest
         expect(refull.resetAt).toBe(start + 1300);
     });
 

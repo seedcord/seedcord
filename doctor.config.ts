@@ -141,7 +141,7 @@ export default defineConfig({
                 rules: ['react-doctor/async-await-in-loop']
             },
             {
-                // bulk deletes go one call at a time to stay under discord's rate limit
+                // bulk deletes go one call at a time to keep under discord's rate limit
                 files: ['**/commands/DiscordSession.ts'],
                 rules: ['react-doctor/async-await-in-loop']
             },

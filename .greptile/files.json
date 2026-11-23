@@ -15,12 +15,12 @@
             "scope": ["apps/**"]
         },
         {
-            "path": ".claude/commands/branch-audit.md",
+            "path": ".agents/skills/branch-audit/SKILL.md",
             "description": "The audit the maintainer runs on every branch"
         },
         {
-            "path": ".agents/skills/code-quality/SKILL.md",
-            "description": "Code quality rules",
+            "path": ".agents/skills/code-quality/DESIGN.md",
+            "description": "Design rules for a fix or a feature",
             "scope": ["**/*.ts", "**/*.tsx"]
         },
         {

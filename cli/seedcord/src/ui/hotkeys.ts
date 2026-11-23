@@ -12,6 +12,7 @@ import type { LogRow } from '#ui/logRows';
 import type { FilterView } from '#ui/Screen';
 import type { DevState, DevStore } from '#ui/stores/DevStore';
 import type { Key } from 'ink';
+import type { Promisable } from 'type-fest';
 
 type FilterChange = <ItemT>(prev: ReadonlySet<ItemT>, item: ItemT, all: readonly ItemT[]) => ReadonlySet<ItemT>;
 
@@ -41,11 +42,11 @@ interface HotkeyContext {
     readonly cycleDetails: () => void;
     readonly cursor: FilterCursor;
     readonly setCursor: (next: FilterCursor) => void;
-    readonly onQuit?: (() => Promise<void> | void) | undefined;
-    readonly onDisconnect?: (() => Promise<void> | void) | undefined;
-    readonly onRestart?: (() => Promise<void> | void) | undefined;
+    readonly onQuit?: (() => Promisable<void>) | undefined;
+    readonly onDisconnect?: (() => Promisable<void>) | undefined;
+    readonly onRestart?: (() => Promisable<void>) | undefined;
     readonly onCodegen?: (() => void) | undefined;
-    readonly onRefreshCommands?: ((shouldRefresh: boolean) => Promise<void> | void) | undefined;
+    readonly onRefreshCommands?: ((shouldRefresh: boolean) => Promisable<void>) | undefined;
 }
 
 type KeyGate = Pick<HotkeyContext, 'state' | 'interactive' | 'filterView' | 'canToggleRail'>;
@@ -119,7 +120,7 @@ const pageDown: Action = (ctx) => ctx.scroll.pageDown();
 const toTop: Action = (ctx) => ctx.scroll.toTop();
 const toBottom: Action = (ctx) => ctx.scroll.toBottom();
 
-// in ink's raw mode, ctrl-c arrives as a keypress with no SIGINT
+// in ink's raw mode, ctrl-c arrives as a keypress without a SIGINT
 const KEYMAP = {
     [CONFIRMS.quit.key]: { confirm: 'quit', run: quit },
     [CONFIRMS.disconnect.key]: { confirm: 'disconnect', when: canDisconnect, run: disconnect },

@@ -63,7 +63,7 @@ export function enclosingChainTop<Node extends TSESTree.Node>(node: Node): Node 
     return current;
 }
 
-// collectChain is outermost-first, so the first match is the last call to run
+// the first match is the last call to run because collectChain is outermost-first
 export function lastCall(calls: TSESTree.CallExpression[], name: string): TSESTree.CallExpression | undefined {
     return calls.find((call) => methodName(call) === name);
 }

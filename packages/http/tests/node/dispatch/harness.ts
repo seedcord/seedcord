@@ -9,10 +9,10 @@ import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpEdgeConfig } from '#interfaces/Config';
-import type { EngineContext } from '#src/requestScope';
+import type { EngineContext } from '#interfaces/EngineContext';
 import type { InteractionKind } from '@seedcord/core';
 import type { StoredSubscriberCtor } from '@seedcord/core/internal';
-import type { TypedOmit } from '@seedcord/types';
+import type { Except } from 'type-fest';
 
 export const FROM = 'handlers/Test.ts';
 
@@ -49,9 +49,13 @@ function filesOf(classes: BotClasses): Record<string, Record<string, unknown>> {
     return files;
 }
 
+type UnhandledHandler = Extract<HttpEdgeConfig['bot']['interactions'], { path: string }>['unhandled'];
+
 interface EngineOptions {
-    readonly settings?: TypedOmit<HttpEdgeConfig, 'bot' | 'subscribers'>;
+    readonly settings?: Except<HttpEdgeConfig, 'bot' | 'subscribers'>;
+    readonly unhandled?: UnhandledHandler;
     readonly env?: Readonly<Record<string, string>>;
+    readonly attach?: (bot: Seedcord) => void;
 }
 
 interface ReadyEngine extends Disposable {
@@ -73,12 +77,14 @@ export async function readyEngine(classes: BotClasses, options: EngineOptions = 
         bot: {
             interactions: {
                 path: `${BUILT_ROOT}/${FOLDERS.handlers}`,
-                middlewares: `${BUILT_ROOT}/${FOLDERS.middleware}`
+                middlewares: `${BUILT_ROOT}/${FOLDERS.middleware}`,
+                ...(options.unhandled && { unhandled: options.unhandled })
             },
             commands: { path: null }
         },
         subscribers: { path: `${BUILT_ROOT}/${FOLDERS.subscribers}` }
     });
+    options.attach?.(seedcord);
     return {
         signer,
         handle: (request, ctx) => seedcord.fetch(request, undefined, ctx),

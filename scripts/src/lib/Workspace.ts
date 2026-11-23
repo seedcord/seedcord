@@ -3,13 +3,14 @@ import path from 'node:path';
 import { getPackages } from '@manypkg/get-packages';
 
 import type { Package, Packages } from '@manypkg/get-packages';
+import type { Except } from 'type-fest';
 
 export class Workspace {
     static async load(dir: string): Promise<Workspace> {
         return new Workspace(await getPackages(dir));
     }
 
-    constructor(private readonly snapshot: Omit<Packages, 'tool'>) {}
+    constructor(private readonly snapshot: Except<Packages, 'tool'>) {}
 
     get rootDir(): string {
         return this.snapshot.rootDir;

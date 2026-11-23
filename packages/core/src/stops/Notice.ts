@@ -7,7 +7,7 @@ import type { Constructor } from 'type-fest';
  * Base class for a user-facing refusal or a reported fault.
  *
  * Throw a `Notice` to stop a handler and reply to the user. The framework catches it at the controller
- * boundary and renders {@link Notice.render}, which always decides what the user sees. With `report`
+ * boundary and renders {@link Notice.render}, which always determines what the user sees. With `report`
  * false that render is all that happens. With `report` true the framework also logs the fault and
  * publishes it to the `handledException` bus. A raw, non-Notice throw shows the generic message.
  *
@@ -67,7 +67,7 @@ export abstract class Notice extends Error {
     protected constructor(message: string, options?: ErrorOptions) {
         super(message, options);
 
-        // Error sets name to 'Error', so stamp the concrete subclass name for logs and the fault report
+        // stamp the concrete subclass name for logs and the fault report because Error sets name to 'Error'
         this.name = new.target.name;
         Error.captureStackTrace(this, this.constructor);
     }
@@ -84,7 +84,7 @@ export abstract class Notice extends Error {
 
 /**
  * A Notice class that seedcord constructs and throws in place of a default refusal. It passes the data that
- * refusal carries, like the retry time for `Cooldown` or the subject and permission names for a permission check.
+ * refusal has, like the retry time for `Cooldown` or the subject and permission names for a permission check.
  *
  * @example
  * ```ts

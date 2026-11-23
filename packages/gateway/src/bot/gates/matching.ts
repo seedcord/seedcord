@@ -23,7 +23,7 @@ export type AnyHandlerCtor = abstract new (...args: never[]) => {
     getEvent(): ValidEventTypes;
 };
 
-// a marker no gate's required context matches, so @Gated rejects every gate on an autocomplete handler
+// @Gated rejects every gate on an autocomplete handler because a gate's required context never matches this marker
 declare const UngateableBrand: unique symbol;
 interface Ungateable {
     readonly [UngateableBrand]: true;

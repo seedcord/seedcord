@@ -29,7 +29,7 @@ export class Presence extends Plugin {
 }
 ```
 
-`setActivity` needs a logged-in client, so `Presence` starts its timer in `ready()`. `dispose()` clears that timer, since an interval left running keeps calling a client that has logged out.
+`setActivity` needs a logged-in client, so `Presence` starts its timer in `ready()`. `dispose()` clears that timer since an interval left running keeps calling a client that has logged out.
 
 <Callout type="transport" only="gateway">
 
@@ -51,7 +51,7 @@ Startup runs three phases in order.
 
 {/* prettier-ignore-end */}
 
-Once Ready finishes, a bot on a server starts answering its [health path](/build/server#the-health-server). Nothing a plugin adds runs after it, so a host that waits on the health path sees a bot whose `ready()` calls have all finished.
+A bot on a server answers its [health path](/build/server#the-health-check) with a 200 only after every `ready()` finishes.
 
 On a server, shutdown runs five phases. A bot on [Cloudflare Workers](#on-cloudflare-workers) never reaches them.
 
@@ -89,7 +89,7 @@ shutdown
 └─ Release
 ```
 
-Your plugins start in the order you attach them and stop in the _reverse_ order. Attach a plugin before any plugin that reads from it. seedcord puts all of a phase's plugin calls in one task, so they run one after another while the phase's [other tasks](/core#running-work-while-your-bot-starts-and-stops) run in parallel with them. Your handlers start when Ready does, so they can already receive interactions and events while `ready()` is still running. Set up anything a handler needs in `init()`, and keep it in Configuration or Login.
+Your plugins start in the order you attach them and stop in the _reverse_ order. Attach a plugin before any plugin that reads from it. seedcord puts all of a phase's plugin calls in one task. They run one after another while the phase's [other tasks](/core#running-work-while-your-bot-starts-and-stops) run in parallel with them. Your handlers start when Ready does, so they can already receive interactions and events while `ready()` is still running. Set up anything a handler needs in `init()`, and keep it in Configuration or Login.
 
 A gateway bot gets events from Discord as soon as it logs in. Anything that arrives during Login waits until Ready starts, so its handler can read your emojis and command mentions.
 
@@ -119,13 +119,13 @@ export class Presence extends Plugin {
 }
 ```
 
-`Presence` moves `init()` to Login, gives `ready()` 20 seconds, and moves `dispose()` to Drain with 30 seconds. The `ready` field takes a timeout without a phase, since `ready()` always runs in the Ready phase. If you move an `init()` to Ready, it still runs before every plugin's `ready()`.
+`Presence` moves `init()` to Login, gives `ready()` 20 seconds, and moves `dispose()` to Drain with 30 seconds. The `ready` field takes a timeout without a phase since `ready()` always runs in the Ready phase. If you move an `init()` to Ready, it still runs before every plugin's `ready()`.
 
 ## Timeouts
 
-An `init()` waiting on a service that never answers would hang your bot's startup forever, so each method gets its own timeout. `init()` and `ready()` default to 15000ms, and `dispose()` defaults to 10000ms.
+Each method gets its own timeout, so if a service hangs in `init()`, startup fails with an error. `init()` and `ready()` default to 15000ms, and `dispose()` defaults to 10000ms.
 
-If a method runs past its timeout, seedcord throws `LifecycleTaskTimeout`. The task name in the message carries the attach key and which method ran.
+If a method runs past its timeout, seedcord throws `LifecycleTaskTimeout`. The task name in the message includes the attach key and which method ran.
 
 ```txt output
 Task "Plugin (db)" timed out after 15000ms. Check what it waits on, or give it a longer timeout.
@@ -133,11 +133,11 @@ Task "Plugin:db:ready" timed out after 15000ms. Check what it waits on, or give 
 Task "Plugin:db:dispose" timed out after 10000ms. Check what it waits on, or give it a longer timeout.
 ```
 
-A timeout of zero, a negative number, or `Infinity` throws `LifecycleInvalidTimeout` in the constructor, before any of your code runs.
+A timeout of zero, a negative number, or `Infinity` throws `LifecycleInvalidTimeout` in the constructor before any of your code runs.
 
 ### The shutdown deadline
 
-Those timeouts limit one method each. Your hosting platform kills the process if shutdown as a whole takes too long, so seedcord also bounds the whole shutdown with a single deadline, 25000ms by default. Once it elapses seedcord skips the phases it never reached and exits. A task already running keeps going until the process exits three seconds later. A deadline of zero, a negative number, or `Infinity` throws `LifecycleInvalidTimeout`.
+Those timeouts limit one method each. Your hosting platform kills the process if shutdown as a whole takes too long, so seedcord also bounds the whole shutdown with a single deadline, 25000ms by default. Once it elapses seedcord skips the phases it never reached and exits. A task already running keeps running until the process exits three seconds later. A deadline of zero, a negative number, or `Infinity` throws `LifecycleInvalidTimeout`.
 
 If shutdown starts while the bot is still starting, it waits for startup to finish, and that wait counts against the same deadline. If the deadline passes first, seedcord doesn't dispose the plugins that finish starting after that.
 
@@ -166,7 +166,7 @@ An `init()` usually fails because a service it connects to is down or can't be r
 
 ### When it throws
 
-seedcord calls `dispose()` on every plugin whose `init()` had already finished, in reverse attach order. The plugin that threw doesn't get a `dispose()` call. Anything its `init()` opened before the error stays open unless `init()` closes it.
+seedcord calls `dispose()` on every plugin whose `init()` had already finished, in reverse attach order. The plugin that threw doesn't get a `dispose()` call. Anything its `init()` opened before the error is still open unless `init()` closes it.
 
 ```ts twoslash title="src/plugins/Feeds.ts"
 import { Plugin } from '@seedcord/gateway';
@@ -210,12 +210,12 @@ Once startup has failed, the same `Seedcord` can't start again. Calling `start()
 
 ## When dispose fails
 
-If one `dispose()` fails, the others still run. With `db` and `settings` from earlier, a throw from `settings.dispose()` still lets `db.dispose()` close the connection. Once they've all run, seedcord logs the failures under "Coordinated shutdown failed" and carries on with the next phase. Your code can't catch them. If several `dispose()` calls in one phase failed, the log shows one error carrying `PluginDisposeFailures`, with each error in its `errors` array. A `dispose()` that fails during a startup rollback is logged as a warning, and `start()` still rejects with the startup error.
+If one `dispose()` fails, the others still run. With `db` and `settings` from earlier, a throw from `settings.dispose()` still lets `db.dispose()` close the connection. Once they've all run, seedcord logs the failures under "Coordinated shutdown failed" and continues with the next phase. Your code can't catch them. If several `dispose()` calls in one phase failed, the log shows one error carrying `PluginDisposeFailures`, with each error in its `errors` array. A `dispose()` that fails during a startup rollback is logged as a warning, and `start()` still rejects with the startup error.
 
 ## On Cloudflare Workers
 
-A Workers bot has no `start()` call, so its plugins start when the first POST reaches an isolate. `init()` and `ready()` run in the same phases and order as above, and requests that arrive meanwhile wait for them. Cloudflare can run several isolates of your bot at once. Each one starts its own copy of every plugin, so a field like a counter holds one value per isolate.
+You don't call `start()` on a Workers bot, so its plugins start when the first POST reaches an isolate, or the first request of any kind once a plugin has [`fetch()`](/writing-plugins/web-requests#where-requests-arrive). `init()` and `ready()` run in the same phases and order as above, and requests that arrive meanwhile wait for them. Cloudflare can run several isolates of your bot at once. Each one starts its own copy of every plugin. A field like a counter holds one value per isolate.
 
-Cloudflare gives [a Worker's isolate](https://developers.cloudflare.com/workers/reference/how-workers-works/) no shutdown hook, so the shutdown phases never run. `dispose()` runs only when startup fails. Then seedcord disposes the plugins whose `init()` had finished, in reverse attach order, and the request that triggered startup gets the error. A plugin can't flush its state on the way out, so write it as you go. After a failed startup the next request starts up again, so a plugin's `init()` can run a second time on the same instance, after its `dispose()`. Write `init()` so it can run twice.
+Cloudflare gives [a Worker's isolate](https://developers.cloudflare.com/workers/reference/how-workers-works/) no shutdown hook, so the shutdown phases never run. `dispose()` runs only when startup fails. Then seedcord disposes the plugins whose `init()` had finished, in reverse attach order, and the request that triggered startup gets the error. A plugin can't flush its state on the way out. Write it as you go. After a failed startup the next request starts up again. A plugin's `init()` can then run a second time on the same instance after its `dispose()`. Write `init()` so it can run twice.
 
 `shutdown.addTask` throws `CoreLifecycleUnavailable` on a Workers bot, and `lifecycle` isn't a config key there.

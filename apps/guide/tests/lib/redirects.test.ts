@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { RENAMED_PAGES, redirectFor } from '#lib/redirects';
 
@@ -21,7 +21,7 @@ describe('the rename log', () => {
         expect(pageExists(from)).toBe(false);
     });
 
-    it('answers a request that carries the trailing slash', () => {
+    it('answers a request with the trailing slash', () => {
         expect(redirectFor('/throwing/faults/')).toBe('/replying/faults/');
     });
 

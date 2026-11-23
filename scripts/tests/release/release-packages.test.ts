@@ -2,7 +2,7 @@ import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { Workspace } from '#src/lib/Workspace';
 import { resolvePackages } from '#src/release/release-packages';
@@ -41,7 +41,7 @@ describe('resolvePackages', () => {
         });
     });
 
-    it('leaves the old version off a first publish', async () => {
+    it("doesn't set the old version on a first publish", async () => {
         const workspace = await workspaceWith({ '@seedcord/kit': '# @seedcord/kit\n\n## 0.1.0\n' });
 
         const [kit] = await resolvePackages(workspace, [{ name: '@seedcord/kit', version: '0.1.0' }]);

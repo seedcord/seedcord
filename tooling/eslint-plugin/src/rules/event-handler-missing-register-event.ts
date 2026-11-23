@@ -20,11 +20,10 @@ export default createRule({
         },
         messages: {
             missingRegister:
-                'This EventHandler has no @RegisterEvent decorator, so it never registers and never runs when the event is emitted.'
+                'This EventHandler is missing @RegisterEvent, so it never registers and never runs when the event is emitted.'
         },
         schema: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

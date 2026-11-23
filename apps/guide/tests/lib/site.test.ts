@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { canonicalUrl, pageMetadata, shownTitle, sitemapEntries } from '#lib/site';
 
@@ -21,7 +21,7 @@ describe('the canonical url for a path', () => {
     });
 });
 
-describe('the metadata a guide page carries', () => {
+describe("a guide page's metadata", () => {
     const page = {
         title: 'Tooling',
         description: 'Configuring and running your bot.',
@@ -77,7 +77,7 @@ describe('the metadata a guide page carries', () => {
         expect(pageMetadata(page).title).toBe('Tooling');
     });
 
-    it('falls back to the site description when a page carries none', () => {
+    it('falls back to the site description when a page omits one', () => {
         const bare = pageMetadata({ title: 'Tooling', path: '/tooling', pill: 'tooling' });
 
         expect(bare.description).toBe('The guide to building Discord bots with seedcord.');
@@ -105,13 +105,13 @@ describe('the sitemap', () => {
         expect(sitemapEntries([page('/tooling', 'tooling/index.mdx')])[0]?.lastModified).toBe(edited);
     });
 
-    it('leaves the date off a page git knows nothing about', () => {
+    it("doesn't set the date for a page git doesn't know about", () => {
         const undated = { url: '/tooling', path: 'tooling/index.mdx', data: {} };
 
         expect(sitemapEntries([undated])[0]).not.toHaveProperty('lastModified');
     });
 
-    it('ranks the page a reader lands on above every other', () => {
+    it('ranks the page a reader opens first above every other', () => {
         expect(sitemapEntries([page('/', 'index.mdx')])[0]?.priority).toBe(1);
     });
 

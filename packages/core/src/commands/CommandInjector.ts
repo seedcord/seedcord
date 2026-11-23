@@ -12,7 +12,8 @@ import type {
 } from '#registries/ContextMenuRegistry';
 import type { SlashRegistry } from '#registries/SlashRegistry';
 import type { CommandRef, LinkedCommands } from '#src/commands/linkCommands';
-import type { CommandBuilder, DeployResult } from '#src/commands/types';
+import type { CommandBody } from '#src/commands/putCommands';
+import type { DeployResult } from '#src/commands/types';
 import type { ILogger } from '@seedcord/types';
 
 const commandStorage = accessorStore<CommandInfo>();
@@ -110,8 +111,8 @@ const KIND_LABELS: Record<ApplicationCommandType, string> = {
 function multiGuildWarning({ name, type }: CommandRef): string {
     const consequence =
         type === ApplicationCommandType.ChatInput
-            ? 'so its mention stays plain text (not clickable)'
-            : 'so its id stays unset';
+            ? 'so its mention is still plain text (not clickable)'
+            : 'so its id is still unset';
     return `${paint.sky.bold(name)} is deployed to multiple guilds, ${consequence}.`;
 }
 
@@ -122,7 +123,7 @@ export function warnLinks(
     for (const ref of multiGuild) logger.warn(multiGuildWarning(ref));
     for (const { name, type } of notInCode) {
         logger.warn(
-            `The ${KIND_LABELS[type]} ${paint.sky.bold(name)} is deployed on Discord with no command for it in your code.`
+            `The ${KIND_LABELS[type]} ${paint.sky.bold(name)} is deployed on Discord, but your code doesn't define it.`
         );
     }
 }
@@ -131,11 +132,8 @@ export function warnLinks(
 export class CommandInjector {
     private readonly logger = new Logger('Commands', { channel: 'bot' });
 
-    public inject(deploy: DeployResult, all: readonly CommandBuilder[]): void {
-        const linked = linkCommands(
-            deploy,
-            all.map((command) => command.toJSON())
-        );
+    public inject(deploy: DeployResult, all: readonly CommandBody[]): LinkedCommands {
+        const linked = linkCommands(deploy, all);
         installLinks(linked);
 
         warnLinks(this.logger, linked);
@@ -148,5 +146,6 @@ export class CommandInjector {
             'context menus':
                 Object.keys(linked.contextMenus.user).length + Object.keys(linked.contextMenus.message).length
         });
+        return linked;
     }
 }

@@ -7,13 +7,13 @@ import Image from 'next/image';
 import { CodeCard } from '#components/code/CodeCard';
 import { Code } from '#components/ui/Code';
 import { SiteLink } from '#components/ui/SiteLink';
-import { CODE_MARK_LIGHT } from '#lib/code/marks';
+import { CODE_MARK_PROSE } from '#lib/code/marks';
 
 import type { HighlightLanguage } from '@seedcord/ui/shiki';
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 
-const MEDIA = tw`rule blk-rind my-3`;
+const MEDIA = tw`my-3 blk-rind rule`;
 
 function captionFor(tag: string | undefined): string {
     if (tag === undefined) return 'text';
@@ -98,7 +98,7 @@ const PROSE = tw`text-lg/relaxed text-(--seed-dark)/85`;
 
 export const mdxComponents = {
     pre: Fence,
-    code: ({ children }) => <Code className={cn(CODE_MARK_LIGHT)}>{children}</Code>,
+    code: ({ children }) => <Code className={cn(CODE_MARK_PROSE)}>{children}</Code>,
     h2: headingFor('h2'),
     h3: headingFor('h3'),
     h4: headingFor('h4'),

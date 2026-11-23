@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-// node reads a raw windows path's drive letter as a url protocol, so import() needs a file url
+// import() needs a file url because node reads a raw windows path's drive letter as a url protocol
 export function fileUrl(file: string): string {
     return pathToFileURL(file).href;
 }
@@ -10,6 +10,12 @@ export function fileUrl(file: string): string {
 export function isInside(folder: string, target: string): boolean {
     const relative = path.relative(folder, target);
     return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+}
+
+// importFiles and readFiles hand files over in this order on disk and in a built bot
+export function comparePaths(a: string, b: string): number {
+    if (a === b) return 0;
+    return a < b ? -1 : 1;
 }
 
 export function toPosixPath(nativePath: string): string {

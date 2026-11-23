@@ -47,7 +47,7 @@ const PALETTE = {
     muted: { hex: '#9aa0b3', ansi: 90 }
 } as const;
 
-// node's getColorDepth returns 1, 4, 8, or 24. 1 means no color
+// node's getColorDepth returns 1, 4, 8, or 24. 1 means monochrome
 const TRUECOLOR_DEPTH = 24;
 const BASIC_COLOR_DEPTH = 4;
 

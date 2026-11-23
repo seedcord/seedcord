@@ -1,8 +1,8 @@
 'use client';
 
+import { cn } from 'cn';
 import { ChevronDown } from 'lucide-react';
 
-import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 
 import type { ButtonHTMLAttributes, ReactElement, ReactNode, Ref } from 'react';

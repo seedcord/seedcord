@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { Plugin } from '#src/Plugin';
@@ -67,7 +67,7 @@ describe('http Seedcord startup failure', () => {
         host.attach('failing', FailsReadyOnce);
         await expect(host.start()).rejects.toThrow();
 
-        // ready resolves from here on, so only the restart guard can reject this
+        // only the restart guard can reject this because ready resolves from here on
         await expect(host.start()).rejects.toThrow(/new instance/);
 
         await using fresh = new Seedcord(config());

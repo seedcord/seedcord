@@ -17,7 +17,7 @@ export function interactionFaultReport(payload: ValidInteractionTypes, dispatch:
             interactionId: payload.id,
             raw: payload
         }),
-        // the raw payload carries only the guild's id
+        // the raw payload has only the guild's id
         guild: undefined,
         user: { id, username },
         metadata: payload

@@ -9,7 +9,7 @@ export function memberModifiers(flags: DocFlags, kind: number): string[] {
     if (flags.isStatic) modifiers.push('static');
     if (flags.isAbstract) modifiers.push('abstract');
     if (flags.isOverwriting) modifiers.push('override');
-    // `const` already says readonly
+    // `const` already implies readonly
     if (flags.isReadonly && kind !== DocKind.Variable) modifiers.push('readonly');
     if (flags.accessor === 'auto-accessor') modifiers.push('accessor');
     if (flags.isAsync) modifiers.push('async');

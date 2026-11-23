@@ -5,20 +5,14 @@ import { Logger } from '@seedcord/logger';
 
 import { OnceTracker } from '#src/dispatch/OnceTracker';
 import { SubscribeMetadataKey } from '#src/metadataKeys';
+import { keepRequestOpenFor } from '#src/requestScope';
 
 import { WebhookLog } from './bases/WebhookLog';
 import { WebhookSender } from './bases/WebhookSender';
 import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';
 import { PublishDefault } from './publishDefault';
-import {
-    OnRun,
-    RegisterDefaults,
-    RegisteredCount,
-    RegisterSubscriber,
-    UnregisterSubscriber,
-    VerifyWebhooks
-} from './slots';
+import { RegisterDefaults, RegisteredCount, RegisterSubscriber, UnregisterSubscriber, VerifyWebhooks } from './slots';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { SubscribeMetadataEntry } from './decorators/Subscribe';
@@ -45,7 +39,7 @@ interface SubscriberRegistration {
 
 const loggerSlot = Symbol('seedcord:bus:logger');
 
-// unknown, because emitSafe only catches a rejected promise and ignores any other value
+// unknown because emitSafe only catches a rejected promise and ignores any other value
 type BusListener<KeyOfSubscribers extends SubscriptionKey> = (...args: SubscriptionTuples[KeyOfSubscribers]) => unknown;
 
 /**
@@ -60,9 +54,8 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     readonly #subscribersMap = new Map<SubscriptionKey, SubscriberRegistration[]>();
     readonly #onceRuns = new OnceTracker();
-    // url -> env keys
+    // url -> each env key or @WebhookUrl function that returned it
     readonly #webhookProbes = new Map<string, string[]>();
-    #onRun: (run: Promise<void>) => void = () => undefined;
 
     constructor(protected core: CoreBase) {
         super();
@@ -100,16 +93,16 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         return new Set([...this.#subscribersMap.values()].flat().map((entry) => entry.ctor)).size;
     }
 
-    /** @internal registration already skipped every reporter with no url set */
+    /** @internal registration has already skipped every reporter without a url set */
     public async [VerifyWebhooks](): Promise<void> {
         const missing: string[] = [];
         await Promise.all(
-            [...this.#webhookProbes].map(async ([url, envKeys]) => {
+            [...this.#webhookProbes].map(async ([url, labels]) => {
                 const result = await new WebhookSender(this.core.rest, url).verify();
-                if (result === 'missing') missing.push(...envKeys);
+                if (result === 'missing') missing.push(...labels);
                 else if (result === 'unreachable')
                     this.#logger.warn(
-                        `could not verify webhook at ${envKeys.map((key) => paint.amber.bold(key)).join(', ')}`
+                        `could not verify webhook at ${labels.map((label) => paint.amber.bold(label)).join(', ')}`
                     );
             })
         );
@@ -121,25 +114,24 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     #probeWebhook(ctor: StoredSubscriberCtor): boolean {
         if (!(ctor.prototype instanceof WebhookLog)) return true;
 
-        const envKey = WebhookLog.envKeyOf(ctor);
-        const url = WebhookLog.urlOf(envKey);
-        if (url === null) {
-            this.#logger.warn(`${paint.sky.bold(ctor.name)} is off because ${paint.amber.bold(envKey)} is not set`);
+        const target = WebhookLog.targetOf(ctor);
+        if (target.url === null) {
+            this.#logger.warn(target.offWarning);
             return false;
         }
-        const envKeys = this.#webhookProbes.get(url) ?? [];
-        if (!envKeys.includes(envKey)) envKeys.push(envKey);
-        this.#webhookProbes.set(url, envKeys);
+        const labels = this.#webhookProbes.get(target.url) ?? [];
+        if (!labels.includes(target.label)) labels.push(target.label);
+        this.#webhookProbes.set(target.url, labels);
         return true;
     }
 
     /**
      * Publishes an event to its subscribers and native listeners.
      *
-     * Fire-and-forget. Subscriber handlers run asynchronously and this returns before they finish.
+     * Subscriber handlers run asynchronously and this returns before they finish.
      * Errors thrown by a subscriber or by an `on()` listener are caught and logged, never surfaced
      * here. One throwing listener does not stop the others. Subscribers on one key run concurrently
-     * and carry no ordering guarantee. A `'once'` subscriber is marked as executed when it starts,
+     * and don't carry an ordering guarantee. A `'once'` subscriber is marked as executed when it starts,
      * even if it throws. It never runs twice.
      *
      * The framework's own keys are excluded. Subscribe to those and listen with `on`. The framework
@@ -169,7 +161,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     /**
      * Registers a listener that runs on every publish of the key. The listener can be async. `publish`
-     * catches what it throws, and an edge bot keeps the request open until it finishes.
+     * catches what it throws. A Workers request and a graceful shutdown both wait until it finishes.
      */
     public override on<KeyOfSubscribers extends SubscriptionKey>(
         event: KeyOfSubscribers,
@@ -210,22 +202,17 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         return this.#dispatchKey(event, data);
     }
 
-    /** @internal the http host keeps the publishing request open for each subscriber and listener run */
-    public set [OnRun](listener: (run: Promise<void>) => void) {
-        this.#onRun = listener;
-    }
-
     #dispatchKey<KeyOfSubscribers extends SubscriptionKey>(
         event: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
     ): boolean {
-        this.#onRun(this.#processSubscriber(event, data));
+        keepRequestOpenFor(this.#processSubscriber(event, data));
         // justified: a generic key can't reduce SubscriptionTuples[K], but data is this event's payload by the signature
         return this.emitSafe(event, ...([data] as SubscriptionTuples[KeyOfSubscribers]));
     }
 
     protected override onListenerRun(run: Promise<void>): void {
-        this.#onRun(run);
+        keepRequestOpenFor(run);
     }
 
     protected override onListenerError(error: unknown, event: string | symbol): void {
@@ -270,7 +257,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     }
 }
 
-// every caller already checked that the Subscribe metadata is there
+// every caller has already checked that the Subscribe metadata is there
 function registrationsFor(ctor: StoredSubscriberCtor): SubscriberRegistration[] {
     const entries = Reflect.getMetadata(SubscribeMetadataKey, ctor) as SubscribeMetadataEntry[];
     return entries.map(({ key, frequency }) => ({ key, frequency, ctor }));

@@ -1,5 +1,6 @@
 import { dirname, resolve } from 'node:path';
 
+import { DEFAULT_SERVER_PORT } from '@seedcord/core/internal';
 import { setCliFiles } from '@seedcord/utils/internal';
 
 import { Project } from '#core/project/Project';
@@ -30,12 +31,10 @@ import type {
     SeedcordBuildConfig,
     SeedcordHmrConfig
 } from './schema';
-
-// the node http Seedcord's default port
-const EDGE_DEV_PORT = 3000;
+import type { Promisable } from 'type-fest';
 
 // runs before any plugin in vitePlugins starts
-export type ProjectCheck = (project: Project) => void | Promise<void>;
+export type ProjectCheck = (project: Project) => Promisable<void>;
 
 function resolveTunnel(value: boolean | string | undefined): ResolvedTunnel {
     if (value === false) return { mode: 'off' };
@@ -103,12 +102,13 @@ export class ProjectLoader {
         const raw: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
         const checked = new ConfigValidator(target).validate(raw);
         const { config } = checked;
+        const { tunnel, idleAnimation = true, hmr } = config.dev ?? {};
 
         const configDir = dirname(configPath);
         const root = realPathUnder(configDir, config.root ?? '.');
         const instance = realPathUnder(root, config.instance);
         const build = this.resolveBuildOptions(configDir, config.build);
-        const typecheck = resolveTypecheck(config.hmr?.typecheck, root);
+        const typecheck = resolveTypecheck(hmr?.typecheck, root);
 
         return {
             instance,
@@ -118,20 +118,21 @@ export class ProjectLoader {
             target: this.resolveTarget(root, configDir, checked),
             build,
             typecheck,
-            idleAnimation: config.idleAnimation ?? true,
+            idleAnimation,
             viteMode: mode,
-            tunnel: resolveTunnel(config.tunnel),
-            hmr: config.hmr,
+            tunnel: resolveTunnel(tunnel),
+            hmr,
             vitePlugins: new VitePlugins(config.vitePlugins, configPath),
             make: {
                 templates: realPathUnder(configDir, config.make?.templates ?? 'templates'),
                 helpers: config.make?.helpers ?? {}
-            }
+            },
+            emojis: { dir: realPathUnder(configDir, config.emojis?.dir ?? 'emojis') }
         } satisfies ResolvedSeedcordConfig;
     }
 
     private resolveTarget(root: string, configDir: string, checked: CheckedConfig): ResolvedTarget {
-        if (isEdgeConfig(checked)) return { ...checked.target, port: checked.config.port ?? EDGE_DEV_PORT };
+        if (isEdgeConfig(checked)) return { ...checked.target, port: checked.config.dev?.port ?? DEFAULT_SERVER_PORT };
 
         const {
             target,

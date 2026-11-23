@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { checkTarget } from '#src/check';
 
@@ -57,7 +57,7 @@ describe('checkTarget on a file', () => {
         });
     });
 
-    it("leaves out the minified size when minifying wouldn't get the file under the limit", async () => {
+    it("doesn't report the minified size when minifying wouldn't get the file under the limit", async () => {
         const payload = { component: { type: 17, components: [{ type: 10, content: 'x'.repeat(3500) }] } };
 
         const result = await checkTarget('embed.json', withFiles({ 'embed.json': JSON.stringify(payload, null, 1) }));
@@ -66,7 +66,7 @@ describe('checkTarget on a file', () => {
         expect(result).not.toHaveProperty('hint');
     });
 
-    it('measures text full of </ as sent, before any script escaping', async () => {
+    it('measures text full of </ as sent before any script escaping', async () => {
         const text = card({ type: 10, content: '</'.repeat(1400) });
 
         expect(await checkTarget('embed.json', withFiles({ 'embed.json': text }))).toEqual({
@@ -277,7 +277,7 @@ describe('checkTarget on a url', () => {
         expect(result.status).toBe('pass');
     });
 
-    const NO_PREVIEW = 'Discord shows no preview for it, not even the Open Graph card.';
+    const NO_PREVIEW = "Discord doesn't show any preview for it, including the Open Graph card.";
 
     it.each([
         [
@@ -295,7 +295,7 @@ describe('checkTarget on a url', () => {
             { 'content-type': 'text/html', 'content-disposition': 'attachment; filename="post.html"' },
             `The page is served as a download, with Content-Disposition: attachment. ${NO_PREVIEW} Remove the Content-Disposition header.`
         ]
-    ])('fails a page served with %s, which discord shows no preview for', async (_label, headers, problem) => {
+    ])("fails a page served with %s, which discord won't preview", async (_label, headers, problem) => {
         const html = page(`<script id="discord:component-embed" type="application/json">${good}</script>`);
 
         expect(await checkTarget(PAGE, serving(html, headers))).toEqual({ status: 'fail', problems: [problem] });
@@ -315,11 +315,11 @@ describe('checkTarget on a url', () => {
         });
     });
 
-    it('fails a page with no component embed', async () => {
+    it('fails a page without a component embed', async () => {
         expect(await checkTarget(PAGE, withPages({ [PAGE]: page('<title>hi</title>') }))).toEqual({
             status: 'fail',
             problems: [
-                'The page has no component embed. Discord reads a <script id="discord:component-embed"> or a <link rel="discord:component-embed">.'
+                'The page doesn\'t have a component embed. Discord reads a <script id="discord:component-embed"> or a <link rel="discord:component-embed">.'
             ]
         });
     });
@@ -383,7 +383,7 @@ describe('checkTarget on an html file', () => {
         });
     });
 
-    it('fails a relative <link> href, since the file has no host to resolve it against', async () => {
+    it("fails a relative <link> href since the file doesn't have a host to resolve it against", async () => {
         const html = page(`<link rel="discord:component-embed" type="application/json" href="/post.json">`);
 
         expect(await checkTarget('dist/post.html', withFilesAndPages({ 'dist/post.html': html }))).toEqual({
@@ -392,11 +392,11 @@ describe('checkTarget on an html file', () => {
         });
     });
 
-    it('fails an .htm file with no component embed', async () => {
+    it('fails an .htm file without a component embed', async () => {
         expect(await checkTarget('post.htm', withFilesAndPages({ 'post.htm': page('<title>hi</title>') }))).toEqual({
             status: 'fail',
             problems: [
-                'The page has no component embed. Discord reads a <script id="discord:component-embed"> or a <link rel="discord:component-embed">.'
+                'The page doesn\'t have a component embed. Discord reads a <script id="discord:component-embed"> or a <link rel="discord:component-embed">.'
             ]
         });
     });

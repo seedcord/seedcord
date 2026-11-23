@@ -1,12 +1,12 @@
 import type { FrameworkChannel } from '@seedcord/types';
 
-// the union stays in @seedcord/types (LoggerConfig reads it) and that entry is type-only,
-// so this list is pinned to it by a type test
+// a type test pins this list to the union in @seedcord/types because that entry is type-only
+// (LoggerConfig reads the union)
 export const FRAMEWORK_CHANNELS = [
     'default',
     'bot',
+    'server',
     'lifecycle',
-    'health',
     'interactions',
     'events',
     'commands',

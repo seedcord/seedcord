@@ -18,7 +18,7 @@ export function missingNotice(platform: NodeJS.Platform): string {
     return `\`seedcord dev\` opens a cloudflared tunnel so Discord can reach your bot. Install it with:\n${paint.mint(installHint(platform))}`;
 }
 
-// cloudflared --version answers in about 40ms and touches no network
+// cloudflared --version answers in about 40ms and doesn't touch the network
 const PROBE_TIMEOUT_MS = 3000;
 
 export async function probeCloudflared(binary = 'cloudflared', timeout = PROBE_TIMEOUT_MS): Promise<boolean> {

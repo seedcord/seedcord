@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach } from 'vite-plus/test';
 
 import { bindBotColor } from '#components/botColorHolder';
 import { Colors } from '#components/colors';
@@ -51,7 +51,7 @@ describe('BuilderComponent bot color', () => {
         expect(new TestEmbed().component.data.color).toBe(0x12_34_56);
     });
 
-    it('leaves the container accent unset when no bot color is configured', () => {
+    it("doesn't set the container accent when no bot color is configured", () => {
         expect(new TestContainer().component.data.accent_color).toBeUndefined();
     });
 
@@ -60,7 +60,7 @@ describe('BuilderComponent bot color', () => {
         expect(new PresetContainer().component.data.accent_color).toBe(0xef_48_60);
     });
 
-    it('applies the default color to an embed only when the subclass set none', () => {
+    it("applies the default color to an embed only when the subclass didn't set one", () => {
         expect(new PresetEmbed().component.data.color).toBe(0xef_48_60);
         expect(new TestEmbed().component.data.color).toBe(resolveColor('Default'));
     });

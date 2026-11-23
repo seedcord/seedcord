@@ -1,0 +1,9 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' stands in for a match case, a gate, or a union member. Write the thing itself."
+level: error
+# case-sensitive because ARM is a real thing
+ignorecase: false
+tokens:
+  - 'arms?'
+  - 'armed'

@@ -1,7 +1,7 @@
 import { RegisterInteractionMiddleware } from '@seedcord/core';
 import { DispatchContext } from '@seedcord/core/internal';
 import { Events } from 'discord.js';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { RegisterEventMiddleware } from '#bDecorators/Middlewares';
 import { EventMiddleware } from '#handlers/event';
@@ -67,6 +67,14 @@ class CatchallType extends EventMiddleware {
 }
 void CatchallType;
 
+// @ts-expect-error use InteractionMiddleware
+class InteractionEvent extends EventMiddleware<Events.InteractionCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void InteractionEvent;
+
 describe('EventMiddleware', () => {
     it('reads the current event name from the dispatch', () => {
         const mw = new SingleMw(createPayload(fakeMessage()), core, dispatch);
@@ -79,7 +87,7 @@ describe('EventMiddleware', () => {
     });
 });
 
-// @RegisterEventMiddleware and the EventMiddleware generic must agree, in both directions
+// @RegisterEventMiddleware and the EventMiddleware generic must list the same events, checked in both directions
 
 @RegisterEventMiddleware()
 class GoodCatchall extends EventMiddleware {
@@ -105,7 +113,7 @@ class GoodMulti extends EventMiddleware<Events.MessageCreate | Events.MessageUpd
 }
 void GoodMulti;
 
-// the generic lists an event that { events } leaves out
+// the generic lists an event that { events } doesn't include
 // @ts-expect-error events lists messageCreate, the generic is guildMemberAdd
 @RegisterEventMiddleware({ events: [Events.MessageCreate] })
 class BadMismatch extends EventMiddleware<Events.GuildMemberAdd> {

@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, it, expect, expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vite-plus/test';
 
 import { FixedScope, Plugin } from '#src/plugin/Plugin';
 import { TestPluginHost } from '#tests/utils/TestPluginHost';
@@ -154,7 +154,7 @@ describe('attaching a plugin that declares options', () => {
         const host = new TestPluginHost('http', 'edge');
 
         // @ts-expect-error ServerScoped declares runtime 'server', this host is 'edge'
-        expectScopeMismatch(() => host.attach('server', ServerScoped));
+        expectScopeMismatch(() => host.attach('serverOnly', ServerScoped));
     });
 
     it('leaves the key free when the scope check throws', () => {

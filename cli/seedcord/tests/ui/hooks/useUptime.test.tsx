@@ -2,7 +2,7 @@ import { settled } from '@seedcord/cli-prompts/testing';
 import { Text } from 'ink';
 import { render } from 'ink-testing-library';
 import React from 'react';
-import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { useUptime } from '#ui/hooks/useUptime';
 import { DevStore } from '#ui/stores/DevStore';
@@ -49,7 +49,7 @@ describe('useUptime', () => {
         unmount();
     });
 
-    it('stays off when no sidebar renders it', async () => {
+    it('is off when no sidebar renders it', async () => {
         const { lastFrame, unmount } = render(<Harness state={liveState()} shown={false} />);
         await settled(() => expect(lastFrame()).toContain('up:null'));
         unmount();

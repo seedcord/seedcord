@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import {
     isHighlightable,
@@ -31,8 +31,13 @@ function codeText(html: string): string {
     return textOf(/<pre[\s\S]*?<\/pre>/.exec(html)?.[0] ?? '');
 }
 
-// hast decides the attribute order
+// hast sets the attribute order
 const ANCHOR_RE = /<a\s([^>]*)>/g;
+
+// the style of the token whose text is exactly `text`
+function styleOf(html: string, text: string): string | undefined {
+    return [...html.matchAll(/<span style="([^"]*)">([^<]*)<\/span>/g)].find((match) => match[2] === text)?.[1];
+}
 
 function attrsFor(html: string, href: string): string[] {
     return [...html.matchAll(ANCHOR_RE)]
@@ -110,7 +115,7 @@ describe('highlightToHtml', () => {
         expect(remote.every((attrs) => attrs.includes('target="_blank"'))).toBe(true);
     });
 
-    it('keeps a subtraction operator coloured in a block that carries a link', async () => {
+    it('keeps a subtraction operator coloured in a block that has a link', async () => {
         const code = 'const gap = end - start;';
         const start = code.indexOf('end');
         const html =
@@ -147,19 +152,19 @@ function anchorTextFor(html: string, href: string): string | null {
 }
 
 describe('the wrapped fragment helpers', () => {
-    it('drops the function wrap a signature needed to tokenize', async () => {
+    it('removes the function wrap a signature needed to tokenize', async () => {
         const html = await highlightSignatureToHtml('doThing(count: number): void');
 
         expect(codeText(html ?? '')).toBe('doThing(count: number): void');
     });
 
-    it('drops the class wrap a member needed to tokenize', async () => {
+    it('removes the class wrap a member needed to tokenize', async () => {
         const html = await highlightMemberToHtml('protected readonly name: string');
 
         expect(codeText(html ?? '')).toBe('protected readonly name: string');
     });
 
-    it('drops the type alias wrap a type parameter needed to tokenize', async () => {
+    it('removes the type alias wrap a type parameter needed to tokenize', async () => {
         const html = await highlightTypeParamToHtml('T extends string = never');
 
         expect(codeText(html ?? '')).toBe('T extends string = never');
@@ -230,7 +235,9 @@ describe('isHighlightable', () => {
         'shell',
         'zsh',
         'txt',
-        'hbs'
+        'hbs',
+        'fluent',
+        'ftl'
     ])('accepts %s, and the highlighter has its grammar', async (lang) => {
         if (!isHighlightable(lang)) throw new Error(`${lang} is not highlightable`);
 
@@ -239,12 +246,17 @@ describe('isHighlightable', () => {
 
     it('colours a yaml key apart from its value', async () => {
         const html = (await highlightToHtml('name: Deploy', 'yaml')) ?? '';
-        const colourOf = (text: string): string | undefined =>
-            new RegExp(`<span style="([^"]*)">${text}</span>`).exec(html)?.[1];
 
-        expect(colourOf('name')).toBeDefined();
-        expect(colourOf(' Deploy')).toBeDefined();
-        expect(colourOf('name')).not.toBe(colourOf(' Deploy'));
+        expect(styleOf(html, 'name')).toBeDefined();
+        expect(styleOf(html, ' Deploy')).toBeDefined();
+        expect(styleOf(html, 'name')).not.toBe(styleOf(html, ' Deploy'));
+    });
+
+    it('colours a Fluent variable apart from the text around it', async () => {
+        const html = (await highlightToHtml('greeting = Hi { $user }', 'ftl')) ?? '';
+
+        expect(styleOf(html, ' $user ')).toBeDefined();
+        expect(styleOf(html, ' $user ')).not.toBe(styleOf(html, 'Hi '));
     });
 
     it.each(['python', 'rust', 'go', 'css', ''])('rejects %s, which the highlighter never loaded', (lang) => {

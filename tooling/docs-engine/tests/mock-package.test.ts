@@ -1,5 +1,5 @@
 import { DocKind } from '@seedcord/docs-search';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { AnchorStrategy } from '#routing/AnchorStrategy';
 import { ReferenceResolver } from '#routing/ReferenceResolver';
@@ -99,19 +99,19 @@ describe('DocsEngine mock package integration', () => {
             expect(child('describe')?.flags.isOverwriting).toBe(true);
         });
 
-        it('leaves an instance method alone when only a base static shares its name', () => {
+        it("doesn't mark an instance method as overriding when only a base static shares its name", () => {
             expect(child('create')?.flags.isOverwriting).toBe(false);
         });
 
-        it('leaves override off a method that implements an abstract one', () => {
+        it("doesn't write override on a method that implements an abstract one", () => {
             expect(child('hook')?.flags.isOverwriting).toBe(false);
         });
 
-        it('leaves override off an overriding field', () => {
+        it("doesn't write override on an overriding field", () => {
             expect(child('label')?.headerText).not.toMatch(/\boverride\b/);
         });
 
-        it('leaves override off a declare field', () => {
+        it("doesn't write override on a declare field", () => {
             expect(child('tag')?.headerText).not.toMatch(/\boverride\b/);
         });
 
@@ -132,7 +132,7 @@ describe('DocsEngine mock package integration', () => {
             expect(member('LIMIT')?.headerText).toMatch(/^public static readonly LIMIT\b/);
         });
 
-        it('leaves async off an abstract method', () => {
+        it("doesn't write async on an abstract method", () => {
             expect(member('load')?.flags.isAsync).toBe(false);
         });
 
@@ -182,7 +182,7 @@ describe('DocsEngine mock package integration', () => {
             const label = mockClass.children.find((child) => child.name === 'label');
             expect(label?.kind).toBe(DocKind.Accessor);
             expect(label?.flags.accessor).toBe('getter-setter');
-            // The comment moves onto the signatures, so the member summary won't render it twice.
+            // The comment moves onto the signatures to keep the member summary from rendering it twice.
             expect(label?.comment).toBeNull();
             expect(label?.signatures.map((sig) => sig.kind)).toEqual([DocKind.GetSignature, DocKind.SetSignature]);
             const [getter, setter] = label?.signatures ?? [];
@@ -274,7 +274,7 @@ describe('DocsEngine mock package integration', () => {
         const decoratorTagPresent =
             decoratorSignature.comment?.blockTags.some((tag) => tag.tag === '@decorator') ?? false;
         expect(decoratorTagPresent).toBe(true);
-        expect(decoratorSignature.comment?.summary).toContain('A simple method decorator');
+        expect(decoratorSignature.comment?.summary).toContain('A method decorator');
 
         const asyncMockFunction = await getNodeBySlug('async-mock-function');
         expect(asyncMockFunction.flags.isAsync).toBe(true);
@@ -306,7 +306,7 @@ describe('DocsEngine mock package integration', () => {
         const concrete = fn.signatures.find((sig) => sig.typeParameters.length === 0);
         expect(generic?.typeParameters.map((tp) => tp.name)).toEqual(['TypeT']);
         expect(concrete).toBeDefined();
-        // render.typeParams mirrors the per-signature list, so a concrete overload renders no `<…>`.
+        // a concrete overload doesn't render `<…>` because render.typeParams mirrors the per-signature list.
         expect(concrete?.render?.typeParams ?? []).toEqual([]);
     });
 
@@ -325,7 +325,7 @@ describe('DocsEngine mock package integration', () => {
 
     it('resolves a bare same-package {@link} in @see to a target reference at extraction time', async () => {
         // a bare {@link MockEnum} only resolves when the adapter passes the owning ApiItem as context;
-        // without it the link carries no target and the see-also renderer falls back to plain text
+        // without it the link doesn't have a target and the see-also renderer falls back to plain text
         const mockClass = await getNodeBySlug('mock-class');
         const enumLink = (mockClass.comment?.blockTags ?? [])
             .filter((tag) => tag.tag === '@see')
@@ -352,9 +352,9 @@ describe('DocsEngine mock package integration', () => {
     });
 
     it('resolves references using keys, package hints, and external URLs', async () => {
-        // DocsEngine is the eager NodeLookup; pair it with a registry over its loaded packages. The
-        // eager engine resolves every ref through loaded nodes, so the index-driven cross-package gate
-        // is never reached here.
+        // DocsEngine is the eager NodeLookup. Pair it with a registry over its loaded packages. The
+        // index-driven cross-package gate is never reached here because the eager engine resolves every
+        // ref through loaded nodes.
         const registry: PackageRegistry = {
             isKnownPackage: (name) => engine.getPackage(name) !== null,
             candidatePackages: (current, hinted) => orderedPackageCandidates(current, hinted, engine.listPackages()),

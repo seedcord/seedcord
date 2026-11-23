@@ -1,0 +1,171 @@
+---
+title: How seedcord ask works
+description: seedcord ask searches the guide from a terminal by meaning. Here's what it's useful for, why coding agents need it, and how the search is built.
+authors: [materwelonDhruv]
+created: 2026-11-20
+cover:
+    src: ./cover.webp
+    alt: Three circles on a dark background. A green one filled with faint discord.js code reads your agent, a cream one in the middle reads asks, and a red one with watermelon seeds reads seedcord
+thumbnail: ./thumbnail.webp
+keywords: [seedcord ask, coding agents, AGENTS.md, guide search, embeddings, cloudflare workers ai, llms.txt]
+---
+
+`seedcord ask` came out with v0.23, and it only got a few lines in [that post](https://seedcord.org/blog/release-v0-23/). It's the most useful thing in seedcord if you build with a coding agent, so this post is all about it. What it does, why your agent needs it, and how it's built.
+
+---
+
+## Asking the guide
+
+It searches the guide from a terminal, even outside a project:
+
+```sh
+pnpm exec seedcord ask how do i split a long list into pages
+```
+
+It matches by _meaning_, so your question doesn't need the guide's words. That one never says "pagination", and you still get this:
+
+```txt
+Pagination (Components): https://seedcord.org/guide/components/pagination.md
+  - Rendering each item
+  - What a paginator takes
+
+Rendering a table (Replying): https://seedcord.org/guide/replying/render-table.md
+  - Paging past the character limit
+```
+
+In a terminal you get a link to each section. An agent runs it without one of course, and that output up there is what it gets. Each link goes to the page's Markdown copy, so the agent can fetch it and read the page directly. Every guide page has one at its url plus `.md` btw.
+
+---
+
+## Why your agent needs it
+
+Your agent has never seen seedcord. It's newer than whatever your model was trained on, so naturally it writes the discord.js it remembers.
+
+To be fair, a lot of that gets caught. A route or an option that doesn't exist is a compile error, and lint catches more. What doesn't get caught is the agent rebuilding something seedcord already has. I had one hand-write pagination. It compiled, lint passed, and it worked, so nothing told it that seedcord ships pagination (well I did, begrudgingly, but that's besides the point).
+
+Regardless, the agent has to look things up before it writes, and it doesn't know what the page is called. That's what `ask` is for. A new project's `AGENTS.md` tells the agent to run it before hand-writing anything bigger than a plain reply.
+
+---
+
+## Error codes
+
+Every error seedcord throws has a number. You can paste the whole error, or only the number:
+
+```sh
+pnpm exec seedcord ask 3116
+```
+
+```txt
+3116 is CliDependencyMissing
+
+seedcord.config.ts (Build & deploy): https://seedcord.org/guide/build/config.md
+  - Config mistakes
+```
+
+The number is swapped for the error's name before the search runs, since `CliDependencyMissing` has words to match and `3116` doesn't.
+
+That only happens when the number is the whole question. A four digit number in the middle of a sentence could just as well be a port or a year. There, `ask` tells you that the number is also an error code and gives you the command to look it up.
+
+---
+
+## How it's built
+
+1. When the guide builds, every heading on every page becomes a section. There are around 600 right now.
+2. CI sends each section to EmbeddingGemma on Cloudflare Workers AI and gets 768 numbers back. They all go into one file, `vectors.bin`, which is about 2 MB and deploys with the site.
+3. When you ask something, the guide's Worker turns your question into 768 numbers too. It compares them with every section and returns the closest 8.
+
+That last step is this:
+
+{/* prettier-ignore */}
+```ts title="tooling/docs-search/src/SectionIndex.ts"
+return (
+    this.rows
+        .map(({ section, vector, norm }) => {
+            // cosine similarity. dividing by the lengths means a
+            // long section doesn't rank higher just for being long
+            const dot = vector.reduce(
+                (sum, value, d) => sum + value * (question[d] ?? 0),
+                0
+            );
+            return { section, score: dot / (norm * questionNorm) };
+        })
+        // results don't show a score, so a weak match looks as
+        // good as a strong one. can just drop them
+        .filter(({ score }) => score >= MIN_SCORE)
+        .sort((a, b) => b.score - a.score)
+        // you only need the top few to find your page. i actually
+        // tweaked the guide a lot when testing with hundreds of
+        // test questions to make sure the right page shows up in
+        // the top 5
+        .slice(0, limit)
+        // the scores stay here. you get the page and the heading
+        .map(({ section }) => guideHit(section))
+);
+```
+
+We don't really need a full-fledged vector database for a guide of this size.
+
+A few more things about it:
+
+- Your question is the only thing that goes to the model when you search. The sections are already embedded.
+- Asking the same thing twice is free. Answers are cached at the edge, and the cache key includes a hash of the whole index, so a deploy clears it.
+
+The search box on [the guide](https://seedcord.org/guide/) uses the same endpoint, so you get the same results there as well.
+
+---
+
+## Only what changed gets embedded
+
+The guide deploys a lot, and most deploys change one page. Embedding every section each time would use up the daily allowance that the searches run on.
+
+So each section's numbers are saved in their own file, and the file's name is a hash of the model's name and the section's text:
+
+{/* prettier-ignore */}
+```ts title="scripts/src/guide/EmbeddingCache.ts"
+const fileName = (document: string): string =>
+    `${createHash('sha256')
+        .update(embedding.model)
+        .update('\0')
+        .update(document)
+        .digest('hex')}.bin`;
+```
+
+If a file with that name exists, that section is already done. Fix a typo and that section's text hashes to a new name, so one section goes to the model and the rest are read from disk. A normal deploy logs something like this:
+
+```txt
+✅ embedded 3 of 659 guide sections. The rest came from the cache.
+```
+
+I added the model's name is part of the hash so switching models changes every file name and everything gets embedded again.
+
+The folder is kept in the GitHub Actions cache between deploys. GitHub removes a cache that nothing has read in over 7 days, so a weekly job restores it to make sure it doesn't get deleted.
+
+Oh another cool thing. After the script writes `vectors.bin`, it loads the file with the same code the Worker uses. If the number of vectors doesn't match the number of sections, CI fails before anything deploys.
+
+---
+
+## Where it falls short
+
+`ask` finds pages. It doesn't answer your question, so obviously you or your agent still have to read the page.
+
+It misses when the guide uses a word that nobody would search for. An agent asked about an "early return from a handler with a message", and the page it needed was called Throwing. It wasn't in the results at all. I renamed that page to Refusing a request and added a section called "Why not reply and return?", and now the same question finds it first. Most misses so far were like this one.
+
+It also used to return something for every question. A search for "tsx jsx components", back when the guide had nothing on TSX, returned six unrelated pages. Now anything that scores under 0.38 is dropped, and `ask` says so when nothing matches. That number came from 200+ test questions, in case you're wondering. The weakest real one scored 0.413 and the TSX one scored 0.376.
+
+For that misses thing above, I also added a button in the seed bot that you can use to report when a question doesn't find the right page. I get what you asked and what the bot returned. This helps me improve the guide and the search results over time.
+
+---
+
+## The rest of it
+
+And of course, `ask` isn't the only thing in seedcord for agents:
+
+- `seedcord dev` without a terminal prints each log line as JSON and takes commands like `{"do":"restart"}` on stdin, so an agent can run your bot and read what happened. [The dev page](https://seedcord.org/guide/tooling/dev/) lists the commands.
+- `pnpm create seedcord` has a flag for every question it asks.
+- Every page in the guide and the reference has a Markdown copy, and each site has an `llms.txt`.
+
+[The ask page](https://seedcord.org/guide/tooling/ask/) has more on the command itself.
+
+---
+
+New to seedcord? [Start here](https://seedcord.org/guide/). Come say hi in [the Discord server](https://seedcord.org/chat) too.

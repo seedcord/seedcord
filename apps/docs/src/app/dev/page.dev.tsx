@@ -64,7 +64,8 @@ const DOCS_BEHAVIORS = [
     {
         href: '/dev/package-overview-tabs',
         label: 'PackageOverviewTabs',
-        description: 'README | Reference Overview segmented toggle; README default, disabled when a version has none'
+        description:
+            "README | Reference Overview segmented toggle; README default, disabled when a version doesn't have one"
     },
     {
         href: '/dev/skeletons',

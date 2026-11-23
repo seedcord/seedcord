@@ -1,4 +1,5 @@
 import langBash from '@shikijs/langs/bash';
+import langFluent from '@shikijs/langs/fluent';
 import langJs from '@shikijs/langs/javascript';
 import langJson from '@shikijs/langs/json';
 import langJsx from '@shikijs/langs/jsx';
@@ -22,7 +23,7 @@ const THEMES = {
 // shiki registers the bash grammar under all four names
 const SHELLS = ['bash', 'sh', 'shell', 'zsh'] as const;
 
-// shiki registers each grammar under its full name and its short alias. txt needs no grammar, shiki special-cases it
+// shiki registers each grammar under its full name and its short alias. txt doesn't need a grammar, shiki special-cases it
 const HIGHLIGHTABLE = [
     'ts',
     'typescript',
@@ -35,6 +36,8 @@ const HIGHLIGHTABLE = [
     'yml',
     'toml',
     'hbs',
+    'fluent',
+    'ftl',
     ...SHELLS,
     'txt',
     'text',
@@ -65,7 +68,7 @@ let highlighterPromise: Promise<HighlighterCore> | null = null;
 function ensureHighlighter(): Promise<HighlighterCore> {
     highlighterPromise ??= createHighlighterCore({
         themes: [seedcordBrandLight, seedcordBrandDark],
-        langs: [langTs, langTsx, langJs, langJsx, langJson, langYaml, langToml, langHandlebars, langBash],
+        langs: [langTs, langTsx, langJs, langJsx, langJson, langYaml, langToml, langHandlebars, langBash, langFluent],
         engine: createOnigurumaEngine(import('shiki/wasm'))
     });
     return highlighterPromise;
@@ -75,7 +78,7 @@ const EXTERNAL_URL_RE = /^https?:\/\//i;
 
 const NEW_TAB = { target: '_blank', rel: ['noreferrer', 'noopener'] };
 
-// transformerDecorations splits a token at any offset, so a link inside `: Foo` gets its own anchor
+// a link inside `: Foo` gets its own anchor because transformerDecorations splits a token at any offset
 function toDecorations(links: readonly CodeLink[]): DecorationItem[] {
     return links.map((link) => ({
         start: link.start,
@@ -89,7 +92,7 @@ function toDecorations(links: readonly CodeLink[]): DecorationItem[] {
 }
 
 const DARK_THEME = { theme: THEMES.dark } as const;
-// each token carries `color: light-dark(light, dark)`. shiki.css has the pre-2024 fallback
+// each token has `color: light-dark(light, dark)`. shiki.css has the pre-2024 fallback
 const BOTH_THEMES = { themes: THEMES, defaultColor: 'light-dark()' } as const;
 
 interface RenderOptions {

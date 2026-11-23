@@ -48,7 +48,7 @@ function pluginBlock(params: {
     settings?: Linter.Config['settings'];
 }): FlatConfigItem {
     const item: FlatConfigItem = { files: [...params.files] };
-    // when disabled, drop the rules and settings as well. eslint throws "rule not found" if a
+    // when disabled, leave out the rules and settings as well. eslint throws "rule not found" if a
     // <plugin>/* rule is set while its plugin is unregistered.
     if (!params.enabled) return item;
     if (params.settings) item.settings = params.settings;
@@ -82,11 +82,6 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
     assertRelativeImportsMode(relativeImports);
     assertTypescriptConfigsLevel(registerTypescriptConfigs);
 
-    const createTsParserOptions = (rootDir: string) => ({
-        project: ['./tsconfig.json'],
-        tsconfigRootDir: rootDir
-    });
-
     const tsConfigs: FlatConfigItem[] = [];
 
     if (registerTypescriptConfigs === 'rules-only') {
@@ -102,8 +97,8 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         );
 
         if (registerTypescriptConfigs === 'no-type-checked') {
-            // rules only. the full config clears parserOptions.project which the seedcord and
-            // discordjs still need to do their type aware linting
+            // rules only. the full config turns off parserOptions.projectService, which the seedcord
+            // and discordjs rules still need to do their type aware linting
             tsConfigs.push({
                 files: [...TS_FILES],
                 rules: merge({}, tseslint.configs.disableTypeChecked.rules)
@@ -129,7 +124,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             files: [...TS_FILES],
             languageOptions: merge({}, TYPESCRIPT_LANGUAGE_OPTIONS, {
                 parser: tseslint.parser,
-                parserOptions: createTsParserOptions(tsconfigRootDir)
+                parserOptions: { projectService: true, tsconfigRootDir }
             }),
             linterOptions: COMMON_LINTER_OPTIONS
         },
@@ -178,7 +173,6 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             taggedTemplates: tailwindTaggedTemplates
         }),
 
-        // Opt-in via mdxFiles, the spread drops the block entirely when omitted.
         ...(mdxFiles ? [mdxBlock(mdxFiles)] : []),
 
         {
@@ -199,10 +193,10 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             }
         },
 
-        // Must stay after the rule blocks above so it can disable any formatting rules they enable.
+        // Must come after the rule blocks above so it can disable any formatting rules they enable.
         prettierConfig,
 
-        // Last so consumer overrides win over everything above.
+        // Last so consumer overrides replace everything above.
         ...userConfigs
     );
 }

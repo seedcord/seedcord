@@ -1,4 +1,4 @@
-import { PublishDefault } from '@seedcord/core/internal';
+import { keepRequestOpenFor, PublishDefault } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { asError } from '@seedcord/utils/internal';
@@ -8,12 +8,10 @@ import { dispatchInteraction } from './dispatch/dispatchInteraction';
 import { resolve } from './dispatch/resolve';
 import { Ed25519Verifier } from './receiver/Ed25519Verifier';
 import { ReplayGuard } from './receiver/ReplayGuard';
-import { keepRequestOpenFor } from './requestScope';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
-import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
-import type { RouteMaps } from './dispatch/resolve';
+import type { Routes } from './dispatch/resolve';
 import type { MiddlewareRegistry } from '@seedcord/core/internal';
 import type { APIInteraction } from 'discord-api-types/v10';
 
@@ -23,20 +21,20 @@ const TIMESTAMP_HEADER = 'x-signature-timestamp';
 const ACCEPTED = 202;
 const BAD_REQUEST = 400;
 const UNAUTHORIZED = 401;
-const METHOD_NOT_ALLOWED = 405;
+const NOT_FOUND = 404;
 
 // widened so the raw payload's number field compares without an unsafe enum comparison
 const PING: number = InteractionType.Ping;
 
 const decoder = new TextDecoder();
 
-type Outcome = 'unsigned' | 'stale' | 'bad-signature' | 'bad-body' | 'ping' | 'replay' | 'dispatched';
+type Outcome = 'not-post' | 'unsigned' | 'stale' | 'bad-signature' | 'bad-body' | 'ping' | 'replay' | 'dispatched';
 type Answer = readonly [Response, Outcome];
 
-// discord only POSTs to the interactions endpoint
+// discord only POSTs interactions and the plugins have already passed on anything else
 export function rejectNonPost(request: Request): Response | undefined {
     if (request.method === 'POST') return undefined;
-    return new Response(null, { status: METHOD_NOT_ALLOWED, headers: { allow: 'POST' } });
+    return new Response(null, { status: NOT_FOUND });
 }
 
 function hasInteractionType(payload: unknown): payload is { type: number } {
@@ -50,7 +48,7 @@ export class InteractionEngine {
 
     constructor(
         private readonly core: Core,
-        private readonly maps: RouteMaps,
+        private readonly routes: Routes,
         private readonly middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>,
         publicKey: string
     ) {
@@ -63,8 +61,10 @@ export class InteractionEngine {
         return response;
     }
 
-    // only POSTs get here. edge Seedcord.fetch and NodeEndpoint reject every other method first
     private async respond(request: Request): Promise<Answer> {
+        const notPost = rejectNonPost(request);
+        if (notPost) return [notPost, 'not-post'];
+
         const signature = request.headers.get(SIGNATURE_HEADER);
         const timestamp = request.headers.get(TIMESTAMP_HEADER);
         if (signature === null || timestamp === null) return [new Response(null, { status: UNAUTHORIZED }), 'unsigned'];
@@ -103,27 +103,23 @@ export class InteractionEngine {
     private async dispatch(interaction: APIInteraction): Promise<void> {
         try {
             this.core.bus[PublishDefault]('anyInteraction', { interaction });
-            const match = resolve(this.maps, interaction);
-            if (match) {
-                const payload = interaction as ValidInteractionTypes;
-                const start = await dispatchInteraction({
-                    match,
-                    payload,
-                    core: this.core,
-                    middlewares: this.middlewares
-                });
+            const resolved = resolve(this.routes, interaction);
+            if (resolved) {
+                const start = await dispatchInteraction({ resolved, core: this.core, middlewares: this.middlewares });
                 // without this catch the rejection reaches the process unhandled
-                if (start) keepRequestOpenFor(start().catch((caught: unknown) => this.rootFault(caught)));
+                if (start) {
+                    keepRequestOpenFor(start().catch((caught: unknown) => this.rootFault(caught, interaction.id)));
+                }
             }
         } catch (caught) {
-            // the 202 has to go out either way or discord drops the interaction
-            this.rootFault(caught);
+            // handle() has to return the 202 either way or discord fails the interaction
+            this.rootFault(caught, interaction.id);
         }
     }
 
-    private rootFault(caught: unknown): void {
+    private rootFault(caught: unknown, interactionId: string): void {
         const error = asError(caught);
         this.logger.error('dispatch failed past the boundary', error);
-        this.core.bus[PublishDefault]('unhandledInteractionError', { error });
+        this.core.bus[PublishDefault]('unhandledInteractionError', { error, interactionId });
     }
 }

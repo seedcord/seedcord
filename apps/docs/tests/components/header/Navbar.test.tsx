@@ -1,6 +1,6 @@
 import { TooltipProvider } from '@seedcord/ui';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { Navbar } from '#components/header/Navbar';
 import { CommandPaletteProvider, useCommandPaletteOpen } from '#components/providers/CommandPaletteProvider';

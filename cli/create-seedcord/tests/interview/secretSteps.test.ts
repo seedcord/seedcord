@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { tokenStep } from '#interview/steps/token';
 import { BOT_TOKEN, TOKEN } from '#tests/token';
@@ -21,7 +21,7 @@ describe('tokenStep', () => {
         expect(() => tokenStep.flag.parse(`${TOKEN}.ddd`)).toThrow();
     });
 
-    it('rejects three parts whose first one holds no application id', () => {
+    it("rejects three parts whose first one isn't an application id", () => {
         expect(() => tokenStep.flag.parse(`${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`)).toThrow();
     });
 
@@ -29,11 +29,11 @@ describe('tokenStep', () => {
         expect(() => tokenStep.flag.parse('aaa..ccc')).toThrow();
     });
 
-    it('rejects nothing at all', () => {
+    it('rejects a blank token', () => {
         expect(() => tokenStep.flag.parse('   ')).toThrow();
     });
 
-    it('points to the flag and the Bot page, which the framework error leaves out', () => {
+    it("points to the flag and the Bot page, which the framework error doesn't mention", () => {
         expect(() => tokenStep.flag.parse('aaa.bbb.ccc')).toThrow(/--token: .*Bot page/);
     });
 });

@@ -36,7 +36,7 @@ export interface SourceEntry {
     file: string;
     line: number;
     column: number;
-    /** GitHub blob URL with the `#L<line>C<column>` anchor, absent when no repo base was supplied. */
+    /** GitHub blob URL with the `#L<line>C<column>` anchor, absent when the caller doesn't pass a repo base. */
     url?: string;
 }
 
@@ -55,7 +55,7 @@ export interface ReexportEntry {
 export interface SourceScan {
     sources: PackageSourceIndex;
     reexports: ReexportEntry[];
-    // per runtime condition, the exports its build declares in place of the default build's
+    // per runtime condition, the exports that its build declares in place of the default build's
     ownVersions: Record<string, string[]>;
 }
 

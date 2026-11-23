@@ -1,24 +1,33 @@
 import { InteractionKind, Fault, Silence } from '@seedcord/core';
-import {
-    DispatchContext,
-    InteractionRun,
-    interactionMiddleware,
-    MiddlewareRegistry,
-    PublishDefault
-} from '@seedcord/core/internal';
+import { InteractionRun } from '@seedcord/core/internal';
+import { PluginHost } from '@seedcord/core/plugin';
 import { Logger } from '@seedcord/logger';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { gatewayRunConfig } from '#bot/controllers/gatewayRunConfig';
+import { autocompleteRunConfig, repliableRunConfig } from '#bot/controllers/gatewayRunConfig';
 import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
+import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { harmlessError } from '#tests/utils/harmlessError';
+import { pluginWithMembers } from '#tests/utils/pluginWithMembers';
+import { stubBus } from '#tests/utils/stubBus';
 import { TestNotice } from '#tests/utils/TestNotice';
 
-import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type { HandlerSlots } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
-import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
+import type { Repliables, ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { SubscriptionData } from '@seedcord/core';
+import type { InteractionRunConfig } from '@seedcord/core/internal';
+import type { Config, InteractionsConfig } from '@seedcord/types';
+import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'discord.js';
+import type { ExtractStrict } from 'type-fest';
+
+type RecordedKey = 'unknownException' | 'handledException' | 'responseAttempted';
+type FaultKey = ExtractStrict<RecordedKey, 'unknownException' | 'handledException'>;
+type Entry<Key extends RecordedKey> = { [K in Key]: [key: K, data: SubscriptionData<K>] }[Key];
+
+// each [key, payload] the bus published, in order
+type Published = Entry<RecordedKey>[];
 
 const withResponse = { resource: { message: { id: 'sent' } } };
 
@@ -51,37 +60,72 @@ function mockInteraction() {
     };
 }
 
-function mockCore(publish: ReturnType<typeof vi.fn>): Core {
-    // justified: the fixture implements only the Core surface the boundary reads.
-    return { bus: { [PublishDefault]: publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
+class BoundaryHost extends PluginHost<'gateway', 'server'> {
+    public readonly config: Config;
+    // justified: the boundary never reads rest
+    public readonly rest = {} as PluginHost<'gateway', 'server'>['rest'];
+    public readonly applicationId = 'app-1';
+    public readonly url = new URL('https://bot.test/');
+
+    constructor(published: Published, errors: Config['errors'], interactions: InteractionsConfig) {
+        super('gateway', 'server', undefined);
+        // justified: the boundary reads only these config sections
+        this.config = { bot: { interactions }, errors, notifications: {} } as unknown as Config;
+        const bus = stubBus();
+        bus.on('unknownException', (data) => published.push(['unknownException', data]));
+        bus.on('handledException', (data) => published.push(['handledException', data]));
+        bus.on('responseAttempted', (data) => published.push(['responseAttempted', data]));
+        Object.assign(this, { bus });
+    }
 }
 
+function mockCore(
+    published: Published,
+    errors: Config['errors'] = {},
+    interactions: InteractionsConfig = { path: null }
+): BoundaryHost & Core {
+    // justified: the fixture implements only the Core surface the boundary reads.
+    return new BoundaryHost(published, errors, interactions) as unknown as BoundaryHost & Core;
+}
+
+type Mock = ReturnType<typeof mockInteraction>;
+
 // justified: the fixture implements only the interaction surface the boundary reads.
-function asInteraction(mock: ReturnType<typeof mockInteraction>): ValidInteractionTypes {
+function asInteraction(mock: Mock): ValidInteractionTypes {
     return mock as unknown as ValidInteractionTypes;
 }
 
-async function runHandler(
-    HandlerCtor: HandlerConstructor,
-    interaction: ValidInteractionTypes,
+// justified: the same fixture, read as the slash command it mocks by default
+function asSlash(mock: Mock): ChatInputCommandInteraction {
+    return mock as unknown as ChatInputCommandInteraction;
+}
+
+// justified: the same fixture, read as an autocomplete once isAutocomplete returns true
+function asAutocomplete(mock: Mock): AutocompleteInteraction {
+    return mock as unknown as AutocompleteInteraction;
+}
+
+async function start(config: InteractionRunConfig): Promise<void> {
+    const started = await new InteractionRun(config).prepare();
+    await started?.();
+}
+
+function runSlash(
+    ctor: HandlerSlots[InteractionKind.Slash],
+    event: ChatInputCommandInteraction,
     core: Core
 ): Promise<void> {
-    const dispatch = new DispatchContext(
-        interaction.isAutocomplete() ? InteractionKind.Autocomplete : InteractionKind.Slash,
-        'test'
-    );
-    const run = new InteractionRun(
-        gatewayRunConfig({
-            interaction,
-            core,
-            dispatch,
-            HandlerCtor,
-            middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware),
-            logger: new Logger('Test')
-        })
-    );
-    const start = await run.prepare();
-    await start?.();
+    const resolved = { kind: InteractionKind.Slash, route: 'test', fallback: false, ctor, event } as const;
+    return start(repliableRunConfig({ resolved, core, middlewares: [], logger: new Logger('Test') }));
+}
+
+function runAutocomplete(
+    ctor: HandlerSlots[InteractionKind.Autocomplete],
+    event: AutocompleteInteraction,
+    core: Core
+): Promise<void> {
+    const resolved = { kind: InteractionKind.Autocomplete, route: 'test', fallback: false, ctor, event } as const;
+    return start(autocompleteRunConfig({ resolved, core, logger: new Logger('Test') }));
 }
 
 function answerFault(caught: Error, interaction: ValidInteractionTypes, core: Core): Promise<void> {
@@ -95,81 +139,92 @@ function answerFault(caught: Error, interaction: ValidInteractionTypes, core: Co
             throw caught;
         }
     }
-    return runHandler(interaction.isAutocomplete() ? ThrowsAutocomplete : ThrowsRepliable, interaction, core);
+    if (interaction.isAutocomplete()) return runAutocomplete(ThrowsAutocomplete, interaction, core);
+    if (interaction.isChatInputCommand()) return runSlash(ThrowsRepliable, interaction, core);
+    throw new Error('the mock is a slash command or an autocomplete');
 }
 
-function faultEvents(publish: ReturnType<typeof vi.fn>): unknown[] {
-    return publish.mock.calls
-        .map(([event]) => event as unknown)
-        .filter((event) => event === 'handledException' || event === 'unknownException');
+function faultCalls(published: Published): Entry<FaultKey>[] {
+    return published.filter((entry): entry is Entry<FaultKey> => entry[0] !== 'responseAttempted');
+}
+
+function firstFault(published: Published, key: 'unknownException'): SubscriptionData<'unknownException'>;
+function firstFault(published: Published, key: 'handledException'): SubscriptionData<'handledException'>;
+function firstFault(published: Published, key: FaultKey): SubscriptionData<FaultKey> {
+    const [first] = faultCalls(published);
+    if (first?.[0] !== key) throw new Error(`expected ${key} first, got ${String(first?.[0])}`);
+    return first[1];
 }
 
 describe('gateway fault answers', () => {
     let mock: ReturnType<typeof mockInteraction>;
-    let publish: ReturnType<typeof vi.fn>;
+    let published: Published;
 
     beforeEach(() => {
         mock = mockInteraction();
-        publish = vi.fn();
+        published = [];
     });
 
     it('replies the generic and publishes unknownException for a raw error on an unacked interaction', async () => {
-        await answerFault(new Error('boom'), asInteraction(mock), mockCore(publish));
+        await answerFault(new Error('boom'), asInteraction(mock), mockCore(published));
 
         expect(mock.reply).toHaveBeenCalledTimes(1);
-        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
-        expect(event).toBe('unknownException');
-        expect(payload.error).toBeInstanceOf(Error);
+        expect(firstFault(published, 'unknownException').error).toBeInstanceOf(Error);
     });
 
     it('attaches the interaction as metadata on a raw fault, so the report keeps its metadata.json', async () => {
         const interaction = asInteraction(mock);
 
-        await answerFault(new Error('boom'), interaction, mockCore(publish));
+        await answerFault(new Error('boom'), interaction, mockCore(published));
 
-        const [, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
-        expect(payload.metadata).toBe(interaction);
+        expect(firstFault(published, 'unknownException').metadata).toBe(interaction);
     });
 
-    it('swallows an api code listed in ignoreApiCodes, with no reply or report', async () => {
-        // justified: the fixture implements only the Core surface the boundary reads.
-        const core = {
-            bus: { [PublishDefault]: publish },
-            config: { errors: { ignoreApiCodes: [RESTJSONErrorCodes.UnknownInteraction] }, notifications: {} }
-        } as unknown as Core;
+    it('swallows an api code listed in ignoreApiCodes, without a reply or report', async () => {
+        const core = mockCore(published, { ignoreApiCodes: [RESTJSONErrorCodes.UnknownInteraction] });
 
         await answerFault(harmlessError(), asInteraction(mock), core);
 
         expect(mock.reply).not.toHaveBeenCalled();
-        expect(faultEvents(publish)).toEqual([]);
+        expect(faultCalls(published)).toEqual([]);
     });
 
     it('edits the deferReply placeholder and publishes handledException for a reporting fault on a deferred interaction', async () => {
         mock.deferred = true;
-        mock.ephemeral = false;
+        mock.ephemeral = true;
 
-        await answerFault(new Fault({ cause: new Error('write failed') }), asInteraction(mock), mockCore(publish));
+        await answerFault(new Fault({ cause: new Error('write failed') }), asInteraction(mock), mockCore(published));
 
         expect(mock.editReply).toHaveBeenCalledTimes(1);
         expect(mock.followUp).not.toHaveBeenCalled();
         expect(mock.deleteReply).not.toHaveBeenCalled();
         expect(mock.reply).not.toHaveBeenCalled();
-        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'handledException'>];
-        expect(event).toBe('handledException');
-        expect(payload.denial).toBeInstanceOf(Fault);
+        expect(firstFault(published, 'handledException').denial).toBeInstanceOf(Fault);
     });
 
-    it('follows up and reports no fault for a non-reporting denial on a replied interaction', async () => {
+    it('swaps a public deferReply placeholder for a private fault card', async () => {
+        mock.deferred = true;
+        mock.ephemeral = false;
+
+        await answerFault(new Fault({ cause: new Error('write failed') }), asInteraction(mock), mockCore(published));
+
+        expect(mock.editReply).not.toHaveBeenCalled();
+        expect(mock.deleteReply).toHaveBeenCalledBefore(mock.followUp);
+        const options = mock.followUp.mock.calls[0]?.[0] as { flags: number };
+        expect(options.flags & MessageFlags.Ephemeral).toBe(MessageFlags.Ephemeral);
+    });
+
+    it("follows up and doesn't report a fault for a non-reporting denial on a replied interaction", async () => {
         mock.replied = true;
 
-        await answerFault(new TestNotice(), asInteraction(mock), mockCore(publish));
+        await answerFault(new TestNotice(), asInteraction(mock), mockCore(published));
 
         expect(mock.followUp).toHaveBeenCalledTimes(1);
-        expect(faultEvents(publish)).toEqual([]);
+        expect(faultCalls(published)).toEqual([]);
     });
 
     it('replies ephemerally for a refusal by default', async () => {
-        await answerFault(new TestNotice(), asInteraction(mock), mockCore(publish));
+        await answerFault(new TestNotice(), asInteraction(mock), mockCore(published));
 
         const options = mock.reply.mock.calls[0]?.[0] as { flags: number };
         expect(options.flags & MessageFlags.Ephemeral).toBe(MessageFlags.Ephemeral);
@@ -183,13 +238,11 @@ describe('gateway fault answers', () => {
         it('responds with empty choices and publishes unknownException with metadata for a raw error', async () => {
             const interaction = asInteraction(mock);
 
-            await answerFault(new Error('boom'), interaction, mockCore(publish));
+            await answerFault(new Error('boom'), interaction, mockCore(published));
 
             expect(mock.respond).toHaveBeenCalledWith([]);
             expect(mock.reply).not.toHaveBeenCalled();
-            const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
-            expect(event).toBe('unknownException');
-            expect(payload.metadata).toBe(interaction);
+            expect(firstFault(published, 'unknownException').metadata).toBe(interaction);
         });
 
         it('does not send empty choices after the handler already responded', async () => {
@@ -200,17 +253,17 @@ describe('gateway fault answers', () => {
                 }
             }
 
-            await runHandler(RespondsThenStops, asInteraction(mock), mockCore(publish));
+            await runAutocomplete(RespondsThenStops, asAutocomplete(mock), mockCore(published));
 
             expect(mock.respond).toHaveBeenCalledTimes(1);
         });
 
         it('publishes responseAttempted for the empty-choices send', async () => {
-            await answerFault(new Error('boom'), asInteraction(mock), mockCore(publish));
+            await answerFault(new Error('boom'), asInteraction(mock), mockCore(published));
 
-            const writes = publish.mock.calls.filter(([key]) => key === 'responseAttempted');
+            const writes = published.flatMap(([key, data]) => (key === 'responseAttempted' ? [data] : []));
             expect(writes).toHaveLength(1);
-            expect(writes[0]?.[1] as SubscriptionData<'responseAttempted'>).toMatchObject({
+            expect(writes[0]).toMatchObject({
                 method: 'respond',
                 outcome: 'sent',
                 messageId: null
@@ -227,7 +280,7 @@ describe('gateway fault answers', () => {
                 }
             }
 
-            await runHandler(RepliesThenThrows, asInteraction(mock), mockCore(publish));
+            await runSlash(RepliesThenThrows, asSlash(mock), mockCore(published));
 
             expect(mock.reply).toHaveBeenCalledTimes(1);
             expect(mock.followUp).toHaveBeenCalledTimes(1);
@@ -241,10 +294,62 @@ describe('gateway fault answers', () => {
                 }
             }
 
-            await runHandler(ThrowsOnBuild, asInteraction(mock), mockCore(publish));
+            await runSlash(ThrowsOnBuild, asSlash(mock), mockCore(published));
 
             expect(mock.reply).toHaveBeenCalledTimes(1);
             expect(mock.followUp).not.toHaveBeenCalled();
         });
+    });
+});
+
+describe('the interactions ephemeral default on gateway', () => {
+    const publicByDefault: InteractionsConfig = { path: 'handlers', ephemeral: false };
+
+    function replyFlags(mock: Mock): number {
+        const [options] = mock.reply.mock.calls[0] as [{ flags: number }];
+        return options.flags & MessageFlags.Ephemeral;
+    }
+
+    it('sends a public reply when the config sets it false', async () => {
+        class Replies extends InteractionHandler<Repliables> {
+            async execute(): Promise<void> {
+                await this.reply('hi');
+            }
+        }
+        const mock = mockInteraction();
+
+        await runSlash(Replies, asSlash(mock), mockCore([], {}, publicByDefault));
+
+        expect(replyFlags(mock)).toBe(0);
+    });
+
+    it('keeps the unhandled fallback reply ephemeral when the config sets it false', async () => {
+        const mock = mockInteraction();
+
+        await runSlash(UnhandledRepliable, asSlash(mock), mockCore([], {}, publicByDefault));
+
+        expect(replyFlags(mock)).toBe(MessageFlags.Ephemeral);
+    });
+});
+
+describe('plugin members on a gateway interaction', () => {
+    it('builds a member from the interaction and sets it on the handler', async () => {
+        let seen: unknown;
+        class Reads extends UnhandledRepliable {
+            override execute(): Promise<void> {
+                // codegen types the members in a bot, and it doesn't run for this test bot
+                seen = Reflect.get(this, 'tag');
+                return Promise.resolve();
+            }
+        }
+        const core = mockCore([]);
+        core.attach(
+            'tagging',
+            pluginWithMembers({ tag: (origin) => `${String(origin.guildId)}:${String(origin.userLocale)}` })
+        );
+
+        await runSlash(Reads, asSlash(Object.assign(mockInteraction(), { locale: 'pl' })), core);
+
+        expect(seen).toBe('g1:pl');
     });
 });

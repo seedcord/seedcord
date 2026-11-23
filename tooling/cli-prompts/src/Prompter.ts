@@ -1,3 +1,5 @@
+import { setImmediate } from 'node:timers/promises';
+
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
@@ -12,8 +14,12 @@ import type { Outcome } from './usePrompt';
 import type { ReactElement } from 'react';
 
 interface PromptStreams {
-    readonly stdin: NodeJS.ReadableStream;
+    readonly stdin: NodeJS.ReadableStream & { setRawMode: (mode: boolean) => unknown };
     readonly stdout: NodeJS.WritableStream;
+}
+
+function isMethod(value: unknown): value is (...args: unknown[]) => unknown {
+    return typeof value === 'function';
 }
 
 type EndPrompt<Answer> = (outcome: Outcome<Answer>) => void;
@@ -55,12 +61,40 @@ export class Prompter {
     }
 
     private async ask<Answer>(view: ViewOf<Answer>): Promise<Answer> {
+        const { stdin } = this.streams;
+        stdin.setRawMode(true);
+
+        let outcome: Outcome<Answer>;
+        try {
+            outcome = await this.show(view);
+        } finally {
+            // windows keeps a process alive until enter while a cooked-mode console read is pending
+            stdin.pause();
+            // node stops the read one tick after the pause
+            await setImmediate();
+            stdin.setRawMode(false);
+        }
+
+        if (outcome.kind === 'cancelled') throw new SeedcordError(SeedcordErrorCode.CliCancelled);
+        if (outcome.kind === 'failed') throw outcome.error;
+        return outcome.answer;
+    }
+
+    private async show<Answer>(view: ViewOf<Answer>): Promise<Outcome<Answer>> {
         // don't statically import these because ink loads react before seedcord build sets NODE_ENV
         const [{ render }, { promptViews: views }] = await Promise.all([import('ink'), import('./promptViews')]);
 
         const ended = Promise.withResolvers<Outcome<Answer>>();
         const app = render(view(views, ended.resolve), {
-            ...this.streams,
+            // ask() sets raw mode itself because ink turns it off while stdin is still reading
+            stdin: new Proxy(this.streams.stdin, {
+                get(target, key) {
+                    if (key === 'setRawMode') return () => target;
+                    const value: unknown = Reflect.get(target, key, target);
+                    return isMethod(value) ? value.bind(target) : value;
+                }
+            }),
+            stdout: this.streams.stdout,
             // ink draws only a final frame when CI is set
             interactive: true,
             exitOnCtrlC: false,
@@ -75,8 +109,6 @@ export class Prompter {
         app.unmount();
         await app.waitUntilExit();
 
-        if (outcome.kind === 'cancelled') throw new SeedcordError(SeedcordErrorCode.CliCancelled);
-        if (outcome.kind === 'failed') throw outcome.error;
-        return outcome.answer;
+        return outcome;
     }
 }

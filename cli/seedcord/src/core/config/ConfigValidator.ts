@@ -5,6 +5,7 @@ import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 
 import type { BuildTarget, EdgeTarget, ServerTarget } from './detectTarget';
 import type { SeedcordConfig, SeedcordServerConfig } from './schema';
+import type { ExtractStrict } from 'type-fest';
 
 type ConfigProblem = SeedcordTypeError | SeedcordRangeError;
 
@@ -26,23 +27,23 @@ function invalidField(field: string, expected: string): SeedcordTypeError {
 function* typecheckProblems(value: unknown): Generator<SeedcordTypeError> {
     if (value === undefined || typeof value === 'boolean') return;
     if (!isPlainObject(value)) {
-        yield invalidField('hmr.typecheck', 'a boolean or an object');
+        yield invalidField('dev.hmr.typecheck', 'a boolean or an object');
         return;
     }
-    if (!isOptionalString(value.tsconfig)) yield invalidField('hmr.typecheck.tsconfig', 'a string');
+    if (!isOptionalString(value.tsconfig)) yield invalidField('dev.hmr.typecheck.tsconfig', 'a string');
 }
 
 function* hmrProblems(value: unknown): Generator<SeedcordTypeError> {
     if (value === undefined) return;
     if (!isPlainObject(value)) {
-        yield invalidField('hmr', 'an object');
+        yield invalidField('dev.hmr', 'an object');
         return;
     }
     if (value.restart !== undefined && !isStringArray(value.restart)) {
-        yield invalidField('hmr.restart', 'an array of strings');
+        yield invalidField('dev.hmr.restart', 'an array of strings');
     }
     if (value.rollback !== undefined && typeof value.rollback !== 'boolean') {
-        yield invalidField('hmr.rollback', 'a boolean');
+        yield invalidField('dev.hmr.rollback', 'a boolean');
     }
     yield* typecheckProblems(value.typecheck);
 }
@@ -64,24 +65,56 @@ function* makeProblems(value: unknown): Generator<SeedcordTypeError> {
     }
     for (const [name, helper] of Object.entries(value.helpers)) {
         const field = `make.helpers.${name}`;
-        if (TAKEN_NAMES.has(name)) yield invalidField(field, `renamed, since templates already use ${name}`);
+        if (TAKEN_NAMES.has(name)) yield invalidField(field, `renamed because templates already use ${name}`);
         else if (typeof helper !== 'function') yield invalidField(field, 'a function');
     }
+}
+
+function* emojisProblems(value: unknown): Generator<SeedcordTypeError> {
+    if (value === undefined) return;
+    if (!isPlainObject(value)) {
+        yield invalidField('emojis', `an object, like ${paint.bold("{ dir: './assets/emojis' }")}`);
+        return;
+    }
+    if (value.dir !== undefined && !isNonEmptyString(value.dir)) yield invalidField('emojis.dir', 'a folder path');
 }
 
 function* tunnelProblems(value: unknown): Generator<SeedcordTypeError> {
     if (value === undefined || typeof value === 'boolean') return;
     // discord only accepts an https interactions endpoint
     if (typeof value !== 'string' || URL.parse(value)?.protocol !== 'https:') {
-        yield invalidField('tunnel', 'a boolean or an https URL');
+        yield invalidField('dev.tunnel', 'a boolean or an https URL');
     }
+}
+
+function* portProblems(port: unknown): Generator<ConfigProblem> {
+    if (port === undefined) return;
+    if (typeof port !== 'number' || !Number.isSafeInteger(port)) {
+        yield invalidField('dev.port', PORT_RANGE);
+    } else if (port < 0 || port > MAX_PORT) {
+        yield new SeedcordRangeError(SeedcordErrorCode.CliConfigInvalidField, ['dev.port', PORT_RANGE]);
+    }
+}
+
+function* devProblems(value: unknown): Generator<ConfigProblem> {
+    if (value === undefined) return;
+    if (!isPlainObject(value)) {
+        yield invalidField('dev', 'an object');
+        return;
+    }
+    yield* tunnelProblems(value.tunnel);
+    yield* portProblems(value.port);
+    if (value.idleAnimation !== undefined && typeof value.idleAnimation !== 'boolean') {
+        yield invalidField('dev.idleAnimation', 'a boolean');
+    }
+    yield* hmrProblems(value.hmr);
 }
 
 export type CheckedConfig =
     | { readonly target: ServerTarget; readonly config: SeedcordServerConfig }
     | { readonly target: EdgeTarget; readonly config: SeedcordConfig };
 
-type CheckedEdgeConfig = Extract<CheckedConfig, { target: EdgeTarget }>;
+type CheckedEdgeConfig = ExtractStrict<CheckedConfig, { target: EdgeTarget }>;
 
 export function isEdgeConfig(checked: CheckedConfig): checked is CheckedEdgeConfig {
     return checked.target.kind === 'edge';
@@ -93,7 +126,7 @@ export class ConfigValidator {
     public validate(raw: unknown): CheckedConfig {
         this.assertValid(raw);
         // justified: problems() checked build.outDir and build.start on a server target
-        // a valid port on a server is accepted and ignored
+        // a valid dev.port on a server is accepted and ignored
         return { target: this.target, config: raw } as CheckedConfig;
     }
 
@@ -105,32 +138,19 @@ export class ConfigValidator {
     private *problems(raw: Record<string, unknown>): Generator<ConfigProblem> {
         if (!isNonEmptyString(raw.instance))
             yield invalidField('instance', 'a string that points to the file that default exports your bot');
-        yield* this.portProblems(raw.port);
         if (!isOptionalString(raw.root)) yield invalidField('root', 'a string');
         if (raw.files !== undefined && !isStringArray(raw.files)) {
             yield invalidField('files', `an array of folder paths, like ${paint.bold("['./locales']")}`);
         }
-        if (raw.idleAnimation !== undefined && typeof raw.idleAnimation !== 'boolean') {
-            yield invalidField('idleAnimation', 'a boolean');
-        }
-        yield* tunnelProblems(raw.tunnel);
         yield* this.buildProblems(raw.build);
-        yield* hmrProblems(raw.hmr);
+        yield* devProblems(raw.dev);
         yield* makeProblems(raw.make);
+        yield* emojisProblems(raw.emojis);
         if (raw.vitePlugins !== undefined && typeof raw.vitePlugins !== 'function') {
             yield invalidField(
                 'vitePlugins',
                 `a function that returns your Vite plugins, like ${paint.bold('() => [yaml()]')}`
             );
-        }
-    }
-
-    private *portProblems(port: unknown): Generator<ConfigProblem> {
-        if (port === undefined) return;
-        if (typeof port !== 'number' || !Number.isSafeInteger(port)) {
-            yield invalidField('port', PORT_RANGE);
-        } else if (port < 0 || port > MAX_PORT) {
-            yield new SeedcordRangeError(SeedcordErrorCode.CliConfigInvalidField, ['port', PORT_RANGE]);
         }
     }
 

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import type { NavigationCategory, PackageCatalogEntry, PackageVersionCatalog } from '#lib/docs/types';
 import type { PackageIndexEntry } from '@seedcord/docs-engine';
@@ -49,7 +49,7 @@ function makeEntry(versions: PackageVersionCatalog[]): PackageCatalogEntry {
 }
 
 describe('findCatalogVersion', () => {
-    it('returns undefined when the entry has no versions', () => {
+    it('returns undefined for an entry without versions', () => {
         const entry = makeEntry([]);
         expect(findCatalogVersion(entry, 'latest')).toBeUndefined();
         expect(findCatalogVersion(entry, '1.0.0')).toBeUndefined();
@@ -63,7 +63,7 @@ describe('findCatalogVersion', () => {
         expect(findCatalogVersion(entry, '2.0.0')).toBe(v2);
     });
 
-    it('returns undefined when the id matches nothing', () => {
+    it('returns undefined for an unknown id', () => {
         const entry = makeEntry([makeVersion('1.0.0'), makeVersion('2.0.0')]);
         expect(findCatalogVersion(entry, '9.9.9')).toBeUndefined();
     });
@@ -121,7 +121,7 @@ describe('loadDocsCatalog version badges', () => {
         expect(preHead).toMatchObject({ channel: 'prerelease', isLatest: false, badge: 'next' });
     });
 
-    it('leaves out a prerelease that a newer stable release passed', async () => {
+    it("doesn't list a prerelease that a newer stable release passed", async () => {
         const passed: PackageIndexEntry = {
             fullName: '@seedcord/core',
             stable: { latest: '0.9.2', latestByMinor: { '0.9': '0.9.2' }, latestByMajor: { '0': '0.9.2' } },
@@ -211,7 +211,7 @@ describe('withVersion', () => {
     const categories: NavigationCategory[] = [{ id: 'classes', title: 'Classes', tone: 'class', items: [] }];
     const filled = { ...makeVersion('1.0.0', { isLatest: true }), categories };
 
-    it('swaps in only the matching (package, version) and leaves the rest empty', () => {
+    it("swaps in only the matching (package, version) and doesn't fill the rest", () => {
         const catalog = [makeEntry([makeVersion('1.0.0', { isLatest: true }), makeVersion('0.9.0')])];
 
         const [entry] = withVersion(catalog, 'seedcord', filled);

@@ -3,7 +3,7 @@ title: Permissions
 description: Check the caller's permissions, your bot's permissions, or the caller's role before a handler runs, and reword each refusal.
 ---
 
-A kick command can fail two ways. The caller might not be allowed to kick, or your bot might not be. Checked by hand, the first is a permissions lookup at the top of every handler. For the second, Discord returns a Missing Permissions error after your handler has already replied or started work.
+A kick command can fail two ways. The caller might not be allowed to kick, or your bot might not be. If you check by hand, the first is a permissions lookup at the top of every handler. For the second, Discord returns a Missing Permissions error after your handler has already replied or started work.
 
 [`RequirePermissions`](ref:core/RequirePermissions) checks the caller and [`RequireBotPermissions`](ref:core/RequireBotPermissions) checks your bot, both before `execute()` runs. [`RequireRole`](ref:core/RequireRole) checks one role by id.
 
@@ -47,11 +47,11 @@ An http bot doesn't depend on discord.js, so the same bits come from `discord-ap
 
 ## Administrator passes everything
 
-Discord grants every permission to **Administrator**, so both permission gates apply that rule. A caller holding **Administrator** passes any scope you name.
+Discord grants every permission to **Administrator**, so both permission gates pass a caller who holds it, whatever scope you name.
 
 <Callout type="warning">
 
-You hold **Administrator** on your own test server, as the owner or through a role. Both permission gates pass there, so you cannot tell a broken one from a working one. Test with a second account that doesn't have an admin role.
+You hold **Administrator** on your own test server as the owner or through a role. Both permission gates pass there, so you cannot tell a broken one from a working one. Test with a second account that doesn't have an admin role.
 
 </Callout>
 
@@ -74,7 +74,7 @@ RequirePermissions([PermissionFlagsBits.BanMembers], { in: '
 
 | `in` | reads | holds true when |
 | --- | --- | --- |
-| `'channel'`, the default | the effective set for the invoked channel, after overwrites | Discord would allow the action right here |
+| `'channel'`, the default | the effective set for the invoked channel after overwrites | Discord would allow the action right here |
 | `'guild'` | the base set from roles alone | the roles grant it somewhere in the server |
 
 {/* prettier-ignore-end */}
@@ -92,7 +92,7 @@ RequirePermissions([PermissionFlagsBits.BanMembers], {
 
 <Callout type="transport" only="gateway">
 
-`in: 'guild'` reads role-derived sets that only the gateway cache carries. So the gate requires a [`GuildPermissionsContext`](ref:core/GuildPermissionsContext), which the http transport never provides.
+`in: 'guild'` reads role-derived sets that only the gateway cache has. So the gate requires a [`GuildPermissionsContext`](ref:core/GuildPermissionsContext), which the http transport never provides.
 
 </Callout>
 
@@ -122,14 +122,14 @@ export class Ban extends SlashHandler<'ban'> {
 
 ## On a gateway event handler
 
-An interaction payload carries both channel sets. A gateway event doesn't carry either one, which changes what `'channel'` does on each gate.
+An interaction payload has both channel sets. A gateway event doesn't have either one, which changes what `'channel'` does on each gate.
 
 {/* prettier-ignore-start */}
 
 | on an event, `in: 'channel'` | what happens |
 | --- | --- |
 | `RequirePermissions` | reads the caller's role-derived set, the same value `'guild'` reads. Channel overwrites go uncounted |
-| `RequireBotPermissions` | doesn't compile, since it reads `app_permissions` and an event never carries it |
+| `RequireBotPermissions` | doesn't compile since it reads `app_permissions` and an event never has it |
 
 {/* prettier-ignore-end */}
 
@@ -207,6 +207,6 @@ RequirePermissions([PermissionFlagsBits.BanMembers], {
 RequireRole('221439658686939136', { missingRole: SubscribersOnly });
 ```
 
-Leaving an option out keeps the default card. The permission gates list every missing bit on it by name, and `RequireRole` mentions the role.
+Without the option, a gate uses the default card. The permission gates list every missing bit on it by name, and `RequireRole` mentions the role.
 
 A check these gates don't cover, like whether the caller linked an account, is [a gate you write yourself](/checks/your-own).

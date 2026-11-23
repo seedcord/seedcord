@@ -6,7 +6,11 @@ export const CALLOUT_LABELS = {
     transport: 'Gateway and http differ'
 } as const;
 
-export const TRANSPORT_LABELS = { gateway: 'Gateway only', http: 'Http only' } as const;
+export const TRANSPORT_LABELS = {
+    gateway: 'Gateway only',
+    http: 'Http only',
+    edge: 'Cloudflare Workers only'
+} as const;
 
 export type CalloutType = keyof typeof CALLOUT_LABELS;
 export type Transport = keyof typeof TRANSPORT_LABELS;

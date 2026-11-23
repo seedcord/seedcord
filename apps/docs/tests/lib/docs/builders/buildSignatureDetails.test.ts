@@ -1,5 +1,5 @@
 import { DocKind } from '@seedcord/docs-search';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import type { CommentParagraph, FormatContext, FormattedComment } from '#lib/docs/types';
 import type { CodeRepresentation } from '@seedcord/ui';
@@ -17,7 +17,7 @@ vi.mock('#lib/docs/formatting', () => {
         highlightCode: vi.fn((text: string) => Promise.resolve(code(text)))
     };
 });
-// param/throws-free signatures never call formatCommentRich, so stub the module to keep its shiki imports out.
+// stub the module to keep its shiki imports out because param/throws-free signatures never call formatCommentRich.
 vi.mock('#lib/docs/comments/formatter', () => ({
     formatCommentRich: vi.fn(() => Promise.resolve({ paragraphs: [], examples: [] }))
 }));

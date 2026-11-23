@@ -1,0 +1,43 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
+
+import type { KyselyTable } from '#src/types/KyselyDatabase';
+import type { KyselyServiceRegistrationOptions } from '#src/types/KyselyServiceRegistrationOptions';
+import type { KyselyServices, KyselyServiceKeys } from '#src/types/KyselyServices';
+import type { Constructor } from 'type-fest';
+
+export const KyselyServiceMetadataKey = Symbol.for('seedcord:kysely:service');
+export const KyselyTableMetadataKey = Symbol.for('seedcord:kysely:table');
+
+/**
+ * Registers the service under `key`, which is also its table name unless `options.table` gives another.
+ * Handlers read it from the plugin's `services[key]`.
+ *
+ * @typeParam TTable - The table that the service reads, defaulting to the key
+ * @param key - Service key for registration and type-safe access
+ * @decorator
+ * @example
+ * ```typescript
+ * \@RegisterKyselyService('users', { table: 'app_users' })
+ * export class UsersService extends KyselyService<'app_users'> {
+ *   // Some code
+ * }
+ * ```
+ *
+ * @see {@link KyselyService}
+ */
+export function RegisterKyselyService<
+    TKey extends KyselyServiceKeys,
+    TTable extends KyselyTable = TKey extends KyselyTable ? TKey : never
+>(key: TKey, options?: KyselyServiceRegistrationOptions<TTable>) {
+    // the `table` member pins the class to the same table the effective option resolves to
+    return <Ctor extends Constructor<KyselyServices[TKey] & { table: TTable }>>(ctor: Ctor): void => {
+        const tableName = options?.table ?? String(key);
+        if (tableName.length === 0) {
+            throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyServiceTableMissing, [ctor.name]);
+        }
+
+        Reflect.defineMetadata(KyselyServiceMetadataKey, key, ctor);
+        Reflect.defineMetadata(KyselyTableMetadataKey, tableName, ctor);
+    };
+}

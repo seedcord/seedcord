@@ -5,7 +5,7 @@ import { PassThrough } from 'node:stream';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
-import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi, type Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi, type Mock } from 'vite-plus/test';
 
 import { DevRunner } from '#commands/dev/DevRunner';
 import { runPlain } from '#commands/dev/runPlain';
@@ -89,7 +89,7 @@ function settled(): Promise<void> {
     return new Promise((resolve) => setImmediate(resolve));
 }
 
-// resolves once the startup write has gone out, with the run loop still going until the test ends
+// resolves after the startup write, while the run loop keeps running until the test ends
 async function startedRunner(codegen: FakeCodegen, codegenLogger: ILogger = silentLogger): Promise<DevRunner> {
     const runner = makeRunner({ codegen, codegenLogger });
     const running = runner.run();
@@ -465,7 +465,7 @@ describe('DevRunner run', () => {
     }, 60_000);
 });
 
-describe('runPlain, with no terminal to answer prompts', () => {
+describe('runPlain, without a terminal to answer prompts', () => {
     afterEach(() => {
         vi.useRealTimers();
     });
@@ -483,7 +483,7 @@ describe('runPlain, with no terminal to answer prompts', () => {
         await running;
     });
 
-    it('refreshes commands once, after a burst of saves stops', async () => {
+    it('refreshes commands once after a burst of saves stops', async () => {
         const store = new DevStore();
         const runtime = fakeRuntime({ default: readyBot });
         const refresh = vi.spyOn(runtime, 'refreshCommands');

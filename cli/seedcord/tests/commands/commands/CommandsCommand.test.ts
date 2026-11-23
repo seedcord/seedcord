@@ -4,20 +4,21 @@ import { Command } from '@commander-js/extra-typings';
 import { KEY, PromptTerminal } from '@seedcord/cli-prompts/testing';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { CommandsCommand } from '#commands/commands/CommandsCommand';
 import { DeployRunner } from '#commands/commands/deploy/DeployRunner';
 import { ListRunner } from '#commands/commands/list/ListRunner';
 import { RemoveRunner } from '#commands/commands/remove/RemoveRunner';
 import { bindEnv } from '#tests/bindEnv';
+import { captureOutput } from '#tests/captureOutput';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { APP_ID, botGuilds, fakeDiscord, fakeProject, removeDeps, slash } from '#tests/commands/commands/fakeBot';
 import { silentLogger } from '#tests/silentLogger';
 
 import type { FakeProject } from '#tests/commands/commands/fakeBot';
 import type { Prompter } from '@seedcord/cli-prompts';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 const GUILD_PAGE = 200;
 
@@ -25,34 +26,6 @@ const ON_DISCORD = {
     [Routes.applicationCommands(APP_ID)]: [slash('ban')],
     [Routes.applicationGuildCommands(APP_ID, '111')]: [slash('ban'), slash('setup')]
 };
-
-interface CapturedOutput extends Disposable {
-    stdout(): string;
-    stderr(): string;
-}
-
-function captureOutput(): CapturedOutput {
-    const capture = (stream: NodeJS.WriteStream): { text: () => string; restore: () => void } => {
-        const chunks: string[] = [];
-        const spy = vi.spyOn(stream, 'write').mockImplementation((chunk: string | Uint8Array) => {
-            chunks.push(String(chunk));
-            return true;
-        });
-        return { text: () => stripVTControlCharacters(chunks.join('')), restore: () => spy.mockRestore() };
-    };
-    const stdout = capture(process.stdout);
-    const stderr = capture(process.stderr);
-
-    return {
-        stdout: stdout.text,
-        stderr: stderr.text,
-        [Symbol.dispose]: () => {
-            stdout.restore();
-            stderr.restore();
-            process.exitCode = undefined;
-        }
-    };
-}
 
 async function runCommands(deps: ConstructorParameters<typeof CommandsCommand>[0], ...args: string[]): Promise<void> {
     const program = new Command().exitOverride();
@@ -219,7 +192,7 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         expect(deletes).toEqual([]);
     });
 
-    it('deletes the duplicates with --yes and asks nothing', async () => {
+    it('deletes the duplicates with --yes and skips the prompt', async () => {
         using _output = captureOutput();
 
         const { deletes } = await run(['clean', '--guilds', '111', '--yes']);
@@ -235,7 +208,7 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         expect(gets).toContain(Routes.applicationGuildCommands(APP_ID, `g${GUILD_PAGE}`));
     });
 
-    it('prints CliNoScopeGiven with no stack when clean gets no guilds', async () => {
+    it('prints CliNoScopeGiven without a stack when clean gets zero guilds', async () => {
         using output = captureOutput();
 
         await run(['clean', '--yes']);
@@ -245,7 +218,7 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         expect(process.exitCode).toBe(1);
     });
 
-    it('lists every command in the guilds passed to purge and deletes nothing', async () => {
+    it('only lists the commands in the guilds passed to purge', async () => {
         using output = captureOutput();
 
         const { puts } = await run(['purge', '--guilds', '111']);
@@ -270,7 +243,7 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         expect(puts).toEqual([{ route: Routes.applicationCommands(APP_ID), names: [] }]);
     });
 
-    it('throws CliNoScopeGiven when purge gets nothing to empty', async () => {
+    it('throws CliNoScopeGiven when purge gets zero scopes', async () => {
         using output = captureOutput();
 
         await run(['purge', '--yes']);
@@ -297,12 +270,12 @@ describe('seedcord commands deploy, off a terminal', () => {
         process.stdin.isTTY = stdinIsTTY;
     });
 
-    it('throws CliDeployNeedsYes before it reads anything', async () => {
+    it('throws CliNeedsYes before it reads anything', async () => {
         using output = captureOutput();
 
         const { gets, puts } = await run(['deploy'], { onDiscord: EMPTY_DISCORD });
 
-        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliDeployNeedsYes}]`);
+        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliNeedsYes}]`);
         expect(process.exitCode).toBe(1);
         expect(gets).toEqual([]);
         expect(puts).toEqual([]);
@@ -342,12 +315,11 @@ describe('seedcord commands list --json', () => {
         using output = captureOutput();
         const inner = await fakeProject();
         const project: FakeProject = {
-            state: inner.state,
+            ...inner,
             readConfig: (dir) => {
                 process.stdout.write('loading the bot\n');
                 return inner.readConfig(dir);
-            },
-            openProject: (config) => inner.openProject(config)
+            }
         };
 
         await run(['list', '--json'], { project });

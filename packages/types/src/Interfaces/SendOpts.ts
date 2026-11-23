@@ -1,11 +1,12 @@
-/** Options for reply / followUp / send. send() applies them only when it creates a new message. */
+/** Options for reply / followUp / send. They apply when the call sends a new message. */
 export interface SendOpts {
     /**
-     * Whether only the invoking user sees the reply.
+     * Whether only the invoking user sees the reply. If the `defer()` placeholder is still empty and this doesn't
+     * match it, the placeholder gets deleted and a new message is sent.
      *
-     * @defaultValue `true`
+     * @defaultValue what `defer()` used, or `bot.interactions.ephemeral` without a defer
      */
-    readonly ephemeral?: boolean;
+    readonly ephemeral?: boolean | undefined;
     /**
      * Whether the message skips push and desktop notifications.
      *
@@ -19,7 +20,7 @@ export interface DeferOpts {
     /**
      * Whether the eventual reply is ephemeral.
      *
-     * @defaultValue `true`
+     * @defaultValue `bot.interactions.ephemeral`
      */
     readonly ephemeral?: boolean;
 }

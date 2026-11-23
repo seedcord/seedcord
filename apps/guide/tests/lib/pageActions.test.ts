@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { pageActionsFor } from '#lib/pageActions';
 
@@ -11,7 +11,7 @@ const page = {
 const MARKDOWN_URL = 'https://seedcord.org/guide/commands/options.md';
 
 describe('pageActionsFor', () => {
-    // a fetch and a plain <a> get no basePath from next
+    // next doesn't add the basePath to a fetch or a plain <a>
     it('copies from the exported file and links the url a reader sees, both under the base path', () => {
         const actions = pageActionsFor(page);
 
@@ -36,7 +36,7 @@ describe('pageActionsFor', () => {
         expect(new URL(links.cursor).host).toBe('cursor.com');
     });
 
-    it('opens the page source on the branch pull requests land on', () => {
+    it('opens the page source on the branch that pull requests target', () => {
         expect(pageActionsFor(page).links.edit).toBe(
             'https://github.com/seedcord/seedcord/edit/next/apps/guide/content/docs/commands/options.mdx'
         );

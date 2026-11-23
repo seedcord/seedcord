@@ -1,3 +1,4 @@
+import { BOT_TOKEN_ENV } from './botTokenKeys';
 import { paint } from './palette';
 
 export interface VitePluginPlace {
@@ -24,8 +25,24 @@ export const listedFolderProblems = {
     outsideProject: `which is outside the folder that holds seedcord.config.ts. Move it into that folder and list its new path.`
 };
 
+export const emojiFileProblems = {
+    name: 'Discord takes a name of 2 to 32 letters, digits, and underscores. Rename the file.',
+    format: 'Discord takes a PNG, JPEG, GIF, APNG, WebP, or AVIF file. Convert this one, or move it out of the emojis folder.',
+    size: 'Discord rejects a file over 2048 KiB. Export it as a 128px WebP, animated if it moves.'
+};
+
+export type LoginNeededReason = 'never' | 'refused' | { missingScope: string };
+
+export function loginNeededBecause(why: LoginNeededReason): string {
+    if (why === 'never') {
+        return "They don't have saved tokens here. They never logged in, they were logged out, or the client secret changed since they logged in.";
+    }
+    if (why === 'refused') return 'Discord refused their saved tokens, which happens after they remove the app.';
+    return `Their login is from before ${paint.bold(why.missingScope)} was in ${paint.bold('scopes')}.`;
+}
+
 // the edge worker sets chalk's color level after this module loads
-export const token = (): string => paint.bold('DISCORD_BOT_TOKEN');
+export const token = (): string => paint.bold(BOT_TOKEN_ENV);
 
 const BAD_REQUEST = 400;
 const UNAUTHORIZED = 401;

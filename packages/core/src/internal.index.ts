@@ -19,7 +19,11 @@ export { FaultBoundary, type FaultDetails } from '#src/notices/FaultBoundary';
 export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
 export type { Runtime, Transport } from '#src/plugin/options';
-export { attachmentsOf, sealAttachments } from '#src/plugin/PluginHost';
+export { DEFAULT_SERVER_PORT, DEV_URL_HEADER, WORKER_PROBE } from '#src/webConstants';
+export { publicUrl } from '#src/publicUrl';
+export { keepRequestOpenFor, requestScope } from '#src/requestScope';
+export { sealAttachments } from '#src/plugin/PluginHost';
+export { PluginRegistry } from '#src/plugin/PluginRegistry';
 export { splitPluginKey } from '#src/plugin/splitPluginKey';
 export { CoordinatedStartup, type StartupTasks } from '#src/lifecycle/CoordinatedStartup';
 export { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
@@ -36,12 +40,13 @@ export {
 
 export { runHandlerGates } from '#gates/runGates';
 export { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
-export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
 export { lazyLogger } from '#src/miscellaneous/lazyLogger';
 export { currentApplication } from '#src/miscellaneous/currentApplication';
 export { readBotToken } from '#src/miscellaneous/readBotToken';
 export { bindEnv } from '#src/miscellaneous/bindViteEnv';
-export { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
+export { emojisOf, resolveEmojis } from '#src/miscellaneous/resolveEmojis';
+export { emojiNotFound, emojiUnreadable, expectedEmojis, folderEmoji } from '#src/miscellaneous/expectedEmojis';
+export type { ExpectedEmoji } from '#src/miscellaneous/expectedEmojis';
 
 export { BAKED_IDS_KEY, type BakedIds } from '#src/bakedIds';
 export { installLinks, warnLinks } from '#src/commands/CommandInjector';
@@ -63,7 +68,6 @@ export {
 export { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export { isCommandClass, type CommandCtor } from '#src/commands/isCommandClass';
-export { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
 export type { GateFitsWith } from '#gates/matching';
@@ -111,11 +115,11 @@ export type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from
 
 export { PAGE_MAX, pageCursor, type PageCursor } from '#pagination/cursor';
 
-export { deferFlags, sendFlags } from '#reply/flags';
-export { checkAckLegality, sendTarget, type AckState, type ReplyMethod } from '#reply/ackLegality';
+export { checkAckLegality, type AckState, type ReplyMethod } from '#reply/ackLegality';
 export { AckTrace } from '#reply/AckTrace';
 export { AutocompleteResponder } from '#reply/AutocompleteResponder';
-export { reportedWrite, type ReplyTelemetry } from '#reply/responseReport';
+export { isEphemeralByDefault } from '#reply/flags';
+export { replyFileInfo, type ReplyTelemetry, type SentFile } from '#reply/responseReport';
 export { translateSerializationError } from '#reply/translateSerialization';
 export { serializeReply, type SerializedReply } from '#reply/serializeReply';
 
@@ -123,7 +127,6 @@ export { type StoredSubscriberCtor } from '#subscribers/Bus';
 export { ReportThrottle } from '#subscribers/ReportThrottle';
 export { PublishDefault } from '#subscribers/publishDefault';
 export {
-    OnRun,
     RegisterDefaults,
     RegisteredCount,
     RegisterSubscriber,
@@ -132,13 +135,15 @@ export {
 } from '#subscribers/slots';
 export { DispatchContext, type InteractionDispatch } from '#src/dispatch/DispatchContext';
 export { InteractionRun, type InteractionRunConfig } from '#src/dispatch/InteractionRun';
-export { componentKindOf } from '#src/dispatch/componentKindOf';
 export { HandlerLoader } from '#src/dispatch/HandlerLoader';
 export {
     emptyRouteMaps,
     matchRoute,
     RouteRegistry,
+    UNHANDLED_REPLY,
+    unhandledSlots,
     type RegisteredRoute,
+    type ResolvedRoute,
     type RouteMaps
 } from '#src/dispatch/RouteRegistry';
 export { eventResultFor, resultFor, runAfter } from '#src/dispatch/runAfter';

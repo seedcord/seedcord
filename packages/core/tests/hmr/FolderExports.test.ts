@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { setDevFiles } from '@seedcord/utils/internal';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
 import { FolderExports } from '#hmr/FolderExports';
 
@@ -90,6 +90,18 @@ describe('FolderExports', () => {
         });
     });
 
+    describe('scan', () => {
+        it('returns what is() accepts once each, without registering it', async () => {
+            write('Ping.mjs', 'export class Ping {}\nexport const helper = 1;\n');
+            write('index.mjs', "export { Ping } from './Ping.mjs';\n");
+
+            const found = await folder.scan();
+
+            expect(found.map((unit) => unit.name)).toEqual(['Ping']);
+            expect(register).not.toHaveBeenCalled();
+        });
+    });
+
     describe('saves outside the folder', () => {
         it('ignores a sibling directory that shares the folder prefix', async () => {
             const siblingDir = join(dir, 'commands-extra');
@@ -130,7 +142,7 @@ describe('FolderExports', () => {
         });
     });
 
-    it('warns when a saved file loses its last export, and stays quiet for a file that never had one', async () => {
+    it("warns when a saved file loses its last export, and doesn't warn for a file that never had one", async () => {
         const { 'Ping.mjs': file = '' } = await loaded({ 'Ping.mjs': 'export class Ping {}\n' });
         write('Ping.mjs', 'export const notAUnit = 1;\n');
 
@@ -163,7 +175,7 @@ describe('FolderExports', () => {
         expect(register.mock.calls).toEqual([[expect.objectContaining({ name: 'Ping' }), file]]);
     });
 
-    it('imports the new contents when two saves of one file land in the same millisecond', async () => {
+    it('imports the new contents when two saves of one file happen in the same millisecond', async () => {
         vi.spyOn(Date, 'now').mockReturnValue(1);
         const file = write('Ping.mjs', 'export class First {}\n');
         await folder.handle({ file, type: 'update' });
@@ -235,7 +247,7 @@ describe('FolderExports', () => {
             expect(debugLines(spies).find((line) => line.includes('Reloaded'))).toMatch(/Reloaded \S*Ping\S* from/);
         });
 
-        it('stays quiet when a new barrel re-exports a class that is already registered', async () => {
+        it("doesn't log when a new barrel re-exports a class that is already registered", async () => {
             await loaded({ 'Ping.mjs': 'export class Ping {}\n' });
             const barrel = write('index.mjs', "export { Ping } from './Ping.mjs';\n");
 
@@ -244,7 +256,7 @@ describe('FolderExports', () => {
             expect(debugLines(spies).some((line) => line.includes('Registered'))).toBe(false);
         });
 
-        it('stays quiet when the file registers nothing', async () => {
+        it('skips the log line for a file without registrations', async () => {
             const file = write('Empty.mjs', 'export const value = 1;\n');
 
             await folder.handle({ file, type: 'update' });
@@ -337,7 +349,7 @@ describe('FolderExports', () => {
 
         beforeEach(() => {
             owner = undefined;
-            // a plain Error, since a plugin's registry throws its own errors
+            // a plain Error since a plugin's registry throws its own errors
             register.mockImplementation((ctor) => {
                 if (owner && owner !== ctor) throw new Error('slash:versions is taken');
                 owner = ctor;
@@ -439,7 +451,7 @@ describe('FolderExports', () => {
             expect(spies.error).toHaveBeenCalledTimes(2);
         });
 
-        it('leaves a file alone when it failed to import', async () => {
+        it("doesn't log a second error when a file that failed to import is deleted", async () => {
             write('Versions.mjs', 'export class Versions {\n');
             await folder.handle({ file: newFile, type: 'create' });
             await folder.handle({ file: oldFile, type: 'update' });
@@ -461,7 +473,7 @@ describe('FolderExports', () => {
             expect(register.mock.calls).toEqual([[expect.objectContaining({ name: 'Broken' }), file]]);
         });
 
-        it('does not log a rollback for a file that had no working version', async () => {
+        it('does not log a rollback for a file without a working version', async () => {
             const file = write('Fresh.mjs', "throw new Error('boom');\n");
 
             await folder.handle({ file, type: 'create' });

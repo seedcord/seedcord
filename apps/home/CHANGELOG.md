@@ -1,5 +1,14 @@
 # @seedcord/home
 
+## 0.0.4-next.0
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `discord-component-embed` 1.1.0 → 1.1.1-next.0
+- `@seedcord/ui` 0.2.2 → 0.2.3-next.0
+
 ## 0.0.3
 
 ### 🩹 Patch

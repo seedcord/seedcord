@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { toPosixPath } from '@seedcord/utils/internal';
-import { assert, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { DevSession } from '#commands/dev/DevSession';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
@@ -57,7 +57,7 @@ function sessionDeps(
     };
 }
 
-// start() spawns tsc --watch before it reaches the throw, so every case has to stop the session
+// every case has to stop the session because start() spawns tsc --watch before it reaches the throw
 async function settle(session: DevSession, run: Promise<unknown>): Promise<unknown> {
     const outcome = await run.then(
         () => null,
@@ -148,7 +148,7 @@ describe('DevSession', () => {
         await running;
     });
 
-    it('rejects a default export that carries no seedcord brand', async () => {
+    it('rejects a default export without a seedcord brand', async () => {
         const session = new DevSession(
             ...withFiles(config()),
             fakeRuntime({ default: { start: vi.fn() } }),

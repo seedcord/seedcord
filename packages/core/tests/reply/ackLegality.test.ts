@@ -1,7 +1,7 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { checkAckLegality, sendTarget } from '#reply/ackLegality';
+import { checkAckLegality } from '#reply/ackLegality';
 import { AckTrace } from '#reply/AckTrace';
 
 import { stripAnsi } from './helpers';
@@ -70,10 +70,9 @@ describe('checkAckLegality', () => {
         expect(message).toContain('edit()');
     });
 
-    it('suggests edit and followUp when reply is called after a deferred reply', () => {
+    it('points reply after a deferred reply at edit, which fills it', () => {
         const message = captureMessage('reply', 'deferred-reply');
-        expect(message).toContain('edit()');
-        expect(message).toContain('followUp()');
+        expect(message).toContain('Use edit() to fill the deferred reply.');
     });
 
     it('suggests only followUp when reply is called after a deferred update', () => {
@@ -102,7 +101,7 @@ describe('checkAckLegality', () => {
         expect(message).toContain('A deferral can only be the initial response.');
     });
 
-    it('says nothing was sent when edit is called before any ack', () => {
+    it('says that nothing was sent when edit is called before any ack', () => {
         const message = captureMessage('edit', 'unacked');
         expect(message.toLowerCase()).toContain('nothing');
     });
@@ -133,14 +132,5 @@ describe('checkAckLegality', () => {
             if (!isSeedcordError(error)) throw error;
             expect(error.cause).toBeUndefined();
         }
-    });
-});
-
-describe('sendTarget', () => {
-    it('maps each ack state to its concrete dispatch method', () => {
-        expect(sendTarget('unacked')).toBe('reply');
-        expect(sendTarget('deferred-reply')).toBe('edit');
-        expect(sendTarget('deferred-update')).toBe('followUp');
-        expect(sendTarget('replied')).toBe('followUp');
     });
 });

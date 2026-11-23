@@ -2,7 +2,7 @@ import { mkdtempDisposable, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { DirectoryBucket } from '#src/docs/DirectoryBucket';
 
@@ -35,7 +35,7 @@ describe('DirectoryBucket', () => {
         await expect(bucket.folders('builds/')).resolves.toEqual(['builds/b/']);
     });
 
-    it('lists nothing before the first upload', async () => {
+    it('returns an empty list before the first upload', async () => {
         const { root } = await scratch();
         await expect(new DirectoryBucket(root).folders('builds/')).resolves.toEqual([]);
     });

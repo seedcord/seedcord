@@ -1,11 +1,11 @@
 import { cn, Icon, tw } from '@seedcord/ui';
 import {
-    Activity,
     AtSign,
     Blocks,
     Binary,
     Bot,
     Cable,
+    CalendarClock,
     Cloud,
     Component,
     Database,
@@ -15,10 +15,13 @@ import {
     GalleryHorizontalEnd,
     Gauge,
     GitMerge,
+    Globe,
     HardDrive,
     HeartPulse,
     Hourglass,
+    ImageUp,
     KeyRound,
+    Languages,
     Layers,
     Leaf,
     ListTree,
@@ -38,6 +41,7 @@ import {
     Server,
     ShieldAlert,
     ShieldCheck,
+    Signpost,
     SlidersHorizontal,
     Smile,
     Sparkles,
@@ -45,6 +49,7 @@ import {
     Split,
     SquareTerminal,
     TimerReset,
+    UserRoundKey,
     Variable,
     WandSparkles,
     Waypoints,
@@ -86,7 +91,7 @@ const GROUPS: Group[] = [
                 gloss: 'a handler per option, and a missing one fails to compile'
             },
             { icon: AtSign, label: 'command mentions', gloss: 'renders </route:id> once Discord assigns the id' },
-            { icon: Smile, label: 'emojis', gloss: 'resolved at startup, reached by name' }
+            { icon: Smile, label: 'emojis', gloss: 'typed from your emojis folder, resolved at startup' }
         ]
     },
     {
@@ -113,7 +118,7 @@ const GROUPS: Group[] = [
             {
                 icon: GalleryHorizontalEnd,
                 label: 'pagination',
-                gloss: 'each nav button carries its page, so a restart keeps working'
+                gloss: 'each nav button encodes its page, so a restart keeps working'
             }
         ]
     },
@@ -136,7 +141,11 @@ const GROUPS: Group[] = [
             { icon: Blocks, label: 'composable gates', gloss: 'stack them with and, or' },
             { icon: TimerReset, label: 'cooldowns', gloss: 'scoped per user, guild or channel' },
             { icon: Gauge, label: 'rate limiter', gloss: 'a sliding window per key' },
-            { icon: ShieldAlert, label: 'errors', gloss: 'Notice refuses, Fault reports, Silence stays quiet' }
+            {
+                icon: ShieldAlert,
+                label: 'errors',
+                gloss: 'Notice refuses, Fault reports, Silence just stops'
+            }
         ]
     },
     {
@@ -145,7 +154,7 @@ const GROUPS: Group[] = [
         rows: [
             { icon: HeartPulse, label: 'lifecycle', gloss: 'phased startup and shutdown' },
             { icon: ScrollText, label: 'logger', gloss: 'named channels, levels and sinks' },
-            { icon: Activity, label: 'health check', gloss: 'an HTTP endpoint that reports readiness' },
+            { icon: Globe, label: 'web server', gloss: 'a health check and your plugin routes on one port' },
             { icon: Webhook, label: 'webhook reporters', gloss: 'faults posted to a Discord webhook' },
             { icon: Variable, label: 'typed env', gloss: 'envapt reads .env, your shell and Worker bindings' },
             {
@@ -170,7 +179,7 @@ const GROUPS: Group[] = [
             {
                 icon: RefreshCw,
                 label: 'hot reload',
-                gloss: 'Vite HMR swaps changed modules, the gateway stays connected'
+                gloss: 'Vite HMR swaps changed modules, the gateway keeps its connection'
             },
             { icon: Cable, label: 'dev tunnel', gloss: 'opens cloudflared and points Discord at it' },
             { icon: FileCode2, label: 'codegen', gloss: 'writes the types for your commands and config' },
@@ -180,7 +189,12 @@ const GROUPS: Group[] = [
                 label: 'seedcord commands',
                 gloss: 'deploy, list and clean up your commands on Discord'
             },
-            { icon: SpellCheck, label: 'eslint rules', gloss: 'flags payloads Discord rejects, before you send them' }
+            {
+                icon: ImageUp,
+                label: 'seedcord emojis',
+                gloss: "upload, list, download and delete your app's emojis from the terminal"
+            },
+            { icon: SpellCheck, label: 'eslint rules', gloss: 'flags payloads Discord rejects before you send them' }
         ]
     },
     {
@@ -202,8 +216,12 @@ const GROUPS: Group[] = [
         accent: 'rind',
         rows: [
             { icon: Plug, label: 'typed plugins', gloss: 'attach once, codegen types it on core' },
+            { icon: Signpost, label: 'web routes', gloss: 'a plugin answers requests with fetch()' },
+            { icon: Languages, label: 'i18n', gloss: "replies and commands in each user's language" },
+            { icon: CalendarClock, label: 'Tasks', gloss: 'cron jobs and scheduled tasks' },
+            { icon: UserRoundKey, label: 'OAuth', gloss: 'Discord login, and calls to Discord as that user' },
             { icon: Leaf, label: 'Mongoose', gloss: 'MongoDB, services typed by key' },
-            { icon: Database, label: 'Kysely', gloss: 'Postgres, queries typed off your schema' }
+            { icon: Database, label: 'Kysely', gloss: 'SQLite, Postgres, or MySQL, queries typed off your schema' }
         ]
     }
 ];
@@ -215,10 +233,6 @@ const ACCENT_TEXT: Record<Accent, string> = {
 
 const ROW = tw`group flex items-start gap-3 py-2`;
 
-function pad(count: number): string {
-    return count.toString().padStart(2, '0');
-}
-
 export function FeatureGrid(): ReactNode {
     return (
         <Section ground="pith">
@@ -226,20 +240,20 @@ export function FeatureGrid(): ReactNode {
                 It all comes <span className={cn('text-(--flesh-deep)')}>built in.</span>
             </h2>
 
-            <div className={cn('rule blk mt-10 rounded-sm bg-(--pith)')}>
+            <div className={cn('mt-10 blk rounded-sm bg-(--pith) rule')}>
                 {GROUPS.map((group, groupIndex) => (
                     <div
                         key={group.area}
                         className={cn('p-5 sm:p-6', groupIndex > 0 && 'border-t border-(--seed-dark)/10')}
                     >
-                        <p
+                        <h3
                             className={cn(
-                                'font-mono-code mb-3 text-xs font-semibold tracking-wide uppercase',
+                                'font-display mb-3 text-2xl font-semibold tracking-tight',
                                 ACCENT_TEXT[group.accent]
                             )}
                         >
-                            {group.area} · {pad(group.rows.length)}
-                        </p>
+                            {group.area}
+                        </h3>
                         <div className={cn('grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3')}>
                             {group.rows.map((row) => (
                                 <div key={row.label} className={cn(ROW)}>

@@ -1,13 +1,12 @@
-import { stripVTControlCharacters } from 'node:util';
-
 import { NEXT_GUIDE } from '@seedcord/brand';
 import { ASK_WAIT_STATUS, QUESTION_LENGTH, SearchUnavailable, SiteUnreachable } from '@seedcord/docs-search';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ASK_STEPS, FOR_AGENT, FOR_PERSON } from '#commands/ask/AskPresenter';
 import { AskRunner } from '#commands/ask/AskRunner';
 import { StepPrinter } from '#core/output/StepPrinter';
+import { fakeTerminal } from '#tests/fakeTerminal';
 
 import type { AskFormat } from '#commands/ask/AskPresenter';
 import type { GuideResult } from '@seedcord/docs-search';
@@ -32,19 +31,11 @@ async function ask(
     search: () => Promise<GuideResult[]>,
     format: AskFormat = FOR_PERSON
 ): Promise<string> {
-    let written = '';
-    const stdout = {
-        isTTY: false,
-        columns: 80,
-        write: (chunk: string | Uint8Array) => {
-            written += String(chunk);
-            return true;
-        }
-    };
+    const stdout = fakeTerminal();
     const printer = new StepPrinter({ command: 'ask', labels: ASK_STEPS, verbose: false, stdout, stderr: stdout });
 
     await new AskRunner(NEXT_GUIDE, { search }).run(printer, format, text);
-    return stripVTControlCharacters(written);
+    return stdout.text();
 }
 
 function failure(text: string, search: () => Promise<GuideResult[]>): Promise<unknown> {

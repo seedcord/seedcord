@@ -1,10 +1,12 @@
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
+import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
+import type { DispatchMemberValues } from '@seedcord/types';
 import type { Promisable } from 'type-fest';
 
 /**
  * The transport-agnostic gate context, the scalar identity of the acting user resolvable from any
- * transport's payload. Every field except `core` is nullable, since an event or DM may carry no
+ * transport's payload. Every field except `core` is nullable since an event or DM may carry no
  * guild or member. Each transport extends it with its own context. For example, the gateway adds the djs
  * `user`/`guild`/`member` objects and the live interaction or event payload.
  *
@@ -16,18 +18,12 @@ import type { Promisable } from 'type-fest';
  * });
  * ```
  */
-export interface GateContextBase {
+export interface GateContextBase extends DispatchOrigin, DispatchMemberValues {
     /** Gates read the config and the rate limiter through it. */
     readonly core: CoreBase;
-    /** The acting user's id, or null on an event that carries none. */
-    readonly userId: string | null;
-    /** The guild id, or null outside a guild. */
-    readonly guildId: string | null;
-    /** The channel id, or null when the source carries none. */
-    readonly channelId: string | null;
     /**
      * The member's role ids without the everyone role, the shape a raw interaction payload
-     * contains. Empty outside a guild or when the source contains none.
+     * contains. Empty outside a guild, or when the event doesn't carry the member's roles.
      */
     readonly memberRoleIds: readonly string[];
     /**
@@ -68,7 +64,7 @@ export interface GuildPermissionsContext extends GateContextBase {
 
 /**
  * The context an interaction provides on both transports, where Discord always sends the bot's channel
- * permissions. A gate that requires it fits no event handler.
+ * permissions. A gate that requires it doesn't fit any event handler.
  *
  * @example
  * ```ts
@@ -86,11 +82,11 @@ declare const GateBrand: unique symbol;
 
 /**
  * A precondition attached to a handler. It refuses by throwing a `Notice` (a reply) or a `Silence`
- * (a drop with no reply), and passes by returning. `Ctx` is the context it requires, so a gate that reads
+ * (no reply), and passes by returning. `Ctx` is the context it requires, so a gate that reads
  * a field absent on a handler's context is rejected at compile time. `Name` is captured as a literal so
- * a mismatch error can name the gate. Build one with {@link defineGate} or {@link defineEffectGate}.
+ * a mismatch error can show the gate's name. Build one with {@link defineGate} or {@link defineEffectGate}.
  *
- * @typeParam Ctx - The context the gate requires. A field missing from it is a compile error.
+ * @typeParam Ctx - The context that the gate requires. A field missing from it is a compile error.
  * @typeParam Name - The gate's literal name, named in a mismatch error.
  *
  * @example
@@ -151,12 +147,12 @@ export interface EffectGate<Ctx extends GateContextBase = GateContextBase, Name 
 
 /**
  * Builds a {@link Gate} from a check. The check refuses by throwing a Notice or a Silence and passes
- * by returning. The required context is inferred from `ctx`, so annotate it as narrowly as the fields
- * the check reads. No annotation defaults to {@link GateContextBase}, an agnostic gate that fits every
- * handler.
+ * by returning. Annotate `ctx` as narrowly as the fields that the check reads because the required context
+ * is inferred from it. No annotation defaults to {@link GateContextBase}, an agnostic gate that fits
+ * every handler.
  *
  * @typeParam Name - The gate's name, captured as a literal for mismatch errors.
- * @typeParam Ctx - The context the check reads, inferred from the `ctx` annotation.
+ * @typeParam Ctx - The context that the check reads, inferred from the `ctx` annotation.
  *
  * @param name - The gate's name, used in mismatch errors.
  * @param fn - The check, which refuses by throwing a Notice or a Silence and passes by returning.
@@ -195,7 +191,7 @@ export function defineGate<const Name extends string, Ctx extends GateContextBas
  * commits. In an `or`, seedcord rolls back the commit a refusing gate queued. This is how {@link Cooldown} peeks
  * in `check` and charges the slot in `commit`.
  *
- * @typeParam Name - The gate's literal name, used to name a mismatch error.
+ * @typeParam Name - The gate's literal name, which a mismatch error shows.
  * @typeParam Ctx - The context both `check` and `commit` read, inferred from the `ctx` annotation.
  *
  * @param name - The gate's name, used in mismatch errors.

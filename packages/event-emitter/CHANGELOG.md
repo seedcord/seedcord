@@ -1,5 +1,11 @@
 # @seedcord/event-emitter
 
+## 0.2.2-next.0
+
+### 🩹 Patch
+
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
+
 ## 0.2.1
 
 ### 🩹 Patch

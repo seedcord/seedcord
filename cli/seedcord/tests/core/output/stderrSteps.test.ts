@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { stderrSteps } from '#core/output/stderrSteps';
-import { pipedTerminal } from '#tests/commands/commands/fakeBot';
+import { fakeTerminal } from '#tests/fakeTerminal';
 
 describe('stderrSteps', () => {
     it('moves what a step prints to stderr and returns its result', async () => {
-        const stdout = pipedTerminal();
-        const stderr = pipedTerminal();
+        const stdout = fakeTerminal();
+        const stderr = fakeTerminal();
 
         const result = await stderrSteps(stdout, stderr).step('load bot', () => {
             stdout.write('loading the bot\n');

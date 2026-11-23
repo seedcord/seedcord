@@ -6,7 +6,7 @@ import type { Logger } from '@seedcord/logger';
 
 export async function usernameOf(rest: Pick<REST, 'get'>, logger: Logger): Promise<string | undefined> {
     try {
-        // justified: the @me payload carries username per the discord api contract
+        // justified: the @me payload has username per the discord api contract
         const me = (await rest.get(Routes.user('@me'))) as { username?: string };
         if (me.username) logger.info(`Running as ${paint.sky.bold(me.username)}`);
         return me.username;

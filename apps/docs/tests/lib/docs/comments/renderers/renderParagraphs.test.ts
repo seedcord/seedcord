@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { renderParagraphs } from '#lib/docs/comments/renderers/renderParagraphs';
 

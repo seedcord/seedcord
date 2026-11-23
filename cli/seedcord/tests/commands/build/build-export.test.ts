@@ -3,7 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { build } from 'vite';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { targetBuildFor } from '#commands/build/builder/targetBuildFor';
 import { runProjectTsc } from '#core/modules/runProjectTsc';
@@ -110,7 +110,7 @@ describe('seedcord build without build.start on an http bot', () => {
         expect(output).not.toContain('only exports your bot');
     }, 120_000);
 
-    it('warns when you run dist/index.mjs itself, because nothing starts the bot', () => {
+    it('warns when you run dist/index.mjs itself because nothing starts the bot', () => {
         const { status, stderr } = spawnSync(process.execPath, [join(projectDir, 'dist/index.mjs')], {
             encoding: 'utf8',
             timeout: 60_000
@@ -120,7 +120,7 @@ describe('seedcord build without build.start on an http bot', () => {
         expect(stderr).toContain('only exports your bot');
     }, 120_000);
 
-    it('still loads its folders once a bundler leaves import.meta.dirname undefined', async () => {
+    it('still loads its folders once a bundler replaces import.meta.dirname with undefined', async () => {
         const outDir = join(projectDir, 'bundled');
         await build({
             configFile: false,

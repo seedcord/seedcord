@@ -25,7 +25,7 @@ export class Post {
 
     // fumadocs-mdx sets absolutePath on every page it loads from disk
     private get file(): string {
-        if (this.page.absolutePath === undefined) throw new Error(`${this.page.path} has no file on disk.`);
+        if (this.page.absolutePath === undefined) throw new Error(`${this.page.path} doesn't have a file on disk.`);
         return this.page.absolutePath;
     }
 

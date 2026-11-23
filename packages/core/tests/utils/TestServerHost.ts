@@ -4,21 +4,22 @@ import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { ServerHost } from '#node/ServerHost';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 
-import type { Config } from '@seedcord/types';
+import type { ServerHostConfig } from '@seedcord/types';
 
 export class TestServerHost extends ServerHost<'gateway'> {
-    public readonly config: Config;
+    public readonly config: ServerHostConfig;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
 
-    // justified: ServerHost reads only kv and errors off the config
+    // justified: ServerHost reads only kv, errors, and server off the config
     constructor(
         shutdown = new CoordinatedShutdown(),
         startup = new CoordinatedStartup(),
-        config: Config = {} as Config
+        config = {} as ServerHostConfig
     ) {
         super('gateway', shutdown, startup, config.kv);
-        this.config = config;
+        // test files run side by side, and a default server would put them all on port 3000
+        this.config = { server: { port: false }, ...config };
     }
 
     public run(): Promise<this> {

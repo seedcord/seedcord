@@ -1,5 +1,25 @@
 # @seedcord/mock-http
 
+## 0.0.18-next.1
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/http` 0.14.0-next.0 → 0.14.0-next.1
+- `@seedcord/plugin-oauth` 0.0.0 → 0.1.0-next.0
+- `@seedcord/plugin-kysely` 0.9.0-next.0 → 0.9.0-next.1
+
+## 0.0.18-next.0
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/plugin-kysely` 0.8.1 → 0.9.0-next.0
+- `@seedcord/http` 0.13.0 → 0.14.0-next.0
+- `@seedcord/plugin-i18n` 0.0.1 → 0.1.0-next.0
+
 ## 0.0.17
 
 ### 🩹 Patch

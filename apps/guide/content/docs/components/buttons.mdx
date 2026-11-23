@@ -34,13 +34,13 @@ A click is an interaction like any other, so every [reply method](/replying) wor
 
 <Callout type="transport" only="gateway">
 
-A gateway `ButtonHandler` takes a second type argument, discord.js's `CacheType`, which defaults to `'cached'`. That default types `this.event.member` as a `GuildMember`, but seedcord doesn't check it at runtime. A button in a DM has no member, so pass `CacheType` for a handler that can get one. An http `ButtonHandler` takes only the route tuple.
+A gateway `ButtonHandler` takes a second type argument, discord.js's `CacheType`, which defaults to `'cached'`. That default types `this.event.member` as a `GuildMember`, but seedcord doesn't check it at runtime. A button in a DM doesn't have a member, so pass `CacheType` for a handler that can get one. An http `ButtonHandler` takes only the route tuple.
 
 </Callout>
 
 ## Rewriting the source message
 
-A `reply` to a click posts a new message under the old one. The old buttons stay there, so someone can click them again.
+A `reply` to a click posts a new message under the old one. The old buttons are still there, so someone can click them again.
 
 [`this.update()`](ref:gateway/ComponentHandler.update) rewrites the message the button came from. It takes the same response shape every reply method takes, so a new `components` list replaces the old buttons.
 
@@ -75,7 +75,7 @@ class Appeal extends ButtonHandler<[typeof AppealId]> {
 }
 ```
 
-Discord shows "This interaction failed" on a click that nobody answers within three seconds. For a click that changes nothing on the message, [`this.deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) answers it and leaves the message unchanged.
+Discord shows "This interaction failed" on a click that nobody answers within three seconds. [`this.deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) answers a click without changing the message.
 
 <Callout type="transport">
     `update()` resolves to a discord.js `Message` on gateway and an
@@ -113,21 +113,21 @@ export class Review extends ButtonHandler<
 }
 ```
 
-You key each case by its route's prefix, and each one receives that route's own values. `reject` reads a `reason` that `approve` never declared. Both cases pass `update` a plain string, which seedcord wraps in one text component. Leave a case out and the build stops, since the compiler requires one per registered prefix.
+You key each case by its route's prefix, and each one receives that route's own values. `reject` reads a `reason` that `approve` never declared. Both cases pass `update` a plain string, which seedcord wraps in one text component. Leave a case out and the build stops since the compiler requires one per registered prefix.
 
 Keep two buttons in one handler when both cases need the same code first, like a check that the clicker is staff. Two buttons that share nothing belong in two handlers, where each file holds only the code its own button runs.
 
 <Callout type="warning">
 
-`this.params` is `never` on a handler registered for several routes, since the decoded shape depends on which button someone clicked. `this.match` is the only read there.
+`this.params` is `never` on a handler registered for several routes since the decoded shape depends on which button someone clicked. `this.match` is the only read there.
 
-Decoding runs once, before any case, so a wire from an [older shape](/components/stale) throws before your code executes.
+Decoding runs once before any case, so a wire from an [older shape](/components/stale) throws before your code executes.
 
 </Callout>
 
 ## Who can click a button
 
-You posted a ticket with a **Close** button, and someone else in the channel closed it. seedcord runs your handler for every click, whoever clicked.
+seedcord runs your handler for every click, whoever clicked. On a ticket with a **Close** button, anyone in the channel can close it.
 
 If only one person needs the buttons, send them in [an ephemeral reply](/replying#only-the-person-who-ran-the-command-sees-it), which nobody else can see. To keep the message public, put that person's id in the custom id and compare it to the clicker.
 
@@ -217,7 +217,7 @@ export class ClaimReward extends ButtonHandler<
 }
 ```
 
-`charge` counts one click at a time, and `ONE_CLAIM` leaves out `limit`, which defaults to one use. The second click gets `limited` as `true`, and [`deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) answers it without changing the message. That click still shows a result, because `update()` on the first click replaces the button with `Claimed.` for everyone. [`buildKey`](ref:core/buildKey) includes `rewardId`, so claiming one reward doesn't block the next one. If `rewards.give` throws, `reset` clears the charge so that the next click can try again.
+`charge` counts one click at a time, and `ONE_CLAIM` doesn't set `limit`, which defaults to one use. The second click gets `limited` as `true`, and [`deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) answers it without changing the message. That click still shows a result because `update()` on the first click replaces the button with `Claimed.` for everyone. [`buildKey`](ref:core/buildKey) includes `rewardId`, so claiming one reward doesn't block the next one. If `rewards.give` throws, `reset` clears the charge so that the next click can try again.
 
 `ONE_CLAIM` expires after a minute, so it only stops a double click. To stop a second claim for later, keep a record of who claimed in your database, or in [the kv store](/built-ins/) with a driver.
 

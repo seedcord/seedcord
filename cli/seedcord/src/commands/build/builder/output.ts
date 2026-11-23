@@ -1,6 +1,7 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError, vitePluginThrew, withoutQuery } from '@seedcord/utils/internal';
+import { sumBy } from 'es-toolkit';
 
 import { isListedFileId } from './builtFiles';
 
@@ -22,7 +23,7 @@ export function bundleStats(chunks: Rolldown.OutputChunk[], layout: BotLayout, e
     return {
         modules: ids.filter((id) => layout.holds(withoutQuery(id))).length,
         listedFiles: ids.filter(isListedFileId).length,
-        bytes: chunks.reduce((total, chunk) => total + Buffer.byteLength(chunk.code), 0),
+        bytes: sumBy(chunks, (chunk) => Buffer.byteLength(chunk.code)),
         entry
     };
 }

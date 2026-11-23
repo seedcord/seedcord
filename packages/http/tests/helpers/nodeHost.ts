@@ -22,7 +22,7 @@ export function serverConfig(bot: Partial<HttpServerConfig['bot']> = {}): HttpSe
     return {
         bot: { interactions: { path: null }, commands: { path: null }, ...bot },
         subscribers: { path: null },
-        port: 0
+        server: { port: 0 }
     };
 }
 

@@ -9,7 +9,7 @@ import { commandLine } from '#cli/shellWord';
 
 import type { CommandRunner } from '#scaffold/scaffold';
 
-// an install logs hundreds of lines before the one that says what broke
+// an install logs hundreds of lines before the one that reports what broke
 const KEPT_LINES = 12;
 
 // npm opens with "npm error", yarn with "ERR!", pnpm with "Error:" above a bare ERR_ code

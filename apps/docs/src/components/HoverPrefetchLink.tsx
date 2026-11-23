@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import type { ComponentProps, ReactElement } from 'react';
+import type { Except } from 'type-fest';
 
-type HoverPrefetchLinkProps = Omit<
+type HoverPrefetchLinkProps = Except<
     ComponentProps<typeof Link>,
     'prefetch' | 'onMouseEnter' | 'onTouchStart' | 'onFocus'
 >;

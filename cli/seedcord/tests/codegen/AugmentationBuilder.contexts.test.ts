@@ -1,5 +1,5 @@
 import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { silentLogger } from '#tests/silentLogger';
@@ -11,8 +11,7 @@ function cacheFor(
     ...commands: { toJSON: () => RESTPostAPIApplicationCommandsJSONBody }[]
 ): Record<string, SlashRouteEntry['cache']> {
     const { slash } = new AugmentationBuilder(silentLogger).generate(
-        commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() })),
-        {}
+        commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() }))
     );
 
     return Object.fromEntries(Object.entries(slash).map(([route, row]) => [route, row.cache]));
@@ -33,7 +32,7 @@ describe('AugmentationBuilder contexts', () => {
         expect(cache).toStrictEqual({ help: undefined });
     });
 
-    it('reads a command with no guild context as uncached', () => {
+    it('reads a command without a guild context as uncached', () => {
         const cache = cacheFor(command('dmonly').setContexts(InteractionContextType.BotDM));
 
         expect(cache).toStrictEqual({ dmonly: undefined });

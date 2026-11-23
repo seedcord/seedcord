@@ -50,7 +50,7 @@ export function eventFaultReport(event: EventOrigin): FaultDetails {
     };
 }
 
-// the bus payload must stay djs-free
+// the bus payload must be djs-free
 function scalarActors(guild: Nullable<Guild>, user: Nullable<User>): Pick<FaultDetails, 'guild' | 'user'> {
     return {
         guild: guild ? { id: guild.id, name: guild.name } : undefined,

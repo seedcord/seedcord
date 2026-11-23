@@ -26,7 +26,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
     private stopping?: Promise<void>;
 
     public abstract startBot(instance: SeedcordInstance): Promise<string | undefined>;
-    // every resource it creates goes on the stack it receives
+    // open() puts every resource it creates on `resources`
     protected abstract open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<TStarted>;
     protected abstract stopInstance(): Promise<void>;
 
@@ -77,7 +77,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
 
     private async close(): Promise<void> {
         this.started = undefined;
-        // a start that failed already closed what it opened and threw to its own caller
+        // a start that failed has already closed what it opened and threw to its own caller
         const started = await this.starting?.catch(() => undefined);
         try {
             await this.stopInstance();

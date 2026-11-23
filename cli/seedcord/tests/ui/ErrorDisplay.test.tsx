@@ -3,7 +3,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
 import { render } from 'ink-testing-library';
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { ErrorDisplay } from '#ui/components/ErrorDisplay';
 

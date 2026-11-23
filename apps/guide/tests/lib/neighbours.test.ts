@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { neighboursOf } from '#lib/neighbours';
 
@@ -18,7 +18,7 @@ describe('the pages either side of the one being read', () => {
         expect(neighboursOf(ORDER, '/commands')).toEqual({ previous: ORDER[1] });
     });
 
-    it('offers nothing for a page the order never lists', () => {
+    it('returns an empty object for a page that the order never lists', () => {
         expect(neighboursOf(ORDER, '/nowhere')).toEqual({});
     });
 });

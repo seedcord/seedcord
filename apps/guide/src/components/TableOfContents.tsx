@@ -1,6 +1,6 @@
 'use client';
 
-import { cn, tw } from '@seedcord/ui';
+import { SECTION_LABEL, cn, tw } from '@seedcord/ui';
 import { m, useReducedMotion } from 'motion/react';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 
@@ -13,9 +13,9 @@ export interface TableOfContentsProps {
     className?: string | undefined;
 }
 
-// GuideShell's ContentsColumn sets the width and the sticky offset
+// GuidePage's ContentsColumn sets the width and the sticky offset
 const columnClassName = tw`nice-scroll overflow-y-auto text-[13px]`;
-const labelClassName = tw`mb-2 text-xs font-semibold text-(--text-faint)`;
+const labelClassName = cn(SECTION_LABEL, 'mb-2');
 const rowClassName = cn(
     tw`block py-1.5`,
     tw`transition-colors duration-100 ease-out`,
@@ -82,7 +82,7 @@ function useRail(items: readonly TOCItemType[]): [RefObject<HTMLDivElement | nul
         const list = listRef.current;
         if (!list) return;
 
-        // fires once on observe, then whenever a title wraps
+        // the observer calls this once on observe, then whenever a title wraps
         const observer = new ResizeObserver(() => {
             setRail({
                 rows: Array.from(list.querySelectorAll('a'), (row) => ({

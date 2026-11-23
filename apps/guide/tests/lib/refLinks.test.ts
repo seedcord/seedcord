@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { compileGuideMdx } from '#tests/mdxPipeline';
 
@@ -71,7 +71,7 @@ describe('a ref: link', () => {
         }
     );
 
-    it('leaves an ordinary link alone', async () => {
+    it("doesn't turn an ordinary link into a Ref", async () => {
         const code = await compileGuideMdx('Read [the reference site](https://seedcord.org/docs).');
 
         expect(code).toContain('href="https://seedcord.org/docs"');
@@ -79,16 +79,16 @@ describe('a ref: link', () => {
     });
 
     it.each([
-        ['ref:core/', 'has a slash with no symbol after it'],
+        ['ref:core/', 'has a slash without a symbol after it'],
         ['ref:/Notice', 'is missing the package'],
         ['ref:core/a/b', 'has a path after the symbol'],
         ['ref:', 'is missing the package'],
-        ['ref:core/Notice.', 'has nothing after the member separator']
+        ['ref:core/Notice.', 'is missing the part after the member separator']
     ])('refuses %s', async (target, problem) => {
         await expect(compileGuideMdx(`a [symbol](${target}) link`)).rejects.toThrow(problem);
     });
 
-    // fumadocs copies heading children into a module-scope toc export, where Ref has no binding
+    // fumadocs copies heading children into a module-scope toc export, where Ref isn't bound
     it('refuses one inside a heading', async () => {
         await expect(compileGuideMdx('## a [Notice](ref:core/Notice) heading')).rejects.toThrow('heading');
     });
@@ -96,11 +96,11 @@ describe('a ref: link', () => {
     it('refuses a reference-style definition', async () => {
         const source = ['a [Notice][n] link', '', '[n]: ref:core/Notice'].join('\n');
 
-        await expect(compileGuideMdx(source)).rejects.toThrow('stays a plain url');
+        await expect(compileGuideMdx(source)).rejects.toThrow('is still a plain url');
     });
 
-    it('refuses one with no link text', async () => {
-        await expect(compileGuideMdx('a [](ref:core/Notice) link')).rejects.toThrow('has no link text');
+    it('refuses one without link text', async () => {
+        await expect(compileGuideMdx('a [](ref:core/Notice) link')).rejects.toThrow("doesn't have link text");
     });
 
     it('points at the line the bad link is on', async () => {

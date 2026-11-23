@@ -1,28 +1,30 @@
 {
     "name": "@seedcord/tsconfig",
-    "type": "module",
     "version": "3.0.0",
-    "engines": {
-        "node": "^24.22.1 || >=26.12.1",
-        "bun": ">=1.4.2"
-    },
     "description": "Shared TypeScript config for seedcord projects",
-    "main": "./base.json",
-    "license": "Apache-2.0",
     "keywords": [
+        "seedcord",
         "tsconfig",
-        "typescript",
-        "seedcord"
+        "typescript"
     ],
+    "homepage": "https://seedcord.org",
+    "bugs": "https://github.com/seedcord/seedcord/issues",
+    "license": "Apache-2.0",
+    "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "tooling/tsconfig"
     },
-    "homepage": "https://seedcord.org",
-    "bugs": "https://github.com/seedcord/seedcord/issues",
-    "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
     "funding": "https://github.com/sponsors/materwelonDhruv",
+    "files": [
+        "base.json",
+        "node.json",
+        "LICENSE",
+        "README.md"
+    ],
+    "type": "module",
+    "main": "./base.json",
     "exports": {
         ".": {
             "default": "./base.json"
@@ -34,20 +36,16 @@
             "default": "./node.json"
         }
     },
-    "files": [
-        "base.json",
-        "node.json",
-        "LICENSE",
-        "README.md"
-    ],
     "publishConfig": {
         "access": "public",
         "provenance": true
     },
     "scripts": {
         "build": "echo 'Are you seriously trying to build .json files?'",
-        "clean": "echo 'What build artifacts?'",
-        "fmt": "prettier --write '**/*.{json,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{json,md}' --cache --no-error-on-unmatched-pattern"
+        "clean": "echo 'What build artifacts?'"
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": "^24.22.1 || >=26.12.1"
     }
 }

@@ -1,15 +1,13 @@
 import { Option } from '@commander-js/extra-typings';
 import { Prompter, unlessCancelled } from '@seedcord/cli-prompts';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { isInteractive } from '@seedcord/utils/internal';
 
 import { BaseCommand } from '#core/BaseCommand';
+import { confirmOrYes, PROCEED } from '#core/output/confirm';
 import { stderrSteps } from '#core/output/stderrSteps';
 import { isVerbose } from '#core/verbose';
 
 import { askClean, CleanMode } from './clean/CleanMode';
-import { PROCEED } from './confirm';
 import { DeployPresenter } from './deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from './deploy/DeployRunner';
 import { listingJson } from './list/listingJson';
@@ -23,7 +21,6 @@ import { RemoveWizard, WIZARD_STEPS } from './remove/RemoveWizard';
 import { guildTargetsOf } from './scope';
 
 import type { StepPrinter } from '#core/output/StepPrinter';
-import type { Confirm } from './confirm';
 import type { DeployOptions, DeployStep } from './deploy/DeployRunner';
 import type { ListScope, ListStep } from './list/ListRunner';
 import type { RemoveMode } from './remove/RemoveMode';
@@ -151,8 +148,7 @@ export class CommandsCommand extends BaseCommand {
         command: CommandUnknownOpts,
         { yes = false, force = false }: DeployOptions
     ): Promise<void> {
-        if (!yes && !isInteractive()) throw new SeedcordTypeError(SeedcordErrorCode.CliDeployNeedsYes);
-        const confirm: Confirm = yes ? PROCEED : (message) => this.prompter.confirm({ message });
+        const confirm = confirmOrYes(this.prompter, { yes, command: 'seedcord commands deploy', action: 'deploys' });
         await this.deployRunner.run(new DeployPresenter(printer, confirm, isVerbose(command)), { force, yes });
     }
 

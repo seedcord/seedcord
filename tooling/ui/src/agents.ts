@@ -1,8 +1,8 @@
 import { PRODUCTION_SITES } from '@seedcord/brand';
 
-import { GUIDE, HOME, REPO_URL } from './sites';
+import { GUIDE, HOME } from './sites';
 import { AGENT_SKILLS_BASE, skillUrl } from './skills';
-import { CODEGEN_RULE, DEV_RULE, SEARCH_RULE, SEEDCORD_SKILL } from './skills/seedcord';
+import { RULES, SEEDCORD_SKILL } from './skills/seedcord';
 
 const SITES = { home: HOME, guide: GUIDE, docs: PRODUCTION_SITES.docs };
 
@@ -11,7 +11,7 @@ export type SeedcordSite = keyof typeof SITES;
 // all three are in the IANA link relation registry
 const RELATIONS = ['service-doc', 'index', 'related'] as const;
 
-// every relation a site would point at itself is left out
+// a site's list doesn't include a relation that points at itself
 const SITE_RELATIONS: Record<SeedcordSite, Partial<Record<(typeof RELATIONS)[number], SeedcordSite>>> = {
     home: { 'service-doc': 'docs', related: 'guide' },
     guide: { 'service-doc': 'docs', index: 'home' },
@@ -28,7 +28,7 @@ export interface AgentLink {
     type?: string;
 }
 
-/** The relations a site repeats on every page, for the html head and the `Link` header alike. */
+/** The relations that a site repeats on every page, for the html head and the `Link` header alike. */
 export function siteLinks(site: SeedcordSite): AgentLink[] {
     const links: AgentLink[] = [
         { rel: 'describedby', href: `${SITES[site].path}/${LLMS_TXT}` },
@@ -51,7 +51,7 @@ function serialize({ rel, href, type }: AgentLink): string {
 /**
  * The `Link` header a site sends on every html page.
  *
- * Pass `twin` on a site that publishes a markdown copy of the page, as the path that serves it.
+ * On a site that publishes a markdown copy of the page, pass `twin` as the path that serves it.
  */
 export function agentLinkHeader(site: SeedcordSite, twin?: string): string {
     const twinLink: AgentLink[] = twin === undefined ? [] : [{ rel: 'alternate', href: twin, type: 'text/markdown' }];
@@ -61,23 +61,13 @@ export function agentLinkHeader(site: SeedcordSite, twin?: string): string {
 
 const SKILL_URL = HOME.at(skillUrl(SEEDCORD_SKILL));
 
-const FRAMEWORK_RULES = [
-    'seedcord has no presence in training data. Read a page before you write code against it.',
-    SEARCH_RULE,
-    "`seedcord` on npm is the command line tool. A bot installs `@seedcord/gateway` for a websocket connection, or `@seedcord/http` to answer Discord's interactions endpoint. It installs one of the two. Before you install another seedcord package, check whether that one already exports what you need since the transports re-export most packages.",
-    'Read the current version of every package from the npm registry. Each one has its own version number.',
-    'A command is declared in one file and answered in another, by a handler class carrying a route decorator. seedcord reads those decorators at startup and dispatches every interaction itself.',
-    CODEGEN_RULE,
-    DEV_RULE,
-    `Never import from a seedcord path ending in \`/internal\`, like \`@seedcord/core/internal\`. Those paths wire seedcord's own packages together and change without notice. If the only way to do something is through one, tell the user so they can open an issue at ${REPO_URL}/issues.`,
-    `The steps for building a bot are at ${SKILL_URL}.`
-];
+const SKILL_RULE = `The steps for starting or porting a bot are at ${SKILL_URL}.`;
 
 const REFERENCE_RULE = `The API reference is at ${PRODUCTION_SITES.docs.url}, one page per symbol.`;
 const GUIDE_RULE = `The guide is at ${GUIDE.url}, one page per feature.`;
 const HOME_RULE = `The project site is at ${HOME.url}.`;
 
-// a reader already on the site gets no line pointing back at it
+// a reader already on the site doesn't get a line pointing back at it
 const SITE_RULES: Record<SeedcordSite, string[]> = {
     home: [REFERENCE_RULE, GUIDE_RULE],
     guide: [REFERENCE_RULE, HOME_RULE],
@@ -86,7 +76,7 @@ const SITE_RULES: Record<SeedcordSite, string[]> = {
 
 /** What an agent needs before it writes seedcord code. Every `llms.txt` opens with these. */
 export function agentRules(site: SeedcordSite): string[] {
-    return [...FRAMEWORK_RULES, ...SITE_RULES[site]];
+    return [...RULES, SKILL_RULE, ...SITE_RULES[site]];
 }
 
 const FEATURES_HEADING = '## Features';

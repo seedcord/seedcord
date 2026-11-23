@@ -13,9 +13,18 @@
 '📦 plugin-mongoose':
   - changed-files:
       - any-glob-to-any-file: 'plugins/mongoose/**'
-'📦 plugin-kysely-postgres':
+'📦 plugin-kysely':
   - changed-files:
-      - any-glob-to-any-file: 'plugins/kysely-postgres/**'
+      - any-glob-to-any-file: 'plugins/kysely/**'
+'📦 plugin-tasks':
+  - changed-files:
+      - any-glob-to-any-file: 'plugins/tasks/**'
+'📦 plugin-i18n':
+  - changed-files:
+      - any-glob-to-any-file: 'plugins/i18n/**'
+'📦 plugin-oauth':
+  - changed-files:
+      - any-glob-to-any-file: 'plugins/oauth/**'
 '📦 custom-id':
   - changed-files:
       - any-glob-to-any-file: 'packages/custom-id/**'
@@ -55,6 +64,12 @@
 '📦 eslint-utils':
   - changed-files:
       - any-glob-to-any-file: 'tooling/eslint-utils/**'
+'📦 plugin-utils':
+  - changed-files:
+      - any-glob-to-any-file: 'tooling/plugin-utils/**'
+'📦 prose':
+  - changed-files:
+      - any-glob-to-any-file: ['tooling/prose/**', '.vale.ini']
 '📦 brand':
   - changed-files:
       - any-glob-to-any-file: 'tooling/brand/**'
@@ -112,9 +127,8 @@
           - 'turbo.json'
           - 'turbo.jsonc'
           - '**/tsconfig*.json'
-          - '**/tsdown.config.*'
+          - '**/vite.config.*'
           - '**/eslint.config.*'
-          - '**/vitest*.config.*'
           - 'pnpm-workspace.yaml'
 '🔗 deps':
   - changed-files:

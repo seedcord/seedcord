@@ -5,13 +5,14 @@ import { ApplicationCommandOptionType, ApplicationCommandType, InteractionContex
 
 import type { FoundCommand } from '#core/modules/CommandScanner';
 import type { OptionKind, RouteCache, SlashOption, SlashRouteEntry } from '@seedcord/core/internal';
-import type { EmojiConfig, ILogger } from '@seedcord/types';
+import type { ILogger } from '@seedcord/types';
 import type {
     APIApplicationCommandBasicOption,
     RESTPostAPIApplicationCommandsJSONBody,
     RESTPostAPIChatInputApplicationCommandsJSONBody,
     RESTPostAPIContextMenuApplicationCommandsJSONBody
 } from 'discord-api-types/v10';
+import type { ExcludeStrict } from 'type-fest';
 
 export type RouteOptions = Record<string, SlashOption>;
 
@@ -21,19 +22,16 @@ export type SlashTables = Record<string, SlashRouteEntry>;
 // keyed by the command name discord shows in the menu
 export type ContextMenuTables = Record<string, { cache: RouteCache }>;
 
-export type EmojiKinds = Record<string, 'string' | 'tuple'>;
-
-export interface Augmentation {
+export interface CommandTables {
     slash: SlashTables;
     userContextMenus: ContextMenuTables;
     messageContextMenus: ContextMenuTables;
-    emojis: EmojiKinds;
 }
 
 export type ScannedCommand = Pick<FoundCommand, 'sourceFile' | 'json'>;
 
 type CommandOption = SlashRouteLeaf['options'][number];
-type BasicOption = Exclude<
+type BasicOption = ExcludeStrict<
     CommandOption,
     { type: ApplicationCommandOptionType.Subcommand | ApplicationCommandOptionType.SubcommandGroup }
 >;
@@ -51,25 +49,17 @@ const KIND_BY_TYPE = {
     [ApplicationCommandOptionType.Attachment]: 'attachment'
 } as const satisfies Record<APIApplicationCommandBasicOption['type'], OptionKind>;
 
-// discord reads a command with no contexts as reachable from all three
+// discord reads a command without contexts as reachable from all three
 function cacheStateOf(contexts: RESTPostAPIApplicationCommandsJSONBody['contexts']): 'cached' | undefined {
     if (!contexts || contexts.length === 0) return undefined;
     return contexts.every((context) => context === InteractionContextType.Guild) ? 'cached' : undefined;
-}
-
-function mapEmojis(emojiConfig: EmojiConfig): EmojiKinds {
-    const emojis: EmojiKinds = {};
-    for (const [key, value] of Object.entries(emojiConfig)) {
-        emojis[key] = Array.isArray(value) ? 'tuple' : 'string';
-    }
-    return emojis;
 }
 
 // reads each builder back through toJSON() because djs erases option names at the type level
 export class AugmentationBuilder {
     constructor(private readonly logger: ILogger) {}
 
-    public generate(commands: readonly ScannedCommand[], emojiConfig: EmojiConfig): Augmentation {
+    public generate(commands: readonly ScannedCommand[]): CommandTables {
         const slash: SlashTables = {};
         const sourceByRoute = new Map<string, string>();
         const sourceByUserName = new Map<string, string>();
@@ -99,11 +89,10 @@ export class AugmentationBuilder {
 
         const userContextMenus = Object.fromEntries(userMenus);
         const messageContextMenus = Object.fromEntries(messageMenus);
-        const emojis = mapEmojis(emojiConfig);
         this.logger.debug(
-            `Generated ${Object.keys(slash).length} slash route(s), ${Object.keys(userContextMenus).length} user and ${Object.keys(messageContextMenus).length} message context-menu command(s), ${Object.keys(emojis).length} emoji(s)`
+            `Generated ${Object.keys(slash).length} slash route(s), ${Object.keys(userContextMenus).length} user and ${Object.keys(messageContextMenus).length} message context-menu command(s)`
         );
-        return { slash, userContextMenus, messageContextMenus, emojis };
+        return { slash, userContextMenus, messageContextMenus };
     }
 
     private collectSlash(
@@ -148,8 +137,8 @@ export class AugmentationBuilder {
         menus.set(json.name, { cache: cacheStateOf(json.contexts) });
     }
 
-    // toJSON() allows an empty subcommand group though discord rejects it at deploy. routeLeavesOf gives it
-    // no route, so it never reaches the tables
+    // toJSON() allows an empty subcommand group though discord rejects it at deploy. the group never
+    // reaches the tables because routeLeavesOf doesn't give it a route
     private warnEmptyGroups(json: RESTPostAPIChatInputApplicationCommandsJSONBody): void {
         for (const option of json.options ?? []) {
             if (option.type === ApplicationCommandOptionType.SubcommandGroup && (option.options ?? []).length === 0) {

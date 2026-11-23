@@ -10,7 +10,7 @@ const PAGE_BOUND = 999;
 const ENTRY_COUNT = 23;
 const SCORE_STEP = 100;
 
-// the caller defines the cursor here, and a plain prev/next never collides, so no slot is needed
+// a slot isn't needed because the caller defines the cursor here and a plain prev/next never collides
 const Board = new CustomId('lb').int('page', 0, PAGE_BOUND);
 
 const SCORES: LeaderboardEntry[] = Array.from({ length: ENTRY_COUNT }, (_, index) => ({

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { agentLinkHeader, agentRules, readmeFeatures, siteLinks } from '#src/agents';
 
@@ -32,7 +32,7 @@ describe('agentLinkHeader', () => {
         }
     });
 
-    it('leaves out the relation a site would point at itself', () => {
+    it("doesn't include the relation a site would point at itself", () => {
         expect(relationsOf(agentLinkHeader('home')).has('index')).toBe(false);
         expect(relationsOf(agentLinkHeader('docs')).has('service-doc')).toBe(false);
     });
@@ -55,13 +55,13 @@ describe('agentLinkHeader', () => {
         expect(agentLinkHeader('guide', '/commands/options.md')).toContain('type="text/markdown"');
     });
 
-    it('offers no alternate on a page with no twin', () => {
+    it("doesn't offer an alternate on a page without a twin", () => {
         expect(relationsOf(agentLinkHeader('guide')).has('alternate')).toBe(false);
     });
 });
 
 describe('siteLinks', () => {
-    it('carries the same relations the header sends', () => {
+    it('has the same relations that the header sends', () => {
         for (const site of SITES) {
             const rels = siteLinks(site).map((entry) => entry.rel);
 
@@ -70,7 +70,7 @@ describe('siteLinks', () => {
     });
 
     // pageMetadata already renders the twin
-    it('leaves the page twin out', () => {
+    it("doesn't include the page twin", () => {
         expect(siteLinks('guide').some((entry) => entry.rel === 'alternate')).toBe(false);
     });
 });
@@ -78,7 +78,7 @@ describe('siteLinks', () => {
 describe('agentRules', () => {
     it('warns every site that seedcord is absent from training data', () => {
         for (const site of SITES) {
-            expect(agentRules(site)[0]).toContain('no presence in training data');
+            expect(agentRules(site)[0]).toContain("isn't in training data");
         }
     });
 
@@ -90,7 +90,7 @@ describe('agentRules', () => {
         }
     });
 
-    it('leaves out the site a reader is already on', () => {
+    it("doesn't include the site a reader is already on", () => {
         expect(agentRules('docs').join('\n')).not.toContain('The API reference is at');
         expect(agentRules('guide').join('\n')).not.toContain('The guide is at');
         expect(agentRules('home').join('\n')).not.toContain('The project site is at');
@@ -135,7 +135,7 @@ describe('readmeFeatures', () => {
         expect(readmeFeatures(README)).not.toContain('this bullet belongs to another section');
     });
 
-    it('comes back empty when the heading is gone', () => {
+    it('is empty when the heading was removed', () => {
         expect(readmeFeatures('# seedcord\n\n- a loose bullet\n')).toEqual([]);
     });
 });

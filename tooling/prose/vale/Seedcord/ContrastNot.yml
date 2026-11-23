@@ -1,0 +1,7 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "Contrast ', not'. State the positive claim alone, or write two plain sentences."
+level: error
+nonword: true
+tokens:
+  - ', not '

@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SlashCommandBuilder, ContextMenuCommandBuilder, ApplicationCommandType } from 'discord.js';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { silentLogger } from '#tests/silentLogger';
@@ -13,8 +13,7 @@ function tablesFor(
     ...commands: { toJSON: () => RESTPostAPIApplicationCommandsJSONBody }[]
 ): Record<string, RouteOptions> {
     const { slash } = new AugmentationBuilder(silentLogger).generate(
-        commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() })),
-        {}
+        commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() }))
     );
 
     return Object.fromEntries(Object.entries(slash).map(([route, row]) => [route, row.options]));
@@ -38,7 +37,7 @@ describe('AugmentationBuilder', () => {
         });
     });
 
-    it('builds subcommands and groups into leaves with no root route', () => {
+    it('builds subcommands and groups into leaves without a root route', () => {
         const tables = tablesFor(
             new SlashCommandBuilder()
                 .setName('demo')
@@ -133,7 +132,7 @@ describe('AugmentationBuilder', () => {
 
         let caught: unknown;
         try {
-            generator.generate(commands, {});
+            generator.generate(commands);
         } catch (error: unknown) {
             caught = error;
         }
@@ -145,7 +144,7 @@ describe('AugmentationBuilder', () => {
         expect(message).toContain('commands/mod/ban.ts');
     });
 
-    it('warns and emits no leaf for an undeployable empty subcommand group', () => {
+    it('warns and emits zero leaves for an undeployable empty subcommand group', () => {
         const warnings: string[] = [];
         const logger: ILogger = { ...silentLogger, warn: (message) => warnings.push(String(message)) };
         const json = new SlashCommandBuilder()
@@ -155,13 +154,13 @@ describe('AugmentationBuilder', () => {
             .addSubcommand((sc) => sc.setName('ping').setDescription('pd'))
             .toJSON();
 
-        const { slash } = new AugmentationBuilder(logger).generate([{ sourceFile: 'admin.ts', json }], {});
+        const { slash } = new AugmentationBuilder(logger).generate([{ sourceFile: 'admin.ts', json }]);
 
         expect(slash).toEqual({ 'admin/ping': { options: {}, cache: undefined } });
         expect(warnings.some((warning) => warning.includes('admin/empty'))).toBe(true);
     });
 
-    it('emits a route with an empty option table for a command with no options', () => {
+    it('emits a route with an empty option table for a command without options', () => {
         expect(tablesFor(new SlashCommandBuilder().setName('ping').setDescription('Pong'))).toEqual({ ping: {} });
     });
 
@@ -195,7 +194,7 @@ describe('AugmentationBuilder', () => {
             }
         });
 
-        // builder order, not alphabetized
+        // in builder order
         expect(Object.keys(tables.kinds ?? {})).toEqual(['s', 'i', 'n', 'b', 'u', 'c', 'r', 'm', 'a']);
     });
 
@@ -243,7 +242,7 @@ describe('AugmentationBuilder', () => {
         });
     });
 
-    it('omits the choices key entirely for an option with no choices', () => {
+    it('omits the choices key entirely for an option without choices', () => {
         const tables = tablesFor(
             new SlashCommandBuilder()
                 .setName('plain')
@@ -255,7 +254,7 @@ describe('AugmentationBuilder', () => {
         expect(tables).toEqual({ plain: { text: { kind: 'string', required: false } } });
     });
 
-    it('builds a bare subcommand into a cmd/sub leaf with no root route', () => {
+    it('builds a bare subcommand into a cmd/sub leaf without a root route', () => {
         const tables = tablesFor(
             new SlashCommandBuilder()
                 .setName('cfg')
@@ -360,7 +359,7 @@ describe('AugmentationBuilder', () => {
         });
     });
 
-    it('emits an empty option table for a subcommand with no options', () => {
+    it('emits an empty option table for a subcommand without options', () => {
         const tables = tablesFor(
             new SlashCommandBuilder()
                 .setName('demo')
@@ -381,7 +380,7 @@ describe('AugmentationBuilder', () => {
             .addSubcommand((sc) => sc.setName('ping').setDescription('pd'))
             .toJSON();
 
-        const { slash } = new AugmentationBuilder(logger).generate([{ sourceFile: 'admin.ts', json }], {});
+        const { slash } = new AugmentationBuilder(logger).generate([{ sourceFile: 'admin.ts', json }]);
 
         expect(slash).toEqual({ 'admin/ping': { options: {}, cache: undefined } });
         expect(slash).not.toHaveProperty('admin/empty');
@@ -421,7 +420,7 @@ describe('AugmentationBuilder', () => {
 
         let caught: unknown;
         try {
-            generator.generate(commands, {});
+            generator.generate(commands);
         } catch (error: unknown) {
             caught = error;
         }
@@ -439,13 +438,10 @@ describe('AugmentationBuilder', () => {
             .setName('Report Message')
             .setType(ApplicationCommandType.Message);
 
-        const registry = new AugmentationBuilder(silentLogger).generate(
-            [
-                { sourceFile: 'view.ts', json: view.toJSON() },
-                { sourceFile: 'report.ts', json: report.toJSON() }
-            ],
-            {}
-        );
+        const registry = new AugmentationBuilder(silentLogger).generate([
+            { sourceFile: 'view.ts', json: view.toJSON() },
+            { sourceFile: 'report.ts', json: report.toJSON() }
+        ]);
 
         expect(registry.slash).toEqual({});
         expect(registry.userContextMenus).toEqual({ 'View Profile': { cache: undefined } });
@@ -456,13 +452,10 @@ describe('AugmentationBuilder', () => {
         const userReport = new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.User);
         const messageReport = new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.Message);
 
-        const registry = new AugmentationBuilder(silentLogger).generate(
-            [
-                { sourceFile: 'user-report.ts', json: userReport.toJSON() },
-                { sourceFile: 'message-report.ts', json: messageReport.toJSON() }
-            ],
-            {}
-        );
+        const registry = new AugmentationBuilder(silentLogger).generate([
+            { sourceFile: 'user-report.ts', json: userReport.toJSON() },
+            { sourceFile: 'message-report.ts', json: messageReport.toJSON() }
+        ]);
 
         expect(registry.userContextMenus).toEqual({ Report: { cache: undefined } });
         expect(registry.messageContextMenus).toEqual({ Report: { cache: undefined } });
@@ -489,7 +482,7 @@ describe('AugmentationBuilder', () => {
 
         let caught: unknown;
         try {
-            generator.generate(commands, {});
+            generator.generate(commands);
         } catch (error: unknown) {
             caught = error;
         }
@@ -517,7 +510,7 @@ describe('AugmentationBuilder', () => {
 
         let caught: unknown;
         try {
-            generator.generate(commands, {});
+            generator.generate(commands);
         } catch (error: unknown) {
             caught = error;
         }

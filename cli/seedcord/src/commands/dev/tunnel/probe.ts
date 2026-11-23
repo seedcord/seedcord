@@ -11,7 +11,7 @@ export interface ProbeDeps {
 
 // an unsigned POST reaches the engine on any path, and only a seedcord bot answers it with a 401
 export async function awaitReachable(url: string, deps: ProbeDeps, signal: AbortSignal): Promise<boolean> {
-    // one budget shared by every request, so a slow answer still gets the time left in it
+    // one budget shared by every request. a slow answer still gets the time left in it
     const budget = AbortSignal.any([signal, AbortSignal.timeout(BUDGET_MS)]);
 
     for (let attempt = 0; attempt < BUDGET_MS / POLL_INTERVAL_MS; attempt++) {

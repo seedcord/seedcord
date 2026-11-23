@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { postImageNames } from '#lib/blog/postFiles';
 import { POST_SLUG, PostFolder } from '#tests/mdxPipeline';
@@ -28,7 +28,7 @@ describe('the files of a post', () => {
         await expect(post.compile('![the dev tui](./shot.webp)')).rejects.toThrow('is not a webp image');
     });
 
-    it('fails the build on an image with no alt text', async () => {
+    it('fails the build on an image without alt text', async () => {
         using post = new PostFolder().webp('shot.webp');
 
         await expect(post.compile('![](./shot.webp)')).rejects.toThrow('![what it shows](./shot.webp)');

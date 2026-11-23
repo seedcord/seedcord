@@ -3,15 +3,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { TypeChecker } from '#commands/build/builder/TypeChecker';
 import { Project } from '#core/project/Project';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 import { emptyModuleGraph } from '#tests/emptyModuleGraph';
-
-import type { ResolvedSeedcordConfig } from '#core/config/schema';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 
 let projectDir: string;
 
@@ -22,19 +21,10 @@ beforeEach(async () => {
 });
 
 function projectFor(tsconfig?: string): Project {
-    const read: Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target' | 'build'> = {
+    const config = resolvedConfigOf(projectDir, {
         root: realPath(projectDir),
-        configFile: realPath(join(projectDir, 'seedcord.config.ts')),
-        files: [],
-        target: {
-            kind: 'server',
-            start: realPath(join(projectDir, 'index.ts')),
-            outDir: realPath(join(projectDir, 'dist'))
-        },
         build: tsconfig === undefined ? {} : { tsconfig: realPath(tsconfig) }
-    };
-    // justified: the type checker and Project read only the fields above
-    const config = read as ResolvedSeedcordConfig;
+    });
     const loader = {
         importModule: () => Promise.reject(new Error('the type checker loads no modules')),
         ...emptyModuleGraph,
@@ -50,7 +40,7 @@ describe('TypeChecker', () => {
         });
     });
 
-    it('reports a project with no tsconfig.json and no build.tsconfig', async () => {
+    it('reports a project without tsconfig.json or build.tsconfig', async () => {
         await expect(new TypeChecker().check(projectFor())).rejects.toMatchObject({
             code: SeedcordErrorCode.CliTsconfigNotFound
         });

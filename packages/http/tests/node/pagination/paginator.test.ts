@@ -1,6 +1,6 @@
 import { DispatchContext, serializeReply } from '@seedcord/core/internal';
 import { ComponentType, InteractionResponseType, MessageFlags } from 'discord-api-types/v10';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { ReplySender } from '#reply/ReplySender';
 import { ButtonRoute } from '#src/index';
@@ -42,20 +42,24 @@ function pagerFor(ephemeral?: boolean): Paginator<string, 'letters'> {
     });
 }
 
-// the guild payload, the DM branch of contextOf drops member and guild_id for a top-level user
 function guildPayload(): Repliables {
     // justified: the paginator reads only the guild id and the acting user off the payload
     return { guild_id: 'g1', member: { user: { id: 'u1' } } } as unknown as Repliables;
 }
 function dmPayload(): Repliables {
-    // justified: same, a DM payload carries neither member nor guild_id
+    // justified: same, a DM payload has neither member nor guild_id
     return { user: { id: 'u2' } } as unknown as Repliables;
 }
 
-function stubHandler(post: ReturnType<typeof vi.fn>, interaction = guildPayload()): RepliableHandler<Repliables> {
+function stubHandler(
+    post: ReturnType<typeof vi.fn>,
+    interaction = guildPayload(),
+    isEphemeralByDefault = true
+): RepliableHandler<Repliables> {
     const core = { bus: stubBus() } as Core;
+    const dispatch = new DispatchContext('slash', 'page');
     // justified: the fixture implements only the REST surface ReplySender reads
-    const sender = new ReplySender(ref, { post } as unknown as REST, new DispatchContext('slash', 'page'), core.bus);
+    const sender = new ReplySender(ref, { post } as unknown as REST, dispatch, core.bus, isEphemeralByDefault);
     // justified: start reads only these three members off the handler
     return {
         core,
@@ -100,10 +104,18 @@ describe('http Paginator.start', () => {
         expect(textLines(callbackBody(post).data?.components?.[0])).toEqual(['e']);
     });
 
-    it('honors an ephemeral paginator', async () => {
+    it("follows the bot default when the paginator doesn't set ephemeral", async () => {
         const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
 
-        await pagerFor(true).start(stubHandler(post));
+        await pagerFor().start(stubHandler(post, guildPayload(), false));
+
+        expect((callbackBody(post).data?.flags ?? 0) & MessageFlags.Ephemeral).toBe(0);
+    });
+
+    it('keeps an ephemeral paginator private on a bot that defaults to public', async () => {
+        const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
+
+        await pagerFor(true).start(stubHandler(post, guildPayload(), false));
 
         expect((callbackBody(post).data?.flags ?? 0) & MessageFlags.Ephemeral).toBeTruthy();
     });
@@ -144,7 +156,7 @@ describe('http Paginator custom source', () => {
 });
 
 describe('http Paginator.page', () => {
-    it('renders the requested page and sends nothing', async () => {
+    it('renders the requested page without sending it', async () => {
         const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
 
         const reply = await pagerFor().page(stubHandler(post), 1);

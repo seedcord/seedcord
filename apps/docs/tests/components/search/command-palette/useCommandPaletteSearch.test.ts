@@ -1,6 +1,6 @@
 import { DocKind } from '@seedcord/docs-search';
 import { renderHook, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import type { useCommandPaletteSearch as UseSearch } from '#components/search/command-palette/useCommandPaletteSearch';
 import type { SearchIndexEntry, SearchPackage } from '@seedcord/docs-search';
@@ -60,12 +60,12 @@ afterEach(() => {
 });
 
 describe('useCommandPaletteSearch', () => {
-    it('downloads nothing while the palette is closed', () => {
+    it('waits for the palette to open before downloading', () => {
         render('seedcord', false);
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it('stays idle while the query is shorter than the minimum', async () => {
+    it('is idle while the query is shorter than the minimum', async () => {
         const { result } = render('s');
         await waitFor(() => expect(fetchMock).toHaveBeenCalled());
         expect(result.current).toEqual({ results: [], status: 'idle' });

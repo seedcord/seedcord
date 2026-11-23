@@ -2,7 +2,7 @@ import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { LinkChecker } from '#lib/export/LinkChecker';
 
@@ -56,7 +56,7 @@ describe('the export link check', () => {
         expect(await new LinkChecker(root).broken()).toEqual([]);
     });
 
-    it('reports a page link that left out the docs path', async () => {
+    it("reports a page link that doesn't include the docs path", async () => {
         await page('index.html', '/packages/core/0.9.2/classes/bus');
 
         expect(await new LinkChecker(root).broken()).toEqual([

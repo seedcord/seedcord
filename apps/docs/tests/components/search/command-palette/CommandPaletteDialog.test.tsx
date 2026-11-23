@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { MotionProvider } from '#components/providers/MotionProvider';
 import { CommandPaletteDialog } from '#components/search/command-palette/CommandPaletteDialog';
@@ -151,13 +151,13 @@ describe('CommandPaletteDialog', () => {
         expect(handleSelect).toHaveBeenCalledWith(RESULTS[2]);
     });
 
-    it('renders no options when the query is below the minimum length', () => {
+    it('renders zero options when the query is below the minimum length', () => {
         renderDialog(makeController({ searchValue: 'a'.repeat(MIN_SEARCH_QUERY_LENGTH - 1) }));
         expect(screen.queryByRole('option')).toBeNull();
         expect(screen.queryByRole('listbox')).toBeNull();
     });
 
-    it('leaves out the pre-release toggle while no package has a pre-release', () => {
+    it('hides the pre-release toggle until a package has a pre-release', () => {
         renderDialog(makeController());
         expect(screen.queryByRole('switch', { name: 'Pre-release' })).toBeNull();
     });

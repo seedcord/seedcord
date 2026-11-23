@@ -3,25 +3,21 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { createLogger, createServer } from 'vite';
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { edgeViteConfig, serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { holdViteHmrPort } from '#tests/viteHmrPort';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { BotLayout } from '@seedcord/utils/internal';
 import type { InlineConfig } from 'vite';
 
-function configAt(root: string): Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target'> {
-    return {
-        root: realPath(root),
-        configFile: realPath(join(root, 'x.ts')),
-        files: [],
-        target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'dist')) }
-    };
+function configAt(root: string): ResolvedSeedcordConfig {
+    return resolvedConfigOf(root, { root: realPath(root), configFile: realPath(join(root, 'x.ts')) });
 }
 
 function layoutAt(root: string): BotLayout {
@@ -39,7 +35,7 @@ describe('dev vite config', () => {
     it.each([
         ['a server', (root: string): InlineConfig => serverViteConfig(configAt(root), layoutAt(root))],
         ['an edge', (root: string): InlineConfig => edgeViteConfig(layoutAt(root), root)]
-    ])('opens no hmr websocket for %s bot while another process holds its port', async (_kind, config) => {
+    ])("doesn't open an hmr websocket for %s bot while another process holds its port", async (_kind, config) => {
         await holdViteHmrPort();
         const root = project();
         const errors: string[] = [];

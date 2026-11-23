@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 // justified: jsdom under vitest 4 exposes window.localStorage without Storage methods; the store needs a real Storage shim installed before import.
 function installStorageShim(): void {

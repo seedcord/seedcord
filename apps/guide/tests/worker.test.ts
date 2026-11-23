@@ -5,7 +5,7 @@ import { NEXT_GUIDE } from '@seedcord/brand';
 import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH, QUESTION_RULE } from '@seedcord/docs-search';
 import { GUIDE as guideSite } from '@seedcord/ui/sites';
 import { parse } from 'jsonc-parser';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { GuideAnswers } from '#lib/GuideAnswers';
 
@@ -104,7 +104,7 @@ describe('the guide worker', () => {
         expect(response.headers.get('Link')).toContain('</guide/llms.txt>; rel="describedby"');
     });
 
-    it('leaves the Link header off an asset that is not a page', async () => {
+    it("doesn't set the Link header on an asset that is not a page", async () => {
         const png = new Response('', { headers: { 'content-type': 'image/png' } });
 
         const response = await get('/some.png', serving(png));
@@ -147,8 +147,8 @@ describe('the guide worker', () => {
         expect(card.asked.at(-1)).toBe('/guide/og/index.png');
     });
 
-    // a screenshot dropped in public/ keeps its own url
-    it('leaves a real file alone', async () => {
+    // a screenshot added to public/ keeps its own url
+    it("doesn't rewrite the path of a real file", async () => {
         const assets = recording('/guide/portal-token.png');
 
         await get('/portal-token.png', assets);
@@ -222,7 +222,7 @@ describe('the guide worker', () => {
     });
 
     // Vary splits a cache entry per accept header
-    it('leaves Vary off an asset that never negotiates', async () => {
+    it("doesn't set Vary on an asset that never negotiates", async () => {
         const script = new Response('', { headers: { 'content-type': 'application/javascript' } });
 
         const response = await get('/_next/static/chunk.js', serving(script));
@@ -268,7 +268,7 @@ describe('the guide worker', () => {
         expect(assets.asked).toEqual([]);
     });
 
-    it('leaves a live page alone', async () => {
+    it("doesn't redirect a live page", async () => {
         const response = await get('/commands/options/', serving(html()));
 
         expect(response.status).toBe(200);

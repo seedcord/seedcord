@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Callout } from '#components/Callout';
 
@@ -15,7 +15,8 @@ describe('Callout', () => {
 
     it.each([
         ['gateway', 'Gateway only'],
-        ['http', 'Http only']
+        ['http', 'Http only'],
+        ['edge', 'Cloudflare Workers only']
     ] as const)('says %s only', (only, label) => {
         render(
             <Callout type="transport" only={only}>
@@ -32,7 +33,7 @@ describe('Callout', () => {
         expect(screen.getByText('Gateway and http differ')).toBeInTheDocument();
     });
 
-    // mdx does not typecheck the props a page writes
+    // mdx doesn't typecheck the props that a page writes
     it('refuses an unknown type', () => {
         const wrong = { type: 'nonsense' } as unknown as CalloutProps;
 

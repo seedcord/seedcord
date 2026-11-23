@@ -22,7 +22,7 @@ type SlashMatchCases<Route extends keyof SlashRegistry, Cache extends CacheType,
  * Base class for a chat-input (slash) command handler.
  *
  * Pass the route from the generated registry as the generic, the same string as `@SlashRoute`, then read
- * `this.options` for a single command or `this.match` for several. Command authoring stays plain
+ * `this.options` for a single command or `this.match` for several. You build the command with plain
  * discord.js. `seedcord codegen` reads its `toJSON()` to type these options.
  *
  * @typeParam Route - One or more route keys from {@link SlashRegistry}, e.g. `'ban'` or `'ban' | 'kick'`.
@@ -63,7 +63,7 @@ export abstract class SlashHandler<
      * Use `this.event.options` directly for anything outside this view, such as `getSubcommand()`.
      */
     protected get options(): SlashOptions<Route, Cache> {
-        // the djs resolver already carries every getter. SlashOptions is its stricter registry-typed view.
+        // the djs resolver already has every getter. SlashOptions is its stricter registry-typed view.
         return this.event.options as SlashOptions<Route, Cache>;
     }
 

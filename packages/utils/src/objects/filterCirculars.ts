@@ -3,7 +3,7 @@ import type { JsonPrimitive } from 'type-fest';
 
 /**
  * JSONify an arbitrary type while allowing any object position to be replaced
- * by a circular marker. Optional keys stay optional.
+ * by a circular marker. Keeps optional keys optional.
  */
 export type JsonifyWithCirculars<BaseType, Marker extends string = '[Circular]'> = BaseType extends JsonPrimitive
     ? BaseType
@@ -43,7 +43,7 @@ export type JsonifyObject<BaseType, Marker extends string> = {
 
 /**
  * Returned by {@link filterCirculars} when a value cannot be made JSON-safe. The original value is
- * never returned on failure, because it would re-throw in the caller's own `JSON.stringify`.
+ * never returned on failure because it would re-throw in the caller's own `JSON.stringify`.
  */
 export interface UnserializableValue {
     '[unserializable]': string;

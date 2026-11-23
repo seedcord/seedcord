@@ -1,14 +1,11 @@
-import { paint } from '@seedcord/errors';
-import { asError } from '@seedcord/utils/internal';
-
-import { lazyLogger } from '#src/miscellaneous/lazyLogger';
-import { PublishDefault } from '#subscribers/publishDefault';
-
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { Bus } from '#subscribers/Bus';
+import type { ResponseAttempt } from '#subscribers/types/Subscriptions';
 import type { ReplyMethod } from './ackLegality';
-
-const logger = lazyLogger('Reply', { channel: 'interactions' });
+import type { SerializedReply } from './serializeReply';
+import type { ReplyFile } from '@seedcord/types';
+import type { APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
+import type { DistributedPick, Except, ExcludeStrict, ExtractStrict, Simplify } from 'type-fest';
 
 export interface ReplyTelemetry {
     readonly bus: Bus;
@@ -16,75 +13,48 @@ export interface ReplyTelemetry {
     readonly interactionId: string;
 }
 
-// the reply verbs plus the autocomplete choices callback, which runs outside the ack state machine
-export type WriteMethod = ReplyMethod | 'respond';
+// send reports the verb it routed to. respond is the autocomplete choices callback, outside the ack state machine
+export type WriteMethod = ExcludeStrict<ReplyMethod, 'send'> | 'respond';
 
-interface WriteStart {
-    readonly method: WriteMethod;
-    // performance.now() captured before the write began
-    readonly startedAt: number;
+export type MessageMethod = ExtractStrict<WriteMethod, 'reply' | 'followUp' | 'update' | 'edit'>;
+
+// messageBody copies only the file metadata since JSON.stringify on the event would print every byte
+export type SentFile = Simplify<Pick<ReplyFile, 'name' | 'description' | 'title'>>;
+
+type MessageBody = Simplify<Except<SerializedReply, 'files'> & { readonly files?: SentFile[] }>;
+
+// a verb missing from here fails to compile at WriteBody
+interface WriteBodies {
+    reply: MessageBody;
+    followUp: MessageBody;
+    update: MessageBody;
+    edit: MessageBody;
+    showModal: APIModalInteractionResponseCallbackData;
+    defer: null;
+    deferUpdate: null;
+    delete: null;
+    respond: null;
 }
 
-interface SentReport extends WriteStart {
-    readonly outcome: 'sent';
-    readonly messageId: string | null;
+export type WriteBody<Method extends WriteMethod> = WriteBodies[Method];
+
+type WriteOf<Outcome extends ResponseAttempt['outcome']> = DistributedPick<
+    ExtractStrict<ResponseAttempt, { outcome: Outcome }>,
+    'method' | 'body'
+>;
+
+// body is null if serializing throws
+export type PendingWrite = WriteOf<'failed'>;
+
+export type SentWrite = WriteOf<'sent'>;
+
+export function replyFileInfo({ name, description, title }: ReplyFile): SentFile {
+    return { name, ...(description !== undefined && { description }), ...(title !== undefined && { title }) };
 }
 
-interface FailedReport extends WriteStart {
-    readonly outcome: 'failed';
-    readonly error: Error;
-}
-
-export type ResponseReport = SentReport | FailedReport;
-
-/** @internal */
-export function publishResponse(telemetry: ReplyTelemetry, report: ResponseReport): void {
-    const durationMs = performance.now() - report.startedAt;
-    const { routeId } = telemetry.dispatch;
-    const write = {
-        dispatchId: telemetry.dispatch.id,
-        routeId,
-        interactionId: telemetry.interactionId,
-        method: report.method,
-        durationMs
-    };
-    telemetry.bus[PublishDefault](
-        'responseAttempted',
-        report.outcome === 'failed'
-            ? { ...write, outcome: 'failed', messageId: null, error: report.error }
-            : { ...write, outcome: 'sent', messageId: report.messageId }
-    );
-
-    // after publish so a throwing sink doesn't reach the publish above
-    logger().trace(
-        `${paint.sky.bold(routeId)} ${report.method} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
-    );
-}
-
-export async function reportedWrite<Result>(
-    telemetry: ReplyTelemetry,
-    method: WriteMethod,
-    write: () => Promise<Result>
-): Promise<Result> {
-    const startedAt = performance.now();
-    const result = await attemptWrite(telemetry, method, startedAt, write);
-    publishResponse(telemetry, { method, startedAt, outcome: 'sent', messageId: null });
-    return result;
-}
-
-// publishes the failed outcome when write() throws, since the caller's success report sits after the write and a throw skips it
-export async function attemptWrite<Result>(
-    telemetry: ReplyTelemetry,
-    method: WriteMethod,
-    startedAt: number,
-    write: () => Promise<Result>
-): Promise<Result> {
-    try {
-        return await write();
-    } catch (caught) {
-        const error = asError(caught);
-        publishResponse(telemetry, { method, startedAt, outcome: 'failed', error });
-        // rethrown raw
-        throw caught;
-    }
+export function messageBody<TNative>(
+    { files, ...message }: SerializedReply<TNative>,
+    describe: (file: ReplyFile | TNative) => SentFile
+): MessageBody {
+    return files ? { ...message, files: files.map(describe) } : message;
 }

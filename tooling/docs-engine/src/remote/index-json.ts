@@ -26,7 +26,7 @@ export interface PackageIndexEntry {
     prerelease: { latest: string } | null;
     // Entity slug -> tone for the latest stable version (`logger` -> `class`). Only a stable publish
     // rewrites it. The lazy engine reads this to build `/tone/version/slug` URLs for an unloaded
-    // package and to drop links to non-entities (params, mis-attributed externals).
+    // package and to omit links to non-entities (params, mis-attributed externals).
     entities?: Record<string, EntityTone>; // Absent on legacy indexes.
     // package.json description of the latest version.
     description?: string; // Absent on legacy indexes.

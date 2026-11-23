@@ -1,5 +1,5 @@
 import { PermissionFlagsBits } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { HasPresentPermissions, MissingPermissions } from '#notices/index';
 import { assertPermissions } from '#src/permissions/assert';
@@ -55,7 +55,7 @@ describe('assertPermissions', () => {
         ).not.toThrow();
     });
 
-    // an administrator effectively holds every permission, so the inverse check reports them all
+    // the inverse check reports every permission because an administrator effectively holds them all
     it('reports every scope bit on the inverse check for an administrator', () => {
         expect(() =>
             assertPermissions({

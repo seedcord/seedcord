@@ -1,21 +1,19 @@
 import 'reflect-metadata';
 
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { defineGate, InteractionKind, Notice, RegisterInteractionMiddleware } from '@seedcord/core';
+import { defineGate, Notice, RegisterInteractionMiddleware } from '@seedcord/core';
 import { GatedMetadataKey, interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';
 import { testCore } from '#tests/helpers/core';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
-
-import { slashPayload } from './harness';
+import { resolvedSlash } from '#tests/helpers/interactions';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
-import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { RenderableNotice, RenderContext, ReplyResponse } from '@seedcord/types';
 
 // a bot augments its own transport package here. both re-export the interface from @seedcord/types
@@ -79,8 +77,7 @@ async function dispatchThrough(
     for (const ctor of ctors) middlewares.register(ctor);
 
     const execute = await dispatchInteraction({
-        match: { kind: InteractionKind.Slash, route: 'guarded', fallback: false, ctor: Handler },
-        payload: slashPayload('guarded') as ValidInteractionTypes,
+        resolved: resolvedSlash('guarded', Handler),
         core: testCore(nullPathConfig, VALID_TOKEN),
         middlewares
     });
@@ -99,7 +96,7 @@ describe('the dispatch context on an http gate', () => {
         expect(seen).toEqual(['from-middleware']);
     });
 
-    it('leaves the key undefined when no middleware wrote it', async () => {
+    it("doesn't set the key when no middleware wrote it", async () => {
         await dispatchThrough(GuardedHandler);
 
         expect(seen).toEqual([undefined]);
@@ -138,8 +135,7 @@ describe('the dispatch context on a rendered notice', () => {
 
         Envapter.useSource(new PortableSource({}));
         await dispatchInteraction({
-            match: { kind: InteractionKind.Slash, route: 'guarded', fallback: false, ctor: Exploding },
-            payload: slashPayload('guarded') as ValidInteractionTypes,
+            resolved: resolvedSlash('guarded', Exploding),
             core: testCore({ ...nullPathConfig, errors: { defaultError: RecordingCard } }, VALID_TOKEN),
             middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
         });

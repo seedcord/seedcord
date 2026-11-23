@@ -1,5 +1,6 @@
+import { cn } from 'cn';
+
 import { Button } from './Button';
-import { cn } from './lib/cn';
 
 import type { ReactElement } from 'react';
 

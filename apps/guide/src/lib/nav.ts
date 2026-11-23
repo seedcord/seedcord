@@ -69,28 +69,46 @@ export const TAB_OF_PAGE: ReadonlyMap<string, string> = new Map(
     })
 );
 
-interface DraftSection {
-    label?: string | undefined;
-    links: SidebarLink[];
-}
-
-function sectionsOf(node: TabRoot): readonly SidebarSection[] {
-    const drafts: DraftSection[] = [{ links: [] }];
+function sectionsOf(node: TabRoot, tab: string): readonly SidebarSection[] {
+    const closed = new Set(source.getNodeMeta(node)?.data.closed);
+    const leadLinks: SidebarLink[] = [];
+    const sections: SidebarSection[] = [{ kind: 'lead', links: leadLinks }];
+    let links = leadLinks;
 
     for (const child of node.children) {
         if (child.type === 'separator') {
-            drafts.push({ label: text(child.name), links: [] });
+            const label = text(child.name);
+            if (label === undefined) {
+                throw new Error(
+                    `The ${tab} tab has a separator without a name. Write it as "---Name---" in meta.json.`
+                );
+            }
+            links = [];
+            sections.push({
+                kind: 'group',
+                label,
+                storageKey: `guide-sidebar:${tab}:${label}`,
+                defaultOpen: !closed.has(label),
+                links
+            });
             continue;
         }
         if (isOwnTab(child)) continue;
 
         const label = text(child.name);
         const href = child.type === 'page' ? child.url : firstUrl(child);
-        const current = drafts[drafts.length - 1];
-        if (label !== undefined && href !== undefined && current) current.links.push({ label, href });
+        if (label !== undefined && href !== undefined) links.push({ label, href });
     }
 
-    return drafts.filter((draft) => draft.links.length > 0);
+    for (const label of closed) {
+        if (!sections.some((section) => section.kind === 'group' && section.label === label)) {
+            throw new Error(
+                `"${label}" in the ${tab} tab's closed list doesn't match a separator. Use a name from a "---Name---" entry in its pages.`
+            );
+        }
+    }
+
+    return sections.filter((section) => section.links.length > 0);
 }
 
 export function guideOrder(): readonly OrderedPage[] {
@@ -98,8 +116,9 @@ export function guideOrder(): readonly OrderedPage[] {
         const tab = text(node.name);
         if (tab === undefined) return order;
 
-        for (const section of sectionsOf(node)) {
-            for (const link of section.links) order.push({ ...link, tab, group: section.label });
+        for (const section of sectionsOf(node, tab)) {
+            const group = section.kind === 'group' ? section.label : undefined;
+            for (const link of section.links) order.push({ ...link, tab, group });
         }
         return order;
     }, []);
@@ -107,11 +126,12 @@ export function guideOrder(): readonly OrderedPage[] {
 
 export type SidebarsByTab = Readonly<Record<string, readonly SidebarSection[]>>;
 
-// a next layout gets no pathname
+// next doesn't pass a layout the pathname
 export function sidebarsByTab(): SidebarsByTab {
     return TAB_ROOTS.reduce<Record<string, readonly SidebarSection[]>>((byTab, node) => {
+        const tab = text(node.name);
         const href = firstUrl(node);
-        if (href !== undefined) byTab[href] = sectionsOf(node);
+        if (tab !== undefined && href !== undefined) byTab[href] = sectionsOf(node, tab);
         return byTab;
     }, {});
 }

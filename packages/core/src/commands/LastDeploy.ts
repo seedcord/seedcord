@@ -5,7 +5,7 @@ import { getDevChannel } from '#hmr/devChannel';
 import type { DeployedHashes, SeedcordCliEvents } from '@seedcord/types/internal';
 
 // seedcord dev answers from one small file
-// something has really gone wrong if this times out
+// a timeout here means something is badly broken
 const ANSWER_TIMEOUT_MS = 5000;
 
 export class LastDeploy {

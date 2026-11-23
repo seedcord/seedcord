@@ -1,7 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-// null-prototype, on a plain object a key named __proto__ sets the store's prototype and adds no entry
+// null-prototype, on a plain object a key named __proto__ sets the store's prototype and doesn't add an entry
 export function accessorStore<Value>(): Record<string, Value> {
     return Object.create(null) as Record<string, Value>;
 }
@@ -15,7 +15,7 @@ export function clearStore(store: Record<string, unknown>): void {
 export function guardedAccessor<Value>(accessor: string, storage: Record<string, Value>): Record<string, Value> {
     return new Proxy(storage, {
         get(target, key, receiver): unknown {
-            // hasOwn, since `in` walks the prototype and would read a key like `constructor` as resolved
+            // hasOwn since `in` walks the prototype and would read a key like `constructor` as resolved
             if (typeof key !== 'string' || Object.hasOwn(target, key)) return Reflect.get(target, key, receiver);
             throw new SeedcordError(SeedcordErrorCode.CoreAccessorUnresolved, [accessor, key]);
         }

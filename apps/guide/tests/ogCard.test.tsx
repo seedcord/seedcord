@@ -3,9 +3,9 @@ import { BRAND_COLORS } from '@seedcord/brand';
 import { OgPageCard } from '@seedcord/ui/OgCard';
 import { loadOgFonts, OG_SIZE } from '@seedcord/ui/og';
 import { ImageResponse } from 'takumi-js/response';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-// a lone no-break space takes one line of height and draws nothing
+// a lone no-break space takes one line of height and is invisible
 const BLANK_LINE = ' ';
 
 const fonts = loadOgFonts();

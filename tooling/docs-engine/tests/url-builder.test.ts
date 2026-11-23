@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { buildEntityHref, buildPackageBasePath, parseEntityPathSegments } from '#routing/url-builder';
 
@@ -168,7 +168,7 @@ describe('parseEntityPathSegments', () => {
         });
     });
 
-    it('parses a tone directory with no slug as a category-only path', () => {
+    it('parses a tone directory without a slug as a category-only path', () => {
         expect(parseEntityPathSegments(['classes'])).toStrictEqual({
             tone: 'class',
             slug: null,
@@ -201,7 +201,7 @@ describe('parseEntityPathSegments', () => {
         });
     });
 
-    it('keeps a non-tone leading segment in the slug (tone-less URL, not a class fallback)', () => {
+    it('keeps a non-tone leading segment in the slug (a tone-less URL)', () => {
         expect(parseEntityPathSegments(['not-a-real-kind', 'thing'])).toStrictEqual({
             tone: null,
             slug: 'not-a-real-kind/thing',

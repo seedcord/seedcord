@@ -17,7 +17,7 @@ import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
  *
  * Register the customId definitions this handler decodes with `@ModalRoute` and list the same ones in the
  * generic. Read the submitted inputs from `this.fields`. Reply through the handler members. `showModal`
- * fails compilation on this kind, because Discord forbids opening a modal in response to a modal.
+ * fails compilation on this kind because Discord forbids opening a modal in response to a modal.
  *
  * @typeParam Defs - The customId definitions this handler decodes, e.g. `[typeof ConfigId]`.
  *
@@ -41,15 +41,15 @@ export abstract class ModalHandler<Defs extends readonly AnyCustomId[]> extends 
     /** @internal */
     declare readonly [ComponentKindBrand]?: InteractionKind.Modal;
 
-    private reader?: ModalFields;
+    #reader?: ModalFields;
 
-    /** The fields this modal submitted, read by custom id. */
+    /** The fields that this modal submitted, read by custom id. */
     protected get fields(): ModalFields {
-        this.reader ??= new ModalFields(this.event.data);
-        return this.reader;
+        this.#reader ??= new ModalFields(this.event.data);
+        return this.#reader;
     }
 
-    /** Rewrite the message this modal was opened from. Throws when a command opened the modal. */
+    /** Rewrite the message that this modal was opened from. Throws when a command opened the modal. */
     protected override update(response: ReplyResponse | string): Promise<SentMessage> {
         this.ensureSourceMessage('update');
         return super.update(response);

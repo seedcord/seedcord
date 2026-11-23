@@ -18,6 +18,6 @@ export function built<Event, ReplyWith, Handler>(
     const replyWith =
         Ctor.prototype instanceof AutocompleteHandler
             ? autocompleteResponder(event as AutocompleteInteraction, core, dispatch)
-            : new ReplySender(event as Repliables, dispatch, core.bus);
+            : new ReplySender(event as Repliables, dispatch, core.bus, true);
     return new Ctor(event, core, dispatch, replyWith as ReplyWith);
 }

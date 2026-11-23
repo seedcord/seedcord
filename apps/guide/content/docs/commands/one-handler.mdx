@@ -3,7 +3,7 @@ title: One handler, several commands
 description: Answer several slash commands or subcommands from one handler class, and branch on the route that ran.
 ---
 
-Two commands that share most of their work become two handler classes, plus a helper you import into both. Instead, just handle both in a single handler class. You write the list in the decorator and again in the generic.
+Two commands that share most of their work become two handler classes, plus a helper you import into both. Instead, handle both in a single handler class. You write the list in the decorator and again in the generic.
 
 ```ts twoslash title="src/handlers/Moderation.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -64,7 +64,7 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 }
 ```
 
-An option only one route declares stays out.
+The type doesn't include an option that only one route declares.
 
 ```ts twoslash
 // @errors: 2339
@@ -120,7 +120,7 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 }
 ```
 
-Leaving one out is a compile error.
+A `match` that's missing one of them is a compile error.
 
 ```ts twoslash
 // @errors: 2345
@@ -141,7 +141,7 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 
 ## Use what the cases return
 
-The code after [`match`](ref:gateway/SlashHandler.match) often needs a value that each case worked out. If you assign that value to a `let` above `match`, TypeScript reports the `let` as used before it's assigned, because it doesn't follow assignments inside the callbacks.
+The code after [`match`](ref:gateway/SlashHandler.match) often needs a value that each case worked out. If you assign that value to a `let` above `match`, TypeScript reports the `let` as used before it's assigned because it doesn't follow assignments inside the callbacks.
 
 Return the value from each case. `match` resolves to what the case returned.
 
@@ -162,7 +162,7 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 }
 ```
 
-`outcome` is a union of both shapes, because each case returned its own. `kick` returns a promise, and `match` waits for it before it resolves.
+`outcome` is a union of both shapes because each case returned its own. `kick` returns a promise, and `match` waits for it before it resolves.
 
 ### Make every case return the same type
 
@@ -187,4 +187,8 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 
 TypeScript reports the error on `kick`, which returns a number. `summary` is a `string`, the type you passed.
 
+<Callout type="warning">
+
 Write the cases inline when you pass a type. If you pass a map stored in a variable, TypeScript doesn't reject an extra key, so that key compiles and never runs.
+
+</Callout>

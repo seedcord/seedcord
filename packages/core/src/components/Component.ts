@@ -18,7 +18,7 @@ abstract class BaseComponent<TComponent> {
     /**
      * Returns the live builder, ready to send in a Discord message or nest in another component.
      *
-     * Reading this can apply the bot color (see {@link BuilderComponent}), so it has a side effect.
+     * Reading this has a side effect because it can apply the bot color (see {@link BuilderComponent}).
      * @example new SomeComponent().component
      */
     public abstract get component(): InstantiatedBuilder<BuilderType> | InstantiatedActionRow<RowType>;

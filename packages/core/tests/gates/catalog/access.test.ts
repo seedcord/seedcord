@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { DmOnly, GuildOnly, OwnerOnly } from '#gates/catalog/access';
 import { NotInDm, NotInGuild, NotOwner } from '#notices/index';
@@ -7,13 +7,13 @@ import type { GateContextBase } from '#gates/Gate';
 import type { CoreBase } from '#interfaces/CoreBase';
 
 function ownerCtx(userId: string | null, ownerIds: string[]): GateContextBase {
-    // the gate reads only core.config.ownerIds and userId, so a minimal cast stands in
+    // a minimal cast stands in because the gate reads only core.config.ownerIds and userId
     const core = { config: { ownerIds } } as unknown as CoreBase;
     return { core, userId } as unknown as GateContextBase;
 }
 
 function guildCtx(inGuild: boolean): GateContextBase {
-    // the gate reads only guildId, so a minimal cast stands in
+    // a minimal cast stands in because the gate reads only guildId
     return { guildId: inGuild ? 'g1' : null } as unknown as GateContextBase;
 }
 
@@ -39,7 +39,7 @@ describe('OwnerOnly', () => {
         await expect(OwnerOnly().check(ownerCtx('u2', []))).rejects.toBeInstanceOf(NotOwner);
     });
 
-    it('refuses with NotOwner when the context carries no user id', async () => {
+    it('refuses with NotOwner when the context has a null user id', async () => {
         await expect(OwnerOnly().check(ownerCtx(null, ['o1']))).rejects.toBeInstanceOf(NotOwner);
     });
 

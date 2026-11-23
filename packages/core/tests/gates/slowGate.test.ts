@@ -1,17 +1,12 @@
-import { Logger } from '@seedcord/logger';
+import { captureLogs } from '@seedcord/logger/internal';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { slowGateMonitor } from '#gates/slowGate';
 
 afterEach(() => {
-    vi.restoreAllMocks();
     Envapter.useSource(new PortableSource({}));
 });
-
-function warnSpy(): MockInstance<Logger['warn']> {
-    return vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-}
 
 describe('slowGateMonitor', () => {
     it('returns undefined in production', () => {
@@ -20,34 +15,35 @@ describe('slowGateMonitor', () => {
     });
 
     it('warns once with the total, the route, and each gate share when the checks sum to the threshold', () => {
-        const warn = warnSpy();
+        using logs = captureLogs();
         const monitor = slowGateMonitor();
         monitor?.observe('first', 400);
         monitor?.observe('second', 350);
         monitor?.report('slash:daily');
 
-        expect(warn).toHaveBeenCalledTimes(1);
-        const message = warn.mock.calls[0]?.[0] ?? '';
+        const warnings = logs.at('warn');
+        expect(warnings).toHaveLength(1);
+        const [message] = warnings;
         expect(message).toContain('750ms');
         expect(message).toContain('first');
         expect(message).toContain('second');
         expect(message).toContain('slash:daily');
     });
 
-    it('stays silent when the checks sum under the threshold', () => {
-        const warn = warnSpy();
+    it('is silent when the checks sum under the threshold', () => {
+        using logs = captureLogs();
         const monitor = slowGateMonitor();
         monitor?.observe('first', 300);
         monitor?.observe('second', 300);
         monitor?.report(null);
 
-        expect(warn).not.toHaveBeenCalled();
+        expect(logs.at('warn')).toEqual([]);
     });
 
-    it('stays silent with no readings', () => {
-        const warn = warnSpy();
+    it('is silent without readings', () => {
+        using logs = captureLogs();
         slowGateMonitor()?.report(null);
 
-        expect(warn).not.toHaveBeenCalled();
+        expect(logs.at('warn')).toEqual([]);
     });
 });

@@ -39,7 +39,7 @@ You write the events twice. `MemberLog` passes `@RegisterEvent` one tuple for ea
 
 <Callout type="warning">
 
-[`this.event`](ref:gateway/EventHandler.event) is `never` on a handler registered for several events, since the payload depends on the event's name. Read the payload through `this.match` there. [`this.route`](ref:gateway/EventHandler.route) holds the event's name, for work that doesn't read the payload.
+[`this.event`](ref:gateway/EventHandler.event) is `never` on a handler registered for several events since the payload depends on the event's name. Read the payload through `this.match` there. [`this.route`](ref:gateway/EventHandler.route) holds the event's name, for work that doesn't read the payload.
 
 </Callout>
 
@@ -75,7 +75,7 @@ class MemberLog extends EventHandler<
 
 ## Every case is required
 
-Without `match`, you'd branch with a `switch` on the event name. Then you add a third event to the decorator and forget its case. That event then silently does nothing. `match` checks the cases against the union, so a missing case fails to compile.
+Without `match`, you'd branch with a `switch` on the event name. Then you add a third event to the decorator and forget its case. When Discord sends that event, the `switch` skips every case and the handler returns without an error. `match` checks the cases against the union, so a missing case fails to compile.
 
 ```ts twoslash
 // @errors: 2345
@@ -135,9 +135,9 @@ class MemberLog extends EventHandler<
 
 ## Mixed frequency
 
-Each tuple carries its own options, so one event's handler can run once while the others run on every dispatch.
+Each tuple has its own options, so one event's handler can run once while the others run on every dispatch.
 
-```ts
+```ts plain
 @RegisterEvent(
     [Events.GuildMemberAdd, { frequency: 'once' }],
     [Events.GuildMemberUpdate]
@@ -146,4 +146,4 @@ Each tuple carries its own options, so one event's handler can run once while th
 
 Here the join case runs for the first member and never again. The update case runs every time.
 
-When several handlers need the same check before they run, like skipping muted members, an [event middleware](/events/middleware) runs it once ahead of all of them.
+When several handlers need the same check before they run, like skipping muted members, an [event middleware](/events/middleware) runs it once before all of them.

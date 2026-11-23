@@ -18,7 +18,7 @@ Done when every published package's README and every private stub is committed.
 - One short sample built from real exports, with nothing from an `./internal` entry.
 - Links to the guide for the rules.
 
-Leave the rules, edge cases and option lists to the guide. A dense paragraph of config detail becomes one line and a link. Each cut fact goes into the guide notes file with the page it belongs on.
+Leave the rules, edge cases and option lists to the guide. A dense paragraph of config detail becomes one line and a link. Write each cut fact into the guide notes file with the page it belongs on.
 
 A library with no guide of its own, like `discord-component-embed`, keeps its long README. That README is its documentation.
 
@@ -37,7 +37,7 @@ Check each one again on later releases, since the code can change.
 - seedcord loads `.env` files into envapt and never into `process.env`. A bot reads its own config through envapt too. Link envapt to `https://envapt.materwelon.dev`, and seedcord packages to npm.
 - Every bot installs `@discordjs/builders` and `envapt`.
 - On a Cloudflare Workers bot, attaching a server-only plugin like Mongoose or Kysely is a compile error.
-- The pre-1.0 line reads "seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update." Packages already past 1.0 leave it out.
+- `stageNotice()` in `@seedcord/brand` writes the stage line, and `scripts/tests/stage-notice.test.ts` fails when a README's copy differs. Packages already past 1.0 leave it out.
 - Link the reference as `seedcord.org/docs`.
 
 ## Verify before claiming

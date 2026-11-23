@@ -92,7 +92,7 @@ interface PaletteProps {
     onRun: (command: SlashCommandDef) => void;
 }
 
-// the input stays mounted while closed. removing a focused input mid-keystroke makes chrome
+// the palette keeps the input mounted while closed because removing a focused input mid-keystroke makes chrome
 // collapse the selection to the removal point (the end of body here) and scroll it into view.
 function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): ReactNode {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -103,7 +103,7 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
         const input = inputRef.current;
         if (!input) return;
         input.focus();
-        // the input persists across opens, so the caret sits wherever the last session left it
+        // the caret would sit wherever the last session left it because the input persists across opens
         input.setSelectionRange(input.value.length, input.value.length);
     }, [open]);
 
@@ -154,7 +154,7 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
     };
 
     return (
-        <div hidden={!open} className={cn('rule blk-sm pointer-events-auto overflow-hidden rounded-sm bg-(--pith)')}>
+        <div hidden={!open} className={cn('pointer-events-auto blk-sm overflow-hidden rounded-sm bg-(--pith) rule')}>
             {matches.length > 0 && (
                 <CommandOptions matches={matches} selected={selected} onHover={onSelect} onRun={run} />
             )}
@@ -178,7 +178,7 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
 function ReplyBubble({ text }: { text: string }): ReactNode {
     return (
         <div
-            className={cn('rule blk-sm pointer-events-auto flex items-center gap-3 rounded-sm bg-(--pith) px-3 py-2.5')}
+            className={cn('pointer-events-auto blk-sm flex items-center gap-3 rounded-sm bg-(--pith) px-3 py-2.5 rule')}
         >
             <Materwelon className={cn('drop-shadow-mark size-8 shrink-0')} />
             <div>

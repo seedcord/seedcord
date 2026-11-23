@@ -1,6 +1,6 @@
 import { InteractionKind } from '@seedcord/core';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
@@ -22,7 +22,7 @@ let capture: LogSinkHandle;
 
 beforeEach(() => {
     records = [];
-    // a test run defaults to the info floor and records nothing at debug
+    // a test run defaults to the info floor, which hides debug lines
     LoggerChannelRegistry.instance.configure({ level: 'debug', sinks: [] });
     capture = LoggerChannelRegistry.instance.installSink({
         kind: 'capture',

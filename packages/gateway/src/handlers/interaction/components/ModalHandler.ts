@@ -15,7 +15,7 @@ import type { CacheType, ModalSubmitFields, ModalSubmitInteraction } from 'disco
  *
  * Register the customId definitions this handler decodes with `@ModalRoute`, list the same ones in the
  * generic, then read `this.params` for a single route or `this.match` for several. Read the submitted
- * inputs from `this.fields`. Reply through the handler members. `showModal` fails compilation on this kind,
+ * inputs from `this.fields`. Reply through the handler members. `showModal` fails compilation on this kind
  * because Discord forbids opening a modal in response to a modal.
  *
  * @typeParam Defs - The customId definitions this handler decodes, e.g. `[typeof ConfigId]`.
@@ -41,12 +41,12 @@ export abstract class ModalHandler<
     /** @internal */
     declare readonly [ComponentKindBrand]?: InteractionKind.Modal;
 
-    /** The fields this modal submitted, read by custom id. */
+    /** The fields that this modal submitted, read by custom id. */
     protected get fields(): ModalSubmitFields<Cache> {
         return this.event.fields;
     }
 
-    /** Rewrite the message this modal was opened from. Throws when a command opened the modal. */
+    /** Rewrite the message that this modal was opened from. Throws when a command opened the modal. */
     protected override update(response: GatewayReplyResponse | string): Promise<SentMessage> {
         this.ensureSourceMessage('update');
         return super.update(response);

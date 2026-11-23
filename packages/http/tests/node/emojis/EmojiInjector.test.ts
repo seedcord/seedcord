@@ -1,17 +1,18 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { EmojiInjector, Emojis } from '#src/emojis/EmojiInjector';
+import { registerBuiltFiles } from '#tests/helpers/builtFiles';
 
 import type { Core } from '#interfaces/Core';
 import type { ResolvedEmoji } from '@seedcord/core';
 import type { APIEmoji } from 'discord-api-types/v10';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 const APP = 'app-1';
 
-// justified: EmojiMap is empty in tests, so runtime values read through a plain record
+// justified: runtime values read through a plain record because EmojiMap is empty in tests
 const emojis = Emojis as Record<string, ResolvedEmoji>;
 
 function apiEmoji(name: string, id: string): APIEmoji {
@@ -44,6 +45,14 @@ describe('EmojiInjector', () => {
         await new EmojiInjector(coreWith({ Confirm: 'confirm' }).core).init();
 
         expect(emojis.Confirm).toEqual({ name: 'confirm', id: '111', animated: false });
+        expect(String(emojis.Confirm)).toBe('<:confirm:111>');
+    });
+
+    it('resolves an emoji that only the emojis folder has', async () => {
+        using _built = registerBuiltFiles({}, [], [{ key: 'Confirm', name: 'confirm' }]);
+
+        await new EmojiInjector(coreWith(undefined).core).init();
+
         expect(String(emojis.Confirm)).toBe('<:confirm:111>');
     });
 

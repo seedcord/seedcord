@@ -1,10 +1,9 @@
 import { Seedcord } from '@seedcord/gateway';
+import { I18n } from '@seedcord/plugin-i18n';
 import { Mongoose } from '@seedcord/plugin-mongoose';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { Converters, Envapter } from 'envapt';
 import { Envapt } from 'envapt/legacy';
-
-import { I18n } from './plugins/I18n';
 
 export class Vars extends Envapter {
     @Envapt('MONGO_URI', { fallback: 'mongodb://localhost:27017/' })
@@ -41,10 +40,6 @@ export const seedcord = new Seedcord({
         events: {
             path: './events',
             middlewares: './events/middlewares'
-        },
-        emojis: {
-            Confirm: 'confirmation_check',
-            Cancel: 'confirmation_cross'
         }
     },
     subscribers: {
@@ -53,10 +48,10 @@ export const seedcord = new Seedcord({
     botColor: '#fe565a'
 })
     .attach('db', Mongoose, {
-        dir: './services',
+        path: './services',
         uri: Vars.mongoUri,
         name: Vars.dbName
     })
-    .attach('i18n', I18n, './locales');
+    .attach('i18n', I18n, { path: './locales' });
 
 export default seedcord;

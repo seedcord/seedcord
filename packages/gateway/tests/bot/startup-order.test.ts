@@ -1,12 +1,12 @@
 import { StartupPhase } from '@seedcord/core/node/internal';
 import { Events } from 'discord.js';
-import { describe, expect, vi } from 'vitest';
+import { describe, expect, vi } from 'vite-plus/test';
 
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
 
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 type Listener = (...args: unknown[]) => void;
 
@@ -28,8 +28,7 @@ describe('gateway startup order', () => {
         const seedcord = seedcordWith(
             testConfig({
                 interactions: testEnv.resolvePath('interactions'),
-                events: testEnv.resolvePath('events'),
-                healthCheck: false
+                events: testEnv.resolvePath('events')
             })
         );
         vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');

@@ -1,4 +1,5 @@
-import { cn } from './lib/cn';
+import { cn } from 'cn';
+
 import { Materwelon } from './Materwelon';
 
 import type { ReactElement } from 'react';

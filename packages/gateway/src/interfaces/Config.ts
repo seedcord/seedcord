@@ -1,5 +1,9 @@
-import type { BotConfig, Config, HealthCheckOption } from '@seedcord/types';
+import type { InteractionHandler } from '#handlers/interaction/InteractionHandler';
+import type { Repliables } from '#handlers/interactionTypes';
+import type { BotConfig, InteractionsConfig, ServerHostConfig, TypedConstructor } from '@seedcord/types';
 import type { ClientOptions } from 'discord.js';
+
+type UnhandledHandler = TypedConstructor<typeof InteractionHandler<Repliables>>;
 
 /**
  * Djs Events handlers
@@ -25,6 +29,8 @@ export type EventsConfig =
  * gateway bot has, the discord.js client options and the gateway event handlers.
  */
 export interface GatewayBotConfig extends BotConfig {
+    interactions: InteractionsConfig<UnhandledHandler>;
+
     /**
      * Passed directly to the discord.js `Client` constructor.
      */
@@ -36,12 +42,6 @@ export interface GatewayBotConfig extends BotConfig {
 /**
  * The gateway transport's configuration, what the {@link Seedcord} constructor takes.
  */
-export interface GatewayConfig extends Config {
+export interface GatewayConfig extends ServerHostConfig {
     bot: GatewayBotConfig;
-
-    /**
-     * The health-check server. `false` disables it, `true` or omit for the defaults, an object
-     * configures it.
-     */
-    healthCheck?: HealthCheckOption;
 }

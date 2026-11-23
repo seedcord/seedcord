@@ -29,7 +29,7 @@ export interface ConfirmOptions {
      * Whether the prompt is ephemeral. Only the invoking user can act on it either way, a non-invoker's
      * click is ignored.
      *
-     * @defaultValue `true`
+     * @defaultValue `bot.interactions.ephemeral`
      */
     ephemeral?: boolean;
     /**
@@ -164,8 +164,8 @@ export function getConfirmation(
  * @throws The send error when the prompt fails to send. The handler's fault boundary catches it.
  *
  * @remarks
- * The prompt is collected in-process, so it does not survive a bot restart. Without an outcome hook the
- * prompt is gone once the user confirms, so deliver the result with a fresh `this.followUp(...)`.
+ * A bot restart ends the prompt because it is collected in-process. Without an outcome hook seedcord deletes
+ * the prompt once the user confirms. Deliver the result with a fresh `this.followUp(...)` in that case.
  *
  * @example
  * ```ts
@@ -212,7 +212,7 @@ export async function getConfirmation(
     prompt: ConfirmPrompt,
     options?: DefaultConfirmOptions
 ): Promise<boolean> {
-    const { ephemeral = true, timeoutMs = DEFAULT_TIMEOUT_MS } = options ?? {};
+    const { ephemeral, timeoutMs = DEFAULT_TIMEOUT_MS } = options ?? {};
 
     const response = typeof prompt === 'string' ? defaultPrompt(prompt, options) : await prompt(CONFIRM_IDS);
     const interaction = handler.getEvent();

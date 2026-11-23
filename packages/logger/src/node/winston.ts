@@ -14,7 +14,7 @@ type WinstonInfo = LogEntry & Logform.TransformableInfo;
 const SPLAT = Symbol.for('splat');
 const LEVEL = Symbol.for('level');
 
-// winston's default npm levels have no `trace`
+// winston's default npm levels don't include `trace`
 export const NODE_LEVELS: Record<LogLevel, number> = { error: 0, warn: 1, info: 2, debug: 3, trace: 4 };
 
 export type SinkFormat = 'pretty' | 'json' | 'json-ansi';
@@ -52,7 +52,7 @@ function firstErrorStack(args?: unknown[]): string | undefined {
     return error?.stack;
 }
 
-// winston sets info.stack for logger.error('msg', err), but logger.log(info) leaves it unset
+// winston sets info.stack for logger.error('msg', err), but logger.log(info) doesn't set it
 export function toInfo(record: LogRecord): WinstonInfo {
     const stack = firstErrorStack(record.args);
     return {

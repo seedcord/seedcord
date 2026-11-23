@@ -1,0 +1,96 @@
+{
+    "name": "@seedcord/plugin-oauth",
+    "version": "0.1.0-next.0",
+    "description": "Log people in with Discord from a seedcord bot and call the API as them",
+    "keywords": [
+        "discord-auth",
+        "discord-bot",
+        "discord-login",
+        "oauth",
+        "oauth2",
+        "plugin",
+        "seedcord"
+    ],
+    "homepage": "https://seedcord.org",
+    "bugs": "https://github.com/seedcord/seedcord/issues",
+    "license": "Apache-2.0",
+    "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/seedcord/seedcord.git",
+        "directory": "plugins/oauth"
+    },
+    "funding": "https://github.com/sponsors/materwelonDhruv",
+    "files": [
+        "dist",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
+    "type": "module",
+    "types": "./dist/index.d.mts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            }
+        },
+        "./client": {
+            "import": {
+                "types": "./dist/client.index.d.mts",
+                "default": "./dist/client.index.mjs"
+            }
+        }
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    },
+    "scripts": {
+        "build": "vp pack",
+        "clean": "rm -rf dist",
+        "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "tc": "tsgo --noEmit",
+        "test": "vp test run",
+        "test:watch": "vp test dev",
+        "coverage": "vp test run --coverage"
+    },
+    "dependencies": {
+        "@discordjs/rest": "catalog:deps",
+        "@seedcord/errors": "workspace:^",
+        "@seedcord/types": "workspace:^",
+        "@seedcord/utils": "workspace:^",
+        "discord-api-types": "catalog:deps",
+        "es-toolkit": "catalog:deps",
+        "type-fest": "catalog:deps"
+    },
+    "devDependencies": {
+        "@seedcord/core": "workspace:^",
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/logger": "workspace:^",
+        "@seedcord/prose": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsdown-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
+        "envapt": "catalog:peer"
+    },
+    "peerDependencies": {
+        "@seedcord/core": "workspace:>=0.14.0-next.1",
+        "envapt": "catalog:peer",
+        "typescript": "catalog:consumerTypes"
+    },
+    "peerDependenciesMeta": {
+        "@seedcord/core": {
+            "optional": true
+        },
+        "envapt": {
+            "optional": true
+        }
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": "^24.22.1 || >=26.12.1"
+    }
+}

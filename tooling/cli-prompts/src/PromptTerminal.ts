@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { expect, vi } from 'vitest';
+import { expect } from 'vite-plus/test';
 
 // Prompter imports these on the first prompt. importing them here stops a test's first press from timing out
 import 'ink';
@@ -43,12 +43,8 @@ export class PromptTerminal {
 
     public readonly prompter = new Prompter({ stdin: this.stdin, stdout: this.stdout });
 
-    // ink reads two keys left in the stream together as one pasted string
     public async press(...keys: string[]): Promise<void> {
-        for (const key of keys) {
-            this.stdin.write(key);
-            await vi.waitFor(() => expect(this.stdin.readableLength).toBe(0), { interval: 1 });
-        }
+        for (const key of keys) await this.stdin.press(key);
     }
 
     // the prompt rejects before press resolves

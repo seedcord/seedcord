@@ -1,5 +1,5 @@
 import { CustomId } from '@seedcord/custom-id';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 
 import { ComponentDefsKey } from '#customId/routing';
 import {
@@ -109,7 +109,7 @@ const profileTypo = UserContextMenuRoute('View Profil');
 const approveRejectButton = ButtonRoute(ApproveId, RejectId);
 const approveButton = ButtonRoute(ApproveId);
 
-// compile-only. each decorator's parameter type is the error the author reads.
+// compile-only. each decorator's parameter type is the error that the author reads.
 function rejectionMessages(): void {
     expectTypeOf<Parameters<typeof slashKick<typeof Ban>>[0]>().toEqualTypeOf<
         Constructor<['SlashRoute does not match the SlashHandler generic', { decorator: 'rtKick'; generic: 'rtBan' }]>
@@ -120,7 +120,7 @@ function rejectionMessages(): void {
         >
     >();
     expectTypeOf<Parameters<typeof slashTypo<typeof Ban>>[0]>().toEqualTypeOf<
-        Constructor<['SlashRoute lists a command that is not registered', '/rtBan']>
+        Constructor<['SlashRoute lists an unregistered command', '/rtBan']>
     >();
     expectTypeOf<Parameters<typeof autocompleteKick<typeof Find>>[0]>().toEqualTypeOf<
         Constructor<
@@ -139,7 +139,7 @@ function rejectionMessages(): void {
         >
     >();
     expectTypeOf<Parameters<typeof profileTypo<typeof Profile>>[0]>().toEqualTypeOf<
-        Constructor<['ContextMenuRoute lists a command that is not registered', 'View Profil']>
+        Constructor<['ContextMenuRoute lists an unregistered command', 'View Profil']>
     >();
     expectTypeOf<Parameters<typeof approveRejectButton<typeof Approve>>[0]>().toEqualTypeOf<
         Constructor<

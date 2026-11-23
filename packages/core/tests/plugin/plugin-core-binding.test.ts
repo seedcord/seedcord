@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { Plugin } from '#src/plugin/Plugin';
 
@@ -15,7 +15,7 @@ class Bound extends Plugin<{}, TransportCore> {
     public init(): Promise<void> {
         return Promise.resolve();
     }
-    // annotated to the bound type, which fails to compile when `core` stays CoreBase
+    // annotated to the bound type, which fails to compile when `core` is still CoreBase
     public peek(): TransportCore {
         return this.core;
     }
@@ -50,7 +50,7 @@ describe('the plugin base binds its core type', () => {
         expect(plugin.readExtra()).toBe('seed');
     });
 
-    it('falls back to CoreBase with no binding', () => {
+    it('falls back to CoreBase without a binding', () => {
         const plugin = new Unbound(host);
 
         expect(plugin.peek()).toBe(host);

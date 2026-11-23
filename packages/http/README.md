@@ -23,11 +23,11 @@
 
 ## About
 
-`@seedcord/http` is the transport for an http bot. Discord posts each interaction to your bot's URL, and the bot checks the request's Ed25519 signature before it runs your handler. It has no discord.js dependency and keeps no connection open, so it runs on your own server or on Cloudflare Workers.
+`@seedcord/http` is the transport for an http bot. Discord posts each interaction to your bot's URL, and the bot checks the request's Ed25519 signature before it runs your handler. It doesn't depend on discord.js or keep a connection open, so it runs on your own server or on Cloudflare Workers.
 
 Discord posts only interactions to that URL. Use [`@seedcord/gateway`](https://www.npmjs.com/package/@seedcord/gateway) when your bot reacts to messages, members, voice, or reactions.
 
-seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 If you use a coding agent, point it at [`seedcord.org/guide/llms.txt`](https://seedcord.org/guide/llms.txt), which lists every page in the guide.
 
@@ -70,11 +70,11 @@ Handlers read raw payloads from `discord-api-types`. Slash commands, components,
 
 ### Its own server
 
-On Node or Bun, `Seedcord` listens on `port`, 3000 by default.
+On Node or Bun, `Seedcord` listens on `server.port`, 3000 by default.
 
 ### Inside your server
 
-Set `port: false`, start the bot, then pass each request to `bot.fetch()`. It takes a web `Request` and returns a `Response`, so a Hono or Next.js route can forward to it:
+Set `server: { port: false }`, start the bot, then pass each request to `bot.fetch()`. It takes a web `Request` and returns a `Response`, so a Hono or Next.js route can forward to it:
 
 ```ts
 import { Hono } from 'hono';
@@ -84,7 +84,7 @@ import bot from './bot';
 await bot.start();
 
 const app = new Hono();
-app.post('/interactions', (c) => bot.fetch(c.req.raw));
+app.all('*', (c) => bot.fetch(c.req.raw));
 ```
 
 ### Cloudflare Workers

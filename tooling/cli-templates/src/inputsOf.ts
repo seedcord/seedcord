@@ -5,6 +5,7 @@ import Handlebars from 'handlebars';
 import { inTemplateFile } from './inTemplateFile';
 
 import type { Template, TemplateFile } from './Template';
+import type { OverrideProperties, ExcludeStrict } from 'type-fest';
 
 export type InputShape =
     | { readonly kind: 'text' }
@@ -58,8 +59,8 @@ class Slot {
         return { kind: this.kind ?? 'text' };
     }
 
-    // {{#if x}} only checks that x has an answer, so a tested value can still take any shape
-    private become(kind: Exclude<InputShape['kind'], 'bool'>): void {
+    // a tested value can still take any shape because {{#if x}} only checks that x has an answer
+    private become(kind: ExcludeStrict<InputShape['kind'], 'bool'>): void {
         if (this.kind !== undefined && this.kind !== 'bool' && this.kind !== kind) {
             throw new SeedcordTypeError(SeedcordErrorCode.MakeValueUsedTwoWays, [
                 this.template,
@@ -77,7 +78,7 @@ interface Scope {
     // block params from `as |item index|`
     readonly params: ReadonlyMap<string, Slot>;
     // a partial's hash values. handlebars sets them on the
-    // partial's context and leaves out the caller's block params
+    // partial's context, which doesn't include the caller's block params
     readonly fields?: ReadonlyMap<string, Slot>;
 }
 
@@ -86,14 +87,14 @@ const ast = Handlebars.AST.helpers as typeof Handlebars.AST.helpers & {
     scopedId: (path: hbs.AST.PathExpression) => boolean;
 };
 
-// the parser leaves blockParams undefined on a block without `as |x|`, whatever the types say
-type ParsedProgram = Omit<hbs.AST.Program, 'blockParams'> & { readonly blockParams?: readonly string[] };
+// the parser doesn't set blockParams on a block without `as |x|`, whatever the types say
+type ParsedProgram = OverrideProperties<hbs.AST.Program, { readonly blockParams?: readonly string[] }>;
 
 function blockParamsOf(program: ParsedProgram): readonly string[] {
     return program.blockParams ?? [];
 }
 
-// the parser also leaves hash undefined on a call without key=value pairs
+// the parser also doesn't set hash on a call without key=value pairs
 function pairsOf(call: { readonly hash?: hbs.AST.Hash }): readonly hbs.AST.HashPair[] {
     return call.hash?.pairs ?? [];
 }
@@ -257,7 +258,7 @@ class InputReader extends Handlebars.Visitor {
         this.scopes.pop();
     }
 
-    // (split csv) has no slot of its own. reading it still asks for csv
+    // (split csv) doesn't have a slot of its own. reading it still asks for csv
     private slotOrRead(expression: hbs.AST.Expression | undefined): Slot | undefined {
         const slot = this.slotOf(pathOf(expression));
         if (!slot && expression) this.accept(expression);

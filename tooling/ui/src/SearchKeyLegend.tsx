@@ -1,5 +1,6 @@
+import { cn } from 'cn';
+
 import { Cap, keyCap } from './KeyCap';
-import { cn } from './lib/cn';
 
 import type { KeyCap } from './KeyCap';
 import type { ReactElement } from 'react';

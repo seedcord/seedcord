@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { errorsInside, lowestTypescript } from '#src/lib/typescript-floor';
 
@@ -11,9 +11,9 @@ describe('lowestTypescript', () => {
         expect(lowestTypescript(WORKSPACE, 'consumerLint')).toBe('5.9.3');
     });
 
-    it('throws for a catalog with no typescript range', () => {
+    it('throws for a catalog without a typescript range', () => {
         expect(() => lowestTypescript(WORKSPACE, 'consumerTypes')).toThrow(
-            "pnpm-workspace.yaml's consumerTypes catalog has no typescript range"
+            "pnpm-workspace.yaml's consumerTypes catalog doesn't have a typescript range"
         );
     });
 });

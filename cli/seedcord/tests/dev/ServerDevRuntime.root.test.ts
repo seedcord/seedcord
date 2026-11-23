@@ -3,9 +3,9 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { HostListenHost, HostShutdown } from '@seedcord/types/internal';
+import { HostDevUrl, HostListenHost, HostShutdown } from '@seedcord/types/internal';
 import { readFiles } from '@seedcord/utils';
-import { afterAll, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterAll, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { ProjectFiles } from '#core/project/ProjectFiles';
@@ -74,7 +74,7 @@ describe('dev runtime with root set to src', () => {
         expect(module).toMatchObject({ texts: ['hello'] });
     }, 60_000);
 
-    it('throws CoreDirectoryNotListed for a text folder that files leaves out', async () => {
+    it("throws CoreDirectoryNotListed for a text folder that files doesn't list", async () => {
         await mkdir(SCRATCH_ROOT, { recursive: true });
         const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
         await writeProject(dir);
@@ -238,12 +238,12 @@ export const runtime = Envapter.get('RUNTIME_GREETING');
     }, 60_000);
 
     it.each([
-        { tunnel: { mode: 'quick' }, host: '127.0.0.1' },
-        { tunnel: { mode: 'url', url: 'https://bot.example.com' }, host: undefined },
-        { tunnel: { mode: 'off' }, host: undefined }
+        { tunnel: { mode: 'quick' }, host: '127.0.0.1', url: undefined },
+        { tunnel: { mode: 'url', url: 'https://bot.example.com' }, host: undefined, url: 'https://bot.example.com' },
+        { tunnel: { mode: 'off' }, host: undefined, url: undefined }
     ] as const)(
-        'sets the listen host on a bot when the tunnel mode is $tunnel.mode',
-        async ({ tunnel, host }) => {
+        'sets the listen host and the dev URL on a bot when the tunnel mode is $tunnel.mode',
+        async ({ tunnel, host, url }) => {
             await mkdir(SCRATCH_ROOT, { recursive: true });
             const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
             await writeProject(dir);
@@ -256,7 +256,7 @@ export const runtime = Envapter.get('RUNTIME_GREETING');
             await runtime.startBot(bot as unknown as SeedcordInstance);
             await runtime.stop();
 
-            expect(bot[HostListenHost]).toBe(host);
+            expect([bot[HostListenHost], bot[HostDevUrl]]).toEqual([host, url]);
         },
         60_000
     );

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { renderReadme } from '#lib/docs/renderReadme';
 
@@ -40,16 +40,19 @@ describe('a README link written for github', () => {
         expect(html).toContain('src="https://img.shields.io/badge/x"');
     });
 
-    it.each(['https://seedcord.org/guide', '#install', 'mailto:hi@seedcord.org'])('leaves %s alone', async (href) => {
-        expect(await renderReadme(`[x](${href})`, FOLDER)).toContain(`href="${href}"`);
-    });
+    it.each(['https://seedcord.org/guide', '#install', 'mailto:hi@seedcord.org'])(
+        "doesn't change a link to %s",
+        async (href) => {
+            expect(await renderReadme(`[x](${href})`, FOLDER)).toContain(`href="${href}"`);
+        }
+    );
 });
 
 describe('renderReadme', () => {
     it('rewrites a prefers-color-scheme wordmark <picture> into data-theme-gated <img>s', async () => {
         const html = await renderReadme(WORDMARK_PICTURE);
 
-        // the <source> media query keys off the OS setting, which the site's data-theme toggle can't drive
+        // the <source> media query keys off the OS setting, which the site's data-theme toggle can't change
         expect(html).not.toContain('prefers-color-scheme');
         expect(html).not.toContain('<source');
 
@@ -59,7 +62,7 @@ describe('renderReadme', () => {
         expect(html).toContain('wordmark-dark.webp');
     });
 
-    it('leaves a plain README image untouched', async () => {
+    it("doesn't rewrite a plain README image", async () => {
         const html = await renderReadme('![banner](https://cdn.seedcord.org/assets/banner.webp)');
 
         expect(html).toContain('src="https://cdn.seedcord.org/assets/banner.webp"');
@@ -80,7 +83,7 @@ describe('renderReadme', () => {
         expect(html).toMatch(/style="[^"]*color:/i);
     });
 
-    it('highlights a fence with no language as the ts default', async () => {
+    it('highlights a fence without a language as the ts default', async () => {
         // a bare ``` fence gives Marked an empty lang string, which must still use the ts default
         const html = await renderReadme('```\nconst answer = 42;\n```');
 
@@ -110,7 +113,7 @@ describe('renderReadme', () => {
         expect(html).toContain('id="tocomponentembed"');
     });
 
-    it('suffixes a repeated heading so both ids stay reachable', async () => {
+    it('suffixes a repeated heading so both ids are reachable', async () => {
         const html = await renderReadme('## Usage\n\n## Usage\n');
 
         expect(html).toContain('id="usage"');

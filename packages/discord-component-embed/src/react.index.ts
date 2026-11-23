@@ -11,8 +11,8 @@ export interface ComponentEmbedProps {
 }
 
 /**
- * Renders the `<script>` tag Discord reads for a component embed. Discord does not run JavaScript, so render this on
- * the server or at build time. It works in the `<head>` or the `<body>`.
+ * Renders the `<script>` tag Discord reads for a component embed. Render this on the server or at build time because
+ * Discord does not run JavaScript. It works in the `<head>` or the `<body>`.
  *
  * @example
  * ```tsx
@@ -33,7 +33,7 @@ export interface ComponentEmbedProps {
  * ```
  */
 export function ComponentEmbed({ children }: ComponentEmbedProps): ReactElement {
-    // no JSX in this file. react 17 has no exports map for react/jsx-runtime
+    // no JSX in this file. react 17 ships without an exports map for react/jsx-runtime
     return createElement('script', {
         id: SCRIPT_ID,
         type: EMBED_TYPE,

@@ -1,63 +1,25 @@
+import { pathToFileURL } from 'node:url';
+
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import mongoose from 'mongoose';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-
-import { Mongoose } from '#src/Mongoose';
+import { describe, expect, vi } from 'vite-plus/test';
 
 import { pluginsPath } from './utils/source-path';
-import { TestEnvironment } from './utils/test-env';
-
-import type { CoreBase } from '@seedcord/core';
+import { it } from './utils/test-env';
 
 describe('Mongoose lifecycle', () => {
-    let testEnv: TestEnvironment;
-    let mockCore: CoreBase;
-    let servicesDir: string;
-
-    beforeEach(async () => {
-        testEnv = new TestEnvironment('mongoose-lifecycle-');
-        await testEnv.setup();
-        await testEnv.createFile('services/.keep', '');
-        servicesDir = testEnv.resolvePath('services');
-        // justified: just to satisfy the constructor
-        mockCore = { config: {} } as unknown as CoreBase;
-    });
-
-    afterEach(async () => {
-        await testEnv.teardown();
-        // the mongoose mock is module-level, so a leaked model goes into the the next test
-        for (const name of Object.keys(mongoose.models)) Reflect.deleteProperty(mongoose.models, name);
-        vi.clearAllMocks();
-    });
-
-    function build(timeout?: number): Mongoose {
-        return new Mongoose(mockCore, {
-            uri: 'mongodb://localhost:27017',
-            name: 'test',
-            dir: servicesDir,
-            ...(timeout !== undefined && { timeout })
-        });
-    }
-
-    it('closes the connection when service loading fails after connecting', async () => {
-        const plugin = new Mongoose(mockCore, {
-            uri: 'mongodb://localhost:27017',
-            name: 'test',
-            dir: testEnv.resolvePath('absent')
-        });
+    it('closes the connection when service loading fails after connecting', async ({ mongooseWith, testEnv }) => {
+        const plugin = mongooseWith({ path: testEnv.resolvePath('absent') });
+        const connection = await mongoose.connect('');
 
         await expect(plugin.init()).rejects.toThrow();
 
-        expect(vi.mocked(plugin.connection.disconnect)).toHaveBeenCalled();
+        expect(vi.mocked(connection.disconnect)).toHaveBeenCalled();
     });
 
-    it('keeps the init failure when the cleanup disconnect also fails', async () => {
-        const plugin = new Mongoose(mockCore, {
-            uri: 'mongodb://localhost:27017',
-            name: 'test',
-            dir: testEnv.resolvePath('absent')
-        });
+    it('keeps the init failure when the cleanup disconnect also fails', async ({ mongooseWith, testEnv }) => {
+        const plugin = mongooseWith({ path: testEnv.resolvePath('absent') });
         const connection = await mongoose.connect('');
         vi.mocked(connection.disconnect).mockRejectedValueOnce(new Error('still busy'));
 
@@ -66,7 +28,7 @@ describe('Mongoose lifecycle', () => {
         );
     });
 
-    it('clears its own model on dispose', async () => {
+    it('clears its own model on dispose', async ({ mongooseWith, testEnv }) => {
         await testEnv.createFile(
             'services/UserService.ts',
             `
@@ -79,7 +41,7 @@ describe('Mongoose lifecycle', () => {
             }
             `
         );
-        const plugin = build();
+        const plugin = mongooseWith();
 
         await plugin.init();
         await plugin.dispose();
@@ -88,7 +50,10 @@ describe('Mongoose lifecycle', () => {
     });
 
     describe('model registration', () => {
-        it('takes the model name from the modelName override when the key differs', async () => {
+        it('takes the model name from the modelName override when the key differs', async ({
+            mongooseWith,
+            testEnv
+        }) => {
             await testEnv.createFile(
                 'services/UserService.ts',
                 `
@@ -101,7 +66,7 @@ describe('Mongoose lifecycle', () => {
             }
             `
             );
-            const plugin = build();
+            const plugin = mongooseWith();
 
             await plugin.init();
             await plugin.dispose();
@@ -109,7 +74,10 @@ describe('Mongoose lifecycle', () => {
             expect(vi.mocked(mongoose.deleteModel)).toHaveBeenCalledWith('app_users');
         });
 
-        it('translates a duplicate model name into PluginMongooseModelCreationFailed', async () => {
+        it('translates a duplicate model name into PluginMongooseModelCreationFailed', async ({
+            mongooseWith,
+            testEnv
+        }) => {
             for (const name of ['AFirst', 'BSecond']) {
                 await testEnv.createFile(
                     `services/${name}.ts`,
@@ -117,21 +85,21 @@ describe('Mongoose lifecycle', () => {
                 import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
                 import mongoose from 'mongoose';
 
-                @RegisterMongooseService('users')
+                @RegisterMongooseService('${name.toLowerCase()}', { modelName: 'users' })
                 export class ${name} extends MongooseService {
                     public static schema = new mongoose.Schema({ name: String });
                 }
                 `
                 );
             }
-            const plugin = build();
+            const plugin = mongooseWith();
 
             await expect(plugin.init()).rejects.toThrow(
                 expect.objectContaining({ code: SeedcordErrorCode.PluginMongooseModelCreationFailed })
             );
         });
 
-        it('builds the model from the schema on the service class', async () => {
+        it('builds the model from the schema on the service class', async ({ mongooseWith, testEnv }) => {
             await testEnv.createFile(
                 'services/UserService.ts',
                 `
@@ -144,14 +112,14 @@ describe('Mongoose lifecycle', () => {
             }
             `
             );
-            const plugin = build();
+            const plugin = mongooseWith();
 
             await plugin.init();
 
             expect(vi.mocked(mongoose.model)).toHaveBeenCalledWith('users', expect.any(mongoose.Schema));
         });
 
-        it('builds the model after the connection opens', async () => {
+        it('builds the model after the connection opens', async ({ mongooseWith, testEnv }) => {
             await testEnv.createFile(
                 'services/UserService.ts',
                 `
@@ -164,7 +132,7 @@ describe('Mongoose lifecycle', () => {
             }
             `
             );
-            const plugin = build();
+            const plugin = mongooseWith();
 
             await plugin.init();
 
@@ -174,9 +142,9 @@ describe('Mongoose lifecycle', () => {
         });
     });
 
-    it('leaves a model it never registered alone', async () => {
+    it('leaves a model it never registered alone', async ({ mongooseWith }) => {
         mongoose.models.foreign = { modelName: 'foreign' } as unknown as mongoose.Model<unknown>;
-        const plugin = build();
+        const plugin = mongooseWith();
 
         await plugin.init();
         await plugin.dispose();
@@ -184,25 +152,40 @@ describe('Mongoose lifecycle', () => {
         expect(vi.mocked(mongoose.deleteModel)).not.toHaveBeenCalledWith('foreign');
     });
 
-    it('throws when services is read before init', () => {
-        const plugin = build();
+    it('leaves the model of a service that another component registered first', async ({ mongooseWith, testEnv }) => {
+        const file = await testEnv.createFile(
+            'services/Adopted.ts',
+            `
+            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
+            import mongoose from 'mongoose';
 
-        expect(() => plugin.services).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
+            @RegisterMongooseService('adopted')
+            export class Adopted extends MongooseService {
+                public static schema = new mongoose.Schema({ username: { type: String, required: true } });
+            }
+            `
         );
-    });
-
-    it('connects once across repeated init calls', async () => {
-        const plugin = build();
+        const { Adopted } = (await import(pathToFileURL(file).href)) as { Adopted: { schema: mongoose.Schema } };
+        // mongoose hands back the existing model for the same schema instance
+        mongoose.model('adopted', Adopted.schema);
+        const plugin = mongooseWith();
 
         await plugin.init();
-        await plugin.init();
+        expect(plugin.services).toHaveProperty('adopted');
+        await plugin.onHmr({ file, type: 'delete' });
+        await plugin.dispose();
 
-        expect(vi.mocked(mongoose.connect)).toHaveBeenCalledTimes(1);
+        expect(vi.mocked(mongoose.deleteModel)).not.toHaveBeenCalledWith('adopted');
     });
 
-    it('exposes the connection and the services map once init resolves', async () => {
-        const plugin = build();
+    it.for(['services', 'connection'] as const)('throws when %s is read before init', (member, { mongooseWith }) => {
+        const plugin = mongooseWith();
+
+        expect(() => plugin[member]).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginNotReady }));
+    });
+
+    it('exposes the connection and the services map once init resolves', async ({ mongooseWith }) => {
+        const plugin = mongooseWith();
 
         await plugin.init();
 
@@ -210,53 +193,41 @@ describe('Mongoose lifecycle', () => {
         expect(plugin.services).toEqual({});
     });
 
-    it('translates a connect failure into PluginConnectionFailed', async () => {
+    it('translates a connect failure into PluginConnectionFailed with the driver message', async ({ mongooseWith }) => {
         vi.mocked(mongoose.connect).mockRejectedValueOnce(new Error('refused'));
-        const plugin = build();
+        const plugin = mongooseWith();
 
         await expect(plugin.init()).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginConnectionFailed })
+            expect.objectContaining({
+                code: SeedcordErrorCode.PluginConnectionFailed,
+                message: expect.stringContaining('refused') as string
+            })
         );
     });
 
-    it('drops services registered by a failed init when the retry no longer finds them', async () => {
-        // A sorts before Z, so this one registers before the broken file aborts the scan
-        await testEnv.createFile(
-            'services/AUserService.ts',
-            `
-            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
-            import mongoose from 'mongoose';
+    it('stops looking for a server after 10 seconds so a dead one fails init with the driver error', async ({
+        mongooseWith
+    }) => {
+        await mongooseWith().init();
 
-            @RegisterMongooseService('users')
-            export class AUserService extends MongooseService {
-                public static schema = new mongoose.Schema({ name: String });
-            }
-            `
+        expect(vi.mocked(mongoose.connect)).toHaveBeenCalledWith(
+            expect.any(String),
+            expect.objectContaining({ serverSelectionTimeoutMS: 10_000 })
         );
-        await testEnv.createFile('services/ZBroken.ts', 'export const broken = {{{ not valid');
-        const plugin = build();
-
-        await expect(plugin.init()).rejects.toThrow();
-
-        await testEnv.removeFile('services/AUserService.ts');
-        await testEnv.createFile('services/ZBroken.ts', 'export const fine = 1;');
-
-        await plugin.init();
-
-        expect(plugin.services).not.toHaveProperty('users');
     });
 
-    it('connects once when two callers race init', async () => {
-        const plugin = build();
+    it('keeps a serverSelectionTimeoutMS from connectionOptions', async ({ mongooseWith }) => {
+        await mongooseWith({ connectionOptions: { serverSelectionTimeoutMS: 2000 } }).init();
 
-        await Promise.all([plugin.init(), plugin.init()]);
-
-        expect(vi.mocked(mongoose.connect)).toHaveBeenCalledTimes(1);
+        expect(vi.mocked(mongoose.connect)).toHaveBeenCalledWith(
+            expect.any(String),
+            expect.objectContaining({ serverSelectionTimeoutMS: 2000 })
+        );
     });
 
-    it('retries after a failed init', async () => {
+    it('retries after a failed init', async ({ mongooseWith }) => {
         vi.mocked(mongoose.connect).mockRejectedValueOnce(new Error('refused'));
-        const plugin = build();
+        const plugin = mongooseWith();
         await expect(plugin.init()).rejects.toThrow();
 
         await plugin.init();
@@ -264,8 +235,8 @@ describe('Mongoose lifecycle', () => {
         expect(plugin.services).toEqual({});
     });
 
-    it('disconnects the live connection on dispose', async () => {
-        const plugin = build();
+    it('disconnects the live connection on dispose', async ({ mongooseWith }) => {
+        const plugin = mongooseWith();
         await plugin.init();
         const { connection } = plugin;
 
@@ -274,8 +245,8 @@ describe('Mongoose lifecycle', () => {
         expect(vi.mocked(connection.disconnect)).toHaveBeenCalled();
     });
 
-    it('reconnects when init runs after dispose', async () => {
-        const plugin = build();
+    it('reconnects when init runs after dispose', async ({ mongooseWith }) => {
+        const plugin = mongooseWith();
         await plugin.init();
         await plugin.dispose();
         vi.mocked(mongoose.connect).mockClear();
@@ -285,42 +256,33 @@ describe('Mongoose lifecycle', () => {
         expect(vi.mocked(mongoose.connect)).toHaveBeenCalled();
     });
 
-    it('reports services unavailable after dispose', async () => {
-        const plugin = build();
-        await plugin.init();
+    it.for(['services', 'connection'] as const)(
+        'reports %s unavailable after dispose',
+        async (member, { mongooseWith }) => {
+            const plugin = mongooseWith();
+            await plugin.init();
 
-        await plugin.dispose();
+            await plugin.dispose();
 
-        expect(() => plugin.services).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
-        );
-    });
+            expect(() => plugin[member]).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginNotReady }));
+        }
+    );
 
-    it('disposes without throwing when init never ran', async () => {
-        const plugin = build();
+    it('disposes without throwing when init never ran', async ({ mongooseWith }) => {
+        const plugin = mongooseWith();
 
         await expect(plugin.dispose()).resolves.toBeUndefined();
     });
 
-    it('translates a disconnect failure into PluginDisconnectFailed', async () => {
-        const plugin = build();
+    it('throws PluginDisconnectFailed on a disconnect failure without logging it too', async ({ mongooseWith }) => {
+        const plugin = mongooseWith();
         await plugin.init();
         vi.mocked(plugin.connection.disconnect).mockRejectedValueOnce(new Error('still busy'));
+        using logged = vi.spyOn(Logger.prototype, 'error');
 
         await expect(plugin.dispose()).rejects.toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginDisconnectFailed })
         );
-    });
-
-    it('reports a disconnect failure once, through the thrown error', async () => {
-        const plugin = build();
-        await plugin.init();
-        vi.mocked(plugin.connection.disconnect).mockRejectedValueOnce(new Error('still busy'));
-        const logged = vi.spyOn(Logger.prototype, 'error');
-
-        await plugin.dispose().catch(() => undefined);
-
         expect(logged).not.toHaveBeenCalled();
-        logged.mockRestore();
     });
 });

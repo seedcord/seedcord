@@ -1,6 +1,7 @@
 'use client';
 
-import { cn } from './lib/cn';
+import { cn } from 'cn';
+
 import { tw } from './lib/tw';
 
 import type { MouseEvent, ReactElement, ReactNode } from 'react';

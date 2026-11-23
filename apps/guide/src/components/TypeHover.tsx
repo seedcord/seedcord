@@ -52,7 +52,7 @@ const CONTENT = cn(
     tw`font-mono text-xs/relaxed whitespace-pre-wrap`
 );
 
-// radix cannot anchor to a token that wasn't rendered
+// radix cannot anchor to an unrendered token
 function anchorRect(shown: Shown): CSSProperties {
     return {
         position: 'fixed',
@@ -82,7 +82,7 @@ function TypePopup({ shown, keyboard, hold, release }: TypePopupProps): ReactEle
             onOpenAutoFocus={(event) => {
                 if (!keyboard.current) event.preventDefault();
             }}
-            // only escape restores focus. tab keeps going where it was heading
+            // only escape restores focus. tab moves on to wherever it was heading
             onCloseAutoFocus={(event) => event.preventDefault()}
             onPointerOver={hold}
             onPointerOut={release}
@@ -143,7 +143,7 @@ function focusLeftTheBlock(event: FocusEvent<HTMLDivElement>): boolean {
 
 type Show = (event: { target: EventTarget | null }, fromKey?: boolean) => void;
 
-// one tab stop per code block, since a page carries dozens of tokens
+// one tab stop per code block since a page has dozens of tokens
 function useTokenWalk(
     marked: RefObject<Element | null>,
     show: Show,
@@ -176,7 +176,7 @@ function useTokenWalk(
 }
 
 export function TypeHover({ children }: { children: ReactNode }): ReactElement {
-    // the last token stays rendered while radix plays its close animation
+    // this holds the last token so it renders while radix plays its close animation
     const [shown, setShown] = useState<Shown | null>(null);
     const [open, setOpen] = useState(false);
     const closing = useRef<ReturnType<typeof setTimeout> | null>(null);

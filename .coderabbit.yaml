@@ -1,4 +1,5 @@
 reviews:
+  profile: assertive
   in_progress_fortune: false
   suggested_reviewers: false
   estimate_code_review_effort: false
@@ -12,7 +13,7 @@ reviews:
       mode: 'off'
     title:
       mode: 'warning'
-      requirements: 'One lowercase conventional-commit subject with no scope, like `feat: ...`. A breaking change puts `!` on the bare type, like `feat!: ...`.'
+      requirements: 'One lowercase conventional-commit subject without a scope, like `feat: ...`. A breaking change puts `!` on the bare type, like `feat!: ...`.'
   tools:
     biome:
       enabled: false
@@ -23,11 +24,11 @@ knowledge_base:
     filePatterns:
       - files: '.greptile/rules.md'
         applyTo: '**'
-      - files: '.claude/commands/branch-audit.md'
+      - files: '.agents/skills/branch-audit/SKILL.md'
         applyTo: '**'
       - files: '.agents/skills/writing-voice/SKILL.md'
         applyTo: '**'
-      - files: '.agents/skills/code-quality/SKILL.md'
+      - files: '.agents/skills/code-quality/DESIGN.md'
         applyTo: '**/*.{ts,tsx}'
       - files: '.agents/skills/code-quality/TYPESCRIPT.md'
         applyTo: '**/*.{ts,tsx}'

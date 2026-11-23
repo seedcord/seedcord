@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Callout } from '#components/Callout';
 import { HoverHint } from '#components/HoverHint';
 import { Shell } from '#components/Shell';
+import { Tab, Tabs } from '#components/Tabs';
 import { LINK, Ref } from '#components/Ref';
 import { TypeHover } from '#components/TypeHover';
 import { FENCE_ATTR } from '#lib/rehypeFenceMeta';
@@ -28,7 +29,7 @@ const FRAME_WEIGHTS = {
     thick: tw`border-4`
 } as const;
 
-// auto margins do nothing without the block class below
+// the block class below lets these auto margins move the image
 const ALIGNMENTS = {
     left: tw`me-auto`,
     center: tw`mx-auto`,
@@ -40,7 +41,7 @@ interface ImageProps extends ComponentProps<'img'> {
     align?: keyof typeof ALIGNMENTS;
 }
 
-// a typo would otherwise render as a padded box with no edge
+// a typo would otherwise render as a padded box without an edge
 function pick<Options extends Record<string, string>>(options: Options, key: keyof Options, prop: string): string {
     const found = options[key];
     if (found === undefined)
@@ -179,9 +180,10 @@ const OFF_SITE = /^[a-z]+:/i;
 type MarkdownLinkProps = Pick<ComponentProps<'a'>, 'href' | 'title' | 'children'>;
 
 function GuideLink({ href, children, ...props }: MarkdownLinkProps): ReactElement {
-    if (href === undefined) {
+    // next's Link skips the scroll when the url already ends in the same #hash, and the browser doesn't
+    if (href === undefined || href.startsWith('#')) {
         return (
-            <a {...props} className={cn(LINK)}>
+            <a {...props} href={href} className={cn(LINK)}>
                 {children}
             </a>
         );
@@ -232,5 +234,7 @@ export const mdxComponents = {
     Image: GuideImage,
     Callout,
     Shell,
-    Ref
+    Ref,
+    Tabs,
+    Tab
 } satisfies MDXComponents;

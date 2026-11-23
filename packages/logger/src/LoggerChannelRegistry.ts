@@ -21,8 +21,8 @@ function channelSinks(channels: NonNullable<LoggerConfig['channels']>): ILogSink
  * Process-global router for every {@link LogRecord}.
  *
  * Resolves the channel and level floor at log time, then runs two layers: config sinks (replaced
- * wholesale by `configure`) and capture sinks (installed imperatively, surviving a config
- * replace). A `console`-kind config sink is skipped while any capture requests `muteConsole`.
+ * wholesale by `configure`) and capture sinks (installed imperatively and left in place
+ * by `configure`). A `console`-kind config sink is skipped while any capture requests `muteConsole`.
  */
 export class LoggerChannelRegistry {
     private static _instance: LoggerChannelRegistry | null = null;
@@ -60,7 +60,7 @@ export class LoggerChannelRegistry {
         this.buildDefaultSinks = build;
     }
 
-    /** @internal the http host keeps the logging request open for each sink run */
+    /** @internal the host keeps the request that logged open for each sink run */
     public trackSinkRuns(track: (run: Promise<unknown>) => void): void {
         this.onSinkRun = track;
     }
@@ -104,7 +104,7 @@ export class LoggerChannelRegistry {
         );
     }
 
-    /** Installs a capture sink (the dev TUI, a remote drain). Survives a `configure` replace. */
+    /** Installs a capture sink (the dev TUI, a remote drain). `configure` leaves it in place. */
     public installSink(sink: ILogSink, options?: { muteConsole?: boolean }): LogSinkHandle {
         const id = this.nextCaptureId++;
         this.captures.set(id, { sink, muteConsole: options?.muteConsole ?? false });

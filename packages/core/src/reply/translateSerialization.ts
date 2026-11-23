@@ -4,7 +4,7 @@ import { pluralize } from '@seedcord/utils/internal';
 
 const allOf = new Intl.ListFormat('en', { type: 'conjunction' });
 
-// shapeshift aggregate errors nest, so the cap bounds the recursion
+// the cap bounds the recursion because shapeshift aggregate errors nest
 const MAX_DEPTH = 8;
 
 interface ShapeshiftLike {

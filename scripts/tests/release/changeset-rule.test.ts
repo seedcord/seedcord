@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ChangesetRule } from '#src/release/ChangesetRule';
 
@@ -295,30 +295,14 @@ describe('ChangesetRule length', () => {
     });
 });
 
-describe('ChangesetRule punctuation', () => {
+describe('ChangesetRule semicolons', () => {
     const rule = new ChangesetRule(PACKAGES);
 
-    it('flags an em dash', () => {
-        const summary = 'The client retries on 429 — up to three times.';
-
-        expect(rule.violations('dash.md', changeset("'@seedcord/core': minor", summary))).toEqual([
-            { file: 'dash.md', reason: 'banned-punctuation', detail: '—' }
-        ]);
-    });
-
-    it('flags an en dash', () => {
-        const summary = 'The window covers 5–10 seconds.';
-
-        expect(rule.violations('en.md', changeset("'@seedcord/core': minor", summary))).toEqual([
-            { file: 'en.md', reason: 'banned-punctuation', detail: '–' }
-        ]);
-    });
-
     it('flags a semicolon', () => {
-        const summary = 'The cache is keyed by file; a rename lands as a fresh entry.';
+        const summary = 'The cache is keyed by file; a rename adds a fresh entry.';
 
         expect(rule.violations('semi.md', changeset("'@seedcord/core': minor", summary))).toEqual([
-            { file: 'semi.md', reason: 'banned-punctuation', detail: ';' }
+            { file: 'semi.md', reason: 'semicolon', detail: ';' }
         ]);
     });
 
@@ -326,32 +310,6 @@ describe('ChangesetRule punctuation', () => {
         const summary = 'Reading `a; b` now returns the matched route.';
 
         expect(rule.violations('span.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
-    });
-});
-
-describe('ChangesetRule banned words', () => {
-    const rule = new ChangesetRule(PACKAGES);
-
-    it('flags a hype word', () => {
-        const summary = 'The dispatcher is more performant now.';
-
-        expect(rule.violations('hype.md', changeset("'@seedcord/core': minor", summary))).toEqual([
-            { file: 'hype.md', reason: 'banned-word', detail: 'performant' }
-        ]);
-    });
-
-    it('flags a reader-reaction opener', () => {
-        const summary = 'Worth noting that the bag now carries the route.';
-
-        expect(rule.violations('note.md', changeset("'@seedcord/core': minor", summary))).toEqual([
-            { file: 'note.md', reason: 'banned-word', detail: 'worth noting' }
-        ]);
-    });
-
-    it('reads a banned word inside a longer word as prose', () => {
-        const summary = 'The leverages field on the payout record now parses.';
-
-        expect(rule.violations('sub.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
     });
 });
 

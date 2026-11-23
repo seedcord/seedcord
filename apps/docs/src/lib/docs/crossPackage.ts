@@ -1,7 +1,7 @@
 import { PRODUCTION_SITES } from '@seedcord/brand';
 import { formatDisplayPackageName } from '@seedcord/docs-engine/client';
 
-// rendered html carries hrefs with the /docs basePath
+// rendered html has hrefs with the /docs basePath
 const PACKAGES_PREFIX = `${PRODUCTION_SITES.docs.path}/packages/`;
 const EXTERNAL_HREF = /^https?:\/\//i;
 

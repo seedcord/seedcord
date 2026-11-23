@@ -11,6 +11,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { validateIndex } from '@seedcord/docs-engine';
 import { Converters, Envapter } from 'envapt';
+import { chunk, limitAsync } from 'es-toolkit';
 
 import type { SiteBucket } from '#src/docs/DocsSiteUpload';
 import type { ListObjectsV2CommandOutput } from '@aws-sdk/client-s3';
@@ -20,6 +21,7 @@ const IMMUTABLE_CACHE_CONTROL = 'public, max-age=31536000, immutable';
 const HTTP_NOT_FOUND = 404;
 // the S3 DeleteObjects call takes at most 1000 keys
 const DELETE_BATCH = 1000;
+const DELETES_AT_ONCE = 4;
 
 export class R2Bucket implements SiteBucket {
     static fromEnv(bucketOverride?: string, prefix = ''): R2Bucket {
@@ -106,15 +108,17 @@ export class R2Bucket implements SiteBucket {
             for (const object of page.Contents ?? []) if (object.Key) keys.push(object.Key);
         }
 
-        for (let start = 0; start < keys.length; start += DELETE_BATCH) {
-            const Objects = keys.slice(start, start + DELETE_BATCH).map((Key) => ({ Key }));
-            const reply = await this.client.send(
-                new DeleteObjectsCommand({ Bucket: this.bucket, Delete: { Objects } })
-            );
-            // DeleteObjects answers 200 and lists each key it refused under Errors
-            const refused = reply.Errors?.map(({ Key, Code }) => `${Key ?? '?'} (${Code ?? 'unknown'})`) ?? [];
-            if (refused.length > 0) throw new Error(`R2 refused to delete ${refused.join(', ')}`);
-        }
+        const deleteBatch = limitAsync((batch: string[]) => this.deleteKeys(batch), DELETES_AT_ONCE);
+        const batches = chunk(keys, DELETE_BATCH);
+        await Promise.all(batches.map((batch) => deleteBatch(batch)));
+    }
+
+    private async deleteKeys(keys: string[]): Promise<void> {
+        const Objects = keys.map((Key) => ({ Key }));
+        const reply = await this.client.send(new DeleteObjectsCommand({ Bucket: this.bucket, Delete: { Objects } }));
+        // DeleteObjects answers 200 and lists each key it refused under Errors
+        const refused = reply.Errors?.map(({ Key, Code }) => `${Key ?? '?'} (${Code ?? 'unknown'})`) ?? [];
+        if (refused.length > 0) throw new Error(`R2 refused to delete ${refused.join(', ')}`);
     }
 
     async list(): Promise<string[]> {

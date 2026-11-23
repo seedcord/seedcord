@@ -47,8 +47,8 @@ export interface IRateLimiter {
     /**
      * Reports `key`'s limited state without recording a use.
      *
-     * The read half of a peek-then-commit. The `Cooldown` gate peeks in its check and charges in its
-     * commit, so a refusal elsewhere in the gate set never burns the slot.
+     * The read half of a peek-then-commit. A refusal elsewhere in the gate set never burns the slot
+     * because the `Cooldown` gate peeks in its check and charges in its commit.
      */
     peek(key: string, window: RateLimitWindow): Promise<RateLimitResult>;
     /** Clears `key`'s recorded uses. */

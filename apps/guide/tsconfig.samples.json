@@ -3,6 +3,7 @@
     "extends": "@seedcord/tsconfig/base",
     "compilerOptions": {
         "noUnusedLocals": false,
-        "noUnusedParameters": false
+        "noUnusedParameters": false,
+        "rootDir": "."
     }
 }

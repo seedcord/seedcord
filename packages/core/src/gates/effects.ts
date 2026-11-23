@@ -2,8 +2,8 @@ import type { EffectGate, Gate, GateContextBase } from './Gate';
 
 type CommitFn = () => Promise<void>;
 
-// commits wait here until the whole gate set passes, one queue per request. the key is the context
-// itself and the map is weak, so an entry goes when its request does
+// commits wait here until the whole gate set passes, one queue per request. gc frees an entry along
+// with its request because the key is the context itself and the map is weak
 const commitQueues = new WeakMap<GateContextBase, CommitFn[]>();
 
 function isEffectGate(gate: Gate<GateContextBase>): gate is EffectGate<GateContextBase> {
@@ -39,7 +39,7 @@ export function markCommits(ctx: GateContextBase): number {
     return commitQueues.get(ctx)?.length ?? 0;
 }
 
-// and rolls back to it when the gate refuses, leaving no commit behind
+// and rolls back to it when the gate refuses, which removes every commit queued after the mark
 export function rollbackCommits(ctx: GateContextBase, mark: number): void {
     const queue = commitQueues.get(ctx);
     if (queue && queue.length > mark) queue.length = mark;

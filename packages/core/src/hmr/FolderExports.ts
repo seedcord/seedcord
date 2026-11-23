@@ -10,7 +10,7 @@ interface FolderExportsOptions<TUnit> {
     dir: string;
     /** Folders inside `dir` to skip, like a middlewares folder that a second `FolderExports` loads. */
     exclude?: readonly string[];
-    /** Receives every value a file exports. The ones it accepts are the folder's "units". */
+    /** Receives every value that a file exports. The ones that it accepts are the folder's "units". */
     is: (value: unknown) => value is TUnit;
     register: (unit: TUnit, file: string) => void;
     unregister: (unit: TUnit) => void;
@@ -71,6 +71,28 @@ export class FolderExports<TUnit> {
     }
 
     /**
+     * Imports every file in the folder and returns what `is` accepts, without registering any of it.
+     * Call it from your plugin's `codegen()`, which runs without `init()`.
+     *
+     * @throws A **SeedcordError** when a file throws while it imports.
+     * @example
+     * ```ts
+     * public override async codegen() {
+     *     const jobs = await this.jobFiles.scan();
+     *     return { jobs: Object.fromEntries(jobs.map((job) => [job.name, job])) };
+     * }
+     * ```
+     */
+    public async scan(): Promise<TUnit[]> {
+        const units = new Set<TUnit>();
+        for await (const { fullPath, imported } of importFiles(this.#options.dir)) {
+            if (!this.#holds(fullPath)) continue;
+            for (const unit of this.#unitsIn(imported)) units.add(unit);
+        }
+        return [...units];
+    }
+
+    /**
      * Unloads or reloads the files in this folder that an {@link HmrUpdateEvent} affects. When that
      * unloads something, it also retries every file whose `register` threw earlier.
      */
@@ -117,7 +139,7 @@ export class FolderExports<TUnit> {
         const lastGood = new Map(
             files.map((file) => [
                 file,
-                // what we roll back to if the new version throws. we skip the deleted file's stuff, since the barrel can't import it anymore anyway
+                // what we roll back to if the new version throws. we skip the deleted file's stuff since the barrel can't import it anymore anyway
                 this.#unload(file).held.filter((unit) => !deleted.has(unit))
             ])
         );
@@ -137,7 +159,7 @@ export class FolderExports<TUnit> {
         this.#report(type === 'create' ? 'Registered' : 'Reloaded', names, touched, Date.now() - startedAt);
     }
 
-    // one line per save, since one edit can reload every module that imports the file
+    // one line per save since one edit can reload every module that imports the file
     #report(verb: string, names: string[], files: string[], elapsedMs?: number): void {
         if (names.length === 0) return;
 
@@ -183,14 +205,14 @@ export class FolderExports<TUnit> {
 
     async #import(file: string): Promise<Record<string, unknown>> {
         let url = fileUrl(file);
-        // vitest has no real vite server managing the module graph
+        // vitest runs without a real vite server managing the module graph
         if (process.env.VITEST === 'true') url += `?update=${String(++testImports)}`;
 
         // justified: a dynamic import resolves to an untyped export map
         return (await import(/* @vite-ignore */ url)) as Record<string, unknown>;
     }
 
-    // returns what it called register for, leaving out units another file already holds
+    // returns what it called register for, which excludes units another file already holds
     #register(file: string, units: TUnit[]): TUnit[] {
         const registered: TUnit[] = [];
         try {
@@ -212,8 +234,8 @@ export class FolderExports<TUnit> {
         }
     }
 
-    // a typo shouldn't knock a handler out until the next good save, so we put the old classes back.
-    // same objects too, so a db connection that a plugin opened for one just stays open
+    // the old classes go back because a typo shouldn't knock a handler out until the next good save
+    // a db connection that a plugin opened for one is still open because they're the same objects
     #rollBack(file: string, lastGood: TUnit[]): void {
         const path = paint.mute(formatFilePath(file));
 

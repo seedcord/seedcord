@@ -39,7 +39,7 @@ export async function signedRequest(signer: Signer, payload: string, init: Signe
 }
 
 export async function createSigner(): Promise<Signer> {
-    // justified: @types/node has no CryptoKeyPair global, and generateKey('Ed25519') returns a pair
+    // justified: @types/node doesn't declare a CryptoKeyPair global, and generateKey('Ed25519') returns a pair
     const pair = (await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify'])) as {
         publicKey: CryptoKey;
         privateKey: CryptoKey;

@@ -1,6 +1,6 @@
 import { asError } from '@seedcord/utils/internal';
 
-import { outcomeFor } from './dispatchReport';
+import { outcomeFor } from './outcomeFor';
 
 import type { DispatchResult, EventDispatchResult, HandlerResult } from './dispatchResult';
 import type { Logger } from '@seedcord/logger';

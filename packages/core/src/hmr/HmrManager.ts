@@ -2,9 +2,8 @@
 /// <reference types="vite/client" />
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
+import { KeyedQueue } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
-
-import { KeyedQueue } from '#src/kv/KeyedQueue';
 
 import { getDevChannel, setDevChannel } from './devChannel';
 import { wrapHot } from './wrapHot';

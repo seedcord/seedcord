@@ -5,14 +5,14 @@ import { bigintToBoundedValue, boundedToBigint, isBounded, radixOf, reject, reje
 
 import type { CustomIdField, CustomIdShape } from './Field';
 
-// wire is routeKey, a colon, then the body. the routeKey is the stable prefix plus a short shape
-// hash, which is how decode rejects a wire minted under an older shape. bounded fields (known range)
-// fold into one base64 integer by mixed-radix packing. unbounded ones (free string, unbounded int)
-// trail it as delimited tokens.
+// a wire is `routeKey:body`. the routeKey is the prefix plus a short hash of the shape.
+// decode compares the hash to tell when a button was encoded under an older shape.
+// every field with a known range gets packed into one big base64 number. free strings and unbounded ints
+// come after it, each one split off by a delimiter.
 //
-// everything here works on runtime values (unknown). CustomId.ts adds the typed layer.
+// only runtime values in here. CustomId.ts adds the types.
 
-// url-safe base64, one utf-16 unit per char so encode's wire.length cap counts chars exactly.
+// url-safe base64. the 100-char check on wire.length is exact because every char is one utf-16 unit
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 const BASE = 64n;
 const CHAR_TO_VALUE = new Map([...ALPHABET].map((char, index) => [char, index] as const));
@@ -26,7 +26,7 @@ export const HASH_LENGTH = 3;
 const SAFE_MAX = BigInt(Number.MAX_SAFE_INTEGER);
 const SAFE_MIN = BigInt(Number.MIN_SAFE_INTEGER);
 
-// toString and parseInt top out at base 36, and float64 loses integers past 2^53.
+// toString and parseInt stop at base 36. converting to a js number would lose anything past 2^53.
 function bigintToBase64(value: bigint): string {
     if (value === 0n) return ALPHABET.charAt(0);
     let text = '';
@@ -46,7 +46,7 @@ function base64ToBigint(text: string): bigint {
     return value;
 }
 
-// zigzag keeps a small negative number short on the wire.
+// zigzag so a small negative number encodes in a few chars
 function zigzagEncode(value: number): bigint {
     const big = BigInt(value);
     return big >= 0n ? big << 1n : (-big << 1n) - 1n;
@@ -91,8 +91,8 @@ function splitTokens(body: string): string[] {
     return pieces;
 }
 
-// an unbounded field trails as its own token, where an empty string is already a legal str value. a
-// nullable one carries one leading char to tell the two apart.
+// an empty token already means '' for a str field. a nullable unbounded token starts with one of
+// these so null encodes differently.
 const ABSENT = '0';
 const PRESENT = '1';
 
@@ -102,7 +102,7 @@ function encodeUnboundedToken(field: CustomIdField<unknown>, name: string, value
         return PRESENT + encodeUnboundedToken({ ...field, nullable: false }, name, value);
     }
     if (field.kind === 'int') {
-        // eslint-disable-next-line unicorn/prefer-number-is-safe-integer -- a fraction is the wrong kind, an integer past 2^53 is out of range
+        // eslint-disable-next-line unicorn/prefer-number-is-safe-integer -- a fraction gets the type error and an integer past 2^53 gets the range error
         if (!Number.isInteger(value)) reject(field, name, value);
         if (!Number.isSafeInteger(value)) rejectOutOfRange(field, name, value);
         return bigintToBase64(zigzagEncode(value as number));
@@ -128,7 +128,7 @@ function decodeUnboundedToken(field: CustomIdField<unknown>, piece: string): unk
 
 /** @internal */
 export function computeLayoutHash(shape: CustomIdShape): string {
-    // stringify escapes the choice strings. two different shapes cannot produce the same signature.
+    // two different shapes never give the same signature because JSON.stringify escapes the choice strings
     const signature = JSON.stringify(
         Object.entries(shape).map(([name, field]) => [
             name,
@@ -141,7 +141,7 @@ export function computeLayoutHash(shape: CustomIdShape): string {
     );
     const modulus = BASE ** BigInt(HASH_LENGTH);
     let hash = 0n;
-    // js stores an emoji as two halves. reading only the first half hashes 1024 emoji to one value.
+    // js strings hold an emoji as two utf-16 halves, and 1024 emoji share the same first half. hash both.
     for (let i = 0; i < signature.length; i++) hash = (hash * 131n + BigInt(signature.charCodeAt(i))) % modulus;
 
     let text = '';
@@ -175,7 +175,7 @@ function unpackBounded(
     blob: string | undefined,
     result: Record<string, unknown>
 ): void {
-    // zero still packs to one char. an empty block means the body was cut short.
+    // an empty block means the body was truncated
     if (blob === undefined || blob === '') throw invalidError('empty packed block');
     let packed = base64ToBigint(blob);
     // last field packed is the first one back out.
@@ -193,7 +193,6 @@ export function decodeBody(shape: CustomIdShape, body: string): Record<string, u
     const bounded = fields.filter(([, field]) => isBounded(field));
     const unbounded = fields.filter(([, field]) => !isBounded(field));
 
-    // a shape with no fields encodes to an empty body.
     const expected = (bounded.length > 0 ? 1 : 0) + unbounded.length;
     if (expected === 0) {
         if (body !== '') throw invalidError(`expected an empty body, got ${JSON.stringify(body)}`);

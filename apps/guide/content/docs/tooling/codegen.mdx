@@ -31,13 +31,13 @@ export class SearchCommand extends BuilderComponent<'command'> {
 
 An option's name and its required flag are arguments to method calls. Those calls run when something constructs the class. TypeScript reads the source of that chain without running it, so the name `query` only exists once the chain has run.
 
-`seedcord codegen` records those names for you. It imports every TypeScript and JavaScript file under your commands folder, constructs each decorated class it finds, reads the JSON that class's builder produced, and writes what it found to `seedcord-gen.ts`.
+`seedcord codegen` records those names for you. It imports every TypeScript and JavaScript file under your commands folder and constructs each decorated class it finds. Then it reads the JSON that class's builder produced and writes what it found to `seedcord-gen.ts`.
 
 <Shell run="codegen" />
 
-Run it after you add a command, change its options, attach a plugin, or edit your emoji block. Also run it after you add something an attached plugin types for you, like a new message in a translations plugin's locale files.
+Run it after you add a command, change its options, attach a plugin, add an image to your emojis folder, or edit your emoji block. Also run it after you add something an attached plugin types for you, like a new message in a translations plugin's locale files.
 
-Your handler then reads its options through `this.options`. `getString('query')` comes back as `string`, because you marked that option required. A typo in the name stops the build. [Command options](/commands/options) covers what each kind returns.
+Your handler then reads its options through `this.options`. `getString('query')` comes back as `string` because you marked that option required. A typo in the name stops the build. [Command options](/commands/options) covers what each kind returns.
 
 `seedcord dev` runs codegen every time the bot starts, and again when you answer `y` to its refresh prompt. If you edit commands while dev is stopped, or your project never runs dev, run it yourself.
 
@@ -54,7 +54,7 @@ Every run rewrites the whole file from scratch.
 | [`SlashRegistry`](ref:core/SlashRegistry) | every command class in your `commands` folder |
 | [`UserContextMenuRegistry`](ref:core/UserContextMenuRegistry) | the same folder, for right-click commands on a user |
 | [`MessageContextMenuRegistry`](ref:core/MessageContextMenuRegistry) | the same folder, for right-click commands on a message |
-| [`EmojiMap`](ref:types/EmojiMap) | the `bot.emojis` block on your config, which [Components](/components) shows in full |
+| [`EmojiMap`](ref:types/EmojiMap) | the images in your emojis folder and the `bot.emojis` block on your config. [Components](/components#emojis-by-name) shows both |
 | [`Core`](ref:gateway/Core) | the key you gave each attached plugin |
 | [`PluginTypes`](ref:core/PluginTypes) | what each attached plugin found in your project, like the keys in its locale files |
 
@@ -62,11 +62,11 @@ Every run rewrites the whole file from scratch.
 
 `Core` only appears once you attach a plugin, and `PluginTypes` once a plugin finds something to type. [Typing a plugin](/plugins/typing) shows both.
 
-Codegen records only the keys you attached. TypeScript resolves each plugin's type from the bot you built, since your `attach()` call already passes the plugin class. Your handler still reads `this.core.db` with every method that plugin declares.
+Codegen records only the keys you attached. TypeScript resolves each plugin's type from the bot you built since your `attach()` call already passes the plugin class. Your handler still reads `this.core.db` with every method that plugin declares.
 
 <Callout type="transport">
 
-The rows codegen adds are the same either way. The interface it adds them to differs, since gateway's [`Core`](ref:gateway/Core) carries a `bot` member holding the discord.js client and its token. http's [`Core`](ref:http/Core) does not hold a connection.
+The rows codegen adds are the same either way. The interface it adds them to differs since gateway's [`Core`](ref:gateway/Core) has a `bot` member holding the discord.js client and its token. http's [`Core`](ref:http/Core) does not hold a connection.
 
 </Callout>
 
@@ -74,17 +74,17 @@ The rows codegen adds are the same either way. The interface it adds them to dif
 
 To read your commands folder and your emoji block, codegen imports the module your `instance` setting points at. Constructing your bot runs every `attach()` call and every plugin constructor.
 
-Even so, your bot never starts. Nothing calls `start()`, so no plugin connects, no task runs, and nothing you've written reaches Discord.
+Even so, your bot never starts. Nothing calls `start()`, so plugins don't connect, tasks don't run, and nothing you've written reaches Discord.
 
 Codegen does call `codegen()` on each attached plugin that has one. That method can read your project's files, like a translations plugin reading its `locales` folder, and it returns what the plugin types for you. If one throws, the run stops with `CliPluginCodegenThrew`, which gives the plugin's key and what it threw.
 
-A command constructor that throws fails the whole run, since codegen has to construct the class to read its options. `CliCommandConstructorThrew` shows the class, the file, and what your constructor threw. Keep anything that can fail out of a command constructor.
+A command constructor that throws fails the whole run since codegen has to construct the class to read its options. `CliCommandConstructorThrew` shows the class, the file, and what your constructor threw. Keep anything that can fail out of a command constructor.
 
 ## Catching a stale file in CI
 
 Some drift breaks the build for you. If you add a command without rerunning codegen, the handler with that route fails to compile. Your editor flags it immediately.
 
-Other drift compiles perfectly. If you delete a command, its entry stays in `SlashRegistry`, still typing a route your bot stopped answering. Passing `--check` renders the file in memory and compares it to the copy on disk, which catches the kind that still compiles.
+Other drift compiles perfectly. If you delete a command, its entry is still in `SlashRegistry`, still typing a route that your bot stopped answering. Passing `--check` renders the file in memory and compares it to the copy on disk, which catches the kind that still compiles.
 
 <Shell exec="seedcord codegen --check" />
 
@@ -100,16 +100,16 @@ It prints a line per step, like plain codegen. If the file matches, the last lin
   [3119] src/seedcord-gen.ts is out of date. Run seedcord codegen and commit it.
 ```
 
-`--check` only reports, so you fix the drift by running plain `seedcord codegen`. The scaffold doesn't wire a script for it, so put it wherever your pipeline runs its checks.
+`--check` only reports. To fix the drift, run plain `seedcord codegen`. The scaffold doesn't wire a script for it, so put it wherever your pipeline runs its checks.
 
-If codegen can't read your commands folder, it throws `CorePathUnreadable`, because a run that found no commands would pass `--check` against a file that's already stale.
+If codegen can't read your commands folder, it throws `CorePathUnreadable` because a run that didn't find any commands would pass `--check` against a file that's already stale.
 
 ## Commands codegen passes over
 
-Codegen records a command class once it carries [`@RegisterCommand`](ref:core/RegisterCommand). If a class has no decorator, codegen skips that export entirely, so your route never appears in `SlashRegistry`. You get the same compile failure as a missed codegen run.
+Codegen records a command class once it has [`@RegisterCommand`](ref:core/RegisterCommand). If a class doesn't have the decorator, codegen skips that export entirely, so your route never appears in `SlashRegistry`. You get the same compile failure as a missed codegen run.
 
 Your commands folder can hold helpers and constants too. Codegen imports each of those files as well, keeps the exports that are decorated command classes, and ignores everything else.
 
 ## Two commands, one name
 
-Discord scopes command names per kind. seedcord enforces the same rule. If two commands resolve to one slash route, or two context menus of one kind share a name, codegen throws `CoreDuplicateName` with both file paths, so you know which one to rename.
+Discord scopes command names per kind. seedcord enforces the same rule. If two commands resolve to one slash route, or two context menus of one kind share a name, codegen throws `CoreDuplicateName`. The error has both file paths, so you know which one to rename.

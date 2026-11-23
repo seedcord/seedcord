@@ -23,17 +23,18 @@ import type { DevPrefs } from '#ui/devPrefs';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
+import type { Promisable } from 'type-fest';
 
 interface DevAppProps {
     readonly store: DevStore;
     readonly onReady: () => void;
     readonly initialPrefs: DevPrefs;
     readonly onPrefsChange?: (prefs: DevPrefs) => void;
-    readonly onQuit?: () => Promise<void> | void;
-    readonly onDisconnect?: () => Promise<void> | void;
-    readonly onRestart?: () => Promise<void> | void;
+    readonly onQuit?: () => Promisable<void>;
+    readonly onDisconnect?: () => Promisable<void>;
+    readonly onRestart?: () => Promisable<void>;
     readonly onCodegen?: () => void;
-    readonly onRefreshCommands?: (shouldRefresh: boolean) => Promise<void> | void;
+    readonly onRefreshCommands?: (shouldRefresh: boolean) => Promisable<void>;
 }
 
 export function DevApp(props: DevAppProps): ReactElement {

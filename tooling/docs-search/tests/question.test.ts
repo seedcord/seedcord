@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { parseQuestion, QUESTION_LENGTH, questionFromText } from '#src/question';
 
@@ -14,7 +14,7 @@ describe('parseQuestion', () => {
         expect(parseQuestion(longest)).toBe(longest);
     });
 
-    it('takes a bare number, since it can be an error code', () => {
+    it('takes a bare number since it can be an error code', () => {
         expect(parseQuestion('3116')).toBe('3116');
     });
 
@@ -54,14 +54,14 @@ describe('questionFromText', () => {
         expect(question?.endsWith('word')).toBe(true);
     });
 
-    it('cuts a long paste with no spaces at the limit', () => {
+    it('cuts a long paste without spaces at the limit', () => {
         const { question, shortened } = questionFromText('k'.repeat(QUESTION_LENGTH.max + 1));
 
         expect(shortened).toBe(true);
         expect(question).toHaveLength(QUESTION_LENGTH.max);
     });
 
-    it('has no question when only punctuation is left', () => {
+    it('returns an undefined question when only punctuation is left', () => {
         expect(questionFromText('    at file:///bot/src/bot.ts:3:1\n!!!')).toEqual({
             question: undefined,
             shortened: false

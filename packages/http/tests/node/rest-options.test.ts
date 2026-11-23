@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord as EdgeSeedcord } from '#src/edge/Seedcord';
 import { Seedcord } from '#src/node/Seedcord';

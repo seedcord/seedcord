@@ -1,14 +1,14 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
-import type { Promisable } from 'type-fest';
+import type { ValueOf, Promisable } from 'type-fest';
 
 type ResolvedReturn<Case> = Case extends (...args: never[]) => infer Result ? Awaited<Result> : never;
 
 // Ret is never when the caller doesn't write one
 export type CaseReturn<Ret> = [Ret] extends [never] ? unknown : Promisable<Ret>;
 
-export type MatchResult<Ret, Cases> = [Ret] extends [never] ? ResolvedReturn<Cases[keyof Cases]> : Ret;
+export type MatchResult<Ret, Cases> = [Ret] extends [never] ? ResolvedReturn<ValueOf<Cases>> : Ret;
 
 // keyof reads discord.js's Events.MessageCreate key and the 'messageCreate' that an author writes as different types
 type ShapeKey<Shape> = keyof Shape | `${Extract<keyof Shape, string>}`;
@@ -22,7 +22,7 @@ export async function runCase<Result>(
     value: string,
     ...args: unknown[]
 ): Promise<Result> {
-    // hasOwn, since a plain lookup for a key named `constructor` returns Object.prototype's
+    // hasOwn since a plain lookup for a key named `constructor` returns Object.prototype's
     const callback = Object.hasOwn(cases, value) ? (cases as Record<string, unknown>)[value] : undefined;
     if (typeof callback !== 'function') {
         throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [handler.constructor.name, kind, value]);

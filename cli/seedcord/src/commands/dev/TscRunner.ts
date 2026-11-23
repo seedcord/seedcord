@@ -83,7 +83,7 @@ export class TscRunner {
         const closed = new Promise<void>((resolve) => child.once('close', () => resolve()));
         child.kill('SIGTERM');
 
-        // justified: tsc --watch can ignore SIGTERM when stdin is detached (Windows/some Node builds), so escalate to SIGKILL after a grace window. unref so the timer never holds the event loop open.
+        // justified: escalate to SIGKILL after a grace window because tsc --watch can ignore SIGTERM when stdin is detached (Windows/some Node builds). unref so the timer never holds the event loop open.
         const killTimer = setTimeout(() => child.kill('SIGKILL'), TSC_GRACEFUL_EXIT_MS);
         killTimer.unref();
         await closed;

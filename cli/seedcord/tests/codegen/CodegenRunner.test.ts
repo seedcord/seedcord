@@ -8,7 +8,7 @@ import { CommandMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { runsUnderSeedcordDev, setDevFiles } from '@seedcord/utils/internal';
 import { ApplicationCommandType, ButtonStyle } from 'discord.js';
-import { assert, describe, expect, it, onTestFinished } from 'vitest';
+import { assert, describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
@@ -69,7 +69,7 @@ function runnerWith(
     return new CodegenRunner({ steps: quietSteps, projectLoader, generator: new AugmentationBuilder(logger), logger });
 }
 
-// no commands path, so the scan is empty and the rendered registry is deterministic.
+// the scan is empty and the rendered registry is deterministic because the runner doesn't have a commands path.
 function makeRunner(root: string, logger: ILogger): CodegenRunner {
     const importModule = (): Promise<unknown> => Promise.resolve({ default: brandedInstance() });
 
@@ -92,7 +92,7 @@ function scanRunner(
     return runnerWith(configAt(root, instancePath), importModule, logger);
 }
 
-// instance double whose default export carries no SeedcordBrand, to exercise the isSeedcordInstance guard.
+// instance double whose default export doesn't have SeedcordBrand, to test the isSeedcordInstance guard.
 function invalidRunner(root: string, logger: ILogger): CodegenRunner {
     const importModule = (): Promise<unknown> => Promise.resolve({ default: { not: 'branded' } });
 
@@ -113,7 +113,7 @@ function pluginRunner(root: string, instance: string, plugins: Record<string, ob
 }
 
 describe('CodegenRunner plugin capabilities', () => {
-    it('augments Core from the attach keys and PluginTypes from each codegen(), sorted by id', async () => {
+    it('augments Core, PluginTypes from each codegen(), and one row per dispatch member, sorted', async () => {
         const root = await tempDir('codegen-');
         const generating = (id: string, data: object): object =>
             new (class {
@@ -125,19 +125,23 @@ describe('CodegenRunner plugin capabilities', () => {
         const plugins = {
             db: {},
             i18n: generating('seedcord-locales', { messages: { greet: true } }),
-            cron: generating('cron', { ready: true })
+            cron: generating('cron', { ready: true }),
+            tagging: { dispatchMembers: { tag: () => 'x', label: () => 'y' } }
         };
         await pluginRunner(root, resolve(root, 'bot.ts'), plugins, silentLogger).run(false);
 
         const output = await readFile(resolve(root, OUTPUT), 'utf8');
         expect(output).toContain("import type Bot from './bot';");
-        expect(output).toContain("        db: (typeof Bot)['db'];");
+        expect(output).toContain("        db: AttachedPlugin<(typeof Bot)['db']>;");
         expect(output).toContain(
             "    interface PluginTypes {\n        cron: Fits<(typeof Bot)['cron'], { ready: true }>;\n        'seedcord-locales': Fits<(typeof Bot)['i18n'], { messages: { greet: true } }>;\n    }"
         );
+        expect(output).toContain(
+            "    interface DispatchMemberValues {\n        label: Awaited<ReturnType<(typeof Bot)['tagging']['dispatchMembers']['label']>>;\n        tag: Awaited<ReturnType<(typeof Bot)['tagging']['dispatchMembers']['tag']>>;\n    }"
+        );
     });
 
-    it('writes a nested bot entry as a relative specifier with no extension', async () => {
+    it('writes a nested bot entry as a relative specifier without an extension', async () => {
         const root = await tempDir('codegen-');
         await pluginRunner(root, resolve(root, 'app/bot.ts'), { db: {} }, silentLogger).run(false);
 
@@ -154,7 +158,7 @@ describe('CodegenRunner plugin capabilities', () => {
         expect(output).toContain("import type Bot from '../");
     });
 
-    it('emits no import, no Core block, and no PluginTypes block when nothing is attached', async () => {
+    it('omits the import and the plugin blocks when nothing is attached', async () => {
         const root = await tempDir('codegen-');
         await pluginRunner(root, resolve(root, 'bot.ts'), {}, silentLogger).run(false);
 
@@ -162,14 +166,17 @@ describe('CodegenRunner plugin capabilities', () => {
         expect(output).not.toContain('import type');
         expect(output).not.toContain('interface Core');
         expect(output).not.toContain('interface PluginTypes');
+        expect(output).not.toContain('interface DispatchMemberValues');
     });
 });
 
 describe('CodegenRunner writeFrom', () => {
-    it("scans with dev's loader, never opens the project, and leaves dev's files slot in place", async () => {
+    it("scans with dev's loader, never opens the project, types the emojis folder, and leaves dev's files slot in place", async () => {
         const root = await tempDir('codegen-');
         const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
+        await mkdir(join(root, 'emojis'));
+        for (const image of ['dot.png', '1up.png']) await writeFile(join(root, 'emojis', image), '');
         const config = configAt(root, resolve(root, 'bot.ts'));
         const files = new ProjectFiles(config);
         using _devFiles = setDevFiles(files.layout.toJSON());
@@ -194,6 +201,8 @@ describe('CodegenRunner writeFrom', () => {
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
         expect(written).toContain("ban: { options: {}; cache: 'cached' }");
         expect(runsUnderSeedcordDev()).toBe(true);
+        expect(written).toContain("Dot: 'application';");
+        expect(written).toContain("'1Up': 'application';");
     });
 });
 
@@ -257,7 +266,7 @@ describe('CodegenRunner', () => {
         });
     });
 
-    it('renders an empty registry when the instance declares no commands path', async () => {
+    it("renders an empty registry when the instance doesn't declare a commands path", async () => {
         const root = await tempDir('codegen-');
         await makeRunner(root, silentLogger).run(false);
 
@@ -388,7 +397,7 @@ describe('CodegenRunner', () => {
         expect(written).toContain("declare module '@seedcord/gateway'");
     });
 
-    it('--check leaves a current registry untouched', async () => {
+    it("--check doesn't rewrite a current registry", async () => {
         const root = await tempDir('codegen-');
         const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
@@ -412,7 +421,7 @@ describe('CodegenRunner', () => {
         expect([first.changed, second.changed]).toStrictEqual([true, false]);
     });
 
-    it('leaves an unchanged registry file untouched on a regular run', async () => {
+    it("doesn't rewrite an unchanged registry file on a regular run", async () => {
         const root = await tempDir('codegen-');
         await makeRunner(root, silentLogger).run(false);
         const outputPath = resolve(root, OUTPUT);
@@ -586,7 +595,7 @@ describe('CodegenRunner', () => {
         const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'helpers.ts'), 'export {};', 'utf8');
 
-        // the scan constructs with no arguments
+        // the scan constructs without arguments
         class Formatter {
             public readonly prefix: string;
 

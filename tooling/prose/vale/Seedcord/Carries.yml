@@ -1,0 +1,7 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' pictures something being moved. Write what the code actually does with the value."
+level: error
+ignorecase: true
+tokens:
+  - 'carries'

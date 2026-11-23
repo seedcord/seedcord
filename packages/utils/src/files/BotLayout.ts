@@ -3,10 +3,13 @@ import * as path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { partition } from 'es-toolkit';
+// node's esm loader needs the .js because picomatch doesn't have an exports map
+import picomatch from 'picomatch/posix.js';
 
 import { asError } from '#src/misc/asError';
 
-import { isInside, posixRelative } from './paths';
+import { comparePaths, isInside, posixRelative, toPosixPath } from './paths';
 
 // every path here is root-relative with a leading slash, like '/locales'. one beside a ./src root reads '/../logs'
 export interface BotLayoutData {
@@ -15,8 +18,10 @@ export interface BotLayoutData {
     readonly listed: readonly string[];
     // outDir and the logs folder
     readonly skippedFolders: readonly string[];
-    // seedcord.config.ts. a script without a config has none
+    // where seedcord.config.ts is. undefined when a script runs without a config
     readonly configFile?: string | undefined;
+    // emojis.dir from that config, undefined in the same case
+    readonly emojiFolder?: string | undefined;
 }
 
 export interface BotEntry {
@@ -27,28 +32,37 @@ export interface BotEntry {
 const MODULE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs'];
 const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts'];
 const CODE_AND_MAP_EXTENSIONS = [...MODULE_EXTENSIONS, '.map'];
-const PROJECT_FILE_NAMES = new Set([
+const PROJECT_FILE_GLOBS = [
+    'seedcord.config.*',
+    'tsconfig*.json',
     'package.json',
     'pnpm-lock.yaml',
     'package-lock.json',
     'yarn.lock',
     'bun.lock',
     'bun.lockb'
-]);
-const PROJECT_FILE_GLOBS = ['seedcord.config.*', 'tsconfig*.json', ...PROJECT_FILE_NAMES];
-
-function isProjectFileName(name: string): boolean {
-    if (PROJECT_FILE_NAMES.has(name)) return true;
-    return name.startsWith('seedcord.config.') || (name.startsWith('tsconfig') && name.endsWith('.json'));
-}
+];
+const isProjectFileName = picomatch(PROJECT_FILE_GLOBS);
 
 // the symbols tinyglobby's escapePath escapes in a posix path.
 // i would use the dependency directly, but the edge bundle can't resolve tinyglobby's fs import
 const GLOB_SYMBOLS = /[()[\]{}*?|]|[!+@](?=\()/g;
 
+// vite's import.meta.glob and picomatch both read a backslash as an escape
+function escapeGlob(text: string): string {
+    return text.replaceAll(GLOB_SYMBOLS, String.raw`\$&`);
+}
+
 // a key of '/' is base itself
 function globFolder(base: string, key: string): string {
-    return (key === '/' ? base : `${base}${key}`).replaceAll(GLOB_SYMBOLS, String.raw`\$&`);
+    return escapeGlob(key === '/' ? base : `${base}${key}`);
+}
+
+function moduleGlobsIn(folder: string): string[] {
+    return [
+        ...MODULE_EXTENSIONS.map((extension) => `${folder}/*${extension}`),
+        ...DECLARATION_EXTENSIONS.map((extension) => `!${folder}/*${extension}`)
+    ];
 }
 
 function endsWithAny(file: string, extensions: string[]): boolean {
@@ -68,21 +82,24 @@ function isSkippedName(name: string): boolean {
 export class BotLayout {
     public readonly root: string;
     public readonly configFile: string | undefined;
+    public readonly emojiFolder: string | undefined;
     private readonly data: Readonly<BotLayoutData>;
-    private readonly listed: readonly string[];
-    private readonly skippedFolders: readonly string[];
+    private readonly listedPaths: readonly string[];
+    private readonly skippedPaths: readonly string[];
 
-    public constructor({ root, listed, skippedFolders, configFile }: BotLayoutData) {
+    public constructor({ root, listed, skippedFolders, configFile, emojiFolder }: BotLayoutData) {
         this.root = path.resolve(root);
         this.data = Object.freeze({
             root: this.root,
             listed: [...listed],
             skippedFolders: [...skippedFolders],
-            configFile
+            configFile,
+            emojiFolder
         });
-        this.listed = this.data.listed.map((key) => this.pathOf(key));
-        this.skippedFolders = this.data.skippedFolders.map((key) => this.pathOf(key));
+        this.listedPaths = this.data.listed.map((key) => this.pathOf(key));
+        this.skippedPaths = this.data.skippedFolders.map((key) => this.pathOf(key));
         this.configFile = configFile === undefined ? undefined : this.pathOf(configFile);
+        this.emojiFolder = emojiFolder === undefined ? undefined : this.pathOf(emojiFolder);
     }
 
     // a script that reads an absolute folder without a config gets every file in it
@@ -119,7 +136,7 @@ export class BotLayout {
     }
 
     public isSkipped(file: string): boolean {
-        if (this.skippedFolders.some((folder) => isInside(folder, file))) return true;
+        if (this.skippedPaths.some((folder) => isInside(folder, file))) return true;
         if (this.isProjectFile(file)) return true;
         const base = this.holds(file) ? this.root : this.projectDir();
         return isInside(base, file) && path.relative(base, file).split(path.sep).some(isSkippedName);
@@ -127,7 +144,10 @@ export class BotLayout {
 
     // also true for one written after the layout was built
     public isProjectFile(file: string): boolean {
-        return path.dirname(file) === this.configDir() && isProjectFileName(path.basename(file));
+        const configDir = this.configDir();
+        if (configDir === undefined) return false;
+        // on windows, path.relative treats c:/proj and C:\proj as one folder
+        return path.relative(configDir, path.dirname(file)) === '' && isProjectFileName(path.basename(file));
     }
 
     public bundleProblem(folder: string): SeedcordError | undefined {
@@ -149,10 +169,13 @@ export class BotLayout {
     }
 
     public listedBesideRoot(): string[] {
-        return this.listed.filter((folder) => !this.holds(folder));
+        return this.listedPaths.filter((folder) => !this.holds(folder));
     }
 
-    // a key under root climbs out of outDir for a listed folder beside root
+    // the build writes each listed file to _virtual/files plus this key.
+    // it starts at the project folder because a locales folder
+    // beside a ./src root would key as /../locales/en.json from root,
+    // and the build would write it outside _virtual/files
     public listedKeyOf(file: string): string {
         return BotLayout.keyUnder(this.projectDir(), file);
     }
@@ -163,7 +186,7 @@ export class BotLayout {
     }
 
     public isListed(folder: string): boolean {
-        return this.listed.some((listed) => isInside(listed, folder));
+        return this.listedPaths.some((listed) => isInside(listed, folder));
     }
 
     public isModule(file: string): boolean {
@@ -178,13 +201,12 @@ export class BotLayout {
         return new BotFolder(this.resolve(dir), this);
     }
 
-    // sorted by path, the order importFiles loads them in
     public async modulesUnder(folder: string): Promise<string[]> {
         const entries = await Array.fromAsync(this.entriesUnder(folder));
         return entries
             .filter(({ path: file, isFolder }) => !isFolder && this.isModule(file))
             .map(({ path: file }) => file)
-            .toSorted();
+            .toSorted(comparePaths);
     }
 
     // never reads inside a skipped folder
@@ -208,12 +230,19 @@ export class BotLayout {
 
     // base is the folder import.meta.glob resolves the patterns against, relative to root
     public moduleGlobs(base = '.'): string[] {
-        const folder = globFolder(base, '/');
-        return [
-            ...MODULE_EXTENSIONS.map((extension) => `${folder}/**/*${extension}`),
-            ...DECLARATION_EXTENSIONS.map((extension) => `!${folder}/**/*${extension}`),
-            ...this.globExcludes(base)
-        ];
+        return [...moduleGlobsIn(`${globFolder(base, '/')}/**`), ...this.globExcludes(base)];
+    }
+
+    public moduleGlobsDirectlyIn(folder: string): string[] {
+        return [...moduleGlobsIn(globFolder('.', this.keyOf(folder))), ...this.globExcludes('.')];
+    }
+
+    // picomatch/posix runs on workerd, which throws on node's path.matchesGlob
+    public matchesFiles(file: string, patterns: readonly string[]): boolean {
+        const [excludes, includes] = partition(patterns, (pattern) => pattern.startsWith('!'));
+        const posixFile = toPosixPath(file);
+        const matches = (pattern: string): boolean => picomatch.isMatch(posixFile, this.rootedGlob(pattern));
+        return includes.some(matches) && !excludes.some((pattern) => matches(pattern.slice(1)));
     }
 
     public listedFileGlobs(base = '.'): string[] {
@@ -233,9 +262,8 @@ export class BotLayout {
 
     // a built bot resolves these against its own root, where a skipped key like '/../dist' is the bot itself.
     // the built entry writes its own configFile, relative to outDir
-    public bundledData(): BotLayoutData {
+    public bundledData(): Pick<BotLayoutData, 'listed' | 'skippedFolders'> {
         return {
-            root: this.root,
             listed: [...this.data.listed],
             skippedFolders: this.data.skippedFolders.filter((key) => this.holds(this.pathOf(key)))
         };
@@ -249,7 +277,7 @@ export class BotLayout {
         return this.configDir() ?? this.root;
     }
 
-    // import.meta.glob already leaves out dotfiles, dot-folders and node_modules
+    // import.meta.glob already skips dotfiles, dot-folders and node_modules
     private globExcludes(base: string): string[] {
         const folders = this.data.skippedFolders.map((key) => `!${globFolder(base, key)}/**`);
         const configDir = this.configDir();
@@ -258,6 +286,14 @@ export class BotLayout {
                 ? []
                 : PROJECT_FILE_GLOBS.map((name) => `!${globFolder(base, this.keyOf(configDir))}/${name}`);
         return [...folders, ...projectFiles];
+    }
+
+    // the root's own [ or ( matches as plain text
+    private rootedGlob(pattern: string): string {
+        const root = escapeGlob(toPosixPath(this.root));
+        if (!path.isAbsolute(pattern)) return path.posix.join(root, toPosixPath(pattern));
+        if (!isInside(this.root, pattern)) return toPosixPath(pattern);
+        return path.posix.join(root, posixRelative(this.root, pattern));
     }
 
     private pathOf(key: string): string {
@@ -280,5 +316,18 @@ export class BotFolder {
     // a skipped file counts as outside the folder
     public holds(file: string): boolean {
         return isInside(this.path, file) && !this.layout.isSkipped(file);
+    }
+
+    public moduleGlobsDirectlyIn(): string[] {
+        return this.layout.moduleGlobsDirectlyIn(this.path);
+    }
+
+    // a relative glob resolves against the bot's root, which is this folder when a script runs without a config
+    public matchesFiles(file: string, patterns: readonly string[]): boolean {
+        return this.layout.matchesFiles(file, patterns);
+    }
+
+    public assertBundled(): void {
+        this.layout.assertBundled(this.path);
     }
 }

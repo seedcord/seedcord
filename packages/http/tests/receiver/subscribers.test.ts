@@ -3,7 +3,7 @@ import { PublishDefault, RegisteredCount, SubscriberLoader } from '@seedcord/cor
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { BUILT_ROOT, registerBuiltFiles } from '#tests/helpers/builtFiles';
 
@@ -35,7 +35,7 @@ class MalformedReporter extends WebhookLog<'unknownException', CoreBase> {
     }
 }
 
-// justified: the Bus only stores core and reads no member during publish
+// justified: the Bus only stores core and doesn't read a member during publish
 function stubBus(): Bus {
     return new Bus({} as unknown as CoreBase);
 }
@@ -55,7 +55,7 @@ const payload = (): SubscriptionData<'unknownException'> => ({
 });
 
 describe('subscribers loaded from the built files on workerd', () => {
-    // workerd binds no source by default
+    // workerd doesn't bind a source by default
     beforeEach(() => {
         Envapter.useSource(new PortableSource({}));
     });
@@ -71,7 +71,7 @@ describe('subscribers loaded from the built files on workerd', () => {
         });
     });
 
-    it('warns at registration and never registers a reporter with no url set', async () => {
+    it('warns at registration and never registers a reporter without a url set', async () => {
         const bus = stubBus();
         // the warn comes off the bus's own logger instance
         const warn = vi.spyOn(Logger.prototype, 'warn');

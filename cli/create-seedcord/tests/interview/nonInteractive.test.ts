@@ -1,5 +1,5 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { runFlow } from '#interview/runFlow';
 import { BOT_TOKEN } from '#tests/token';
@@ -19,7 +19,7 @@ function neverAsks<Key extends keyof Answers>(key: Key, flag: string): Step<Key>
     };
 }
 
-describe('runFlow with no terminal', () => {
+describe('runFlow without a terminal', () => {
     it('takes every answer from the flags', async () => {
         const answers = await runFlow([neverAsks('directory', 'dir')], { directory: 'my-bot' }, NO_TERMINAL);
 
@@ -41,7 +41,7 @@ describe('runFlow with no terminal', () => {
         expect(answers.token).toBeNull();
     });
 
-    it('offers the --no- flag, with what it does, when a step that can wait has no answer', async () => {
+    it('offers the --no- flag, with what it does, when a step that can wait is unanswered', async () => {
         const token: Step<'token'> = {
             ...neverAsks('token', 'token'),
             flag: { name: 'token', description: 'a stub', parse: () => BOT_TOKEN, noFlag: 'leave it for later' }
@@ -60,7 +60,7 @@ describe('runFlow with no terminal', () => {
         expect(answers.install).toBe(true);
     });
 
-    it('leaves a skipped step alone', async () => {
+    it("doesn't set an answer for a skipped step", async () => {
         const capabilities: Step<'capabilities'> = {
             ...neverAsks('capabilities', 'capabilities'),
             skip: (answers) => answers.transport === 'http'

@@ -51,7 +51,7 @@ function refsToLinks(refs: readonly RefRange[], currentPackage: string): CodeLin
 }
 
 // dompurify's html5 reparse splits a link that crosses a shiki span boundary into the real anchor plus
-// an empty one, because the parser copies the href onto the tag it reopens. the loop repeats for
+// an empty one because the parser copies the href onto the tag it reopens. the loop repeats for
 // back-to-back boundaries.
 const EMPTY_ANCHOR = /<a\b[^>]*>\s*<\/a>/g;
 
@@ -77,7 +77,7 @@ export async function formatDeclarationHeader(
 ): Promise<CodeRepresentation> {
     const { text, refs } = await formatRenderedDeclarationHeaderPretty(header, buildResolveHref(context), optional);
     const links = refsToLinks(refs, context.manifestPackage);
-    // with no leading keyword the text isn't top-level TS, and shiki only reads `protected`, `readonly`
+    // without a leading keyword the text isn't top-level TS, and shiki only reads `protected`, `readonly`
     // and type-param `extends` as keywords inside the class-body wrap
     const highlighter = header.keyword
         ? (c: string): Promise<string | null> => highlightToHtml(c, 'ts', { links })

@@ -1,7 +1,7 @@
 import { Writable } from 'node:stream';
 
 import chalk from 'chalk';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import winston from 'winston';
 
 import { LogFormatter } from '#src/node/LogFormatter';
@@ -195,7 +195,7 @@ describe('LogFormatter', () => {
             expect((output[0]?.match(/Unique error message/gu) ?? []).length).toBe(2);
         });
 
-        it('renders both stacks when a call carries two Errors', () => {
+        it('renders both stacks when a call has two Errors', () => {
             const { logger, output } = createTestLogger(formatter);
             logger.error('both failed', new Error('first boom'), new Error('second boom'));
             expect(output[0]).toContain('first boom');
@@ -265,7 +265,7 @@ describe('LogFormatter', () => {
             expect(output[0]).not.toContain('more frames');
         });
 
-        it('renders a member that carries its own cause', () => {
+        it('renders a member that has its own cause', () => {
             const { logger, output } = createTestLogger(formatter);
             const member = new Error('driver refused', { cause: new Error('socket hang up') });
             logger.error('shutdown caught', new AggregateError([member], 'one failed'));

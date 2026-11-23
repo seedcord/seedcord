@@ -4,7 +4,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostStartup, HostVersion } from '@seedcord/types/internal';
 import { setDevFiles } from '@seedcord/utils/internal';
 import { ApplicationCommandType, Collection, Events, GatewayIntentBits } from 'discord.js';
-import { type Mock, describe, expect, afterEach, onTestFinished, vi } from 'vitest';
+import { type Mock, describe, expect, afterEach, onTestFinished, vi } from 'vite-plus/test';
 
 import { commandRegistryOf } from '#bot/Bot';
 import { Plugin } from '#src/Plugin';
@@ -182,7 +182,7 @@ describe('CommandRegistry Integration', () => {
             }
             `
         );
-        const config = testConfig({ commands: testEnv.resolvePath('commands'), healthCheck: false });
+        const config = testConfig({ commands: testEnv.resolvePath('commands') });
         config.bot.clientOptions = { intents: [GatewayIntentBits.Guilds] };
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
         try {
@@ -211,7 +211,7 @@ describe('CommandRegistry Integration', () => {
 
     it('fails startup at the login timeout when login hangs', async ({ testEnv }) => {
         await testEnv.createFile('commands/.keep', '');
-        const config = testConfig({ commands: testEnv.resolvePath('commands'), healthCheck: false });
+        const config = testConfig({ commands: testEnv.resolvePath('commands') });
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
         try {
             await using seedcord = new Seedcord(config);
@@ -257,7 +257,7 @@ describe('CommandRegistry Integration', () => {
                 return Promise.resolve();
             }
         }
-        const config = testConfig({ commands: testEnv.resolvePath('commands'), healthCheck: false });
+        const config = testConfig({ commands: testEnv.resolvePath('commands') });
         config.bot.clientOptions = { intents: [GatewayIntentBits.Guilds] };
         await using seedcord = new Seedcord(config).attach('reader', ReadsCommands);
         vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
@@ -289,7 +289,7 @@ describe('CommandRegistry Integration', () => {
         );
         // a cached module keeps the import well inside the 100ms emoji fetch
         await import(commandFile);
-        const config = testConfig({ commands: testEnv.resolvePath('commands'), healthCheck: false });
+        const config = testConfig({ commands: testEnv.resolvePath('commands') });
         config.bot.clientOptions = { intents: [GatewayIntentBits.Guilds] };
         config.bot.emojis = { Wave: 'wave' };
         await using seedcord = new Seedcord(config);
@@ -389,7 +389,7 @@ describe('CommandRegistry Integration', () => {
         expect(names?.toSorted()).toEqual(['kick', 'mute', 'ping']);
     });
 
-    it('sends no refresh prompt for a file saved in a dot-folder, which startup skips', async ({ testEnv }) => {
+    it("doesn't send a refresh prompt for a file saved in a dot-folder, which startup skips", async ({ testEnv }) => {
         using _dev = setDevFiles({
             root: testEnv.rootDir,
             listed: [],

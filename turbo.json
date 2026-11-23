@@ -22,8 +22,11 @@
                 "@seedcord/gateway#build",
                 "@seedcord/http#build",
                 "@seedcord/logger#build",
-                "@seedcord/plugin-kysely-postgres#build",
+                "@seedcord/plugin-i18n#build",
+                "@seedcord/plugin-kysely#build",
                 "@seedcord/plugin-mongoose#build",
+                "@seedcord/plugin-oauth#build",
+                "@seedcord/plugin-tasks#build",
                 "@seedcord/types#build",
                 "@seedcord/utils#build",
                 "discord-component-embed#build",
@@ -77,6 +80,15 @@
         "//#lint:md": {
             "inputs": ["**/*.md", ".markdownlint-cli2.jsonc", ".markdownlint.json"]
         },
+        "//#lint:prose": {
+            "inputs": ["**/*.{md,mdx,ts,tsx,yml,yaml}", ".vale.ini", "tooling/prose/**"]
+        },
+        "//#knip": {
+            "inputs": ["**/*.{ts,tsx,mts,cts,js,mjs,json}", "knip.ts"]
+        },
+        "//#react-doctor": {
+            "inputs": ["apps/**/*.{ts,tsx}", "tooling/ui/**/*.{ts,tsx}", "cli/**/*.tsx", "doctor.config.ts"]
+        },
         "lint": {
             "dependsOn": ["^build", "@seedcord/eslint-config#build"]
         },
@@ -96,6 +108,10 @@
         "@seedcord/core#lint": {
             "dependsOn": ["^build", "@seedcord/core#build"]
         },
+        "@seedcord/core#lint:fix": {
+            "dependsOn": ["^build", "@seedcord/core#build"],
+            "cache": false
+        },
         "@seedcord/core#tc": {
             "dependsOn": ["^build", "@seedcord/core#build"]
         },
@@ -113,13 +129,6 @@
         },
         "seedcord#test": {
             "dependsOn": ["^build", "seedcord#build"]
-        },
-        "fmt": {
-            "dependsOn": ["@seedcord/eslint-config#build"],
-            "cache": false
-        },
-        "fmt:check": {
-            "dependsOn": ["@seedcord/eslint-config#build"]
         },
         "clean": {
             "cache": false

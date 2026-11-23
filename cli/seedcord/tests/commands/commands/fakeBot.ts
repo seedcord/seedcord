@@ -2,13 +2,12 @@ import { EventEmitter } from 'node:events';
 import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { stripVTControlCharacters } from 'node:util';
 
 import { REST } from '@discordjs/rest';
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
-import { SeedcordBrand } from '@seedcord/types/internal';
+import { HOST_CONTRACT, HostContract, HostPlugins, SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { onTestFinished, vi } from 'vitest';
+import { onTestFinished, vi } from 'vite-plus/test';
 
 import { Project } from '#core/project/Project';
 import { realPath } from '#core/project/realPath';
@@ -19,10 +18,9 @@ import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { silentLogger } from '#tests/silentLogger';
 
 import type { RemoveDeps } from '#commands/commands/remove/RemoveRunner';
-import type { DiscordRest } from '#commands/commands/runnerDeps';
 import type { ProjectOpener } from '#core/config/openProjectWithSteps';
+import type { DiscordRest } from '#core/discord/runnerDeps';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
-import type { Terminal } from '#core/output/terminal';
 import type { CommandBody } from '@seedcord/core/internal';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
@@ -56,7 +54,7 @@ interface BotOptions {
 }
 
 // a test that reuses a project reuses its last deploy
-export type FakeProject = ProjectOpener & { readonly state: StateFolder };
+export type FakeProject = ProjectOpener & { readonly state: StateFolder; readonly dir: string };
 
 interface FakeDiscord {
     rest: REST;
@@ -102,7 +100,13 @@ export async function fakeProject({
     const instance = resolve(root, 'bot.ts');
     await writeFile(instance, '');
     byPath.set(instance, {
-        default: { [SeedcordBrand]: true, rest, config: { bot: { commands: { path: commandsPath, guilds } } } }
+        default: {
+            [SeedcordBrand]: true,
+            [HostContract]: HOST_CONTRACT,
+            [HostPlugins]: { prepareCommands: () => Promise.resolve() },
+            rest,
+            config: { bot: { commands: { path: commandsPath, guilds } } }
+        }
     });
 
     const config = resolvedConfigOf(root, {
@@ -122,7 +126,8 @@ export async function fakeProject({
     return {
         readConfig: () => Promise.resolve(loadedConfig(config)),
         openProject: (loaded) => Promise.resolve(new Project(loaded.config, loaded.files, moduleLoader(byPath))),
-        state: new StateFolder(root, silentLogger)
+        state: new StateFolder(root, silentLogger),
+        dir: root
     };
 }
 
@@ -201,18 +206,4 @@ export function botGuilds(count: number): Record<string, unknown> {
     };
     const commandRoutes = guilds.map(({ id }): [string, unknown] => [Routes.applicationGuildCommands(APP_ID, id), []]);
     return { [Routes.userGuilds()]: page, ...Object.fromEntries(commandRoutes) };
-}
-
-// a piped terminal, read back without colors and with plain spaces
-export function pipedTerminal(): Terminal & { text: () => string } {
-    let written = '';
-    return {
-        isTTY: false,
-        columns: 0,
-        write: (chunk: string | Uint8Array) => {
-            written += String(chunk);
-            return true;
-        },
-        text: () => stripVTControlCharacters(written).replaceAll(' ', ' ')
-    };
 }

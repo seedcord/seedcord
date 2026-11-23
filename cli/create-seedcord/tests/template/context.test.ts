@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { PackageManager } from '#cli/PackageManager';
 import { buildContext } from '#template/context';
@@ -47,7 +47,7 @@ describe('buildContext on gateway', () => {
         expect(context.partials).toEqual(['Message', 'Channel', 'Reaction']);
     });
 
-    it('sees no message capability behind reactions alone', () => {
+    it('reports hasMessages as false for reactions alone', () => {
         expect(context.hasMessages).toBe(false);
     });
 });
@@ -64,21 +64,21 @@ describe('buildContext on http', () => {
         expect(context.transport).toBe('@seedcord/http');
     });
 
-    it('carries no intents or partials', () => {
+    it('has empty intents and partials', () => {
         expect(context.intents).toEqual([]);
         expect(context.partials).toEqual([]);
         expect(context.hasMessages).toBe(false);
     });
 });
 
-describe('buildContext on a gateway bot that picked nothing', () => {
+describe('buildContext on a bare gateway bot', () => {
     const context = buildContext({ ...GATEWAY, capabilities: [] }, EXTRAS);
 
     it('still writes Guilds', () => {
         expect(context.intents).toEqual(['Guilds']);
     });
 
-    it('sees no message capability', () => {
+    it('reports hasMessages as false', () => {
         expect(context.hasMessages).toBe(false);
     });
 });
@@ -88,13 +88,13 @@ describe('the message capabilities', () => {
         expect(buildContext({ ...GATEWAY, capabilities: [id] }, EXTRAS).hasMessages).toBe(true);
     });
 
-    it.each(['reactions', 'voice', 'polls', 'automod'])('leaves %s out', (id) => {
+    it.each(['reactions', 'voice', 'polls', 'automod'])("doesn't set hasMessages for %s", (id) => {
         expect(buildContext({ ...GATEWAY, capabilities: [id] }, EXTRAS).hasMessages).toBe(false);
     });
 });
 
 describe('buildContext extras', () => {
-    it('carries the developer name and the run command', () => {
+    it('fills in the developer name and the run command', () => {
         const context = buildContext(GATEWAY, EXTRAS);
 
         expect(context.developerUsername).toBe('dhruv');

@@ -21,7 +21,7 @@ runs:
 
     - name: Embed guide sections
       shell: bash
-      run: pnpm guide:embed
+      run: vp run guide:embed
       env:
         CLOUDFLARE_ACCOUNT_ID: ${{ inputs.cloudflare_account_id }}
         CLOUDFLARE_API_TOKEN: ${{ inputs.cloudflare_api_token }}

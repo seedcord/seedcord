@@ -38,7 +38,7 @@ function segmentWidth(segment: string): number {
     return inRanges(cp, WIDE_RANGES) ? 2 : 1;
 }
 
-// .length counts UTF-16 units, so it miscounts emoji, astral, and CJK chars and the border drifts
+// .length counts UTF-16 units. it miscounts emoji, astral, and CJK chars, and the border drifts
 export function displayWidth(text: string): number {
     let width = 0;
     for (const { segment } of segmenter.segment(text)) width += segmentWidth(segment);

@@ -77,16 +77,16 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
         return interactionUser(this.event);
     }
 
-    private resolver?: HttpSlashOptions;
+    #resolver?: HttpSlashOptions;
 
     private get reader(): HttpSlashOptions {
-        this.resolver ??= new HttpSlashOptions(this.event.data);
-        return this.resolver;
+        this.#resolver ??= new HttpSlashOptions(this.event.data);
+        return this.#resolver;
     }
 
     /**
      * The focused option for this interaction. `value` is always the raw partial string the user is typing,
-     * even for an integer or number option, so coerce it yourself when you need a number.
+     * even for an integer or number option. Coerce it yourself when you need a number.
      */
     protected get focused(): FocusedField<Route> {
         const focused = this.reader.getFocused();
@@ -126,11 +126,11 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
 
     /**
      * The already-entered options on this command, restricted to the kinds Discord resolves during autocomplete
-     * (string, integer, number, boolean) with every read nullable, since a sibling is partial while the user
+     * (string, integer, number, boolean) with every read nullable since a sibling is partial while the user
      * types the focused field. The focused field is on `this.focused`.
      */
     protected get options(): AutocompleteOptions<Route> {
-        // AutocompleteOptions is the registry-typed view over the getters the reader exposes
+        // AutocompleteOptions is the registry-typed view over the getters that the reader exposes
         return this.reader as AutocompleteOptions<Route>;
     }
 }

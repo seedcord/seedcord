@@ -25,7 +25,7 @@ export class Ping extends SlashHandler<'ping'> {
 
 Other code reaches the same object. A gate, which is a check that runs before a handler, reads it as `ctx.core`. A subscriber, which listens for your own events, and a plugin read `this.core` like a handler does.
 
-## What it carries
+## What it holds
 
 {/* prettier-ignore-start */}
 
@@ -34,12 +34,13 @@ Other code reaches the same object. A gate, which is a check that runs before a 
 | `config` | the object you passed to `new Seedcord()` |
 | `rest` | Discord's REST client, which is the discord.js client's own on gateway |
 | `applicationId` | your bot's Discord application id. On gateway, reading it before the Login phase throws |
+| `url` | [the address people reach your bot at](/build/server#your-bots-address), from `server.url` in your config |
 | `rateLimiter` | the counters behind [`Cooldown`](/checks/cooldown), which you can also use directly |
 | `kv` | the [key-value store](/built-ins/), where your handlers keep records between interactions |
 | `bus` | [publishing and subscribing](/events/bus) for framework and application events |
 | `startup` | `addTask`, for work that runs while your bot starts |
 | `shutdown` | `addTask`, for work that runs while it stops |
-| `bot` | on gateway, `bot.client` is the discord.js client and `bot.botToken` is your token. Http has no `bot` |
+| `bot` | gateway only. `bot.client` is the discord.js client and `bot.botToken` is your token |
 
 {/* prettier-ignore-end */}
 
@@ -91,9 +92,9 @@ export default seedcord;
 
 Each call takes the phase, a name for the logs, the function to run, and an optional timeout in milliseconds. A startup task gets 10000 unless you pass a timeout. A shutdown task gets 5000.
 
-Add every task before the bot starts, because `addTask` throws `LifecycleTaskChangeRejected` once startup is running or finished. The sample does it at the top level of `bot.ts`.
+Add every task before the bot starts because `addTask` throws `LifecycleTaskChangeRejected` once startup is running or finished. The sample does it at the top level of `bot.ts`.
 
-A startup task's function receives an `AbortSignal`, and the sample passes it to `openCache`. Pass it to any request the task makes, because it aborts if the task times out or startup stops. A shutdown task gets a signal too, and it aborts if that task times out.
+A startup task's function receives an `AbortSignal`, and the sample passes it to `openCache`. Pass it to any request the task makes because it aborts if the task times out or startup stops. A shutdown task gets a signal too, and it aborts if that task times out.
 
 Pick the phase by what must already be ready when your task runs. The sample registers `open-cache` in `Configuration`, before anything connects, and `close-cache` in `Disconnect`, the phase for closing external resources. [Plugin lifecycle](/plugins/lifecycle) has a table of every startup and shutdown phase and what has run before it.
 
@@ -105,15 +106,15 @@ All the shutdown phases share one deadline of 25000 milliseconds, and after them
 
 <Callout type="transport" only="gateway">
 
-`core.applicationId` comes from the discord.js client, so it resolves during the Login phase. If you read it in a `Configuration` task, it throws. Read it in a handler or in a `Ready` task. `core.rest` has no token before Login either.
+`core.applicationId` comes from the discord.js client, so it resolves during the Login phase. If you read it in a `Configuration` task, it throws. Read it in a handler or in a `Ready` task. `core.rest` also gets its token only at Login.
 
 </Callout>
 
-<Callout type="transport" only="http">
+<Callout type="transport" only="edge">
 
-On [Cloudflare Workers](/build/workers), startup tasks run on the first POST request each worker instance receives, in the same phases and with the same timeouts. Requests that arrive meanwhile wait for them. If a task fails, the next request runs the tasks again.
+On [Cloudflare Workers](/build/workers), startup tasks run on [the first request that starts the bot](/plugins/lifecycle#on-cloudflare-workers) in each worker instance, in the same phases and with the same timeouts. Requests that arrive meanwhile wait for them. If a task fails, the next request runs the tasks again.
 
-`shutdown.addTask` throws `CoreLifecycleUnavailable` there, because Cloudflare doesn't have a shutdown hook for a worker. Do your cleanup inside a handler. A Workers config doesn't take a `lifecycle`.
+`shutdown.addTask` throws `CoreLifecycleUnavailable` there because Cloudflare doesn't have a shutdown hook for a worker. Do your cleanup inside a handler. A Workers config doesn't take a `lifecycle`.
 
 </Callout>
 
@@ -121,9 +122,9 @@ On [Cloudflare Workers](/build/workers), startup tasks run on the first POST req
 
 A process runs one `Seedcord`. If you construct a second before the first has shut down, the constructor throws `CoreSingletonViolation`. Import the instance that you already have, like the one that `src/bot.ts` exports, or run the second bot in its own process.
 
-A script that starts a bot for one job can shut it down with `await using`, which runs the shutdown when the block ends. You can construct a new `Seedcord` after that. This only works on a server, since an edge bot doesn't have a shutdown.
+A script that starts a bot for one job can shut it down with `await using`, which runs the shutdown when the block ends. You can construct a new `Seedcord` after that. This only works on a server since an edge bot doesn't have a shutdown.
 
-```ts
+```ts plain
 await using bot = await new Seedcord(config).start();
 ```
 
@@ -135,8 +136,10 @@ If you construct a plugin yourself, you pass it down through imports and order i
 
 ```ts twoslash
 import { Seedcord } from '@seedcord/gateway';
-import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import { Kysely } from '@seedcord/plugin-kysely';
+import Database from 'better-sqlite3';
 import { GatewayIntentBits } from 'discord.js';
+import { SqliteDialect } from 'kysely';
 // ---cut-start---
 
 const seedcord = new Seedcord({
@@ -150,15 +153,16 @@ const seedcord = new Seedcord({
 });
 // ---cut-end---
 
-export default seedcord.attach('db', KyselyPostgres, {
-    dir: './services',
-    connectionString: 'postgres://localhost:5432/seedcord',
+export default seedcord.attach('db', Kysely, {
+    path: './services',
+    dialect: () =>
+        new SqliteDialect({ database: new Database('bot.db') }),
     migrations: {
-        dir: './migrations'
+        path: './migrations'
     }
 });
 ```
 
-`attach()` sets the property at runtime. The type that makes `this.core.db` compile in a handler is defined in `seedcord-gen.ts`. `seedcord codegen` writes that file, and `seedcord dev` rewrites it each time the bot starts. Both `dir` values are relative to `root` in `seedcord.config.ts`, like the folders in `bot.ts`.
+`attach()` sets the property at runtime. The type that makes `this.core.db` compile in a handler is defined in `seedcord-gen.ts`. `seedcord codegen` writes that file, and `seedcord dev` rewrites it each time the bot starts. Both `path` values are relative to `root` in `seedcord.config.ts`, like the folders in `bot.ts`.
 
 The scaffold's `bot.ts` attaches its `Uptime` plugin with `.attach('uptime', Uptime)`, so the `ping` handler can read `this.core.uptime`.

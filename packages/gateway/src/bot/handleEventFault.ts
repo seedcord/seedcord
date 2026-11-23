@@ -1,5 +1,4 @@
 import { FaultBoundary } from '@seedcord/core/internal';
-import { DiscordAPIError } from 'discord.js';
 
 import { deriveEventActor } from '#miscellaneous/deriveEventActor';
 import { eventFaultReport } from '#miscellaneous/faultReports';
@@ -13,10 +12,10 @@ interface EventFault {
     readonly dispatch: DispatchContext;
 }
 
-// a generic event has no reply target
+// a generic event doesn't have a reply target
 export function handleEventFault(caught: unknown, fault: EventFault, core: Core): void {
     const { handlerName, args, dispatch } = fault;
-    const boundary = new FaultBoundary(core, core.config.errors?.ignoreEventApiCodes, DiscordAPIError, dispatch, () => {
+    const boundary = new FaultBoundary(core, core.config.errors?.ignoreEventApiCodes, dispatch, () => {
         const { channelId, guild, user } = deriveEventActor(args);
         return eventFaultReport({ name: dispatch.route, handler: handlerName, args, channelId, guild, user });
     });

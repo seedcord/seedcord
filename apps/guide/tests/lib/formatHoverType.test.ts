@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { formatHoverType } from '#lib/formatHoverType';
 
@@ -76,7 +76,7 @@ describe('formatting a hover type', () => {
         'class Ping',
         'const routes: readonly ["ping", "ban"]',
         'type Transport = "gateway" | "http"'
-    ])('leaves %s on one line, since it already fits', async (short) => {
+    ])('leaves %s on one line since it already fits', async (short) => {
         await expect(formatHoverType(short)).resolves.toBe(short);
     });
 

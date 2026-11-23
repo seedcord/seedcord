@@ -5,7 +5,7 @@ import { KEY, PromptTerminal, settled } from '@seedcord/cli-prompts/testing';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { HostAugmentTarget } from '@seedcord/types/internal';
 import { toPosixPath } from '@seedcord/utils/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { MAKE_STEPS, MakeRunner } from '#commands/make/MakeRunner';
 import { StepPrinter } from '#core/output/StepPrinter';
@@ -130,7 +130,7 @@ describe('MakeRunner', () => {
         });
     });
 
-    it('throws MakeNoTemplates with the templates folder when the bot and its plugins have none', async () => {
+    it("throws MakeNoTemplates with the templates folder when the bot and its plugins don't have any", async () => {
         using terminal = new PromptTerminal();
         const projectDir = makeProject(BOT_FILES);
 
@@ -140,7 +140,7 @@ describe('MakeRunner', () => {
         });
     });
 
-    it('writes nothing when a prompt is cancelled', async () => {
+    it("doesn't write any file when a prompt is cancelled", async () => {
         using terminal = new PromptTerminal();
         const projectDir = makeProject({ ...BOT_FILES, 'templates/Button/{{pascal name}}.ts.hbs': '{{label}}' });
         const done = make(terminal, projectDir);

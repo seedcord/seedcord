@@ -10,8 +10,9 @@ import { canonicalUrl, OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, SITE_DESCRIPTION, S
 import type { EntityModel, PackageCatalogEntry, PackageVersionCatalog } from '#lib/docs/types';
 import type { OgPageCardProps } from '@seedcord/ui/OgCard';
 import type { Metadata } from 'next';
+import type { Except } from 'type-fest';
 
-export type DocsCard = Omit<OgPageCardProps, 'domain'>;
+export type DocsCard = Except<OgPageCardProps, 'domain'>;
 
 export function rootCard(): DocsCard {
     return { pill: 'docs', accent: BRAND_COLORS.seedDark, meta: [], name: 'Reference', description: SITE_DESCRIPTION };
@@ -70,7 +71,7 @@ interface PageFacts {
     image: string;
     markdownPath?: string;
     isArticle?: boolean;
-    // `undefined` drops the page from the index
+    // `undefined` marks the page noindex
     canonicalPath?: string | undefined;
 }
 
@@ -143,7 +144,7 @@ export class DocsPage {
                 canonical: url,
                 ...(markdownPath ? { types: { 'text/markdown': canonicalUrl(markdownPath) } } : {})
             },
-            // google merges a canonical between near-duplicates. a dropped symbol has no page to merge into
+            // google merges a canonical between near-duplicates. a symbol missing from latest doesn't have a page to merge into
             ...(canonicalPath === undefined ? { robots: { index: false, follow: true } } : {}),
             openGraph: {
                 type: isArticle ? 'article' : 'website',

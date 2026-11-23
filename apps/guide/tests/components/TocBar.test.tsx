@@ -1,6 +1,6 @@
 import { MotionProvider } from '@seedcord/ui';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { TocBar } from '#components/TocBar';
 
@@ -95,7 +95,7 @@ describe('TocBar', () => {
         expect(trigger()).toHaveFocus();
     });
 
-    it('leaves focus alone when escape arrives from outside the bar', () => {
+    it("doesn't move focus when escape arrives from outside the bar", () => {
         renderBar();
         const outside = screen.getByRole('link', { name: 'elsewhere' });
 

@@ -15,9 +15,10 @@ import type {
     APIUser,
     ModalSubmitComponent
 } from 'discord-api-types/v10';
+import type { ExtractStrict } from 'type-fest';
 
 type FieldKind = ModalSubmitComponent['type'];
-type KindWithValues = Extract<ModalSubmitComponent, { values: string[] }>['type'];
+type KindWithValues = ExtractStrict<ModalSubmitComponent, { values: string[] }>['type'];
 
 interface KindLabel {
     label: string;
@@ -62,14 +63,14 @@ export interface SelectedMentionables {
 }
 
 /**
- * The fields a modal carries, read by custom id.
+ * The fields in a modal, read by custom id.
  *
- * A select getter resolves the ids its field picked against the interaction's `resolved` data and returns a
- * `Collection` keyed by id. A field that picked nothing returns null.
+ * A select getter resolves the ids that its field picked against the interaction's `resolved` data and returns a
+ * `Collection` keyed by id. An empty field returns null.
  *
- * @throws A **SeedcordTypeError** from every getter when no field in the modal has that custom id.
+ * @throws A **SeedcordTypeError** from every getter when the modal doesn't have a field with that custom id.
  * @throws A **SeedcordTypeError** from every getter when the field holds a kind that getter does not read. The message gives the getter that does.
- * @throws A **SeedcordTypeError** from a select getter called with `required` when its field picked nothing.
+ * @throws A **SeedcordTypeError** from a select getter called with `required` when its field is empty.
  */
 export class ModalFields {
     private readonly entries = new Map<string, ModalSubmitComponent>();
@@ -123,12 +124,12 @@ export class ModalFields {
     }
 
     /**
-     * Returns the field with this custom id, as Discord sent it. Use it for a component type the typed
+     * Returns the field with this custom id as Discord sent it. Use it for a component type the typed
      * getters do not cover.
      *
      * Pass a component type to get that exact type back.
      *
-     * @throws A **SeedcordTypeError** when no field has this custom id.
+     * @throws A **SeedcordTypeError** when the modal doesn't have a field with this custom id.
      * @throws A **SeedcordTypeError** when you pass a component type and the field holds a different one.
      */
     getField<Kind extends FieldKind>(customId: string, kind: Kind): Extract<ModalSubmitComponent, { type: Kind }>;

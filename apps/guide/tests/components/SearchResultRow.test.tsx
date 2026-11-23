@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { render, screen, type RenderResult } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { SearchResultRow } from '#components/SearchResultRow';
 
@@ -30,7 +30,7 @@ function renderRow(result: GuideResult = RESULT): RenderResult {
     return render(row(result));
 }
 
-// jsdom has no CSS Custom Highlight API
+// jsdom doesn't implement the CSS Custom Highlight API
 function stubHighlights(): Map<string, Set<Range>> {
     const highlights = new Map<string, Set<Range>>();
     vi.stubGlobal('CSS', { highlights });

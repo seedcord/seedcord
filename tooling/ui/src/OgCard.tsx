@@ -21,7 +21,7 @@ const panelBase: CSSProperties = {
     borderRadius: RADIUS
 };
 
-// takumi's drop-shadow offset ignores a parent scale()
+// takumi's drop-shadow offset doesn't follow a parent scale()
 export function OgMark({ width, offset }: { width: number; offset: number }): ReactElement {
     const ink = BRAND_COLORS.seedDark;
     const height = (width * GLYPH_SIZE.height) / GLYPH_SIZE.width;
@@ -108,7 +108,7 @@ interface NameStep {
     descLines: number;
 }
 
-// the description drops a row once the name wraps to a second line
+// the description shows one row fewer once the name wraps to a second line
 const NAME_STEPS = [
     { upTo: 18, fontSize: 72, descLines: 5 },
     { upTo: 24, fontSize: 60, descLines: 5 }

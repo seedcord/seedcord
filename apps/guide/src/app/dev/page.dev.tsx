@@ -8,11 +8,6 @@ const SHELL_PIECES = [
         href: '/dev/mdx-kit',
         label: 'The mdx kit',
         description: 'every element the guide component map renders, with the source that produced it'
-    },
-    {
-        href: '/dev/search-results',
-        label: 'Search results',
-        description: 'result rows next to the placeholder rows the search dialog shows while it loads'
     }
 ] as const;
 
@@ -24,8 +19,8 @@ function DevIndex(): ReactElement {
                     Dev playground
                 </h1>
                 <p className={cn('text-subtle text-sm')}>
-                    Previews for the pieces of the guide shell that live in @seedcord/ui. Each one renders against mock
-                    data so only the thing under review changes between variants.
+                    Previews for the pieces of the guide shell that come from @seedcord/ui. Each one renders against
+                    mock data so only the thing under review changes between variants.
                 </p>
             </header>
             <section className={cn('space-y-3')}>

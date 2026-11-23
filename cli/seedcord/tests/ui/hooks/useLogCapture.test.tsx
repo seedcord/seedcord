@@ -1,7 +1,7 @@
 import { Text } from 'ink';
 import { render } from 'ink-testing-library';
 import React from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { cliLogger } from '#core/cliLogger';
 import { useLogCapture } from '#ui/hooks/useLogCapture';

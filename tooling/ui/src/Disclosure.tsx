@@ -1,10 +1,11 @@
 'use client';
 
+import { cn } from 'cn';
 import { ChevronDown } from 'lucide-react';
-import { createContext, use, useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { createContext, use, useCallback, useId, useMemo, useState } from 'react';
 
-import { cn } from './lib/cn';
 import { tw } from './lib/tw';
+import { localItems, useStoredItem } from './lib/useStoredItem';
 
 import type {
     ButtonHTMLAttributes,
@@ -14,6 +15,7 @@ import type {
     ReactNode,
     Ref
 } from 'react';
+import type { Except } from 'type-fest';
 
 const disclosureTriggerBaseClassName = cn(
     tw`flex w-full cursor-pointer items-center gap-2 text-left`,
@@ -45,7 +47,7 @@ function useDisclosureContext(componentName: string): DisclosureContextValue {
 
 /**
  * Reads the surrounding `Disclosure`'s state. Put `panelId` on your own panel element when you
- * render one in place of `DisclosurePanel`, since `DisclosureTrigger` points `aria-controls` at it.
+ * render one in place of `DisclosurePanel` since `DisclosureTrigger` points `aria-controls` at it.
  */
 export function useDisclosure(): DisclosureContextValue {
     return useDisclosureContext('useDisclosure');
@@ -57,6 +59,7 @@ export interface DisclosureProps {
     onOpenChange?: (open: boolean) => void;
     /**
      * If provided, the open/close state is persisted to localStorage under this key.
+     * Every Disclosure with the same key opens and closes together.
      * Only effective when the Disclosure is uncontrolled (no `open` prop).
      */
     storageKey?: string;
@@ -75,29 +78,16 @@ export function Disclosure({
     const panelId = useId();
     const isControlled = controlledOpen !== undefined;
     const [internalOpen, setInternalOpen] = useState(defaultOpen);
-    const open = isControlled ? controlledOpen : internalOpen;
-
-    useEffect(() => {
-        if (!storageKey || isControlled) return;
-        try {
-            const saved = globalThis.localStorage.getItem(storageKey);
-            if (saved !== null) setInternalOpen(saved === 'true');
-        } catch {
-            // localStorage throws in private-mode browsers and during SSR
-        }
-    }, [storageKey, isControlled]);
+    const saved = useStoredItem(localItems, storageKey);
+    const open = isControlled ? controlledOpen : saved === null ? internalOpen : saved === 'true';
 
     const setOpen = useCallback(
         (next: boolean): void => {
-            if (!isControlled) setInternalOpen(next);
-            onOpenChange?.(next);
-            if (storageKey && !isControlled) {
-                try {
-                    globalThis.localStorage.setItem(storageKey, String(next));
-                } catch {
-                    // same reason as above
-                }
+            if (!isControlled) {
+                setInternalOpen(next);
+                if (storageKey !== undefined) localItems.write(storageKey, String(next));
             }
+            onOpenChange?.(next);
         },
         [isControlled, onOpenChange, storageKey]
     );
@@ -111,7 +101,7 @@ export function Disclosure({
     );
 }
 
-export interface DisclosureTriggerProps extends Omit<
+export interface DisclosureTriggerProps extends Except<
     ButtonHTMLAttributes<HTMLButtonElement>,
     'type' | 'aria-expanded' | 'aria-controls'
 > {
@@ -145,7 +135,7 @@ export function DisclosureTrigger({
     );
 }
 
-export interface DisclosureChevronProps extends Omit<ComponentPropsWithoutRef<typeof ChevronDown>, 'aria-hidden'> {}
+export interface DisclosureChevronProps extends Except<ComponentPropsWithoutRef<typeof ChevronDown>, 'aria-hidden'> {}
 
 export function DisclosureChevron({ className, size = 16, ...props }: DisclosureChevronProps): ReactElement {
     const { open } = useDisclosureContext('DisclosureChevron');
@@ -170,7 +160,7 @@ export function DisclosurePanel({ children, className, ...props }: DisclosurePan
         <div
             {...props}
             id={panelId}
-            aria-hidden={!open}
+            inert={!open}
             data-state={open ? 'open' : 'closed'}
             className={cn(disclosurePanelBaseClassName, className)}
         >

@@ -1,9 +1,9 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { HostPluginKeys } from '@seedcord/types/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 import { bindings } from 'cf/config';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { openProjectWithSteps } from '#core/config/openProjectWithSteps';
 import { ProjectLoader } from '#core/config/ProjectLoader';
@@ -22,7 +22,7 @@ describe('loading an edge bot', () => {
         const instance = await importInstance(project.modules, project.config.instance);
 
         expect('start' in instance).toBe(false);
-        expect(instance[HostPluginKeys]).toEqual(['counter']);
+        expect(instance[HostPlugins].keys).toEqual(['counter']);
     });
 
     it("reads the .env file for the loader's mode", async () => {

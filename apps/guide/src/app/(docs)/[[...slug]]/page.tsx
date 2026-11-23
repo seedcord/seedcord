@@ -1,6 +1,7 @@
 import { cn, CopyAnchorButton } from '@seedcord/ui';
 import { notFound } from 'next/navigation';
 
+import { GuidePage } from '#components/GuidePage';
 import { PageActions } from '#components/PageActions';
 import { PageNav } from '#components/PageNav';
 import { ANCHOR_DROP, ANCHOR_SIZE, mdxComponents } from '#lib/mdxComponents';
@@ -29,36 +30,39 @@ export default async function Page(props: PageParams): Promise<ReactNode> {
 
     const MDX = page.data.body;
     const order = guideOrder();
-    const { previous, next } = neighboursOf(order, page.url);
+    const neighbours = neighboursOf(order, page.url);
+    const actions = pageActionsFor(page);
     const twinMarkdown = await page.data.getText('processed');
 
     return (
-        <article>
-            <ComponentEmbed>
-                <PreviewCard {...guidePreview({ page, order, twinMarkdown })} />
-            </ComponentEmbed>
-            <div className={cn('flex flex-col items-start gap-1')}>
-                <div className={cn('min-w-0')}>
-                    <div className={cn('group text-4xl/tight')}>
-                        <h1 className={cn('font-display inline font-semibold text-(--text)')}>{page.data.title}</h1>
-                        <CopyAnchorButton
-                            label={page.data.title}
-                            iconSize={ANCHOR_SIZE.h1}
-                            className={cn(ANCHOR_REVEAL, ANCHOR_DROP.h1)}
-                        />
+        <GuidePage toc={page.data.toc} neighbours={neighbours} pageTitle={page.data.title} actions={actions}>
+            <article>
+                <ComponentEmbed>
+                    <PreviewCard {...guidePreview({ page, order, twinMarkdown })} />
+                </ComponentEmbed>
+                <div className={cn('flex flex-col items-start gap-1')}>
+                    <div className={cn('min-w-0')}>
+                        <div className={cn('group text-4xl/tight')}>
+                            <h1 className={cn('font-display inline font-semibold text-(--text)')}>{page.data.title}</h1>
+                            <CopyAnchorButton
+                                label={page.data.title}
+                                iconSize={ANCHOR_SIZE.h1}
+                                className={cn(ANCHOR_REVEAL, ANCHOR_DROP.h1)}
+                            />
+                        </div>
+                        {page.data.description ? (
+                            <p className={cn('mt-3 text-lg/relaxed text-(--text-muted)')}>{page.data.description}</p>
+                        ) : null}
                     </div>
-                    {page.data.description ? (
-                        <p className={cn('mt-3 text-lg/relaxed text-(--text-muted)')}>{page.data.description}</p>
-                    ) : null}
+                    {/* the button's own px-3 would inset it from the content column */}
+                    <PageActions {...actions} className={cn('order-first -me-3 -mt-6 self-end lg:hidden')} />
                 </div>
-                {/* the button's own px-3 would inset it from the content column */}
-                <PageActions {...pageActionsFor(page)} className={cn('order-first -me-3 -mt-6 self-end lg:hidden')} />
-            </div>
-            <div className={cn('mt-10 flex flex-col gap-5')}>
-                <MDX components={mdxComponents} />
-            </div>
-            <PageNav previous={previous} next={next} />
-        </article>
+                <div className={cn('mt-10 flex flex-col gap-5')}>
+                    <MDX components={mdxComponents} />
+                </div>
+                <PageNav {...neighbours} />
+            </article>
+        </GuidePage>
     );
 }
 

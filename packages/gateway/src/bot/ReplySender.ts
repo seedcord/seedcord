@@ -1,14 +1,16 @@
+import { basename } from 'node:path';
+
 import { BaseReplySender } from '@seedcord/core';
-import { deferFlags, sendFlags } from '@seedcord/core/internal';
+import { replyFileInfo } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { MessageFlags } from 'discord.js';
 
-import type { GatewayFile, GatewayReplyResponse } from '#interfaces/ReplyResponse';
+import type { GatewayFile } from '#interfaces/ReplyResponse';
 import type { Repliables } from '#src/handlers/interactionTypes';
 import type { Bus, DispatchContext } from '@seedcord/core';
-import type { AckState } from '@seedcord/core/internal';
-import type { DeferOpts, ReplyFile, SendOpts } from '@seedcord/types';
+import type { AckState, SentFile, SerializedReply } from '@seedcord/core/internal';
+import type { ReplyFile } from '@seedcord/types';
 import type {
     APIModalInteractionResponseCallbackData,
     InteractionCallbackResponse,
@@ -25,6 +27,8 @@ type SourceInteraction = MessageComponentInteraction | ModalMessageModalSubmitIn
 
 export type SentMessage = Message;
 
+type GatewayReply = SerializedReply<GatewayFile>;
+
 function isReplyFile(file: ReplyFile | GatewayFile): file is ReplyFile {
     return typeof file === 'object' && 'data' in file && ArrayBuffer.isView(file.data);
 }
@@ -40,13 +44,45 @@ function toDjsFile(file: ReplyFile | GatewayFile): GatewayFile {
     };
 }
 
-// djs flips `replied` on editReply, so per-call derivation would break repeated update() and post-edit
-// send() parity
-function seedState(interaction: Repliables): AckState {
-    if (interaction.deferred && interaction.ephemeral === null) return 'deferred-update';
-    if (interaction.replied) return 'replied';
-    if (interaction.deferred) return 'deferred-reply';
+function stringField(file: object, key: string): string | undefined {
+    const value: unknown = Reflect.get(file, key);
+    return typeof value === 'string' ? value : undefined;
+}
+
+// discord.js's naming rule for an upload without a name, from MessagePayload.resolveFile
+function djsFileName(attachment: unknown): string {
+    if (typeof attachment === 'string') return basename(attachment);
+    const streamPath =
+        typeof attachment === 'object' && attachment !== null ? stringField(attachment, 'path') : undefined;
+    return streamPath === undefined ? 'file.jpg' : basename(streamPath);
+}
+
+function gatewayFileInfo(file: GatewayFile): SentFile {
+    // the same check discord.js runs: a path, a Buffer, or a stream is its own attachment
+    if (typeof file === 'string' || Buffer.isBuffer(file) || typeof Reflect.get(file, 'pipe') === 'function') {
+        return { name: djsFileName(file) };
+    }
+    const description = stringField(file, 'description');
+    const title = stringField(file, 'title');
+    return {
+        name: stringField(file, 'name') ?? djsFileName(Reflect.get(file, 'attachment')),
+        ...(description !== undefined && { description }),
+        ...(title !== undefined && { title })
+    };
+}
+
+// seed the state once because djs flips `replied` on editReply, and deriving it per call would break repeated update()
+function seedState({ deferred, replied, ephemeral }: Repliables): AckState {
+    // djs leaves ephemeral null after a deferUpdate
+    if (deferred && ephemeral === null) return 'deferred-update';
+    if (replied) return 'replied';
+    if (deferred) return 'deferred-reply';
     return 'unacked';
+}
+
+// an earlier deferReply sets the default the same way BaseReplySender.defer() does
+function seedEphemeral({ deferred, ephemeral }: Repliables, configured: boolean): boolean {
+    return deferred && ephemeral !== null ? ephemeral : configured;
 }
 
 /** Writes interaction responses through discord.js. The repliable handler bases and the dispatcher construct it. */
@@ -54,46 +90,45 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
     public constructor(
         private readonly interaction: Repliables,
         dispatch: DispatchContext,
-        bus: Bus
+        bus: Bus,
+        isEphemeralByDefault: boolean
     ) {
-        super({ bus, dispatch, interactionId: interaction.id }, seedState(interaction));
+        super(
+            { bus, dispatch, interactionId: interaction.id },
+            seedEphemeral(interaction, isEphemeralByDefault),
+            seedState(interaction)
+        );
     }
 
-    protected async writeReply(
-        response: GatewayReplyResponse | string,
-        opts?: SendOpts
-    ): Promise<SentMessage | undefined> {
-        const result = await this.interaction.reply({
-            ...this.replyOptions(response, sendFlags(opts)),
-            withResponse: true
-        });
+    protected async writeReply(reply: GatewayReply, flags: number): Promise<SentMessage | undefined> {
+        const result = await this.interaction.reply({ ...this.replyOptions(reply, flags), withResponse: true });
         return this.createdMessage(result);
     }
 
-    protected async writeDefer(opts?: DeferOpts): Promise<void> {
-        await this.interaction.deferReply({ flags: deferFlags(opts) });
+    protected async writeDefer(flags: number): Promise<void> {
+        await this.interaction.deferReply({ flags });
     }
 
     protected async writeDeferUpdate(): Promise<void> {
         await this.sourceInteraction('deferUpdate').deferUpdate();
     }
 
-    protected async writeUpdate(response: GatewayReplyResponse | string): Promise<SentMessage | undefined> {
+    protected async writeUpdate(reply: GatewayReply): Promise<SentMessage | undefined> {
         const source = this.sourceInteraction('update');
-        const result = await source.update({ ...this.updateOptions(response), withResponse: true });
+        const result = await source.update({ ...this.updateOptions(reply), withResponse: true });
         return this.createdMessage(result);
     }
 
-    protected async writeFollowUp(response: GatewayReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
-        return await this.interaction.followUp(this.replyOptions(response, sendFlags(opts)));
+    protected async writeFollowUp(reply: GatewayReply, flags: number): Promise<SentMessage> {
+        return await this.interaction.followUp(this.replyOptions(reply, flags));
     }
 
-    protected async writeEditOriginal(response: GatewayReplyResponse | string): Promise<SentMessage> {
-        return await this.interaction.editReply(this.editOptions(response));
+    protected async writeEditOriginal(reply: GatewayReply): Promise<SentMessage> {
+        return await this.interaction.editReply(this.editOptions(reply));
     }
 
-    protected async writeEditTarget(targetId: string, response: GatewayReplyResponse | string): Promise<SentMessage> {
-        return await this.interaction.webhook.editMessage(targetId, this.editOptions(response));
+    protected async writeEditTarget(targetId: string, reply: GatewayReply): Promise<SentMessage> {
+        return await this.interaction.webhook.editMessage(targetId, this.editOptions(reply));
     }
 
     protected async writeDeleteOriginal(): Promise<void> {
@@ -109,6 +144,10 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         // unreachable after guardModalSource, the throw re-narrows the union for showModal
         if (interaction.isModalSubmit()) this.rejectModalSubmit();
         await interaction.showModal(data);
+    }
+
+    protected describeFile(file: ReplyFile | GatewayFile): SentFile {
+        return isReplyFile(file) ? replyFileInfo(file) : gatewayFileInfo(file);
     }
 
     protected override guardModalSource(): void {
@@ -132,8 +171,7 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         throw new SeedcordError(SeedcordErrorCode.ReplyUpdateWithoutSource, [method, this.routeId]);
     }
 
-    private replyOptions(response: GatewayReplyResponse | string, flags: number): InteractionReplyOptions {
-        const reply = this.serialize(response);
+    private replyOptions(reply: GatewayReply, flags: number): InteractionReplyOptions {
         return {
             components: reply.components,
             flags,
@@ -142,8 +180,7 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         };
     }
 
-    private editOptions(response: GatewayReplyResponse | string): WebhookMessageEditOptions {
-        const reply = this.serialize(response);
+    private editOptions(reply: GatewayReply): WebhookMessageEditOptions {
         return {
             components: reply.components,
             flags: MessageFlags.IsComponentsV2,
@@ -152,8 +189,7 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         };
     }
 
-    private updateOptions(response: GatewayReplyResponse | string): InteractionUpdateOptions {
-        const reply = this.serialize(response);
+    private updateOptions(reply: GatewayReply): InteractionUpdateOptions {
         return {
             components: reply.components,
             flags: MessageFlags.IsComponentsV2,

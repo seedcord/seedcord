@@ -1,4 +1,4 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import type { ColorChoice } from '#interview/steps/botColor';
 import type { ColorName } from '@seedcord/types';

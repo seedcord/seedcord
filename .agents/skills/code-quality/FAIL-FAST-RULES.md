@@ -1,31 +1,31 @@
 ---
 name: fail-fast-rules
-description: Use this when writing, refactoring, or reviewing code paths that involve null handling, invariant checks, optional dependencies, or async resource access patterns. Enforces the project fail-fast policy from AGENTS.md.
+description: Use this when writing, refactoring, or reviewing code paths that involve null handling, invariant checks, optional dependencies, or async resource access patterns.
 ---
 
 # Fail-Fast Rules
 
-Do not silently swallow missing values. If a reference is assumed to exist, use it directly. If it's missing, let the error surface and fix the root cause. Do not paper over it with a cast or a silent fallback.
+Don't hide a missing value. If code assumes a reference exists, use it directly. If it's missing, let the error surface and fix the root cause. A cast or a silent fallback only hides it.
 
-**Explicit checks are only warranted in two cases:**
+**Write an explicit check in two cases only:**
 
-1. **Invariant violations** - if a condition represents a contract that must always hold (wrong execution context, invalid state, missing required config, auth mismatch), throw with a descriptive message. Never guard-and-return silently.
-2. **Expected optional branches** - if a null/undefined value is a valid runtime possibility with defined behavior (optional dependency, missing config with a real fallback), guard explicitly using `?.` and `??` and handle intentionally. Never fall back to a silent or meaningless default.
+1. **A broken invariant.** When a condition must always hold, like the execution context, the state, a required config value, or an auth match, throw a `SeedcordError` whose message gives the fix. A guard that returns quietly hides the bug.
+2. **An expected optional branch.** When null or undefined is a real runtime case with defined behavior, like an optional dependency or a config value with a real fallback, check it with `?.` and `??` and handle it on purpose. The fallback must mean something.
 
-Everything else: use directly, let it throw, fix the root cause.
+Everything else: use it directly, let it throw, and fix the root cause.
 
-**On `?.` and `??`:** these are valid and preferred over casts, but only when the nullish case is a genuinely expected branch with intentional handling. Do not reach for them as a reflexive way to suppress errors. Never use them as a substitute for fixing a broken assumption.
+**On `?.` and `??`:** prefer them over casts, but only when the nullish case is an expected branch that the code handles on purpose. Using them to quiet an error hides a broken assumption. A chain of them on one value usually means its type has optional fields that never should have been optional. [DESIGN.md](./DESIGN.md#5-pick-a-shape-that-cant-hold-the-wrong-state) covers that fix.
 
 ```ts
-// Bad: silently swallows a missing dependency; hides a broken contract
+// Bad: hides a missing dependency and a broken contract
 const result = service?.doThing() ?? null;
 
-// Good: null is a documented valid state with real handling
+// Good: null is a documented state with real handling
 const user = session?.user ?? guestUser;
 
-// Bad: casts away the problem instead of fixing it
+// Bad: casts the problem away
 const name = (obj as any).name;
 
-// Good: let it throw if the contract is violated
+// Good: throws if the contract breaks
 const name = obj.name;
 ```

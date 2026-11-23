@@ -3,13 +3,14 @@ import { cn, Icon, tw } from '@seedcord/ui';
 import type { Ground } from '#components/home/Section';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
+import type { ExtractStrict } from 'type-fest';
 
 interface Chip {
     icon: LucideIcon;
     label: string;
 }
 
-type ChipGround = Extract<Ground, 'flesh' | 'ink'>;
+type ChipGround = ExtractStrict<Ground, 'flesh' | 'ink'>;
 
 const FILL: Record<ChipGround, string> = {
     flesh: tw`bg-(--seed-dark)/30`,
@@ -23,7 +24,7 @@ export function Chips({ items, ground }: { items: readonly Chip[]; ground: ChipG
                 <span
                     key={chip.label}
                     className={cn(
-                        'rule-pith font-mono-code flex items-center gap-2 rounded-sm px-3 py-1.5 text-xs font-semibold',
+                        'font-mono-code flex items-center gap-2 rounded-sm px-3 py-1.5 text-xs font-semibold rule-pith',
                         FILL[ground]
                     )}
                 >

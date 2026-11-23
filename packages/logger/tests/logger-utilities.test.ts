@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { paint } from '@seedcord/errors';
+import { setColorLevel } from '@seedcord/errors/internal';
+import chalk from 'chalk';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { LoggerUtilities } from '#src/LoggerUtilities';
 
@@ -15,6 +18,13 @@ class FakeLogger implements ILogger {
     private record(level: LogLevel) {
         return (text: string): void => void this.calls.push({ level, text });
     }
+}
+
+// chalk's level belongs to the whole worker, and the next test file would inherit it
+function fullColor(): Disposable {
+    const before = chalk.level;
+    setColorLevel(3);
+    return { [Symbol.dispose]: () => setColorLevel(before) };
 }
 
 const plain = (value: string): string =>
@@ -50,7 +60,7 @@ describe('LoggerUtilities', () => {
         expect(text).toContain('./src/Ping.ts');
     });
 
-    it('leaves an out-of-cwd path unchanged', () => {
+    it("doesn't change an out-of-cwd path", () => {
         const logger = new FakeLogger();
         new LoggerUtilities(logger).registration('Ping', '/elsewhere/Ping.ts');
         expect(logger.calls[0]?.text).toContain('/elsewhere/Ping.ts');
@@ -94,6 +104,18 @@ describe('LoggerUtilities', () => {
         expect(parts[2]).toContain('beta');
     });
 
+    it.each([
+        ['warn', 'amber'],
+        ['error', 'coral'],
+        ['info', 'mint']
+    ] as const)('colors a %s block heading %s', (level, tone) => {
+        using _colors = fullColor();
+        const logger = new FakeLogger();
+        new LoggerUtilities(logger).block('Head', ['line'], level);
+
+        expect(logger.calls[0]?.text.split('\n')[0]).toBe(paint[tone].bold('Head'));
+    });
+
     it('applies a custom heading styler to a block', () => {
         const logger = new FakeLogger();
         new LoggerUtilities(logger).block('Head', ['line'], 'warn', (heading) => `<${heading}>`);
@@ -113,7 +135,7 @@ describe('LoggerUtilities', () => {
         expect(plain(short ?? '').indexOf('./src/')).toBe(plain(long ?? '').indexOf('./src/'));
     });
 
-    it('drops zero counts', () => {
+    it('omits zero counts', () => {
         const lines = new LoggerUtilities(new FakeLogger()).counts({ slash: 7, modals: 0, buttons: 3 });
         const joined = lines.join(' ');
         expect(joined).toContain('7 slash');
@@ -132,7 +154,7 @@ describe('LoggerUtilities', () => {
         for (const line of lines) expect(plain(line).length).toBeLessThanOrEqual(14);
     });
 
-    it('logs nothing for an empty list and only the heading when one is given', () => {
+    it('logs only the heading for an empty list if one is given', () => {
         const empty = new FakeLogger();
         new LoggerUtilities(empty).list([]);
         expect(empty.calls).toHaveLength(0);

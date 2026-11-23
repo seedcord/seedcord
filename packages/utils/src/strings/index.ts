@@ -1,4 +1,3 @@
-export * from './capitalize';
 export * from './longestStringLength';
 export * from './renderTable';
 export * from './prettify';

@@ -5,7 +5,7 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { logsFolderIn } from '@seedcord/logger/internal';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { Envapter, Environment } from 'envapt';
-import { onTestFinished } from 'vitest';
+import { onTestFinished } from 'vite-plus/test';
 
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { toSeedcordInstance } from '#core/modules/importInstance';
@@ -24,7 +24,7 @@ import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/sc
 import type { LogRecord } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
-// a port probed up front can go to another worker before the runtime binds it
+// another worker can take a port probed up front before the runtime binds it
 const ANY_PORT = 0;
 
 function edgeTarget(projectDir: string, port: number): ResolvedEdgeTarget {
@@ -64,12 +64,12 @@ export const WAVE_INTERACTION = JSON.stringify({
     data: { type: 1, name: 'wave' }
 });
 
-export const waveHandler = (says: string): string => `import { SlashHandler, SlashRoute } from '@seedcord/http';
+export const waveHandler = (...says: string[]): string => `import { SlashHandler, SlashRoute } from '@seedcord/http';
 
 @SlashRoute('wave')
 export class WaveHandler extends SlashHandler<'wave'> {
     public execute(): Promise<void> {
-        console.log('${says}');
+        ${says.map((line) => `console.log('${line}');`).join('\n        ')}
         return Promise.resolve();
     }
 }
@@ -148,7 +148,7 @@ export const messagesOf = (records: LogRecord[]): string[] => records.map((recor
 interface StartedRuntime extends AsyncDisposable {
     readonly runtime: EdgeDevRuntime;
     readonly instance: SeedcordInstance;
-    // the endpoint's port, once startBot has finished
+    // the endpoint's port once startBot has finished
     port(): number;
 }
 

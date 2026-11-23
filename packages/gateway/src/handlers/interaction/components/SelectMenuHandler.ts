@@ -28,7 +28,7 @@ export abstract class SelectMenuHandler<
     Event extends AnySelectMenuInteraction,
     Defs extends readonly AnyCustomId[]
 > extends ComponentHandler<Event, Defs> {
-    /** The values this select picked. On every kind but the string menu they are snowflake ids. */
+    /** The values that this select picked. On every kind but the string menu they are snowflake ids. */
     protected get values(): string[] {
         return this.event.values;
     }
@@ -92,7 +92,7 @@ export abstract class UserMenuHandler<
     /** @internal */
     declare readonly [ComponentKindBrand]?: InteractionKind.UserMenu;
 
-    /** The users this select picked. */
+    /** The users that this select picked. */
     protected get users(): UserSelectMenuInteraction<Cache>['users'] {
         return this.event.users;
     }
@@ -130,7 +130,7 @@ export abstract class RoleMenuHandler<
     /** @internal */
     declare readonly [ComponentKindBrand]?: InteractionKind.RoleMenu;
 
-    /** The roles this select picked. */
+    /** The roles that this select picked. */
     protected get roles(): RoleSelectMenuInteraction<Cache>['roles'] {
         return this.event.roles;
     }
@@ -163,7 +163,7 @@ export abstract class ChannelMenuHandler<
     /** @internal */
     declare readonly [ComponentKindBrand]?: InteractionKind.ChannelMenu;
 
-    /** The channels this select picked. */
+    /** The channels that this select picked. */
     protected get channels(): ChannelSelectMenuInteraction<Cache>['channels'] {
         return this.event.channels;
     }
@@ -196,7 +196,7 @@ export abstract class MentionableMenuHandler<
     /** @internal */
     declare readonly [ComponentKindBrand]?: InteractionKind.MentionableMenu;
 
-    /** The users this select picked. */
+    /** The users that this select picked. */
     protected get users(): MentionableSelectMenuInteraction<Cache>['users'] {
         return this.event.users;
     }
@@ -206,7 +206,7 @@ export abstract class MentionableMenuHandler<
         return this.event.members;
     }
 
-    /** The roles this select picked. */
+    /** The roles that this select picked. */
     protected get roles(): MentionableSelectMenuInteraction<Cache>['roles'] {
         return this.event.roles;
     }

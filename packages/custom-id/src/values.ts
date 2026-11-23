@@ -7,9 +7,9 @@ import { invalidError } from './errors';
 
 import type { CustomIdField } from './Field';
 
-// one field's runtime value as a number and back. codec.ts turns those numbers into the wire string.
+// converts one field's value to a bigint and back. codec.ts packs those bigints into the wire.
 
-// bounded means the full range is known. those fold into the shared packed integer.
+// codec.ts packs a bounded field into the shared integer since it has a known range
 export function isBounded(field: CustomIdField<unknown>): boolean {
     if (field.kind === 'int') return field.min !== undefined && field.max !== undefined;
     return (
@@ -21,7 +21,7 @@ export function isBounded(field: CustomIdField<unknown>): boolean {
     );
 }
 
-// slot 0 is the null on a nullable field. every other value shifts up one.
+// on a nullable field slot 0 is null and every real value moves up one
 export function radixOf(field: CustomIdField<unknown>): bigint {
     return kindRadix(field) + (field.nullable === true ? 1n : 0n);
 }
@@ -38,25 +38,23 @@ function kindRadix(field: CustomIdField<unknown>): bigint {
             return 2n;
         }
         case 'oneOf': {
-            // oneOf() rejects an empty list at define time, so an empty one here came from a
-            // hand-built shape.
-            if (!field.choices?.length) throw invalidError('oneOf field has no choices');
+            // this only throws for a hand-built shape because oneOf() already rejects an empty list
+            if (!field.choices?.length) throw invalidError("oneOf field doesn't have choices");
             return BigInt(field.choices.length);
         }
         case 'someOf': {
-            if (!field.choices?.length) throw invalidError('someOf field has no choices');
-            // one bit per choice.
+            if (!field.choices?.length) throw invalidError("someOf field doesn't have choices");
             return 1n << BigInt(field.choices.length);
         }
         case 'int': {
-            // isBounded only lets a min-and-max int through. a missing bound means the shape is corrupt.
+            // a missing bound means a corrupt shape. isBounded only passes an int with both bounds
             if (field.min === undefined || field.max === undefined)
                 throw invalidError('bounded int field is missing a bound');
-            // bigint before the math, max - min + 1 in float64 drops the +1 at 2^53.
+            // convert first. in float64, max - min + 1 loses the +1 once it reaches 2^53.
             return BigInt(field.max) - BigInt(field.min) + 1n;
         }
         default: {
-            throw invalidError(`field kind ${field.kind} has no radix`);
+            throw invalidError(`field kind ${field.kind} doesn't have a radix`);
         }
     }
 }
@@ -72,8 +70,7 @@ export function boundedToBigint(field: CustomIdField<unknown>, name: string, val
     return slot;
 }
 
-// a bad value makes BigInt() throw a bare TypeError or SyntaxError. the guard gets ahead of it with
-// the branded error.
+// check first and throw our own error because BigInt() throws a bare TypeError or SyntaxError on bad input
 function snowflakeSlot(field: CustomIdField<unknown>, name: string, value: unknown): bigint {
     if (typeof value !== 'string' || !/^\d+$/.test(value)) return reject(field, name, value);
     return BigInt(value);
@@ -121,7 +118,7 @@ function boundedSlot(field: CustomIdField<unknown>, name: string, value: unknown
         case 'int': {
             // eslint-disable-next-line unicorn/prefer-number-is-safe-integer -- a bounded int field may declare max up to 2**53 exactly (a power of two, exact in float64)
             if (!Number.isInteger(value)) return reject(field, name, value);
-            // a plain js number cannot hold this subtraction once it passes 2^53.
+            // subtract in bigint. with a negative min the result can pass 2^53.
             return BigInt(value as number) - BigInt(field.min ?? 0);
         }
         default: {
@@ -138,7 +135,7 @@ export function rejectOutOfRange(field: CustomIdField<unknown>, name: string, va
     throw new SeedcordRangeError(SeedcordErrorCode.CustomIdValueRejected, [name, expectation(field), show(value)]);
 }
 
-// what the field takes, written to finish the sentence "expects ...".
+// CustomIdValueRejected prints "expects " followed by this
 function expectation(field: CustomIdField<unknown>): string {
     switch (field.kind) {
         case 'snowflake': {
@@ -170,7 +167,7 @@ function listChoices(field: CustomIdField<unknown>): string {
     return (field.choices ?? []).map((choice) => JSON.stringify(choice)).join(', ');
 }
 
-// quoting keeps the string 'false' apart from the boolean. JSON.stringify throws on a bigint.
+// quote strings so 'false' reads differently from false. stringifying everything would throw on a bigint.
 function quote(value: unknown): string {
     return typeof value === 'string' ? JSON.stringify(value) : String(value);
 }
@@ -180,7 +177,7 @@ function show(value: unknown): string {
     return quote(value);
 }
 
-// inverse of boundedSlot.
+// the reverse of boundedToBigint
 export function bigintToBoundedValue(field: CustomIdField<unknown>, slot: bigint): unknown {
     if (field.nullable === true) {
         return slot === 0n ? null : bigintToBoundedValue({ ...field, nullable: false }, slot - 1n);

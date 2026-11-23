@@ -4,7 +4,7 @@ import { Commands } from '@seedcord/core';
 import { setDevChannel } from '@seedcord/core/internal';
 import { HostStartup } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { Seedcord } from '#src/node/Seedcord';
@@ -18,7 +18,7 @@ const COMMANDS_DIR = path.resolve(__dirname, './fixtures');
 const EMOJI_COMMANDS_DIR = path.resolve(__dirname, './emoji-fixtures');
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 
-// justified: the generated Commands map is empty in tests, so entries read through a plain record
+// justified: entries read through a plain record because the generated Commands map is empty in tests
 const commands = Commands as Record<string, { id: string; mention: string } | undefined>;
 
 function config(commandsPath: string | null, interactionsPath: string | null = null): HttpServerConfig {
@@ -77,7 +77,7 @@ describe('command deploy during http startup', () => {
         expect(commands.ping?.mention).toBe('</ping:cmd-1>');
     });
 
-    it('reads the ids and deploys nothing when seedcord dev holds the hashes of an unchanged deploy', async () => {
+    it('reads the ids and skips the deploy when seedcord dev holds the hashes of an unchanged deploy', async () => {
         let saved: DeployedHashes | undefined;
         const handlers = new Map<string, (data: unknown) => void>();
         setDevChannel({
@@ -196,7 +196,7 @@ describe('command deploy during http startup', () => {
         await expect(host.start()).resolves.toBe(host);
     });
 
-    it('touches no command route when no commands path is configured', async () => {
+    it("doesn't touch a command route when no commands path is configured", async () => {
         await using host = new Seedcord(config(null));
         const { get, put } = stubRest(host);
 

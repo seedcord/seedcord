@@ -17,7 +17,7 @@ export async function fetchFileOrUrl(url: string): Promise<Response> {
     }
 }
 
-// each site runs from apps/<name>, two levels below what pnpm docs:local writes
+// each site runs from apps/<name>, two levels below what vp run docs:local writes
 function localIndexPath(): string {
     return path.resolve(process.cwd(), '../../generated/artifacts/index.json');
 }

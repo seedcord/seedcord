@@ -6,10 +6,12 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { BotLayout } from './BotLayout';
 import { decodeFile } from './encodedFile';
-import { fileUrl } from './paths';
+import { comparePaths, fileUrl } from './paths';
+import { folderEmojisIn } from './readEmojiFolder';
 import { botFilesSlot } from './slots';
 
 import type { BotFolder } from './BotLayout';
+import type { FolderEmoji } from './readEmojiFolder';
 import type { BotFilesSlot, BuiltSlot, ModuleLoader } from './slots';
 import type { Buffer } from 'node:buffer';
 
@@ -21,10 +23,15 @@ interface FolderAccess {
     resolveBundled(dir: string): string;
     resolveListed(dir: string): string;
     layoutAt(folder: string): BotLayout;
+    emojiFolder(): string | undefined;
 }
 
 class BotFolderAccess implements FolderAccess {
     public constructor(private readonly layout: BotLayout) {}
+
+    public emojiFolder(): string | undefined {
+        return this.layout.emojiFolder;
+    }
 
     public resolve(dir: string): string {
         return this.layout.resolve(dir);
@@ -48,8 +55,12 @@ class BotFolderAccess implements FolderAccess {
     }
 }
 
-// a plain script or test has no config
+// a plain script or test doesn't have a config
 class OpenFolderAccess implements FolderAccess {
+    public emojiFolder(): undefined {
+        return undefined;
+    }
+
     public resolve(dir: string): string {
         if (!path.isAbsolute(dir)) throw new SeedcordError(SeedcordErrorCode.CoreDirectoryRootUnknown, [dir]);
         return path.resolve(dir);
@@ -69,20 +80,22 @@ class OpenFolderAccess implements FolderAccess {
 }
 
 abstract class FileSource {
-    public constructor(private readonly access: FolderAccess) {}
+    public constructor(protected readonly access: FolderAccess) {}
+
+    public abstract emojis(): Promise<FolderEmoji[]>;
 
     public layoutFor(dir: string): BotLayout {
         return this.access.layoutAt(this.access.resolve(dir));
     }
 
-    public modules(dir: string): Promise<Loaders<ModuleLoader>> {
+    public async modules(dir: string): Promise<{ folder: string; files: Loaders<ModuleLoader> }> {
         const folder = this.access.resolveBundled(dir);
-        return this.modulesIn(folder, this.access.layoutAt(folder));
+        return { folder, files: await this.modulesIn(folder, this.access.layoutAt(folder)) };
     }
 
-    public files(dir: string): Promise<Loaders<BytesLoader>> {
+    public async files(dir: string): Promise<{ folder: string; files: Loaders<BytesLoader> }> {
         const folder = this.access.resolveListed(dir);
-        return this.filesIn(folder, this.access.layoutAt(folder));
+        return { folder, files: await this.filesIn(folder, this.access.layoutAt(folder)) };
     }
 
     protected abstract modulesIn(folder: string, layout: BotLayout): Promise<Loaders<ModuleLoader>>;
@@ -90,6 +103,11 @@ abstract class FileSource {
 }
 
 class DiskFiles extends FileSource {
+    public async emojis(): Promise<FolderEmoji[]> {
+        const folder = this.access.emojiFolder();
+        return folder === undefined ? [] : folderEmojisIn(folder);
+    }
+
     protected async modulesIn(folder: string, layout: BotLayout): Promise<Loaders<ModuleLoader>> {
         const files = await layout.modulesUnder(folder);
         return files.map((file) => [
@@ -109,7 +127,7 @@ class DiskFiles extends FileSource {
         return entries
             .filter(({ isFolder }) => !isFolder)
             .map(({ path: file }) => file)
-            .toSorted();
+            .toSorted(comparePaths);
     }
 }
 
@@ -118,12 +136,14 @@ class BuiltFiles extends FileSource {
     private readonly folders: Set<string>;
     private readonly moduleLoaders: Map<string, ModuleLoader>;
     private readonly fileLoaders: Map<string, BytesLoader>;
+    private readonly builtEmojis: readonly FolderEmoji[];
 
     public constructor(slot: BuiltSlot) {
         const layout = new BotLayout(slot);
         super(new BotFolderAccess(layout));
-        const { folders, modules, listedFiles, sourcePaths = false } = slot;
+        const { folders, emojis, modules, listedFiles, sourcePaths = false } = slot;
         this.root = layout.root;
+        this.builtEmojis = emojis;
         this.folders = new Set([this.root, ...folders.map((folder) => path.join(this.root, folder))]);
         const pathOf = (key: string): string => (sourcePaths ? key : BotLayout.builtPath(key));
         this.moduleLoaders = new Map(
@@ -137,6 +157,10 @@ class BuiltFiles extends FileSource {
                 async () => decodeFile(await load())
             ])
         );
+    }
+
+    public emojis(): Promise<FolderEmoji[]> {
+        return Promise.resolve([...this.builtEmojis]);
     }
 
     protected modulesIn(folder: string): Promise<Loaders<ModuleLoader>> {
@@ -153,7 +177,7 @@ class BuiltFiles extends FileSource {
         }
 
         const prefix = path.join(folder, path.sep);
-        return [...loaders].filter(([file]) => file.startsWith(prefix)).sort(([a], [b]) => (a < b ? -1 : 1));
+        return [...loaders].filter(([file]) => file.startsWith(prefix)).sort(([a], [b]) => comparePaths(a, b));
     }
 }
 
@@ -173,6 +197,15 @@ export function fileSource(): FileSource {
     return slot ? sourceOf(slot) : new DiskFiles(new OpenFolderAccess());
 }
 
+export function folderEmojis(): Promise<FolderEmoji[]> {
+    return fileSource().emojis();
+}
+
 export function botFolder(dir: string): BotFolder {
     return fileSource().layoutFor(dir).folderAt(dir);
+}
+
+// only an absolute pattern can match when a script runs without a config
+export function matchesBotGlobs(file: string, patterns: readonly string[]): boolean {
+    return fileSource().layoutFor(file).matchesFiles(file, patterns);
 }

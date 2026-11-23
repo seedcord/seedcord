@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { llmsText } from '#lib/llms';
 import { POST } from '#tests/fixtures/post';
@@ -10,7 +10,7 @@ describe('llmsText', () => {
         );
     });
 
-    it('leaves out the Blog heading while no post is listed', () => {
+    it('hides the Blog heading until a post is listed', () => {
         expect(llmsText([])).not.toContain('## Blog');
     });
 });

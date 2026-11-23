@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { computeScrollView } from '#ui/hooks/useScroll';
 
@@ -24,7 +24,7 @@ describe('computeScrollView', () => {
         expect(view.below).toBe(0);
     });
 
-    it('shows everything (and stays following) when the buffer is shorter than the viewport', () => {
+    it('shows everything (and keeps following) when the buffer is shorter than the viewport', () => {
         const view = computeScrollView(rows(1, 3), 5, null, key);
         expect(ids(view.visible)).toEqual([1, 2, 3]);
         expect(view.following).toBe(true);

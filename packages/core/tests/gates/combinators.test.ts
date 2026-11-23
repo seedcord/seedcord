@@ -1,4 +1,4 @@
-import { describe, it, expect, expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vite-plus/test';
 
 import { and, or } from '#gates/combinators';
 import { defineGate } from '#gates/Gate';
@@ -11,7 +11,7 @@ import { TestNotice } from '#tests/utils/TestNotice';
 import type { Gate, GateContextBase, RequiredOf } from '#gates/Gate';
 import type { RenderContext } from '@seedcord/types';
 
-// gates ignore ctx here, so a minimal cast stands in
+// a minimal cast stands in because gates ignore ctx here
 const ctx = {} as unknown as GateContextBase;
 
 const AgnosticGate = defineGate('any', () => {});
@@ -65,7 +65,7 @@ describe('and', () => {
         expect(or(A, B).name).toBe('a | b');
     });
 
-    it('wraps a nested combinator so the grouping survives the join', () => {
+    it('wraps a nested combinator so the joined name keeps the grouping', () => {
         const A = defineGate('a', () => {});
         const B = defineGate('b', () => {});
         const C = defineGate('c', () => {});
@@ -190,14 +190,14 @@ describe('or', () => {
             );
 
         expect(thrown).toBeInstanceOf(Notice);
-        // the list render ignores ctx, so a minimal cast stands in
+        // a minimal cast is enough since the list render ignores ctx
         const reply = (thrown as Notice).render({} as unknown as RenderContext);
         const description = cardJson(reply);
         expect(description).toContain('Manage Server');
         expect(description).toContain('be a bot owner');
     });
 
-    it('falls back to the neutral refusal when a gate leaves summary unset', async () => {
+    it("falls back to the neutral refusal when a gate doesn't set summary", async () => {
         const A = defineGate('a', () => {
             const notice = new TestNotice('a');
             notice.summary = 'Manage Server';
@@ -213,7 +213,7 @@ describe('or', () => {
                 () => {
                     throw new Error('expected a refusal');
                 },
-                // the render ignores ctx, so a minimal cast stands in
+                // ctx is a minimal cast. the render ignores it
                 (error: Notice) => error.render({} as unknown as RenderContext)
             );
 
@@ -264,12 +264,12 @@ describe('or', () => {
 });
 
 describe('combinator typing on the scalar base', () => {
-    it('rejects or() with no gates at compile time', () => {
+    it('rejects or() without gates at compile time', () => {
         // @ts-expect-error or requires at least two gates
         or();
     });
 
-    it('rejects and() with no gates at compile time', () => {
+    it('rejects and() without gates at compile time', () => {
         // @ts-expect-error and requires at least two gates
         and();
     });
@@ -290,7 +290,7 @@ describe('combinator typing on the scalar base', () => {
         or(AgnosticGate, AgnosticGate, { fail }, { fail });
     });
 
-    it('rejects an options object with no gates', () => {
+    it('rejects an options object without gates', () => {
         const fail = new TestNotice('x');
         // @ts-expect-error or requires at least two gates before the options
         or({ fail });

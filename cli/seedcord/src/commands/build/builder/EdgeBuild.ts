@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { warnLinks } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 import { BotLayout, isInside } from '@seedcord/utils/internal';
 import { createBuilder } from 'vite';
 
@@ -26,6 +27,7 @@ import type { EdgeTarget } from '#core/config/detectTarget';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ImportCloudflare } from '#core/modules/cloudflarePlugin';
 import type { Project } from '#core/project/Project';
+import type { BuiltLists } from '#core/project/ProjectFiles';
 import type { BundleStats } from './output';
 import type { CommandsInCode } from './readDiscord';
 import type { NextCommand } from './TargetBuild';
@@ -97,7 +99,7 @@ export class EdgeBuild extends TargetBuild {
         const { commands, emojis } = instance.config.bot;
         const read = await readDiscord({
             rest: this.deps.openDiscord(instance),
-            commands: await this.commandsInCode(commands),
+            commands: await this.commandsInCode(commands, instance),
             emojis
         });
 
@@ -107,9 +109,9 @@ export class EdgeBuild extends TargetBuild {
 
     public async bundle(ids: BakedIds): Promise<BundleStats> {
         const { files } = this.project;
-        const [folders, cloudflare] = await Promise.all([files.foldersIncludingEmpty(), this.worker()]);
+        const [lists, cloudflare] = await Promise.all([files.builtLists(), this.worker()]);
 
-        const captured = await this.bundleWorker(ids, folders, cloudflare).catch(bundleFailed);
+        const captured = await this.bundleWorker(ids, lists, cloudflare).catch(bundleFailed);
         const chunks =
             captured ??
             bundleFailed(
@@ -123,7 +125,7 @@ export class EdgeBuild extends TargetBuild {
 
     private async bundleWorker(
         ids: BakedIds,
-        folders: string[],
+        lists: BuiltLists,
         cloudflare: CloudflareWorker
     ): Promise<Rolldown.OutputChunk[] | undefined> {
         const { config, files, modules } = this.project;
@@ -140,7 +142,7 @@ export class EdgeBuild extends TargetBuild {
             plugins: [
                 workerEntry({
                     layout: files.layout,
-                    folders,
+                    lists,
                     instanceKey: BotLayout.keyUnder(viteRoot, config.instance),
                     functionExports: () => functionExportsOf(modules, config.instance),
                     rootKey: BotLayout.keyUnder(viteRoot, config.root),
@@ -175,9 +177,12 @@ export class EdgeBuild extends TargetBuild {
         return [['deploy', 'cf deploy --prebuilt']];
     }
 
-    private async commandsInCode(commands: CommandsConfig): Promise<CommandsInCode | undefined> {
+    private async commandsInCode(
+        commands: CommandsConfig,
+        instance: SeedcordInstance
+    ): Promise<CommandsInCode | undefined> {
         if (commands.path === null) return undefined;
-        const scanner = new CommandScanner(this.project.modules, this.project.files);
+        const scanner = new CommandScanner(this.project.modules, this.project.files, instance[HostPlugins]);
         const found = await scanner.scan(commands.path);
         return { found, configuredGuilds: commands.guilds ?? [] };
     }

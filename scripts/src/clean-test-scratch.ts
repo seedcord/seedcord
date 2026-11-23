@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import type { Dirent } from 'node:fs';
 
-// A killed test run leaves fixtures behind, where the next `tc` reads them as source.
+// A killed test run doesn't delete its fixtures, and the next `tc` reads them as source.
 // Excluding this directory in tsconfig instead breaks the gateway tests.
 const SCRATCH_DIR = path.join('tests', 'temp');
 

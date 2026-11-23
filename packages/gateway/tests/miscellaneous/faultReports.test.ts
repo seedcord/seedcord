@@ -1,13 +1,13 @@
 import { InteractionKind } from '@seedcord/core';
 import { DispatchContext } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { eventFaultReport, interactionFaultReport } from '#miscellaneous/faultReports';
 
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { Guild, User } from 'discord.js';
 
-// justified: the fixtures carry the fields the mapping reads plus djs baggage it must strip
+// justified: the fixtures carry the fields that the mapping reads plus djs baggage it must strip
 const guild = { id: 'g1', name: 'Guild One', members: {} } as unknown as Guild;
 const user = { id: 'u1', username: 'uname', client: {} } as unknown as User;
 

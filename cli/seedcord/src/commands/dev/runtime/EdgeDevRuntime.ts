@@ -9,7 +9,7 @@ import chalk from 'chalk';
 
 import { CloudflareWorker } from '#commands/build/builder/CloudflareWorker';
 import { workerEntry } from '#commands/build/builder/workerEntry';
-import { listenHostFor } from '#commands/dev/tunnel/listenHost';
+import { listenHostFor, stableUrlOf } from '#commands/dev/tunnel/listenHost';
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
@@ -77,8 +77,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         // ServerHost installs these for a server bot. the edge Seedcord does not
         installNodeDefaults();
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
-        const [folders, cloudflare, workerEnv] = await Promise.all([
-            files.foldersIncludingEmpty(),
+        const [lists, cloudflare, workerEnv] = await Promise.all([
+            files.builtLists(),
             CloudflareWorker.load(this.target),
             WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
@@ -100,7 +100,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                 plugins: [
                     workerEntry({
                         layout: files.layout,
-                        folders,
+                        lists,
                         instanceKey: BotLayout.keyUnder(viteRoot, config.instance),
                         rootKey: BotLayout.keyUnder(viteRoot, config.root),
                         functionExports: () => (functionExports ??= this.readFunctionExports(context, nodeCopy)),
@@ -145,7 +145,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                 resolve(username);
             });
             cli.on('seedcord:start-failed', ({ error }) => reject(fromWireError(error)));
-            cli.send('seedcord:start', { colorLevel: chalk.level });
+            const url = stableUrlOf(context.config.tunnel) ?? `http://localhost:${String(port)}`;
+            cli.send('seedcord:start', { colorLevel: chalk.level, url });
         });
     }
 

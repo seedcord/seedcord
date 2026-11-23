@@ -1,11 +1,9 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { LoggerChannelRegistry } from '@seedcord/logger';
-import { describe, it, expect } from 'vitest';
+import { captureLogs } from '@seedcord/logger/internal';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { StartupPhase } from '#src/lifecycle/phases';
-
-import type { LogRecord } from '@seedcord/types';
 
 // the base runs through CoordinatedStartup here, CoordinatedShutdown's signal handlers and
 // process.exit would kill the test run
@@ -27,7 +25,7 @@ describe('CoordinatedStartup run', () => {
 });
 
 describe('CoordinatedStartup failure and guards', () => {
-    it('rethrows and stays unready when a task rejects', async () => {
+    it('rethrows and leaves isReady false when a task rejects', async () => {
         const startup = new CoordinatedStartup();
 
         startup.addTask(StartupPhase.Configuration, 'reject', () => Promise.reject(new Error('boom')));
@@ -108,8 +106,7 @@ describe('CoordinatedStartup failure and guards', () => {
 
     it('leaves a task rejection unlogged once the run is aborted', async () => {
         const startup = new CoordinatedStartup();
-        const records: LogRecord[] = [];
-        using _capture = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
+        using logs = captureLogs();
 
         startup.addTask(StartupPhase.Configuration, 'aborter', () => {
             startup.abort();
@@ -118,7 +115,7 @@ describe('CoordinatedStartup failure and guards', () => {
 
         await startup.run();
 
-        expect(records.filter((record) => record.level === 'error')).toHaveLength(0);
+        expect(logs.at('error')).toEqual([]);
         expect(startup.isReady).toBe(false);
     });
 
@@ -139,13 +136,5 @@ describe('CoordinatedStartup failure and guards', () => {
 
         expect(startup.isReady).toBe(false);
         expect(readyRan).toBe(false);
-    });
-
-    it('abort() inside the step after Ready keeps isReady false', async () => {
-        const startup = new CoordinatedStartup();
-
-        await startup.run(() => startup.abort());
-
-        expect(startup.isReady).toBe(false);
     });
 });

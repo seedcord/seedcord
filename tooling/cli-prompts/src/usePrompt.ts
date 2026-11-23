@@ -45,7 +45,7 @@ function advance<State, Answer>(
             ? { state: submitted.stay }
             : { ...progress, outcome: { kind: 'answered', answer: submitted.answer } };
     } catch (error: unknown) {
-        // ink's input handler has no caller to rethrow to
+        // ink's input handler doesn't have a caller to rethrow to
         return { ...progress, outcome: { kind: 'failed', error } };
     }
 }

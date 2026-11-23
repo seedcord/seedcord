@@ -38,7 +38,7 @@ export async function readPublished(values: {
 export async function readStatusReleases(workspace: Workspace): Promise<PublishedPackage[]> {
     const file = path.join(workspace.rootDir, '.changeset', 'status.json');
     if (!existsSync(file)) {
-        throw new Error(`${file} does not exist. Run \`pnpm cs:status\` first, or pass --published.`);
+        throw new Error(`${file} does not exist. Run \`vp run cs:status\` first, or pass --published.`);
     }
 
     // justified: changesets writes this file

@@ -8,7 +8,7 @@ import {
     UserMenuRoute
 } from '@seedcord/core';
 import { DispatchContext } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import {
     ChannelMenuHandler,
@@ -30,7 +30,7 @@ const core = {} as unknown as Core;
 const ConfigId = new CustomId('config').str('guildId');
 const AssignId = new CustomId('assign').str('roleId');
 
-// each fake carries only the fields the accessors forward
+// each fake has only the fields the accessors forward
 function modal(customId: string, inputs: Record<string, string>): ModalSubmitInteraction<'cached'> {
     return {
         customId,

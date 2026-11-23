@@ -1,7 +1,8 @@
-import type { ColorName, TypedOmit } from '@seedcord/types';
+import type { ColorName } from '@seedcord/types';
+import type { Except } from 'type-fest';
 
 // ported verbatim from discord.js (Apache-2.0), src/util/Colors.js
-export const Colors: TypedOmit<Record<ColorName, number>, 'Random'> = {
+export const Colors: Except<Record<ColorName, number>, 'Random'> = {
     Aqua: 0x1a_bc_9c,
     Blue: 0x34_98_db,
     Blurple: 0x58_65_f2,

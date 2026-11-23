@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
 
 import { Template } from '@seedcord/cli-templates';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { PackageManager } from '#cli/PackageManager';
 import { buildContext } from '#template/context';
@@ -126,13 +126,13 @@ describe('renderTemplates', () => {
         expect(files.find((file) => file.path === 'pnpm-workspace.yaml')).toBeUndefined();
     });
 
-    it('drops the .hbs extension', async () => {
+    it('removes the .hbs extension', async () => {
         const files = await render(GATEWAY);
 
         expect([...files.keys()].filter((path) => path.endsWith('.hbs'))).toEqual([]);
     });
 
-    it('restores the leading dot on the three files npm would drop', async () => {
+    it('restores the leading dot on the files npm would remove', async () => {
         const files = await render(GATEWAY);
 
         expect(files.has('.env')).toBe(true);
@@ -284,7 +284,7 @@ describe('the rendered gateway config', () => {
 });
 
 describe('the rendered http config', () => {
-    it('imports the http package and declares no intents', async () => {
+    it('imports the http package and omits intents', async () => {
         const bot = await renderOne(HTTP, 'src/bot.ts');
 
         expect(bot).toContain("from '@seedcord/http'");
@@ -313,13 +313,13 @@ describe('the rendered edge project', () => {
         expect(files.has('src/index.ts')).toBe(false);
     });
 
-    it('writes no cloudflare.config.ts for a server bot', async () => {
+    it("doesn't write cloudflare.config.ts for a server bot", async () => {
         const files = await render(HTTP);
 
         expect(files.has('cloudflare.config.ts')).toBe(false);
     });
 
-    it('writes build.start for a node bot and leaves it out on edge', async () => {
+    it("writes build.start for a node bot and doesn't write it on edge", async () => {
         expect(await renderOne(EDGE, 'seedcord.config.ts')).not.toContain('start:');
         expect(await renderOne(HTTP, 'seedcord.config.ts')).toContain("build: { start: './index.ts' }");
     });
@@ -362,14 +362,17 @@ describe('the rendered scripts', () => {
         ['gateway', GATEWAY],
         ['http', HTTP],
         ['edge', EDGE]
-    ])('give the %s bot commands scripts and a check that runs only scripts it has', async (_kind, answers) => {
-        const scripts = await scriptsOf(answers);
-        const checked = (scripts.check ?? '').split('&&').map((step) => step.trim().replace(/^pnpm run /, ''));
+    ])(
+        'give the %s bot commands and emojis scripts and a check that runs only scripts it has',
+        async (_kind, answers) => {
+            const scripts = await scriptsOf(answers);
+            const checked = (scripts.check ?? '').split('&&').map((step) => step.trim().replace(/^pnpm run /, ''));
 
-        expect(Object.keys(scripts)).toEqual(expect.arrayContaining(['commands', 'commands:deploy']));
-        expect(checked.length).toBeGreaterThan(1);
-        for (const name of checked) expect(scripts[name], name).toBeDefined();
-    });
+            expect(Object.keys(scripts)).toEqual(expect.arrayContaining(['commands', 'commands:deploy', 'emojis']));
+            expect(checked.length).toBeGreaterThan(1);
+            for (const name of checked) expect(scripts[name], name).toBeDefined();
+        }
+    );
 });
 
 describe('escaping', () => {

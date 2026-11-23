@@ -10,7 +10,7 @@ export function renderMarkdown(
     pad: string,
     header: boolean
 ): string {
-    // a raw | or \ in a cell would split or corrupt the GFM row, so escape before measuring widths
+    // escape before measuring widths because a raw | or \ in a cell would split or corrupt the GFM row
     const escapeCell = (value: string): string => value.replaceAll('\\', '\\\\').replaceAll('|', String.raw`\|`);
     const escaped = grid.map((row) => Array.from({ length: columnCount }, (_, col) => escapeCell(row[col] ?? '')));
 

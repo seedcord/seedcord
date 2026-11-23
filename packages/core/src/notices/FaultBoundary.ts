@@ -1,7 +1,8 @@
-import { paint } from '@seedcord/errors';
-import { asError } from '@seedcord/utils/internal';
+import { SeedcordErrorCode, isSeedcordError, paint } from '@seedcord/errors';
+import { asError, discordErrorOf } from '@seedcord/utils/internal';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
 
+import { MemberValues } from '#src/dispatch/DispatchContext';
 import { lazyLogger } from '#src/miscellaneous/lazyLogger';
 import { Fault } from '#stops/Fault';
 import { Notice } from '#stops/Notice';
@@ -14,9 +15,6 @@ import type { CoreBase } from '#interfaces/CoreBase';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { FaultSource, SubscriptionData } from '#subscribers/types/Subscriptions';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
-
-// each transport passes the DiscordAPIError that its discord client throws
-export type ApiErrorClass = abstract new (...args: never[]) => { readonly code: number | string };
 
 export interface FaultDetails extends Pick<SubscriptionData<'unknownException'>, 'guild' | 'user'> {
     readonly origin: string;
@@ -36,6 +34,12 @@ const HARMLESS_API_CODES: ReadonlySet<number | string> = new Set([
     RESTJSONErrorCodes.UnknownMessage // message was lost
 ]);
 
+// the Discord error code of `error` when `codes` has it
+function codeIn(error: unknown, codes: ReadonlySet<number | string>): number | string | undefined {
+    const code = discordErrorOf(error)?.code;
+    return code !== undefined && codes.has(code) ? code : undefined;
+}
+
 interface ReportedFault {
     readonly error: Error;
     readonly uuid: RenderContext['uuid'];
@@ -52,14 +56,13 @@ export class FaultBoundary {
     constructor(
         private readonly core: CoreBase,
         ignoredCodes: readonly (number | string)[] | undefined,
-        private readonly apiError: ApiErrorClass,
         private readonly dispatch: DispatchContext,
         private readonly detailsOf: () => FaultDetails
     ) {
         this.ignoredCodes = new Set(ignoredCodes);
     }
 
-    // null when the fault is a Silence or carries an ignored api code
+    // null when the fault is a Silence or has an ignored api code
     public report(caught: unknown): ReportedFault | null {
         const { config } = this.core;
         if (caught instanceof Silence) {
@@ -70,8 +73,9 @@ export class FaultBoundary {
         }
 
         const error = asError(caught);
-        if (error instanceof this.apiError && this.ignoredCodes.has(error.code)) {
-            logger().debug(`swallowed api code ${paint.amber(String(error.code))}`);
+        const ignored = codeIn(error, this.ignoredCodes);
+        if (ignored !== undefined) {
+            logger().debug(`swallowed api code ${paint.amber(String(ignored))}`);
             return null;
         }
 
@@ -129,14 +133,18 @@ export class FaultBoundary {
     private render({ error, uuid }: ReportedFault): FaultReply {
         const ctx = this.renderContext(uuid);
         if (error instanceof Notice) return { response: error.render(ctx), ephemeral: error.ephemeral };
-        const Override = this.core.config.errors?.defaultError;
+        // a bot's own card might read the member that just failed
+        const Override = isSeedcordError(error, undefined, SeedcordErrorCode.CorePluginMemberThrew)
+            ? undefined
+            : this.core.config.errors?.defaultError;
         return { response: (Override ? new Override(uuid) : new Fault()).render(ctx), ephemeral: true };
     }
 
     private renderContext(uuid: RenderContext['uuid']): RenderContext {
         const { dispatch } = this;
+        const context = { ...dispatch[MemberValues], uuid, dispatch };
         const developerUsername = this.core.config.notifications?.developerUsername;
-        return developerUsername === undefined ? { uuid, dispatch } : { uuid, developerUsername, dispatch };
+        return developerUsername === undefined ? context : { ...context, developerUsername };
     }
 
     // only this send swallows the harmless codes. a handler's own write still reports them
@@ -144,8 +152,9 @@ export class FaultBoundary {
         try {
             await send();
         } catch (error) {
-            if (error instanceof this.apiError && HARMLESS_API_CODES.has(error.code)) {
-                logger().debug(`fault reply hit harmless code ${paint.amber(String(error.code))}`);
+            const harmless = codeIn(error, HARMLESS_API_CODES);
+            if (harmless !== undefined) {
+                logger().debug(`fault reply hit harmless code ${paint.amber(String(harmless))}`);
                 return;
             }
             logger().error(`could not send a fault reply for route ${paint.sky.bold(this.dispatch.routeId)}`, error);

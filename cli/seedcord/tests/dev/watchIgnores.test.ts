@@ -4,14 +4,14 @@ import { join } from 'node:path';
 
 import { posixRelative } from '@seedcord/utils/internal';
 import { createServer } from 'vite';
-import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 
-import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ViteDevServer } from 'vite';
 
 const TEST_TIMEOUT_MS = 20_000;
@@ -56,12 +56,10 @@ interface WatchedProject {
 async function watchProject(root: string, botRoot = root): Promise<WatchedProject> {
     const reported = new Set<string>();
 
-    const config: Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target'> = {
+    const config = resolvedConfigOf(root, {
         root: realPath(botRoot),
-        configFile: realPath(join(root, 'seedcord.config.ts')),
-        files: [],
         target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'build')) }
-    };
+    });
     server = await createServer(
         mergeViteConfig(serverViteConfig(config, new ProjectFiles(config).layout), {
             plugins: [

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { embedding } from '#src/embedding';
 import { GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH } from '#src/files';
@@ -49,7 +49,7 @@ describe('SectionIndex', () => {
         ]);
     });
 
-    it('leaves out sections that barely relate to the question', async () => {
+    it("doesn't include sections that barely relate to the question", async () => {
         const index = await SectionIndex.load(assets(SECTIONS, VECTORS));
 
         expect(index.rank(zeroPadded(0, 0, 1), 3)).toEqual([]);

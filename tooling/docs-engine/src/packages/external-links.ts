@@ -88,7 +88,7 @@ export const rawExternalLinks = {
     Capitalize: 'https://www.typescriptlang.org/docs/handbook/utility-types.html#capitalizestringtype',
     Uncapitalize: 'https://www.typescriptlang.org/docs/handbook/utility-types.html#uncapitalizestringtype',
 
-    // TypeScript publishes no page for these. the nearest one is the best available.
+    // TypeScript doesn't publish a page for these. the nearest one is the best available.
     TypedPropertyDescriptor: 'https://www.typescriptlang.org/docs/handbook/decorators.html#parameter-decorators',
 
     // Node.js APIs (@types/node)

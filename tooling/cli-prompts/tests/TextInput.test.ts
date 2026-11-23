@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { KEY, PromptTerminal } from '#src/PromptTerminal';
 import { settled } from '#src/settled';
@@ -30,7 +30,7 @@ describe('Prompter.text', () => {
         await expect(answer).resolves.toBe('my-bot');
     });
 
-    it('stays open and shows the message validate returns', async () => {
+    it('keeps asking and shows the message validate returns', async () => {
         using terminal = new PromptTerminal();
         const answer = terminal.prompter.text(FOLDER);
 

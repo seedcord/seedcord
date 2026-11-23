@@ -13,7 +13,7 @@ ruleTester.run('no-djs-builder-import', rule, {
             import * as Djs from 'discord.js';
             new Djs.Client();
         `,
-        // a type-only import or re-export is erased, so no CJS copy reaches runtime
+        // no CJS copy reaches runtime from a type-only import or re-export because the compiler erases it
         `import type { EmbedBuilder } from 'discord.js';`,
         `import { type ButtonBuilder } from 'discord.js';`,
         `export type { EmbedBuilder } from 'discord.js';`,

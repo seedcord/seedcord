@@ -17,7 +17,7 @@ body:
       description: What you did, and what you expected instead.
       placeholder: |
         I added a second option to my command and this.options.getString('reason') still returns string | null.
-        I expected it to be a string, since I declared it required.
+        I expected it to be a string since I declared it required.
     validations:
       required: true
 

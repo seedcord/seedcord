@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { bindings, exports } from 'cf/config';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vite-plus/test';
 
 import { writeCloudflareConfig, writeSigningEnv } from '#tests/commands/build/edgeBot';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
@@ -165,6 +165,24 @@ describe('EdgeDevRuntime endpoint', () => {
         );
     }, 120_000);
 
+    // cloudflare/workers-sdk#16251. this fails over the dev channel because the empty 202 ends the request before a hot.send finishes
+    it('reaches the CLI with every line that a handler logs during one request', async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        const { publicKey, sign } = await writeSigningEnv(projectDir);
+        await writeDevVars(projectDir, { DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: publicKey });
+        const lines = ['burst 1', 'burst 2', 'burst 3', 'burst 4', 'burst 5'];
+        await writeFile(join(projectDir, 'src/handlers/Wave.ts'), waveHandler(...lines));
+        const logs = captureLogs();
+        await using started = await startedRuntime(projectDir);
+        await started.runtime.startBot(started.instance);
+
+        const body = WAVE_INTERACTION;
+        await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body, headers: await sign(body) });
+
+        await vi.waitFor(() => expect(messagesOf(logs)).toEqual(expect.arrayContaining(lines)), { timeout: 10_000 });
+    }, 120_000);
+
     // cloudflare/workers-sdk#16339
     it('logs the error a plugin throws with a circular field when a handler reload fails', async () => {
         await using project = await edgeProject();
@@ -276,7 +294,7 @@ describe('EdgeDevRuntime endpoint', () => {
         const events: DevEvent[] = [];
         await using started = await startedRuntime(projectDir, (event) => events.push(event));
         await started.runtime.startBot(started.instance);
-        // the replay guard rejects a body it already saw with the same timestamp
+        // the replay guard rejects a body it has already seen with the same timestamp
         const wave = async (id: string): Promise<void> => {
             const body = JSON.stringify({ ...JSON.parse(WAVE_INTERACTION), id });
             await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body, headers: await sign(body) });

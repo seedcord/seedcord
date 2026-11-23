@@ -2,7 +2,7 @@ import { mkdtempDisposable } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { ApiDocsGenerator } from '#src/ApiDocsGenerator';
 
@@ -37,8 +37,8 @@ describe('ApiDocsGenerator scoped extraction', () => {
         expect(result.results[0]?.name).toBe(MOCK_FULL_NAME);
     });
 
-    it('throws when --package matches no workspace package', async () => {
+    it('throws when --package matches zero workspace packages', async () => {
         const generator = await scopedRun('does-not-exist');
-        await expect(generator.run()).rejects.toThrow(/matched no package/u);
+        await expect(generator.run()).rejects.toThrow(/didn't match any package/u);
     });
 }, 60_000);

@@ -5,13 +5,15 @@ import type { Core } from '#interfaces/Core';
 import type { ReplySender } from '#reply/ReplySender';
 import type { DispatchContext, ModalLike } from '@seedcord/core';
 import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
+import type { ExcludeStrict } from 'type-fest';
 
 /**
  * Shared base the repliable interaction handlers extend.
  *
- * Not a public entry point. Extend {@link SlashHandler}, {@link ContextMenuHandler}, {@link ButtonHandler},
- * {@link ModalHandler}, or one of the select menu bases instead. This class adds `showModal` on top
- * of the reply members.
+ * For a handler with a route, extend {@link SlashHandler}, {@link ContextMenuHandler},
+ * {@link ButtonHandler}, {@link ModalHandler}, or one of the select menu bases. Extend this class
+ * directly only for `interactions.unhandled`, which answers every interaction without a handler except
+ * autocomplete. This class adds `showModal` on top of the reply members.
  *
  * @typeParam Event - The repliable interaction type this handler processes
  */
@@ -26,7 +28,7 @@ export abstract class InteractionHandler<Event extends Repliables> extends Repli
      * compile time (Discord forbids a modal in response to a modal).
      */
     protected showModal(
-        this: InteractionHandler<Exclude<Repliables, APIModalSubmitInteraction>>,
+        this: InteractionHandler<ExcludeStrict<Repliables, APIModalSubmitInteraction>>,
         modal: ModalLike
     ): Promise<void> {
         return this.sender.showModal(modal);

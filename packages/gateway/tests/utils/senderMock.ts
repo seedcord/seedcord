@@ -1,5 +1,5 @@
 import { DispatchContext } from '@seedcord/core/internal';
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 import { ReplySender } from '#bot/ReplySender';
 
@@ -7,6 +7,7 @@ import { stubBus } from './stubBus';
 
 import type { SentMessage } from '#bot/ReplySender';
 import type { Repliables } from '#src/handlers/interactionTypes';
+import type { Bus } from '@seedcord/core';
 
 // justified: the sender reads only the id off a sent message
 export const message = { id: 'msg-1' } as SentMessage;
@@ -51,7 +52,7 @@ export function mockInteraction(overrides: FlagOverrides = {}) {
     };
 }
 
-export function senderFor(mock: ReturnType<typeof mockInteraction>): ReplySender {
+export function senderFor(mock: ReturnType<typeof mockInteraction>, bus: Bus = stubBus()): ReplySender {
     // eslint-disable-next-line no-restricted-syntax -- fixture cast, the mock implements only the Repliables surface the sender reads
-    return new ReplySender(mock as unknown as Repliables, new DispatchContext('button', 'page'), stubBus());
+    return new ReplySender(mock as unknown as Repliables, new DispatchContext('button', 'page'), bus, true);
 }

@@ -3,10 +3,10 @@ import { paint } from '@seedcord/errors';
 
 import { LOAD_STEPS, loadCodeScopes } from '#commands/commands/codeScopes';
 import { DiscordSession } from '#commands/commands/DiscordSession';
-import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
+import { defaultRunnerDeps } from '#core/discord/runnerDeps';
 
 import type { Scan } from '#commands/commands/DiscordSession';
-import type { RunnerDeps } from '#commands/commands/runnerDeps';
+import type { RunnerDeps } from '#core/discord/runnerDeps';
 import type { Steps } from '#core/output/Steps';
 import type { ListPresenter } from './ListPresenter';
 import type { APIApplicationCommand } from 'discord-api-types/v10';

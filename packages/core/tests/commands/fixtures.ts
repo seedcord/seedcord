@@ -4,7 +4,11 @@ import { ApplicationCommandType } from 'discord-api-types/v10';
 import { GLOBAL_ID } from '#src/commands/scopes';
 
 import type { DeployResult } from '#src/commands/types';
-import type { APIApplicationCommand } from 'discord-api-types/v10';
+import type {
+    APIApplicationCommand,
+    RESTPostAPIChatInputApplicationCommandsJSONBody,
+    RESTPostAPIContextMenuApplicationCommandsJSONBody
+} from 'discord-api-types/v10';
 
 type DeployedEntry = [id: string, name: string, type?: ApplicationCommandType];
 
@@ -29,31 +33,35 @@ export function guildBucket(
     return guilds;
 }
 
-export function ping(): SlashCommandBuilder {
-    return new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!');
+export function ping(): RESTPostAPIChatInputApplicationCommandsJSONBody {
+    return new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!').toJSON();
 }
 
-export function grouped(): SlashCommandBuilder {
-    const builder = new SlashCommandBuilder().setName('mod').setDescription('moderation');
-    builder.addSubcommandGroup((group) =>
-        group
-            .setName('case')
-            .setDescription('cases')
-            .addSubcommand((sub) => sub.setName('close').setDescription('close a case'))
-    );
-    return builder;
+export function grouped(): RESTPostAPIChatInputApplicationCommandsJSONBody {
+    return new SlashCommandBuilder()
+        .setName('mod')
+        .setDescription('moderation')
+        .addSubcommandGroup((group) =>
+            group
+                .setName('case')
+                .setDescription('cases')
+                .addSubcommand((sub) => sub.setName('close').setDescription('close a case'))
+        )
+        .toJSON();
 }
 
-export function withSubcommand(): SlashCommandBuilder {
-    const builder = new SlashCommandBuilder().setName('ban').setDescription('ban');
-    builder.addSubcommand((sub) => sub.setName('list').setDescription('list bans'));
-    return builder;
+export function withSubcommand(): RESTPostAPIChatInputApplicationCommandsJSONBody {
+    return new SlashCommandBuilder()
+        .setName('ban')
+        .setDescription('ban')
+        .addSubcommand((sub) => sub.setName('list').setDescription('list bans'))
+        .toJSON();
 }
 
-export function userMenu(name = 'View Profile'): ContextMenuCommandBuilder {
-    return new ContextMenuCommandBuilder().setName(name).setType(ApplicationCommandType.User);
+export function userMenu(name = 'View Profile'): RESTPostAPIContextMenuApplicationCommandsJSONBody {
+    return new ContextMenuCommandBuilder().setName(name).setType(ApplicationCommandType.User).toJSON();
 }
 
-export function messageMenu(name = 'Report Message'): ContextMenuCommandBuilder {
-    return new ContextMenuCommandBuilder().setName(name).setType(ApplicationCommandType.Message);
+export function messageMenu(name = 'Report Message'): RESTPostAPIContextMenuApplicationCommandsJSONBody {
+    return new ContextMenuCommandBuilder().setName(name).setType(ApplicationCommandType.Message).toJSON();
 }

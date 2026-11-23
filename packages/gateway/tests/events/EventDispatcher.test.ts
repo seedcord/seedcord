@@ -1,5 +1,5 @@
 import { PublishDefault } from '@seedcord/core/internal';
-import { afterEach, describe, expect, vi } from 'vitest';
+import { afterEach, describe, expect, vi } from 'vite-plus/test';
 
 import { botLoggerOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
@@ -73,7 +73,8 @@ describe('EventDispatcher Integration', () => {
         });
 
         const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
-            ((...args: unknown[]) => void) | undefined;
+            | ((...args: unknown[]) => void)
+            | undefined;
 
         expect(fire).toBeDefined();
         expect(() => fire?.({ reply: vi.fn() })).not.toThrow();
@@ -108,7 +109,8 @@ describe('EventDispatcher Integration', () => {
         seedcord.bus.on('eventDispatching', (payload) => seen.push(payload));
 
         const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
-            ((...args: unknown[]) => void) | undefined;
+            | ((...args: unknown[]) => void)
+            | undefined;
         const message = { id: 'm1', content: 'hi' };
         fire?.(message);
 
@@ -330,7 +332,8 @@ describe('EventDispatcher Integration', () => {
                 controller.inFlight.open();
 
                 const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
-                    ((...args: unknown[]) => void) | undefined;
+                    | ((...args: unknown[]) => void)
+                    | undefined;
                 expect(fire).toBeDefined();
                 await use({ seedcord, controller, fire });
             }
@@ -356,24 +359,22 @@ describe('EventDispatcher Integration', () => {
             });
         });
 
-        withClient(
-            'wraps a non-Error rejection at the root, so the payload still carries an Error',
-            async ({ client }) => {
-                const { seedcord, controller, fire } = client;
-                vi.spyOn(controller, 'processEvent').mockRejectedValue('a bare string');
-                vi.spyOn(botLoggerOf(seedcord.bot), 'error').mockImplementation(() => undefined);
+        withClient('wraps a non-Error rejection at the root and publishes the event name', async ({ client }) => {
+            const { seedcord, controller, fire } = client;
+            vi.spyOn(controller, 'processEvent').mockRejectedValue('a bare string');
+            vi.spyOn(botLoggerOf(seedcord.bot), 'error').mockImplementation(() => undefined);
 
-                const seen: SubscriptionData<'unhandledEventError'>[] = [];
-                seedcord.bus.on('unhandledEventError', (payload) => seen.push(payload));
+            const seen: SubscriptionData<'unhandledEventError'>[] = [];
+            seedcord.bus.on('unhandledEventError', (payload) => seen.push(payload));
 
-                fire?.({ reply: vi.fn() });
+            fire?.({ reply: vi.fn() });
 
-                await vi.waitFor(() => {
-                    expect(seen).toHaveLength(1);
-                });
-                expect(seen[0]?.error.message).toBe('a bare string');
-            }
-        );
+            await vi.waitFor(() => {
+                expect(seen).toHaveLength(1);
+            });
+            expect(seen[0]?.error.message).toBe('a bare string');
+            expect(seen[0]?.name).toBe('messageCreate');
+        });
 
         withClient('stops dispatching new events after stopAccepting, and drain resolves', async ({ client }) => {
             const { controller, fire } = client;

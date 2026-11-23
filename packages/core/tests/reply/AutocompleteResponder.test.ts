@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { AutocompleteResponder } from '#reply/AutocompleteResponder';
 import { DispatchContext } from '#src/dispatch/DispatchContext';

@@ -2,7 +2,7 @@ import type { EmbedElement, EmbedNode } from './element';
 import type { APIMessageComponentEmoji } from 'discord-api-types/v10';
 
 export interface ContainerProps {
-    /** The color of the bar on the left edge, as an RGB integer like `0x5865f2`. */
+    /** The color of the bar on the left edge as an RGB integer like `0x5865f2`. */
     accentColor?: number;
     /** Blurs the whole card until someone clicks it. */
     spoiler?: boolean;
@@ -70,8 +70,8 @@ export type LinkButtonProps = LinkButtonBase &
     ({ label: string; emoji?: LinkButtonEmoji } | { label?: string; emoji: LinkButtonEmoji });
 
 /**
- * The root of every component embed. Wrap everything else in one, then pass it to {@link toComponentEmbed}. React
- * leaves it out of your page.
+ * The root of every component embed. Wrap everything else in one, then pass it to {@link toComponentEmbed}. It
+ * renders as `null` in your React page.
  *
  * @example
  * ```tsx
@@ -85,7 +85,7 @@ export function Container(_props: ContainerProps): null {
 }
 
 /**
- * A block of Discord markdown. Every piece of text in a component embed goes inside one.
+ * A block of Discord markdown. Every piece of text in a component embed must be inside one.
  *
  * @example
  * ```tsx
@@ -123,7 +123,7 @@ export function Section(_props: SectionProps): null {
 }
 
 /**
- * A small image. It goes in a {@link Section}'s `accessory`.
+ * A small image for a {@link Section}'s `accessory`.
  *
  * @example
  * ```tsx

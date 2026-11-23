@@ -1,5 +1,5 @@
 import { ESLint } from 'eslint';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import createConfig from '#src/index';
 
@@ -25,7 +25,7 @@ describe('createConfig no-restricted-syntax', () => {
         expect(selectors.some((selector) => selector.includes('TSAsExpression'))).toBe(true);
     });
 
-    it('turns the ban off for .test.tsx files, since tests may use fixture casts', async () => {
+    it('turns the ban off for .test.tsx files since tests may use fixture casts', async () => {
         const rule = (await resolveRules('tests/example.test.tsx'))['no-restricted-syntax'];
         const severity = Array.isArray(rule) ? rule[0] : rule;
         expect([0, 'off']).toContain(severity);

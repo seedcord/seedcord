@@ -1,12 +1,13 @@
 import { BaseReplySender } from '@seedcord/core';
-import { deferFlags, sendFlags } from '@seedcord/core/internal';
+import { replyFileInfo } from '@seedcord/core/internal';
 import { InteractionResponseType, MessageFlags, Routes } from 'discord-api-types/v10';
 
 import type { REST, RawFile } from '@discordjs/rest';
 import type { Bus, DispatchContext } from '@seedcord/core';
-import type { SerializedReply } from '@seedcord/core/internal';
-import type { DeferOpts, ReplyResponse, SendOpts, TypedOmit } from '@seedcord/types';
+import type { SentFile, SerializedReply } from '@seedcord/core/internal';
+import type { ReplyFile, ReplyResponse } from '@seedcord/types';
 import type { APIMessage, APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
+import type { Except } from 'type-fest';
 
 /** The interaction payload fields the sender writes its wire from. */
 export interface InteractionRef {
@@ -19,7 +20,7 @@ export interface InteractionRef {
 export type SentMessage = APIMessage;
 
 // the framework's allowedMentions keys are camelCase, and the wire reads replied_user
-type WireAllowedMentions = TypedOmit<NonNullable<ReplyResponse['allowedMentions']>, 'repliedUser'> & {
+type WireAllowedMentions = Except<NonNullable<ReplyResponse['allowedMentions']>, 'repliedUser'> & {
     replied_user?: boolean;
 };
 
@@ -42,7 +43,7 @@ function wireAllowedMentions(mentions: NonNullable<ReplyResponse['allowedMention
     return { ...wire, ...(repliedUser !== undefined && { replied_user: repliedUser }) };
 }
 
-// RawFile has no description field
+// RawFile doesn't have a description field
 function wireAttachments(files: SerializedReply['files']): WireAttachment[] | null {
     if (!files?.some((file) => file.description ?? file.title)) return null;
     return files.map((file, index) => ({
@@ -72,31 +73,30 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         private readonly ref: InteractionRef,
         private readonly rest: REST,
         dispatch: DispatchContext,
-        bus: Bus
+        bus: Bus,
+        isEphemeralByDefault: boolean
     ) {
-        super({ bus, dispatch, interactionId: ref.id });
+        super({ bus, dispatch, interactionId: ref.id }, isEphemeralByDefault);
     }
 
-    protected async writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage | undefined> {
-        const reply = this.serialize(response);
+    protected async writeReply(reply: SerializedReply, flags: number): Promise<SentMessage | undefined> {
         const result = await this.callback(
             InteractionResponseType.ChannelMessageWithSource,
-            callbackData(reply, sendFlags(opts)),
+            callbackData(reply, flags),
             reply.files
         );
         return this.createdMessage(result);
     }
 
-    protected async writeDefer(opts?: DeferOpts): Promise<void> {
-        await this.callback(InteractionResponseType.DeferredChannelMessageWithSource, { flags: deferFlags(opts) });
+    protected async writeDefer(flags: number): Promise<void> {
+        await this.callback(InteractionResponseType.DeferredChannelMessageWithSource, { flags });
     }
 
     protected async writeDeferUpdate(): Promise<void> {
         await this.callback(InteractionResponseType.DeferredMessageUpdate);
     }
 
-    protected async writeUpdate(response: ReplyResponse | string): Promise<SentMessage | undefined> {
-        const reply = this.serialize(response);
+    protected async writeUpdate(reply: SerializedReply): Promise<SentMessage | undefined> {
         const result = await this.callback(
             InteractionResponseType.UpdateMessage,
             callbackData(reply, MessageFlags.IsComponentsV2),
@@ -105,12 +105,11 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         return this.createdMessage(result);
     }
 
-    protected async writeFollowUp(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
-        const reply = this.serialize(response);
+    protected async writeFollowUp(reply: SerializedReply, flags: number): Promise<SentMessage> {
         // discord returns the created message for interaction-token followups either way. wait=true pins
         // that contract and matches the djs webhook client
         const result = await this.rest.post(Routes.webhook(this.ref.application_id, this.ref.token), {
-            body: callbackData(reply, sendFlags(opts)),
+            body: callbackData(reply, flags),
             query: new URLSearchParams({ wait: 'true' }),
             ...(reply.files && { files: this.rawFiles(reply.files) })
         });
@@ -118,16 +117,12 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         return result as SentMessage;
     }
 
-    protected writeEditOriginal(response: ReplyResponse | string): Promise<SentMessage> {
-        return this.editMessage(
-            Routes.webhookMessage(this.ref.application_id, this.ref.token),
-            this.serialize(response)
-        );
+    protected writeEditOriginal(reply: SerializedReply): Promise<SentMessage> {
+        return this.editMessage(Routes.webhookMessage(this.ref.application_id, this.ref.token), reply);
     }
 
-    protected writeEditTarget(targetId: string, response: ReplyResponse | string): Promise<SentMessage> {
-        const route = Routes.webhookMessage(this.ref.application_id, this.ref.token, targetId);
-        return this.editMessage(route, this.serialize(response));
+    protected writeEditTarget(targetId: string, reply: SerializedReply): Promise<SentMessage> {
+        return this.editMessage(Routes.webhookMessage(this.ref.application_id, this.ref.token, targetId), reply);
     }
 
     protected async writeDeleteOriginal(): Promise<void> {
@@ -140,6 +135,10 @@ export class ReplySender extends BaseReplySender<SentMessage> {
 
     protected async writeModal(data: APIModalInteractionResponseCallbackData): Promise<void> {
         await this.callback(InteractionResponseType.Modal, data);
+    }
+
+    protected describeFile(file: ReplyFile): SentFile {
+        return replyFileInfo(file);
     }
 
     private async callback(

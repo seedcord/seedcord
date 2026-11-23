@@ -1,6 +1,6 @@
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/edge/Seedcord';
 import { registerBakedIds } from '#tests/helpers/bakedIds';
@@ -68,7 +68,7 @@ describe('config.logger on an edge bot', () => {
         expect(messages).not.toContain('quiet');
     });
 
-    it('goes back to the default sink when a later bot omits logger', async () => {
+    it('returns to the default sink when a later bot omits logger', async () => {
         await startBot(edgeConfig({ level: 'trace', sinks: [sink] }));
         await startBot(edgeConfig());
 

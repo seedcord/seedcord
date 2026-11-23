@@ -1,5 +1,5 @@
 /**
- * Copies only the keys holding a value, dropping both `undefined` and `null`.
+ * Copies only the keys whose value isn't `undefined` or `null`.
  *
  * @typeParam TObject - the original object type you're pulling from
  * @typeParam TKey - the keys to copy when defined

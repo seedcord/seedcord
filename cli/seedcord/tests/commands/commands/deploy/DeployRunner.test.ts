@@ -3,17 +3,18 @@ import { stripVTControlCharacters } from 'node:util';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Routes } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { PROCEED } from '#commands/commands/confirm';
 import { DeployPresenter } from '#commands/commands/deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from '#commands/commands/deploy/DeployRunner';
+import { PROCEED } from '#core/output/confirm';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { lastDeployOf } from '#core/state/deployedCommands';
-import { APP_ID, Config, fakeDiscord, fakeProject, Ping, pipedTerminal, slash } from '#tests/commands/commands/fakeBot';
+import { APP_ID, Config, fakeDiscord, fakeProject, Ping, slash } from '#tests/commands/commands/fakeBot';
+import { fakeTerminal } from '#tests/fakeTerminal';
 import { silentLogger } from '#tests/silentLogger';
 
-import type { Confirm } from '#commands/commands/confirm';
+import type { Confirm } from '#core/output/confirm';
 import type { FakeProject } from '#tests/commands/commands/fakeBot';
 import type { REST } from '@discordjs/rest';
 
@@ -29,7 +30,7 @@ async function deploy(
     rest: REST,
     { verbose = false, answer = true, confirm = () => Promise.resolve(answer), yes = false }: DeployOptions = {}
 ): Promise<string> {
-    const stdout = pipedTerminal();
+    const stdout = fakeTerminal();
     const printer = new StepPrinter({ command: 'commands', labels: DEPLOY_STEPS, verbose, stdout, stderr: stdout });
     const presenter = new DeployPresenter(printer, yes ? PROCEED : confirm, verbose);
     const runner = new DeployRunner({
@@ -54,7 +55,7 @@ describe('DeployRunner', () => {
         ]);
     });
 
-    it('counts only global commands when the code targets no guild', async () => {
+    it('counts only global commands when the code targets zero guilds', async () => {
         const { rest } = fakeDiscord();
 
         const output = await deploy(await fakeProject({ commands: [Ping] }), rest);
@@ -62,7 +63,7 @@ describe('DeployRunner', () => {
         expect(output).toMatch(/deploy +\S+ +1 global\n/u);
     });
 
-    it('prints what each scope gains and loses, and counts the commands that stay', async () => {
+    it('prints what each scope gains and loses, and counts the commands it keeps', async () => {
         const { rest } = fakeDiscord({ [Routes.applicationCommands(APP_ID)]: [slash('ping'), slash('legacy')] });
 
         const output = await deploy(await fakeProject(), rest);
@@ -75,7 +76,7 @@ describe('DeployRunner', () => {
         expect(output).toMatch(/deploy +\S+ +1 global, 1 in 1 guild/u);
     });
 
-    it('says when a scope gains and loses nothing', async () => {
+    it("says when a scope doesn't gain or lose anything", async () => {
         const { rest } = fakeDiscord({ [Routes.applicationCommands(APP_ID)]: [slash('ping')] });
 
         const output = await deploy(await fakeProject({ commands: [Ping] }), rest);
@@ -91,7 +92,7 @@ describe('DeployRunner', () => {
         expect(output).toContain('    - /legacy\n      /ping\n');
     });
 
-    it('leaves the global commands alone when the code has none', async () => {
+    it("doesn't change the global commands when the code doesn't have any", async () => {
         const { rest, puts } = fakeDiscord({ [Routes.applicationCommands(APP_ID)]: [slash('ban')] });
 
         const output = await deploy(await fakeProject({ commands: [Config] }), rest);
@@ -100,7 +101,7 @@ describe('DeployRunner', () => {
         expect(output).not.toContain('/ban');
     });
 
-    it('skips every scope on a second deploy that changed nothing', async () => {
+    it('skips every scope when a second deploy matches the first', async () => {
         const project = await fakeProject();
         const { rest, puts } = fakeDiscord();
         await deploy(project, rest);
@@ -139,7 +140,7 @@ describe('DeployRunner', () => {
         ]);
     });
 
-    it('deploys nothing when the skipped scopes are declined', async () => {
+    it('prints "Nothing deployed." when the skipped scopes are declined', async () => {
         const project = await fakeProject();
         const { rest, puts } = fakeDiscord();
         await deploy(project, rest);
@@ -190,7 +191,7 @@ describe('DeployRunner', () => {
         expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Deploy to 2 scopes?'));
     });
 
-    it('says there is nothing to deploy and asks nothing when the code has no commands', async () => {
+    it('says there is nothing to deploy and skips the prompt when the code defines zero commands', async () => {
         const { rest, puts } = fakeDiscord();
         const confirm = vi.fn((_message: string) => Promise.resolve(true));
 
@@ -210,7 +211,7 @@ describe('DeployRunner', () => {
         expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Deploy to 1 scope?'));
     });
 
-    it('deploys nothing and says so when the deploy is declined', async () => {
+    it('stops and says so when the deploy is declined', async () => {
         const { rest, puts } = fakeDiscord();
 
         const output = await deploy(await fakeProject(), rest, { answer: false });
@@ -219,7 +220,7 @@ describe('DeployRunner', () => {
         expect(output.trimEnd().split('\n').at(-1)).toBe('  Nothing deployed.');
     });
 
-    it('deploys nothing and prints cancelled when the question is cancelled', async () => {
+    it('stops and prints cancelled when the question is cancelled', async () => {
         const { rest, puts } = fakeDiscord();
 
         const output = await deploy(await fakeProject(), rest, {
@@ -230,7 +231,7 @@ describe('DeployRunner', () => {
         expect(output.trimEnd().split('\n').at(-1)).toBe('  cancelled');
     });
 
-    it('throws CliDeployNoCommandsFolder and sends nothing when the bot has no commands folder', async () => {
+    it("throws CliDeployNoCommandsFolder before any request when the bot doesn't have a commands folder", async () => {
         const { rest, puts } = fakeDiscord();
 
         const deploying = deploy(await fakeProject({ commandsPath: null }), rest);
@@ -240,7 +241,7 @@ describe('DeployRunner', () => {
     });
 
     it('fails the read discord step when the token is missing', async () => {
-        const stdout = pipedTerminal();
+        const stdout = fakeTerminal();
         const printer = new StepPrinter({
             command: 'commands',
             labels: DEPLOY_STEPS,
@@ -271,7 +272,7 @@ describe('DeployRunner', () => {
         expect(output).toContain('Run seedcord build and deploy the worker again');
     });
 
-    it('skips the rebuild hint when the deploy adds no command', async () => {
+    it('skips the rebuild hint when the deploy adds zero commands', async () => {
         const { rest } = fakeDiscord({
             [Routes.applicationCommands(APP_ID)]: [slash('ping')],
             [Routes.applicationGuildCommands(APP_ID, '111')]: [slash('config')]

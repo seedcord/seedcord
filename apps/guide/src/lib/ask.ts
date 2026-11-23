@@ -13,7 +13,7 @@ export interface WorkerContext {
     waitUntil(promise: Promise<unknown>): void;
 }
 
-// 5 minutes caps how long a browser shows paths from the last deploy. the edge key carries the index version
+// 5 minutes caps how long a browser shows paths from the last deploy. the edge key includes the index version
 const CACHE_CONTROL = 'public, max-age=300, s-maxage=86400';
 const BAD_REQUEST = 400;
 // the ASK_LIMIT period in wrangler.jsonc

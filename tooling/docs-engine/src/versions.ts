@@ -50,9 +50,9 @@ export function servedPrerelease({
 }
 
 /**
- * Where a request for an old `version` should go. That's the newest patch of the same minor if the docs still
+ * The version that replaces an old `version`. That's the newest patch of the same minor if the docs still
  * show that minor, then the newest release of the same major, then the newest stable release. An old prerelease
- * goes to the current prerelease of its major when that one is newer. Returns `null` when the docs still show
+ * maps to the current prerelease of its major when that one is newer. Returns `null` when the docs still show
  * `version`, when `version` isn't a full semver string, or when nothing newer exists.
  */
 export function replacementVersion(

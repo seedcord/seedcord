@@ -45,7 +45,7 @@ export function buildOfHead(): SiteBuild {
 }
 
 const runWrangler: Wrangler = (args) =>
-    execFileSync('pnpm', ['exec', 'wrangler', ...args, '--json'], { cwd: DOCS_APP, encoding: 'utf8' });
+    execFileSync('vp', ['exec', 'wrangler', ...args, '--json'], { cwd: DOCS_APP, encoding: 'utf8' });
 
 // wrangler rollback picks the newest earlier deployment that runs one version at 100%
 export function rollbackBuildId(wrangler: Wrangler = runWrangler): string | null {
@@ -64,6 +64,6 @@ export function rollbackBuildId(wrangler: Wrangler = runWrangler): string | null
 export function workerBucket(): R2Bucket {
     const config = parse(readFileSync(path.join(DOCS_APP, 'wrangler.jsonc'), 'utf8')) as WranglerConfig;
     const bucket = config.r2_buckets?.find(({ binding }) => binding === WORKER_BINDING)?.bucket_name;
-    if (!bucket) throw new Error(`apps/docs/wrangler.jsonc binds no R2 bucket as ${WORKER_BINDING}`);
+    if (!bucket) throw new Error(`apps/docs/wrangler.jsonc doesn't bind an R2 bucket as ${WORKER_BINDING}`);
     return R2Bucket.fromEnv(bucket);
 }

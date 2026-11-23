@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { routeConsoleToLogs } from '#commands/dev/routeConsoleToLogs';
 import { LogStore } from '#ui/stores/LogStore';
@@ -26,7 +26,7 @@ describe('LogStore', () => {
         );
     });
 
-    it('carries level, label, channel, head, and the record timestamp onto each entry', async () => {
+    it('copies level, label, channel, head, and the record timestamp onto each entry', async () => {
         store.onLog(record({ level: 'warn', label: 'Mongoose', channel: 'db', message: 'up', timestamp: 42 }));
         await store.flush();
 

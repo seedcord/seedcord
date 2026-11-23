@@ -5,7 +5,7 @@ export class LoadedConfig implements AsyncDisposable {
     constructor(
         public readonly config: ResolvedSeedcordConfig,
         public readonly files: ProjectFiles,
-        // a local plugin file's lazy import() goes through this loader
+        // this loader runs a local plugin file's lazy import()
         private readonly configLoader?: AsyncDisposable
     ) {}
 

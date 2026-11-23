@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ChangelogSections } from '#src/release/ChangelogSections';
 
@@ -54,7 +54,7 @@ describe('ChangelogSections headings', () => {
         expect(out).not.toContain('Breaking');
     });
 
-    it('leaves a file with no sections alone', () => {
+    it("doesn't change a file without sections", () => {
         const text = lines('# @seedcord/core', '');
 
         expect(regrouped(text)).toBe(text);
@@ -62,7 +62,7 @@ describe('ChangelogSections headings', () => {
 });
 
 describe('ChangelogSections breaking split', () => {
-    it('moves a breaking entry above the minor one and drops the marker', () => {
+    it('moves a breaking entry above the minor one and removes the marker', () => {
         const out = regrouped(
             lines(
                 '## 0.8.0',
@@ -91,7 +91,7 @@ describe('ChangelogSections breaking split', () => {
         );
     });
 
-    it('drops a bump section that had only breaking entries', () => {
+    it('removes a bump section that had only breaking entries', () => {
         const out = regrouped(
             lines('## 0.8.0', '', '### Minor Changes', '', '- **BREAKING:** Everything moved. ([#311](url))', '')
         );
@@ -138,7 +138,7 @@ describe('ChangelogSections marker placement', () => {
 });
 
 describe('ChangelogSections text it does not recognize', () => {
-    it('leaves a version alone when a section carries an unknown #### heading', () => {
+    it("doesn't change a version when a section has an unknown #### heading", () => {
         const text = lines(
             '## 0.1.0',
             '',
@@ -155,7 +155,7 @@ describe('ChangelogSections text it does not recognize', () => {
         expect(regrouped(text)).toBe(text);
     });
 
-    it('leaves a version alone when text sits above the first entry', () => {
+    it("doesn't change a version when text sits above the first entry", () => {
         const text = lines(
             '## 0.1.0',
             '',

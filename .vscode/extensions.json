@@ -1,10 +1,11 @@
 {
     "recommendations": [
         // Essential formatting and linting
-        "esbenp.prettier-vscode",
+        "VoidZero.vite-plus-extension-pack",
         "dbaeumer.vscode-eslint",
         "EditorConfig.EditorConfig",
         "DavidAnson.vscode-markdownlint",
+        "ChrisChinchilla.vale-vscode",
 
         // Lang Tooling
         "christian-kohler.path-intellisense",

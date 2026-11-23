@@ -50,9 +50,9 @@ function writeStoredTab(tab: OverviewTab): void {
     try {
         window.localStorage.setItem(TAB_STORAGE_KEY, tab);
     } catch {
-        // storage blocked (private mode / disabled), so the preference just won't persist
+        // the preference just won't persist because storage is blocked (private mode / disabled)
     }
-    // the 'storage' event fires only in other tabs
+    // the browser dispatches the 'storage' event only in other tabs
     tabListeners.forEach((callback) => callback());
 }
 

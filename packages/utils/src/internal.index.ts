@@ -14,13 +14,19 @@ export {
     setCliFiles,
     setDevFiles
 } from './files/slots';
-export { botFolder } from './files/sources';
+export { emojiClashes, emojiFileAt, folderEmojisIn, readEmojiFolder } from './files/readEmojiFolder';
+export type { EmojiFile, FolderEmoji } from './files/readEmojiFolder';
+export { botFolder, folderEmojis, matchesBotGlobs } from './files/sources';
 export { withoutQuery } from './files/withoutQuery';
 export * from './misc/asError';
+export * from './misc/discordErrorOf';
+export * from './misc/errorReason';
 export * from './misc/hasErrorCode';
 export * from './misc/isInteractive';
 export * from './misc/isPortInUse';
+export * from './misc/KeyedQueue';
 export * from './misc/unlessAborted';
+export type { IsDigits, StripZeros } from './numbers/IsDigits';
 export * from './objects/isPlainObject';
 export * from './objects/isStringArray';
 export * from './strings/buildSlashRoute';

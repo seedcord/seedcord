@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { BRAND_COLORS } from '@seedcord/brand';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 const uiTokens = readFileSync(join(import.meta.dirname, '../src/styles/tokens.css'), 'utf8');
 

@@ -1,7 +1,7 @@
 import { Notice } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Guild, GuildMember, PermissionFlagsBits, PermissionsBitField, Role, TextChannel } from 'discord.js';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { CannotAssignBotRole, RoleHigherThanMe } from '#bot/notices';
 import { checkBotPermissions } from '#bUtilities/permissions/checkBotPermissions';
@@ -55,7 +55,7 @@ describe('checkPermissions', () => {
     it('refuses with a card that mentions the member', () => {
         const caught = thrownBy(() => checkPermissions({ for: memberWith([], 'm7'), scope: [BanMembers] }));
         expect(caught).toBeInstanceOf(Notice);
-        // the permission card reads nothing off the render context
+        // the permission card never reads the render context
         const card = (caught as Notice).render({} as RenderContext);
         expect(JSON.stringify(card)).toContain('<@m7>');
     });

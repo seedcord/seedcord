@@ -1,6 +1,6 @@
 import { buildSlashRoute } from '@seedcord/utils/internal';
 import { SlashCommandBuilder, ApplicationCommandOptionType } from 'discord.js';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { silentLogger } from '#tests/silentLogger';
@@ -40,10 +40,9 @@ describe('route-key parity between AugmentationBuilder and buildSlashRoute', () 
             .addUserOption((o) => o.setName('target').setDescription('Who').setRequired(true));
         const json = builder.toJSON();
 
-        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate(
-            [{ sourceFile: 'ban.ts', json }],
-            {}
-        ).slash;
+        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate([
+            { sourceFile: 'ban.ts', json }
+        ]).slash;
 
         expect(new Set(Object.keys(tables))).toEqual(new Set(expectedRoutesFromJson(json)));
         expect(Object.keys(tables)).toEqual([buildSlashRoute('ban')]);
@@ -72,15 +71,14 @@ describe('route-key parity between AugmentationBuilder and buildSlashRoute', () 
             );
         const json = builder.toJSON();
 
-        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate(
-            [{ sourceFile: 'demo.ts', json }],
-            {}
-        ).slash;
+        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate([
+            { sourceFile: 'demo.ts', json }
+        ]).slash;
 
         expect(new Set(Object.keys(tables))).toEqual(new Set(expectedRoutesFromJson(json)));
     });
 
-    it('empty subcommand group yields no route on either side', () => {
+    it('empty subcommand group yields zero routes on either side', () => {
         const builder = new SlashCommandBuilder()
             .setName('admin')
             .setDescription('d')
@@ -88,10 +86,9 @@ describe('route-key parity between AugmentationBuilder and buildSlashRoute', () 
             .addSubcommand((sc) => sc.setName('ping').setDescription('pd'));
         const json = builder.toJSON();
 
-        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate(
-            [{ sourceFile: 'admin.ts', json }],
-            {}
-        ).slash;
+        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate([
+            { sourceFile: 'admin.ts', json }
+        ]).slash;
 
         expect(new Set(Object.keys(tables))).toEqual(new Set(expectedRoutesFromJson(json)));
         expect(Object.keys(tables)).toEqual([buildSlashRoute('admin', 'ping')]);

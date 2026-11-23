@@ -5,11 +5,11 @@ import { Guild } from 'discord.js';
 import { checkPermissions } from './checkPermissions';
 
 import type { CheckPermissionOptions } from './checkPermissions';
-import type { TypedOmit } from '@seedcord/types';
 import type { GuildBasedChannel, GuildMember } from 'discord.js';
+import type { Except } from 'type-fest';
 
 /** Options for {@link checkBotPermissions}. */
-export interface CheckBotPermissionOptions extends TypedOmit<CheckPermissionOptions, 'for' | 'in'> {
+export interface CheckBotPermissionOptions extends Except<CheckPermissionOptions, 'for' | 'in'> {
     /** A guild, to read the bot's base set from roles, or a channel or thread, to read its set there. */
     in: Guild | GuildBasedChannel;
 }

@@ -1,6 +1,7 @@
-import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
+import { DiscordAPIError } from '@discordjs/rest';
+import { captureLogs } from '@seedcord/logger/internal';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
-import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { afterEach, describe, expect, it, vi, type Mock } from 'vite-plus/test';
 
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { InteractionKind } from '#src/metadataKeys';
@@ -9,17 +10,16 @@ import { Fault } from '#stops/Fault';
 import { Notice } from '#stops/Notice';
 import { Silence } from '#stops/Silence';
 import { busWith } from '#tests/utils/busWith';
+import { CommonJsDiscordAPIError } from '#tests/utils/commonJsRest';
 import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { FaultDetails, FaultSender } from '#src/notices/FaultBoundary';
 import type { FaultSource } from '#subscribers/types/Subscriptions';
-import type { Config, LogRecord, RenderContext, ReplyResponse } from '@seedcord/types';
+import type { Config, RenderContext, ReplyResponse } from '@seedcord/types';
 
-class FakeApiError extends Error {
-    constructor(public readonly code: number) {
-        super(`api ${code}`);
-    }
+function apiError(code: number, ApiError: typeof DiscordAPIError = DiscordAPIError): DiscordAPIError {
+    return new ApiError({ code, message: `api ${code}` }, code, 404, 'POST', 'url', {});
 }
 
 const source: FaultSource = {
@@ -63,7 +63,7 @@ function harness(errors: NonNullable<Config['errors']> = {}, details: Partial<Fa
         ...details
     });
     return {
-        boundary: new FaultBoundary(core, errors.ignoreApiCodes, FakeApiError, dispatch, detailsOf),
+        boundary: new FaultBoundary(core, errors.ignoreApiCodes, dispatch, detailsOf),
         published,
         send: vi.fn<FaultSender['send']>().mockResolvedValue(undefined)
     };
@@ -101,17 +101,6 @@ class ExplodingNotice extends Notice {
     }
 }
 
-function logCapture(level: LogRecord['level']): { lines: LogRecord[] } & Disposable {
-    const lines: LogRecord[] = [];
-    const sink = LoggerChannelRegistry.instance.installSink({
-        kind: 'capture',
-        onLog: (record) => {
-            if (record.level === level) lines.push(record);
-        }
-    });
-    return { lines, [Symbol.dispose]: () => sink[Symbol.dispose]() };
-}
-
 afterEach(() => {
     vi.restoreAllMocks();
 });
@@ -138,16 +127,16 @@ describe('FaultBoundary', () => {
 
         it('publishes unknownException for a raw throw and logs its stack', () => {
             const { boundary, published } = harness();
-            using log = logCapture('error');
+            using logs = captureLogs();
             const thrown = new Error('a bug');
 
             boundary.report(thrown);
 
             expect(published).toEqual([{ event: 'unknownException', error: thrown }]);
-            expect(log.lines.at(-1)?.args).toEqual([thrown]);
+            expect(logs.argsAt('error')).toEqual([thrown]);
         });
 
-        it('publishes nothing for a Notice that does not report', () => {
+        it("skips the publish for a Notice that doesn't report", () => {
             const { boundary, published } = harness();
 
             boundary.report(new TestNotice());
@@ -164,31 +153,33 @@ describe('FaultBoundary', () => {
         });
 
         it('returns null for a Silence and logs its reason only when logSilences allows it', () => {
-            const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
+            using logs = captureLogs();
             const on = harness();
             const off = harness({ logSilences: false });
 
             expect(on.boundary.report(new Silence('first'))).toBeNull();
             expect(off.boundary.report(new Silence('second'))).toBeNull();
 
-            expect(debug).toHaveBeenCalledWith('Silence: first');
-            expect(debug).not.toHaveBeenCalledWith('Silence: second');
+            expect(logs.at('debug')).toEqual(['Silence: first']);
             expect(on.published).toEqual([]);
         });
 
-        it('returns null for an ignored api code and reports any other', () => {
+        it.each([
+            ['', DiscordAPIError],
+            [', thrown by a discord.js call', CommonJsDiscordAPIError]
+        ])('returns null for an ignored api code and reports any other%s', (_source, ApiError) => {
             const { boundary, published } = harness({ ignoreApiCodes: [10_008] });
 
-            expect(boundary.report(new FakeApiError(10_008))).toBeNull();
+            expect(boundary.report(apiError(10_008, ApiError))).toBeNull();
             expect(published).toEqual([]);
 
-            expect(boundary.report(new FakeApiError(10_009))).not.toBeNull();
+            expect(boundary.report(apiError(10_009, ApiError))).not.toBeNull();
             expect(published).toHaveLength(1);
         });
     });
 
     describe('answerWithReply', () => {
-        it('sends nothing for a Silence', async () => {
+        it("doesn't send a reply for a Silence", async () => {
             const { boundary, send } = harness();
 
             await boundary.answerWithReply(new Silence(), { send });
@@ -245,29 +236,28 @@ describe('FaultBoundary', () => {
 
         it('logs the error and sends the built-in Fault card when the defaultError render throws too', async () => {
             const { boundary, send } = harness({ defaultError: BrokenCard });
-            using log = logCapture('error');
+            using logs = captureLogs();
 
             await boundary.answerWithReply(new Error('boom'), { send });
 
             expect(send).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) as unknown }), {
                 ephemeral: true
             });
-            expect(log.lines.flatMap((line) => line.args ?? [])).toContainEqual(
-                expect.objectContaining({ message: 'card exploded' })
-            );
+            expect(logs.argsAt('error')).toContainEqual(expect.objectContaining({ message: 'card exploded' }));
         });
 
         it.each([
             { failure: new Error('network down'), reported: true },
-            { failure: new FakeApiError(RESTJSONErrorCodes.UnknownInteraction), reported: false }
+            { failure: apiError(RESTJSONErrorCodes.UnknownInteraction), reported: false },
+            { failure: apiError(RESTJSONErrorCodes.UnknownInteraction, CommonJsDiscordAPIError), reported: false }
         ])('logs a send failure only when it is unexpected ($reported)', async ({ failure, reported }) => {
             const { boundary, send } = harness();
             send.mockRejectedValueOnce(failure);
-            using log = logCapture('error');
+            using logs = captureLogs();
 
             await boundary.answerWithReply(new TestNotice(), { send });
 
-            expect(log.lines.flatMap((line) => line.args ?? []).includes(failure)).toBe(reported);
+            expect(logs.argsAt('error').includes(failure)).toBe(reported);
         });
     });
 

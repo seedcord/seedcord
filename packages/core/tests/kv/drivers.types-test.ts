@@ -1,6 +1,6 @@
 import Keyv from 'keyv';
 import { createStorage } from 'unstorage';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { KeyvDriver } from '#src/kv/KeyvDriver';
 import { UnstorageDriver } from '#src/kv/UnstorageDriver';

@@ -2,7 +2,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { CleanMode } from '#commands/commands/clean/CleanMode';
 import { PurgeMode } from '#commands/commands/purge/PurgeMode';
@@ -12,7 +12,7 @@ import { APP_ID, fakeDiscord, removeDeps, slash } from '#tests/commands/commands
 
 import type { RemoveMode } from '#commands/commands/remove/RemoveMode';
 import type { GuildTargets } from '#commands/commands/scope';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 const ALPHA: GuildTargets = { kind: 'named', ids: ['111'] };
 
@@ -62,7 +62,7 @@ function outputInto(lines: string[]): ConstructorParameters<typeof RemovePresent
 }
 
 describe('RemoveRunner.run', () => {
-    it('reports nothing to clean and never asks or deletes when nothing is selected', async () => {
+    it('says there is nothing to clean and never asks or deletes when nothing is selected', async () => {
         const { lines, confirm, deletes } = await run({ onDiscord: {} });
 
         expect(lines.at(-1)).toMatch(/Nothing to clean\.$/u);
@@ -87,7 +87,7 @@ describe('RemoveRunner.run', () => {
         expect(discord.deletes).toEqual([]);
     });
 
-    it('warns about each command it could not delete, then throws CliCommandsNotDeleted', async () => {
+    it('warns about each command it could not delete, then throws CliSomeFailed', async () => {
         const discord = fakeDiscord({
             ...ON_DISCORD,
             [Routes.applicationGuildCommands(APP_ID, '222')]: [slash('ban')],
@@ -102,7 +102,7 @@ describe('RemoveRunner.run', () => {
             apply: true
         });
 
-        await expect(removal).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsNotDeleted });
+        await expect(removal).rejects.toMatchObject({ code: SeedcordErrorCode.CliSomeFailed });
         expect(lines).toContain('Could not delete ban in Alpha (Unknown Command).');
         expect(discord.deletes).toEqual([Routes.applicationGuildCommand(APP_ID, '222', 'ban-id')]);
     });
@@ -122,7 +122,7 @@ describe('RemoveRunner.run', () => {
         expect(lines).toContain('/ban  ban-id');
     });
 
-    it('asks before it deletes, then deletes the duplicates and leaves global alone', async () => {
+    it("asks before it deletes, then deletes the duplicates and doesn't touch global", async () => {
         const { confirm, deletes, lines } = await run();
 
         expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Delete 1 command?'));
@@ -130,14 +130,14 @@ describe('RemoveRunner.run', () => {
         expect(lines.at(-1)).toBe('Global commands untouched.');
     });
 
-    it('deletes nothing when the delete is declined', async () => {
+    it('keeps every command when the delete is declined', async () => {
         const { deletes, lines } = await run({ answer: false });
 
         expect(deletes).toEqual([]);
         expect(lines.at(-1)).toBe('Nothing deleted.');
     });
 
-    it('clears global and each guild with purge, and leaves out the untouched line', async () => {
+    it("clears global and each guild with purge, and doesn't print the untouched line", async () => {
         const { puts, lines, confirm } = await run({ mode: new PurgeMode(true) });
 
         expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Delete 3 commands?'));

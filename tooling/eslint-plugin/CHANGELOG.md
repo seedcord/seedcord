@@ -1,5 +1,21 @@
 # @seedcord/eslint-plugin
 
+## 0.5.2-next.1
+
+### 🩹 Patch
+
+- Improved some error message wording. ([`557be23`](https://github.com/seedcord/seedcord/commit/557be23c5772d1afd957f326c93609d602bed100))
+
+## 0.5.2-next.0
+
+### 🩹 Patch
+
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
+
+#### 📦 Seedcord packages
+
+- `eslint-plugin-discordjs` 0.2.1 → 0.2.2-next.0
+
 ## 0.5.1
 
 ### 🩹 Patch

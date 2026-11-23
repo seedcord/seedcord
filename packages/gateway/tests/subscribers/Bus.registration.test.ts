@@ -1,6 +1,6 @@
 import { DiscordAPIError } from '@discordjs/rest';
 import { busLoggerOf, RegisteredCount, VerifyWebhooks, SubscriberLoader } from '@seedcord/core/internal';
-import { describe, expect, afterAll, afterEach, vi, type MockInstance } from 'vitest';
+import { describe, expect, afterAll, afterEach, vi, type MockInstance } from 'vite-plus/test';
 
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
@@ -14,7 +14,7 @@ function loaderOf(instance: Seedcord): SubscriberLoader {
     return new SubscriberLoader(instance.bus, instance.config.subscribers.path);
 }
 
-// envapt snapshots process.env on its first read, before any test runs
+// envapt snapshots process.env on its first read before any test runs
 const WEBHOOK_ENV = vi.hoisted(() => {
     const env = {
         MALFORMED_REPORTER_WEBHOOK_URL: 'https://example.com/not-a-webhook',

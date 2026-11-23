@@ -21,6 +21,12 @@ interface PullRequest {
     head: { sha: string };
 }
 
+interface WorkflowRun {
+    id: number;
+    status: string;
+    conclusion: string | null;
+}
+
 const humanLogin = (account: Account | null | undefined): string | undefined =>
     account && account.type !== 'Bot' ? account.login : undefined;
 
@@ -61,12 +67,12 @@ export class GitHubApi {
         return role;
     }
 
-    async lastSuccessfulPullRequestRun(workflow: string, sha: string): Promise<number | undefined> {
-        const { workflow_runs: runs } = await this.get<{ workflow_runs: { id: number }[] }>(
-            `actions/workflows/${workflow}/runs?head_sha=${sha}&event=pull_request&status=success&per_page=1`,
+    async lastPullRequestRun(workflow: string, sha: string): Promise<WorkflowRun | undefined> {
+        const { workflow_runs: runs } = await this.get<{ workflow_runs: WorkflowRun[] }>(
+            `actions/workflows/${workflow}/runs?head_sha=${sha}&event=pull_request&per_page=1`,
             `listing ${workflow} runs for ${sha}`
         );
-        return runs[0]?.id;
+        return runs[0];
     }
 
     async artifactNames(run: number): Promise<string[]> {

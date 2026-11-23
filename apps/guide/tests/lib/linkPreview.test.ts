@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { guidePreview } from '#lib/linkPreview';
 
@@ -21,7 +21,7 @@ describe('guidePreview', () => {
         expect(card.subtext?.[0]).toBe('2 of 2 in Replying');
     });
 
-    it('leaves out a group that repeats the page title', () => {
+    it("doesn't include a group that repeats the page title", () => {
         const card = guidePreview({
             page: page('/components/custom-ids/', 'Custom IDs'),
             order: ORDER,

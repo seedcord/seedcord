@@ -1,6 +1,6 @@
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { twinOf } from './twinPipeline';
 
@@ -17,7 +17,7 @@ function linksIn(markdown: string): Link[] {
 }
 
 describe('what an agent reads instead of the page', () => {
-    it('drops the heading anchor a reader never sees', async () => {
+    it('removes the heading anchor a reader never sees', async () => {
         expect(await twinOf('## Reading options\n')).toBe('## Reading options\n');
     });
 
@@ -33,7 +33,7 @@ describe('what an agent reads instead of the page', () => {
         expect(twin).toContain('/packages/core/latest/classes/paginator-base#start)');
     });
 
-    it('links the package overview when a ref carries no symbol', async () => {
+    it('links the package overview when the ref is only a package', async () => {
         const twin = await twinOf('install [core](ref:core) first\n');
 
         expect(twin).toContain('[core](https://seedcord.org/docs/packages/core/latest)');
@@ -70,6 +70,14 @@ describe('what an agent reads instead of the page', () => {
         expect(twin).toBe('> **Warning**\n>\n> Mind the cap.\n');
     });
 
+    it('writes every tab in order, each under its label', async () => {
+        const twin = await twinOf(
+            '<Tabs>\n<Tab label="Gateway">\n\nUses the cache.\n\n</Tab>\n<Tab label="Http">\n\nCalls REST.\n\n</Tab>\n</Tabs>\n'
+        );
+
+        expect(twin).toBe('**Gateway**\n\nUses the cache.\n\n**Http**\n\nCalls REST.\n');
+    });
+
     it('says which transport a transport callout applies to', async () => {
         const twin = await twinOf('<Callout type="transport" only="gateway">\n\nOnly here.\n\n</Callout>\n');
 
@@ -92,7 +100,7 @@ describe('what an agent reads instead of the page', () => {
         expect(await twinOf(source)).toBe('```ts\nnew Ping();\n```\n');
     });
 
-    it('keeps the title a fence carries', async () => {
+    it("keeps a fence's title", async () => {
         const source = '```ts title="src/bot.ts"\nconst a = 1;\n```\n';
 
         expect(await twinOf(source)).toBe('```ts title="src/bot.ts"\nconst a = 1;\n```\n');

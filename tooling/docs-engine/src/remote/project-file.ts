@@ -48,7 +48,7 @@ export function validateProjectFile(value: unknown): DocProjectFile {
         throw new ProjectFetchError(null, 'project.json.root must be an object');
     }
 
-    // serializeProject already produced this tree at publish time, so deep validation here would be redundant cost on every fetch.
+    // deep validation here would add redundant cost on every fetch because serializeProject has already produced this tree at publish time.
     return {
         schemaVersion: 1,
         package: { name: pkg.name, version: pkg.version },
@@ -57,7 +57,7 @@ export function validateProjectFile(value: unknown): DocProjectFile {
     };
 }
 
-// project.json carries only name and version. The rest of DocManifestPackage describes the extraction
+// project.json has only name and version. The rest of DocManifestPackage describes the extraction
 // run (entry points, warnings, errors), which the render path never reads.
 function manifestShell(pkg: DocProjectFile['package'], fields: PageFields): DocManifestPackage {
     return {

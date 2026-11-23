@@ -34,7 +34,7 @@ const CASES: Record<string, Partial<PreviewCardProps>> = {
     underscores: {
         title: 'MAX_JSON_BYTES',
         titleEmoji: PREVIEW_EMOJI.variable,
-        body: 'The limit is MAX_JSON_BYTES. Private names like __internal__ and snake_case_name sit in prose.'
+        body: 'The limit is MAX_JSON_BYTES. Private names like __internal__ and snake_case_name appear in prose.'
     },
     'angle-brackets': {
         title: 'Plugin<Opts>',

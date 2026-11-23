@@ -6,7 +6,7 @@ import type { FeedEvent } from '../components/bundles/Feed';
 
 const TOTAL_EVENTS = 43;
 
-// simulates a feed with no cheap total, so the CursorSource skips the last button and shows "Page X"
+// simulates a feed without a cheap total. the CursorSource skips the last button and shows "Page X" for it
 function fetchEvents(page: number, perPage: number): { items: FeedEvent[]; hasNext: boolean } {
     const start = page * perPage;
     const count = Math.min(perPage, Math.max(0, TOTAL_EVENTS - start));

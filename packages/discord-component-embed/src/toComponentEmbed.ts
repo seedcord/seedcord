@@ -116,7 +116,7 @@ export function collectErrors(root: EmbedElement): ComponentEmbedError[] {
     const collector = collectInto(errors);
     try {
         const payload = buildPayload(root, collector);
-        // a component that failed to build would drop out of the counts
+        // the counts would miss a component that failed to build
         if (errors.length === 0) checkComponentLimits(payload.component, collector);
     } catch (error) {
         errors.push(asEmbedError(error));
@@ -368,7 +368,7 @@ function emojiToShow(emoji: LinkButtonProps['emoji'], path: Path): APIMessageCom
     return isFilled(emoji?.id) || isFilled(emoji?.name) ? emoji : undefined;
 }
 
-// an emoji object from discord's API also carries roles and user
+// an emoji object from discord's API also has roles and user
 function toEmoji({ id, name, animated }: APIMessageComponentEmoji): APIMessageComponentEmoji {
     return {
         ...(id !== undefined && { id }),

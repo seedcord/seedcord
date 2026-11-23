@@ -4,8 +4,9 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { ConfigGuilds } from '#decorators/Command';
 
 import type { CommandMeta } from '#decorators/Command';
+import type { ExcludeStrict } from 'type-fest';
 
-export type DeployTarget = Exclude<CommandMeta, { scope: 'config' }>;
+export type DeployTarget = ExcludeStrict<CommandMeta, { scope: 'config' }>;
 
 export function resolveDeployTarget(
     meta: CommandMeta,

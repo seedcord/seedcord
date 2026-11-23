@@ -1,7 +1,7 @@
 import { basename } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { copyEdgeBotForTest, edgeBuildRunner, writeCloudflareConfig } from './edgeBot';
 
@@ -36,7 +36,7 @@ describe('seedcord build checks that an edge bot keeps Node compat on', () => {
         await expect(build(projectDir)).resolves.toBeDefined();
     }, 120_000);
 
-    // workerd loads no node: modules for nodejs_compat_v2 alone
+    // workerd doesn't load node: modules for nodejs_compat_v2 alone
     it('throws CliEdgeCompatDateTooOld for an older date with only nodejs_compat_v2', async () => {
         const projectDir = await edgeBotWith({
             compatibilityDate: '2026-08-03',

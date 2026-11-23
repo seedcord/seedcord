@@ -8,7 +8,7 @@ const present: BoardParams['roleId'] = '123';
 void absent;
 void present;
 
-// @ts-expect-error page took no options and stays a plain number
+// @ts-expect-error page was declared without options, so it's a plain number
 const pageIsNotNullable: BoardParams['page'] = null;
 void pageIsNotNullable;
 
@@ -23,7 +23,7 @@ Note.encode({ body: null });
 const Plain = new CustomId('plain').snowflake('userId');
 type PlainParams = ReturnType<typeof Plain.decode>;
 
-// @ts-expect-error a field with no options stays non-null
+// @ts-expect-error a field without options can't be null
 const plainIsNotNullable: PlainParams['userId'] = null;
 void plainIsNotNullable;
 
@@ -36,10 +36,10 @@ void explicitIsNotNullable;
 
 Explicit.encode({ silent: true });
 
-// encode takes the same widening the decode side gets
+// encode accepts null wherever decode can return it
 Board.encode({ page: 0, roleId: null });
 Plain.encode({
-    // @ts-expect-error null reaches encode only on a nullable field
+    // @ts-expect-error encode only accepts null on a nullable field
     userId: null
 });
 
@@ -53,7 +53,7 @@ void picked;
 const unlisted: AssignParams['roles'] = ['admin'];
 void unlisted;
 
-// @ts-expect-error a someOf with no options stays non-null
+// @ts-expect-error a someOf without options can't be null
 const rolesAreNotNullable: AssignParams['roles'] = null;
 void rolesAreNotNullable;
 
@@ -66,6 +66,6 @@ void noRoles;
 Optional.encode({ roles: null });
 
 Assign.encode({
-    // @ts-expect-error an unlisted choice never reaches encode
+    // @ts-expect-error encode rejects an unlisted choice
     roles: ['admin']
 });

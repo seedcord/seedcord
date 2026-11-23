@@ -71,8 +71,8 @@ export type EventSpec<EventKey extends ValidNonInteractionKeys> = readonly [
 export function RegisterEvent<const Defs extends readonly EventSpec<ValidNonInteractionKeys>[]>(...defs: Defs) {
     type EventKey = Defs[number][0];
 
-    // EventHandler is invariant in its Names generic (match puts Names in the cases, a contravariant position), so
-    // this single constraint rejects a handler whose generic and decorator list different events, both directions.
+    // this single constraint rejects a handler whose generic and decorator list different events, in both directions,
+    // because EventHandler is invariant in its Names generic (match puts Names in the cases, a contravariant position)
     return function <HandlerCtor extends Constructor<EventHandler<EventKey>>>(constructor: HandlerCtor): void {
         const entries = defs.map<RegisterEventMetadataEntry<EventKey>>(([event, options]) => ({
             event,

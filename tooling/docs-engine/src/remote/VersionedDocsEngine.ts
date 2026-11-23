@@ -149,7 +149,7 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
         return null;
     }
 
-    // deferred so several setVersion calls cost one rebuild, and a slug-only render builds nothing
+    // deferred so several setVersion calls cost one rebuild, and a slug-only render skips the build
     private ensureBuilt(): void {
         if (!this.dirty) return;
         this.rebuild();
@@ -175,7 +175,7 @@ function entityFromEntry(entry: PackageIndexEntry, slug: string, activeVersion?:
     const tone = entry.entities?.[entitySlug];
     if (!tone) return null;
 
-    // stay on the version the reader is viewing
+    // link to the version the reader is viewing
     const version = activeVersion ?? entry.stable?.latest ?? entry.prerelease?.latest;
     if (!version) return null;
 

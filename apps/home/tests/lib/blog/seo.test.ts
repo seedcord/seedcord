@@ -1,18 +1,18 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { postMetadata } from '#lib/blog/seo';
 import { DEFAULT_OG_IMAGE } from '#lib/site';
 import { POST } from '#tests/fixtures/post';
 
 describe('postMetadata', () => {
-    it('sets noindex and leaves out the markdown copy link on an unlisted post', () => {
+    it("sets noindex and doesn't include the markdown copy link on an unlisted post", () => {
         const metadata = postMetadata({ ...POST, unlisted: true });
 
         expect(metadata.robots).toEqual({ index: false, follow: false });
         expect(metadata.alternates?.types).not.toHaveProperty('text/markdown');
     });
 
-    it('sets no robots rule on a listed post', () => {
+    it('leaves robots null on a listed post', () => {
         expect(postMetadata(POST).robots).toBeNull();
     });
 

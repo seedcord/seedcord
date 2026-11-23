@@ -35,4 +35,4 @@ seedcord is pre-1.0. A fix ships in the next release. I only patch an older vers
 
 ## After the fix
 
-I publish the advisory once the fixed version is on npm, and I credit you in it unless you'd rather stay unnamed.
+I publish the advisory once the fixed version is on npm, and I credit you in it unless you'd rather I leave your name out.

@@ -3,7 +3,7 @@ import { createServer } from 'node:net';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostListenHost } from '@seedcord/types/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';
@@ -29,7 +29,7 @@ describe('the interactions server port', () => {
     it('throws PortInUse when another process already listens on the port', async () => {
         await using held = await heldPort();
         await bindSignedEnv();
-        await using host = new Seedcord({ ...serverConfig(), port: held.port });
+        await using host = new Seedcord({ ...serverConfig(), server: { port: held.port } });
 
         const error: unknown = await host.start().catch((caught: unknown) => caught);
 
@@ -39,7 +39,7 @@ describe('the interactions server port', () => {
     it('throws PortInUse when another process holds the listen host seedcord dev set', async () => {
         await using held = await heldPort('127.0.0.1');
         await bindSignedEnv();
-        await using host = new Seedcord({ ...serverConfig(), port: held.port });
+        await using host = new Seedcord({ ...serverConfig(), server: { port: held.port } });
         host[HostListenHost] = '127.0.0.1';
 
         const error: unknown = await host.start().catch((caught: unknown) => caught);

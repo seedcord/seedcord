@@ -27,7 +27,7 @@ Without the Message Content intent, `Echo` logs an empty string every time.
 content: ""
 ```
 
-Nothing throws, so you only notice when a feature quietly never matches. The compiler can't warn you either, since `text` is typed `string` with or without the intent.
+Nothing throws, so you only notice when a feature quietly never matches. The compiler can't warn you either since `text` is typed `string` with or without the intent.
 
 ## What the intent gates
 
@@ -73,13 +73,13 @@ export class Mentioned extends EventHandler<Events.MessageCreate> {
 
 Your handler only runs for a message that starts with a mention of your bot. It ignores a reply that pings your bot and a message that mentions your bot later in the text. If an edit should run the command, register `messageUpdate` too and handle both events with [`this.match()`](/events/several-events). The gate then passes an edit only when the edit adds the mention.
 
-If the message already started with the mention, editing it doesn't run the command again. With `Partials.Message` on, discord.js also emits an edit to a message it didn't cache. That edit runs the command again.
+If the message has already started with the mention, editing it doesn't run the command again. With `Partials.Message` on, discord.js also emits an edit to a message it didn't cache. That edit runs the command again.
 
 [`@Gated`](ref:gateway/Gated) with [`IgnoreBots`](ref:gateway/IgnoreBots) stops the handler on a message from any bot, including your own. Without it, `Mentioned` would answer another bot that mentions yours. Two bots like that can reply to each other forever. The [gate catalog](/checks/gates) lists the other checks.
 
 ## Turning the intent on
 
-When your bot does need every message's text, like an auto-moderator scanning for banned words, you turn the intent on in two places. Turn on **Message Content** in the developer portal under your application's **Bot** tab, then add the intent to `clientOptions`. If you flip only the portal switch, the text stays empty. If you add only the client intent, Discord closes the connection with close code 4014, "Disallowed intent(s)".
+When your bot does need every message's text, like an auto-moderator scanning for banned words, you turn the intent on in two places. Turn on **Message Content** in the developer portal under your application's **Bot** tab, then add the intent to `clientOptions`. If you flip only the portal switch, the text is empty. If you add only the client intent, Discord closes the connection with close code 4014, "Disallowed intent(s)".
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -116,4 +116,4 @@ Message Content is a privileged intent. Once more than 10,000 unique users can s
 
 Don't build commands on a prefix like `!help` or `?play`. Make them slash commands. Discord's page on avoiding a privileged intent opens its checklist with this question: "Is my bot using prefix commands (`!help`, `?play`) that could be migrated to slash commands?"
 
-A slash command runs without a privileged intent. It also gives you typed options and a place in Discord's command picker. [Commands](/commands) covers slash commands. A message context menu command is the other route, since it receives the full message, content included.
+A slash command runs without a privileged intent. It also gives you typed options and a place in Discord's command picker. [Commands](/commands) covers slash commands. A message context menu command is the other route since it receives the full message, content included.

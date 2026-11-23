@@ -6,7 +6,7 @@ The split is deliberate. This half has to open source to do its job. The prose h
 
 **Send the prompt verbatim.** Fill in four per-page fields, repeated for each page in the batch, and change nothing else: the file path, the symbols the page teaches, which sibling pages cover which material, and which of the five architectural arguments this page is responsible for. Adding the verdict you already reached turns the answer into your own opinion read back to you.
 
-Section 1 of the skill lists the five arguments. Which page is responsible for each one is a content decision rather than a rule, so you fill that field in when you send the prompt.
+Section 1 of the skill lists the five arguments. Which page is responsible for each one is a content decision, so you fill that field in when you send the prompt.
 
 ---
 
@@ -50,22 +50,21 @@ Nine checks.
 
 2. Every feature's reason to exist.
 
-   Take each section of the page and read its opening. A section that teaches a
-   feature says what the reader does without it and what that costs them, in one
-   or two sentences, before it says how to configure the thing.
+   Take each section of the page and read its heading and first two sentences.
+   Report a section where those leave a reader unable to tell what the feature
+   is for. A heading that already says it, like "Limit how often a command
+   runs", needs nothing more.
 
-   A real miss. The emoji section opened on "Name each custom emoji in your
-   config, then read it back by that name", where the fact the reader needed is
-   that Discord takes a custom emoji as <:name:id>, so without the map those ids
+   Where a section needs one, write the problem it solves as one or two plain
+   sentences of fact, from the declarations and from what the platform
+   requires. Name the file and line, or the platform rule. Report the ones you
+   cannot source rather than reasoning one out. The emoji section needed this:
+   Discord takes a custom emoji as <:name:id>, so without the map those ids
    spread through the message code and go stale on a re-upload.
 
-   For each section report whether it answers this, and where it does not, write
-   the answer yourself from the declarations and from what the platform
-   requires. Name the file and line, or name the platform rule. Report the ones
-   you cannot source rather than reasoning one out.
-
-   Take this per section. A page carrying one reason near the top has answered
-   it for that section alone, so keep going through the rest.
+   Report every scene standing in for that fact: an invented person, a made-up
+   afternoon, "you've done X before", or a story about what goes wrong later.
+   Give the fact that should replace it.
 
    Then, for each section, ask what call the surface hands the reader once they
    have it. Where the code goes, which of two shapes fits, what today's choice

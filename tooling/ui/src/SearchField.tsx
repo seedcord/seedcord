@@ -1,11 +1,11 @@
 'use client';
 
+import { cn } from 'cn';
 import { LoaderCircle, Search } from 'lucide-react';
 
 import { CloseControls } from './CloseControls';
 import { IconSwap } from './IconSwap';
 import { Input } from './Input';
-import { cn } from './lib/cn';
 import { useSearchDialogListExpanded } from './SearchDialog';
 
 import type { KeyboardEvent, ReactElement, ReactNode, RefObject } from 'react';

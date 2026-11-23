@@ -47,13 +47,13 @@ export class SymbolRef {
 
         const [pkg = '', symbol, ...extra] = url.slice(PROTOCOL.length).split('/');
         if (pkg === '') return 'is missing the package';
-        if (symbol === '') return 'has a slash with no symbol after it';
+        if (symbol === '') return 'has a slash without a symbol after it';
         if (extra.length > 0) return 'has a path after the symbol';
 
         const ref = new SymbolRef(pkg, symbol ?? '');
         if (ref.isPackage) return ref;
-        if (ref.owner === '') return 'has nothing before the member';
-        if (ref.member === '') return 'has nothing after the member separator';
+        if (ref.owner === '') return 'is missing the part before the member';
+        if (ref.member === '') return 'is missing the part after the member separator';
         return ref;
     }
 

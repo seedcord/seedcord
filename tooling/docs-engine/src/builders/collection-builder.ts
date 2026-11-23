@@ -200,7 +200,7 @@ export function buildCollection(manifest: DocManifest, options: ResolveOptions):
         resolvePackageJsonPath(output, baseCandidates, options);
 
     const model = createApiModel();
-    // Load every package into the shared model before adapting any, so cross-package @link
+    // Load every package into the shared model before adapting any because cross-package @link
     // references resolve against the full set.
     const loaded: { pkg: DocManifestPackage; entries: AdapterEntry[] }[] = [];
     for (const pkg of manifest.packages) {

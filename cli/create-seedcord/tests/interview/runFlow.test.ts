@@ -1,5 +1,5 @@
 import { Prompter } from '@seedcord/cli-prompts';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { runFlow } from '#interview/runFlow';
 import { BOT_TOKEN } from '#tests/token';
@@ -39,7 +39,7 @@ describe('runFlow', () => {
         expect(answers).toEqual({ directory: 'my-bot', transport: 'gateway' });
     });
 
-    it('hands each asked answer to onAnswer, and leaves out what a flag supplied', async () => {
+    it("hands each asked answer to onAnswer, and doesn't pass what a flag supplied", async () => {
         const rows: string[] = [];
 
         await runFlow(

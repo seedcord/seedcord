@@ -42,7 +42,7 @@ export const GENERAL_RULES: Linter.RulesRecord = {
     'no-magic-numbers': [
         'warn',
         {
-            ignore: [-1, 0, 1, 2, 5, 10, 20, 100, 1000, 1024, 5000, 10000],
+            ignore: [-1, 0, 1, 2, 5, 7, 10, 12, 20, 24, 28, 30, 31, 52, 60, 100, 365, 366, 1000, 1024, 5000, 10000],
             ignoreArrayIndexes: true,
             ignoreDefaultValues: true,
             ignoreClassFieldInitialValues: true,
@@ -69,7 +69,7 @@ export const GENERAL_RULES: Linter.RulesRecord = {
 
     'arrow-body-style': ['error', 'as-needed', { requireReturnForObjectLiteral: false }],
 
-    // flat config replaces this rule wholesale when another block also sets no-restricted-syntax, so keep every selector in this one array
+    // keep every selector in this one array because flat config replaces this rule wholesale when another block also sets no-restricted-syntax
     'no-restricted-syntax': [
         'error',
         {

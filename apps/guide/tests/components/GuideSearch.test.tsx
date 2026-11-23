@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { GuideSearch } from '#components/GuideSearch';
 
@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 describe('GuideSearch', () => {
-    it('opens nothing on Enter while the rows on screen answer the previous question', async () => {
+    it('ignores Enter while the rows on screen answer the previous question', async () => {
         serving();
         const push = vi.fn();
         const unused = (): void => undefined;

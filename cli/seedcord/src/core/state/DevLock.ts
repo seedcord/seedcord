@@ -59,7 +59,7 @@ function alreadyRunning(holder: LockBody, path: string): SeedcordError {
     return new SeedcordError(SeedcordErrorCode.CliDevAlreadyRunning, [holder.configDir, holder.pid, startedAt, path]);
 }
 
-// windows has no uids and gives every user their own tmpdir
+// windows doesn't have uids and gives every user their own tmpdir
 function assertOwnFolder(dir: string): void {
     const uid = process.getuid?.();
     if (uid !== undefined && statSync(dir).uid !== uid) {

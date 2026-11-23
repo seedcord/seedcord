@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@seedcord/ui';
+import { cn, tw } from '@seedcord/ui';
 
 import { CommentExamples } from '#components/docs/entity/comments/CommentExamples';
 import { CommentParagraphs } from '#components/docs/entity/comments/CommentParagraphs';
@@ -16,6 +16,25 @@ export type SignatureSelection = [string, (id: string) => void];
 
 interface MemberRowBodyProps extends WithParentDeprecationStatus {
     member: EntityMemberSummary;
+}
+
+const LABEL_ROW = tw`text-subtle flex flex-wrap items-baseline gap-2`;
+const LABEL = tw`font-semibold text-(--text)`;
+
+function InheritedFrom({ from }: { from: NonNullable<EntityMemberSummary['inheritedFrom']> }): ReactElement {
+    if (typeof from === 'string') return <span>{from}</span>;
+    if (!from.href) return <span>{from.name}</span>;
+
+    return (
+        <a
+            href={from.href}
+            target={from.external ? '_blank' : undefined}
+            rel={from.external ? 'noopener noreferrer' : undefined}
+            className={cn('link underline', from.external && 'cross-ref')}
+        >
+            {from.name}
+        </a>
+    );
 }
 
 export function MemberRowBody({ member, parentDeprecationStatus }: MemberRowBodyProps): ReactElement {
@@ -41,34 +60,21 @@ export function MemberRowBody({ member, parentDeprecationStatus }: MemberRowBody
             ))}
             {hasSharedExamples ? <CommentExamples examples={member.sharedExamples} /> : null}
             {member.inheritedFrom ? (
-                <p className={cn('text-subtle flex flex-wrap items-baseline gap-2')}>
-                    <span className={cn('font-semibold text-(--text)')}>Inherited from:</span>
-                    {typeof member.inheritedFrom === 'string' ? (
-                        <span>{member.inheritedFrom}</span>
-                    ) : member.inheritedFrom.href ? (
-                        <a
-                            href={member.inheritedFrom.href}
-                            target={member.inheritedFrom.external ? '_blank' : undefined}
-                            rel={member.inheritedFrom.external ? 'noopener noreferrer' : undefined}
-                            className={cn('link underline', member.inheritedFrom.external && 'cross-ref')}
-                        >
-                            {member.inheritedFrom.name}
-                        </a>
-                    ) : (
-                        <span>{member.inheritedFrom.name}</span>
-                    )}
+                <p className={cn(LABEL_ROW)}>
+                    <span className={cn(LABEL)}>Inherited from:</span>
+                    <InheritedFrom from={member.inheritedFrom} />
                 </p>
             ) : null}
             {member.defaultValue?.length ? (
-                <p className={cn('text-subtle flex flex-wrap items-baseline gap-2')}>
-                    <span className={cn('font-semibold text-(--text)')}>Default:</span>
+                <p className={cn(LABEL_ROW)}>
+                    <span className={cn(LABEL)}>Default:</span>
                     <span dangerouslySetInnerHTML={{ __html: member.defaultValue[0]?.html ?? '' }} />
                 </p>
             ) : null}
             {member.throws?.length ? (
                 <div>
-                    <p className={cn('text-subtle flex flex-wrap items-baseline gap-2')}>
-                        <span className={cn('font-semibold text-(--text)')}>Throws:</span>
+                    <p className={cn(LABEL_ROW)}>
+                        <span className={cn(LABEL)}>Throws:</span>
                     </p>
                     <CommentParagraphs paragraphs={member.throws} isList />
                 </div>

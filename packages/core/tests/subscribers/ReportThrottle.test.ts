@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ReportThrottle } from '#subscribers/ReportThrottle';
 
@@ -9,7 +9,7 @@ describe('ReportThrottle', () => {
         expect(throttle.take('k')).toBe(0);
     });
 
-    it('sends nothing inside the window', () => {
+    it('holds every send inside the window', () => {
         let now = 1000;
         const throttle = new ReportThrottle(60_000, () => now);
 
@@ -19,7 +19,7 @@ describe('ReportThrottle', () => {
         expect(throttle.take('k')).toBeNull();
     });
 
-    it('carries the count of everything it suppressed into the next send', () => {
+    it('includes the count of everything it suppressed in the next send', () => {
         let now = 1000;
         const throttle = new ReportThrottle(60_000, () => now);
 
@@ -88,7 +88,7 @@ describe('ReportThrottle', () => {
         expect(throttle.take('k')).toBe(2);
     });
 
-    it('hands a failed send its count back, so the next one carries it', () => {
+    it('hands a failed send its count back, so the next one includes it', () => {
         let now = 1000;
         const throttle = new ReportThrottle(60_000, () => now);
 

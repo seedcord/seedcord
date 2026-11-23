@@ -5,7 +5,7 @@ description: Subscribe to the events seedcord itself publishes on the bus, and s
 
 seedcord publishes its own keys on `core.bus`, alongside the keys you declare yourself. Without them, logging every deploy, tracing each interaction, or posting faults to a channel means wrapping your own handlers and deploy script. You subscribe to them with [`@Subscribe`](ref:core/Subscribe) or `core.bus.on`, the same way you subscribe to [your own keys](/events/bus). You can't publish them yourself.
 
-The `where` column says which transport publishes each key.
+The `where` column lists which transport publishes each key.
 
 {/* prettier-ignore-start */}
 
@@ -14,10 +14,11 @@ The `where` column says which transport publishes each key.
 | `unknownException` | both | a raw throw reaches the fault boundary, or the Node process catches an unhandled error |
 | `handledException` | both | a [`Notice`](ref:core/Notice) with `report` true is caught |
 | `unhandledInteractionError` | both | an interaction dispatch throws past the boundary |
+| `interactionDispatching` | both | an interaction dispatch starts, before its plugin members, middleware, gates, and handler run |
 | `interactionDispatched` | both | one dispatch finishes |
 | `responseAttempted` | both | any write through the reply surface |
 | `commandsDeployed` | both | a command deploy finishes |
-| `anyInteraction` | both | an interaction arrives, before routing |
+| `anyInteraction` | both | an interaction arrives before routing |
 | `unhandledEventError` | gateway | an event dispatch throws past the boundary |
 | `eventDispatching` | gateway | before the handlers for an event run |
 | `eventDispatched` | gateway | those handlers finish |
@@ -26,7 +27,7 @@ The `where` column says which transport publishes each key.
 
 <Callout type="transport">
 
-`anyInteraction` carries a discord.js `Interaction` on gateway and an `APIInteraction` on http. If a subscriber calls a discord.js method on it, that subscriber compiles on gateway and fails to compile on http.
+`anyInteraction` has a discord.js `Interaction` as its payload on gateway and an `APIInteraction` on http. If a subscriber calls a discord.js method on it, that subscriber compiles on gateway and fails to compile on http.
 
 On http, seedcord publishes it only after the request passes Ed25519 verification and the replay checks. A forged or repeated request never reaches it.
 
@@ -80,9 +81,9 @@ export class Trace extends Subscriber<'eventDispatching'> {
 
 `Trace` reads only `args.length`, which works for any event. `name` and `args` narrow together, so a check like `name === 'messageCreate'` gives you that event's own tuple in `args`.
 
-<Callout type="warning">
+<Callout type="note">
 
-seedcord publishes `eventDispatching` only when at least one handler is about to run. It doesn't publish it for an event that no handler registered, or for an event whose handlers were all `once` and have already run. The key is published before middleware runs, including when middleware later stops the dispatch.
+seedcord publishes `eventDispatching` only when at least one handler is about to run. It doesn't publish it for an event with zero registered handlers, or for an event whose handlers were all `once` and have already run. The key is published before middleware runs, including when middleware later stops the dispatch.
 
 </Callout>
 
@@ -90,7 +91,7 @@ seedcord publishes `eventDispatched` once the handlers finish. Its fields, inclu
 
 ## The two unhandled errors
 
-A throw from your handlers, gates, or middleware reaches the fault boundary, which catches and reports it. `unhandledInteractionError` and `unhandledEventError` cover a throw the boundary never sees, like one inside seedcord's own dispatch code ([report it](https://github.com/seedcord/seedcord/issues/new?template=bug_report.yml)). Both carry only `{ error: Error }`. Subscribe to them to hear about those failures in production, since your handlers' own reporting never sees them.
+A throw from your handlers, gates, or middleware reaches the fault boundary, which catches and reports it. `unhandledInteractionError` and `unhandledEventError` cover a throw the boundary never catches, like one inside seedcord's own dispatch code ([report it](https://github.com/seedcord/seedcord/issues/new?template=bug_report.yml)). Both have the `error`. `unhandledInteractionError` also has the `interactionId`, and `unhandledEventError` has the event's `name`. Subscribe to them to hear about those failures in production since your handlers' own reporting never receives them.
 
 ## The fault keys
 
@@ -110,7 +111,7 @@ These two keys carry a fault out of your bot, to a log service or a Discord chan
 
 {/* prettier-ignore-end */}
 
-A reported `Notice` thrown from an autocomplete also publishes here, since [`FaultSource`](ref:core/FaultSource) only has shapes for interactions and events. Check `error` with `instanceof Notice` if your subscriber treats the two differently.
+A reported `Notice` thrown from an autocomplete also publishes here since [`FaultSource`](ref:core/FaultSource) only has shapes for interactions and events. Check `error` with `instanceof Notice` if your subscriber treats the two differently.
 
 seedcord publishes `handledException` on a [`Notice`](ref:core/Notice) with `report` true.
 
@@ -120,13 +121,13 @@ seedcord publishes `handledException` on a [`Notice`](ref:core/Notice) with `rep
 | --- | --- | --- |
 | `uuid` | `UUID` | this fault, and the id the error card shows the user |
 | `dispatchId` | `string` | the dispatch that reported it |
-| `origin` | `string` | the same shape `unknownException` carries |
+| `origin` | `string` | the same shape `unknownException` has |
 | `denial` | [`Notice`](ref:core/Notice) | the Notice itself |
 | `source` | [`FaultSource`](ref:core/FaultSource) | where the throw came from, with `kind` of `interaction` or `event` (http only produces `interaction`) |
 
 {/* prettier-ignore-end */}
 
-An event `origin` carries a third segment with the handler's name, since one dispatch runs several of them.
+An event `origin` has a third segment with the handler's name since one dispatch runs several of them.
 
 seedcord ships a subscriber for each of these keys and registers it for you. Each one [posts a card to a Discord webhook](/replying/reporting) once you set its environment variable.
 
@@ -135,4 +136,4 @@ UNKNOWN_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
 HANDLED_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
-If a variable isn't set, that reporter stays off. seedcord logs a warning about it at startup.
+If a variable isn't set, that reporter doesn't post anything. seedcord logs a warning about it at startup.

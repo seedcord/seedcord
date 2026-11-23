@@ -1,5 +1,4 @@
-import { cn, Icon } from '@seedcord/ui';
-import { ArrowRight } from 'lucide-react';
+import { cn, tw } from '@seedcord/ui';
 
 import { CodeCard } from '#components/code/CodeCard';
 import { SECTION_HEADING, Section } from '#components/home/Section';
@@ -7,33 +6,54 @@ import { afterSeedcord, beforeRawDjs } from '#lib/code/samples';
 
 import type { ReactNode } from 'react';
 
+const GONE = [
+    { what: 'No deploy script', why: 'Your bot sends its commands to Discord when it starts.' },
+    { what: 'No command switch', why: 'The route decorator picks the handler.' },
+    { what: 'No server check', why: 'The gate refuses a DM and replies for you.' },
+    { what: 'No cast', why: 'Codegen types the option from your builder.' },
+    { what: 'No try/catch', why: 'A throw replies to the user, logs, and reports.' }
+] as const;
+
+const FADE = tw`after:pointer-events-none after:absolute after:inset-x-0.75 after:bottom-0.75 after:h-24 after:bg-linear-to-t after:from-(--seed-dark) after:from-15% max-lg:after:right-3.25`;
+
 export function BeforeAfter(): ReactNode {
     return (
-        <Section ground="pith">
-            <div className={cn('mb-10 flex flex-wrap items-end justify-between gap-4')}>
-                <div>
-                    <h2 className={cn(SECTION_HEADING)}>
-                        Same command.
-                        <br />
-                        <span className={cn('text-(--flesh-deep)')}>Far less</span> to write.
-                    </h2>
+        <Section ground="rind">
+            <h2 className={cn(SECTION_HEADING)}>
+                Same command.
+                <br />
+                Far less to write.
+            </h2>
+            <div className={cn('mt-10 grid gap-6 lg:grid-cols-2')}>
+                {/* on desktop the seedcord card sets the row's height, and this one scrolls inside it */}
+                <div className={cn('relative min-w-0 max-lg:h-96', FADE)}>
+                    <CodeCard
+                        code={beforeRawDjs}
+                        filename="discord.js"
+                        scrolls
+                        className={cn('blk-pith h-full rule lg:absolute lg:inset-0')}
+                    />
                 </div>
-                <div className={cn('font-mono-code flex items-center gap-3 text-sm font-semibold')}>
-                    <span className={cn('rounded-sm bg-(--seed-dark) px-3 py-2 text-(--pith)')}>by hand</span>
-                    <Icon icon={ArrowRight} size={20} className={cn('text-(--seed-dark)')} />
-                    <span className={cn('rounded-sm bg-(--flesh-deep) px-3 py-2 text-(--pith)')}>
-                        seedcord · one handler
-                    </span>
-                </div>
+                <CodeCard code={afterSeedcord} filename="seedcord" className={cn('blk-pith rule')} />
             </div>
-            <div className={cn('grid gap-6 lg:grid-cols-2')}>
-                <CodeCard code={beforeRawDjs} filename="by hand" className={cn('rule blk-rind')} />
-                <CodeCard code={afterSeedcord} filename="seedcord" className={cn('rule blk-rind')} />
-            </div>
-            <p className={cn('font-mono-code mt-5 text-xs text-(--seed-dark)/70')}>
-                By hand you wire the routing, registration and checks yourself. seedcord does all that from your
-                decorators.
-            </p>
+            <dl
+                className={cn(
+                    'mt-8 max-lg:divide-y max-lg:divide-(--pith)/25 lg:mt-10 lg:grid lg:grid-cols-5 lg:gap-x-6'
+                )}
+            >
+                {GONE.map((item) => (
+                    <div key={item.what} className={cn('max-lg:py-2.5 lg:border-t-[3px] lg:border-(--pith) lg:pt-3')}>
+                        <dt
+                            className={cn(
+                                'lg:font-display font-semibold max-lg:inline max-lg:after:content-["."] lg:text-lg'
+                            )}
+                        >
+                            {item.what}
+                        </dt>{' '}
+                        <dd className={cn('text-(--pith)/85 max-lg:inline lg:mt-1')}>{item.why}</dd>
+                    </div>
+                ))}
+            </dl>
         </Section>
     );
 }
