@@ -274,4 +274,12 @@ describe('highlightInlineToHtml', () => {
         expect(html).not.toContain('<pre');
         expect(html).not.toContain('class="line"');
     });
+
+    it('renders an address as one token', async () => {
+        const address = 'https://bot.example.com/oauth/callback';
+
+        const html = (await highlightInlineToHtml(address)) ?? '';
+
+        expect(html).toContain(`>${address}</span>`);
+    });
 });
