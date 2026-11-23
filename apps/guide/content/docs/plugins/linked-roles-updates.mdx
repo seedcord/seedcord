@@ -1,6 +1,6 @@
 ---
 title: Updating values
-description: Write a member's Linked Roles values again after they change, like after another match in your game or when they leave your GitHub organization, from a handler or a webhook.
+description: Write a member's Linked Roles values again after they change, like after another match in your game, from a handler or a webhook.
 ---
 
 [The Linked Roles plugin](/plugins/linked-roles) only writes a member's values when they connect. Say a member has won more matches in your game since then, or has left your GitHub organization. Without [`push()`](ref:plugin-linked-roles/LinkedRoles.push), Discord keeps the old value for them.
@@ -142,7 +142,7 @@ export class Sync extends SlashHandler<'sync'> {
 }
 ```
 
-`push()` takes a member's id, here `this.user.id`. It runs your `values` for them again and writes what it returns. It resolves to a [`ConnectionResult`](ref:plugin-linked-roles/ConnectionResult), which is one of the two results that [`onResult`](/plugins/linked-roles#the-page-after-connecting) gets after a connect:
+`push()` takes a member's id, here `this.user.id`. It runs your `values` for them again and writes what it returns. It resolves to a [`ConnectionResult`](ref:plugin-linked-roles/ConnectionResult), which is the `connected` or the `refused` result from [`onResult`'s table](/plugins/linked-roles#the-page-after-connecting):
 
 {/* prettier-ignore-start */}
 
@@ -226,7 +226,7 @@ export class GithubWebhook extends Plugin {
 
 In `fetch()`, you check the method and the path before you read the body. [A request's body can only be read once](/writing-plugins/web-requests#reading-the-body), and the steps after your plugin may need it.
 
-If `push()` throws in a route, seedcord [answers the request with a 500](/writing-plugins/web-requests#when-fetch-throws). That happens for a member who removed your application since they connected. To answer 204 for them, catch `PluginOAuthLoginNeeded` the way `Sync` does.
+If `push()` throws in a route, seedcord [answers the request with a 500](/writing-plugins/web-requests#when-fetch-throws). One case is a member who removed your application since they connected. To answer 204 for them, catch `PluginOAuthLoginNeeded` the way `Sync` does.
 
 ## Clearing a member's values
 
@@ -238,7 +238,7 @@ Discord compares the values you wrote to each role's requirement. If a member's 
 
 ## Sending a member to connect again
 
-The verify link also works for a member who is already connected. When they open it, they approve the consent screen again, and the plugin runs your `values` for them and writes the result. You can also make a command that replies with `verifyUrl()` to let members refresh their own values. It works with or without `keepTokens`.
+The verify link also works for a member who is already connected. When they open it, they have to approve the consent screen again. The plugin then runs your `values` for them and writes the result. You can also make a command that replies with `verifyUrl()` to let members refresh their own values. It works with or without `keepTokens`.
 
 ### With the OAuth plugin
 

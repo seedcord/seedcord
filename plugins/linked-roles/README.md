@@ -74,9 +74,9 @@ export default new Seedcord({
 
 Add `https://bot.example.com/linked-roles/callback` under Redirects on your application's OAuth2 page in the Developer Portal. The plugin logs the exact address at startup if it isn't there yet.
 
-`records` lists what a server can set a requirement on. The plugin runs `values` for each member who connects, and `metadata` is typed from your records, so `matches_won` has to be a number here. Return `{ refuse: 'your message' }` to turn someone away without writing anything.
+`records` lists what a server can set a requirement on. The plugin runs `values` for each member who connects. `metadata` takes its types from your records, so `matches_won` has to be a number here. Return `{ refuse: 'your message' }` to turn someone away without writing anything.
 
-A server admin adds the requirement under Server Settings, Roles, then Links on a role. A member then claims the role from the server's Linked Roles menu.
+A server admin adds the requirement under Server Settings, Roles, then Links on a role. A member then has to claim the role from the server's Linked Roles menu.
 
 ### Updating a member later
 

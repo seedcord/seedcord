@@ -1,6 +1,6 @@
 ---
 title: Linked Roles
-description: Give members server roles based on what your bot has for them outside Discord, like matches won in your game or a GitHub account, through Discord's Linked Roles.
+description: Give members server roles from data your bot has outside Discord, like matches won in your game or a GitHub account, through Discord's Linked Roles.
 ---
 
 Discord's [Linked Roles](https://docs.discord.com/developers/tutorials/configuring-app-metadata-for-linked-roles) let a server put a requirement on a role that only your bot can answer, like "100 matches won or more" in your game. A member who meets it can claim the role. [`@seedcord/plugin-linked-roles`](ref:plugin-linked-roles) serves that whole flow from your bot.
@@ -66,7 +66,7 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-In `records`, you list what a server can set a requirement on. This bot has one record, `matches_won`. The plugin runs `values` for each person who connects, and you return their value for every record. `players` in the sample is a file of your own that looks up your game's player by their Discord id. A member who hasn't linked Discord in the game doesn't have a player, so `values` refuses them with a message.
+In `records`, you list what a server can set a requirement on. This bot has one record, `matches_won`. The plugin runs `values` for each person who connects, and you return their value for every record. `players` is your own file, and it looks up your game's player by Discord id. A member who hasn't linked Discord in the game doesn't have a player, so `values` refuses them with a message.
 
 [`LinkedRoles.with()`](ref:plugin-linked-roles/LinkedRoles.with) returns a plugin class with your options in it, and `Ranked` is that class. You attach it like any other plugin. That's also how `matches_won` in `metadata` gets typed as a number from the record's `type`. The plugin authoring guide shows [how to write a `with()`](/writing-plugins/typing#taking-the-type-from-an-option) for a plugin of your own.
 
@@ -128,7 +128,7 @@ You give each record a `type` from `RecordType`, a `name`, and a `description`. 
 
 Discord [takes five records at most](https://docs.discord.com/developers/resources/application-role-connection-metadata#update-application-role-connection-metadata-records). A key can only use `a-z`, `0-9`, and `_`, and takes at most 50 characters. A name takes at most 100 characters and a description at most 200. If a record breaks one of these, your bot fails to compile, and the error message gives the limit. For a key or text that isn't a literal, like one you build from a variable, the bot stops at startup with `PluginOptionsRejected`.
 
-To show a record in other languages, add `nameLocalizations` and `descriptionLocalizations`, keyed by Discord locale code. [`LinkedRoleRecords`](ref:plugin-linked-roles/LinkedRoleRecords) is the type of the whole `records` object.
+To show a record in other languages, add `nameLocalizations` and `descriptionLocalizations`, keyed by Discord locale code. A translation takes the same limit as the text it translates, and the plugin checks it at startup. [`LinkedRoleRecords`](ref:plugin-linked-roles/LinkedRoleRecords) is the type of the whole `records` object.
 
 ```ts twoslash
 import { RecordType } from '@seedcord/plugin-linked-roles';
