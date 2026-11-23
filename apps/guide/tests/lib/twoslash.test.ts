@@ -51,6 +51,21 @@ describe('the twoslash transformer', () => {
         expect(html).toContain('--ts-col:8.5');
     });
 
+    it('puts the caret on the first line of a multi-line error', async () => {
+        const html = await render(
+            sample(
+                '// @errors: 2345',
+                'declare function double(n: number): number;',
+                'double({',
+                '    value: 12',
+                '});'
+            )
+        );
+
+        // the argument starts at 7, and its first line ends at 8
+        expect(html).toContain('--ts-col:7.5');
+    });
+
     it('renders a type query as a line', async () => {
         const html = await render(
             sample("const routes = ['ping', 'ban'] as const;", 'const first = routes[0];', '//    ^?')
