@@ -79,14 +79,19 @@ export class Tags extends Plugin {
 
 ```ts title="src/seedcord-gen.ts" output
 interface PluginTypes {
-    'seedcord-tags': Fits<
-        (typeof Bot)['tags'],
-        { replies: { rules: true; welcome: true } }
-    >;
+    'seedcord-tags': { replies: { rules: true; welcome: true } };
+}
+interface PluginTypeChecks {
+    'seedcord-tags': [
+        Fits<
+            (typeof Bot)['tags'],
+            { replies: { rules: true; welcome: true } }
+        >
+    ];
 }
 ```
 
-`Fits` is a type defined at the top of that file. The bot's type check fails on it when the row doesn't match your `codegen()` return type.
+Codegen writes the row a second time under `PluginTypeChecks`, inside `Fits`, a type defined at the top of that file. It writes one `Fits` for every key the bot attached your plugin under. When the row doesn't match your `codegen()` return type, the bot's type check fails on that line. Your plugin only reads the row in `PluginTypes`.
 
 `Replies` reads its keys from that row, so `tag()` accepts `'rules'` or `'welcome'`, and the bot author's editor offers both:
 
@@ -123,7 +128,7 @@ Before codegen first runs in a bot, [`Generated`](ref:core/Generated) falls back
 
 <Callout type="warning">
 
-Tell your users in your README to run `seedcord codegen` after they add a tag, and after they upgrade to a release of your plugin that changes what `codegen()` returns. Until they run it, a new key fails to compile. After such an upgrade, their type check fails on your row's `Fits` line until codegen rewrites it.
+Tell your users in your README to run `seedcord codegen` after they add a tag, and after they upgrade to a release of your plugin that changes what `codegen()` returns. Until they run it, a new key fails to compile. After such an upgrade, their type check fails on your row in `PluginTypeChecks` until codegen rewrites it.
 
 </Callout>
 
@@ -334,14 +339,11 @@ If a bot attaches it as `arcade` and its `games/Trivia.ts` exports a `Trivia` cl
 
 ```ts title="src/seedcord-gen.ts" output
 interface PluginTypes {
-    'seedcord-arcade': Fits<
-        (typeof Bot)['arcade'],
-        {
-            games: {
-                Trivia: (typeof import('./games/Trivia'))['Trivia'];
-            };
-        }
-    >;
+    'seedcord-arcade': {
+        games: {
+            Trivia: (typeof import('./games/Trivia'))['Trivia'];
+        };
+    };
 }
 ```
 

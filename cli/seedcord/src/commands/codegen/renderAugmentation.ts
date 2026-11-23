@@ -50,7 +50,10 @@ export function renderAugmentation(registry: Augmentation, target: string, bot: 
             : ['', ''];
     const hasTypes = bot.types.size > 0;
     const fits = hasTypes ? `${FITS}\n\n` : '';
-    const typesBlock = hasTypes ? renderInterface('PluginTypes', pluginTypeRows(bot.types)) : '';
+    const typesBlock = hasTypes
+        ? renderInterface('PluginTypes', pluginTypeRows(bot.types)) +
+          renderInterface('PluginTypeChecks', pluginTypeCheckRows(bot.types))
+        : '';
     const membersBlock = bot.members.length > 0 ? renderInterface('DispatchMemberValues', memberRows(bot.members)) : '';
 
     // prettier-ignore binds to the next statement, and the declare module is the whole file
@@ -90,8 +93,15 @@ function coreRows(groups: readonly string[]): Row[] {
     return groups.map((key) => [key, `AttachedPlugin<(typeof ${BOT_BINDING})['${escapeLiteral(key)}']>`]);
 }
 
+// a row can't mention the bot. a plugin option's callback can read a row while typescript is still
+// inferring the bot constant, and `typeof Bot` in the row would close that loop (TS7022)
 function pluginTypeRows(types: PluginTypeTable): Row[] {
-    return [...types].map(([id, attachments]) => [id, attachments.map(renderFits).join(' & ')]);
+    return [...types].map(([id, attachments]) => [id, attachments.map(({ type }) => type).join(' & ')]);
+}
+
+// nothing reads these rows. they're here for tsc to check each row against its attachment's codegen()
+function pluginTypeCheckRows(types: PluginTypeTable): Row[] {
+    return [...types].map(([id, attachments]) => [id, `[${attachments.map(renderFits).join(', ')}]`]);
 }
 
 function memberRows(members: readonly DispatchMemberAt[]): Row[] {

@@ -27,7 +27,19 @@ declare const bot: {
 export default bot;
 `;
 
-function errorCodes(types: PluginTypeTable): number[] {
+// the bot's type comes from a callback that reads a row, like a plugin option that reads another plugin
+const BOT_READING_A_ROW = `
+import type { PluginTypes } from './target';
+declare class Cron {
+    codegen(): Promise<{ ready: boolean }>;
+}
+declare const rows: PluginTypes;
+declare function attach<Result>(read: () => Promise<Result>): { cron: Cron; result: Result };
+const bot = attach(async () => rows.cron.ready);
+export default bot;
+`;
+
+function errorCodes(types: PluginTypeTable, bot = BOT): number[] {
     const generated = renderAugmentation(
         { slash: {}, userContextMenus: {}, messageContextMenus: {}, emojis: {} },
         './target',
@@ -43,7 +55,7 @@ function errorCodes(types: PluginTypeTable): number[] {
     );
     const files = new Map([
         ['/target.ts', TARGET],
-        ['/bot.ts', BOT],
+        ['/bot.ts', bot],
         ['/seedcord-gen.ts', generated]
     ]);
     const options = {
@@ -73,6 +85,12 @@ describe('renderAugmentation Fits rows', () => {
         expect(errorCodes(new Map([['cron', [{ key: 'cron', type: '{ ready: true }' }]]]))).toEqual([]);
         // 2344: the row doesn't satisfy the constraint on Fits
         expect(errorCodes(new Map([['cron', [{ key: 'cron', type: "{ ready: 'no' }" }]]]))).toEqual([2344]);
+    });
+
+    it("compiles a bot whose own type reads a plugin's row", () => {
+        const types: PluginTypeTable = new Map([['cron', [{ key: 'cron', type: '{ ready: true }' }]]]);
+
+        expect(errorCodes(types, BOT_READING_A_ROW)).toEqual([]);
     });
 
     it('checks each attachment of a generic plugin against its own type argument', () => {

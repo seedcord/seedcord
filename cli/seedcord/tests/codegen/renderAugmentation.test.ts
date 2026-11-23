@@ -562,7 +562,7 @@ export {};
             types: new Map([['users-plugin', [{ key: 'services.users', type: '{ ready: true }' }]]])
         });
 
-        expect(output).toContain("        'users-plugin': Fits<(typeof Bot)['services']['users'], { ready: true }>;");
+        expect(output).toContain("        'users-plugin': [Fits<(typeof Bot)['services']['users'], { ready: true }>];");
     });
 });
 

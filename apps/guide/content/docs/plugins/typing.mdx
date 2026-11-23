@@ -45,7 +45,10 @@ declare module '@seedcord/gateway' {
     }
     // SlashRegistry, the context menu registries, and EmojiMap follow
     interface PluginTypes {
-        '@seedcord/plugin-i18n': Fits<(typeof Bot)['i18n'], { messages: { bye: {}; greet: { user: 'text' } } }>;
+        '@seedcord/plugin-i18n': { messages: { bye: {}; greet: { user: 'text' } } };
+    }
+    interface PluginTypeChecks {
+        '@seedcord/plugin-i18n': [Fits<(typeof Bot)['i18n'], { messages: { bye: {}; greet: { user: 'text' } } }>];
     }
     interface DispatchMemberValues {
         t: Awaited<ReturnType<(typeof Bot)['i18n']['dispatchMembers']['t']>>;
@@ -55,21 +58,36 @@ declare module '@seedcord/gateway' {
 export {};
 ```
 
-`Bot` is the default export of the file that your `instance` config key points to. Each row reads its type from that bot, so `db` has the type `attach` returns, minus the members only seedcord calls, like [`init()`](ref:core/Plugin.init). [Calling it from a handler](/writing-plugins#calling-it-from-a-handler) lists all of them. This only works when the default export is the value `attach` returns. If you [export the bot without it](/plugins#no-plugin-types-in-your-handler), `this.core.db` has the type `any`. If you export the bot only as a named const, codegen stops with the code `CliInstanceInvalid` before it writes anything.
-
-[`AttachedPlugin`](ref:core/AttachedPlugin) is the type that omits those members. It also omits the class's private members, so `this.core.db` isn't assignable to a parameter typed as the [`Mongoose`](ref:plugin-mongoose/Mongoose) class. To pass it to a function of your own, type that parameter as `AttachedPlugin<Mongoose>`.
-
-[`PluginTypes`](ref:core/PluginTypes) holds the types that each plugin's [`codegen()`](ref:core/Plugin.codegen) returns from your project's files. The [i18n plugin](/plugins/i18n), attached as `i18n`, writes the row above. It lists the message keys in your `locales` folder and the variables each one takes, so `this.t()` accepts `'bye'` or `'greet'` and rejects a typo. Each row is keyed by the plugin's `static id`, like `'@seedcord/plugin-i18n'`. `Fits` checks the row against the plugin at every key you attached it under. To add a row from your own plugin, read [Writing types from codegen](/writing-plugins/codegen).
-
-[`DispatchMemberValues`](ref:types/DispatchMemberValues) gets one row for each key in a plugin's [`dispatchMembers`](/writing-plugins#adding-a-value-to-every-handler). The `t` row types `this.t` on every handler.
-
-The `Core` block appears once you've attached something. `PluginTypes` appears once a plugin has written a row, and `DispatchMemberValues` appears once a plugin has `dispatchMembers`.
+`Bot` is the default export of the file that your `instance` config key points to. The file has three kinds of rows for plugins, and each block appears once it has a row.
 
 <Callout type="transport">
 
 Each transport package declares its own `Core`, so the `declare module` line uses the package you import [`Seedcord`](ref:gateway/Seedcord) from. A gateway bot's file uses `declare module '@seedcord/gateway'`, and an http bot's uses `declare module '@seedcord/http'`.
 
 </Callout>
+
+### The Core rows
+
+The `Core` block appears once you've attached something. Each row reads its type from `Bot`, so `db` has the type `attach` returns, minus the members only seedcord calls, like [`init()`](ref:core/Plugin.init). [Calling it from a handler](/writing-plugins#calling-it-from-a-handler) lists all of them.
+
+[`AttachedPlugin`](ref:core/AttachedPlugin) is the type that omits those members. It also omits the class's private members, so `this.core.db` isn't assignable to a parameter typed as the [`Mongoose`](ref:plugin-mongoose/Mongoose) class. To pass it to a function of your own, type that parameter as `AttachedPlugin<Mongoose>`.
+
+These rows need the bot file's default export to be the value `attach` returns:
+
+- If you [export the bot without it](/plugins#no-plugin-types-in-your-handler), `this.core.db` has the type `any`.
+- If you export the bot only as a named const, codegen stops with the code `CliInstanceInvalid` before it writes anything.
+
+### The PluginTypes rows
+
+[`PluginTypes`](ref:core/PluginTypes) appears once a plugin has written a row. It holds the types that each plugin's [`codegen()`](ref:core/Plugin.codegen) returns from your project's files, keyed by the plugin's `static id`, like `'@seedcord/plugin-i18n'`.
+
+The [i18n plugin](/plugins/i18n), attached as `i18n`, writes the row in the sample. It lists the message keys in your `locales` folder and the variables each one takes, so `this.t()` accepts `'bye'` or `'greet'` and rejects a typo.
+
+[Writing types from codegen](/writing-plugins/codegen) covers the `PluginTypeChecks` block under it, and how to add a row from your own plugin.
+
+### The DispatchMemberValues rows
+
+[`DispatchMemberValues`](ref:types/DispatchMemberValues) appears once a plugin has [`dispatchMembers`](/writing-plugins#adding-a-value-to-every-handler), and it gets one row for each key in them. The `t` row types `this.t` on every handler.
 
 ## When to run it
 
@@ -105,3 +123,52 @@ export class History extends SlashHandler<'history'> {
 ```
 
 [The lifecycle page](/plugins/lifecycle) covers whether the plugin has started by the time your handler runs.
+
+## Referenced directly or indirectly in its own initializer
+
+TypeScript reports this error when an option you pass to `attach` reads the bot that the same statement creates.
+
+```ts plain title="src/bot.ts"
+import { Seedcord } from '@seedcord/gateway';
+import { Kysely } from '@seedcord/plugin-kysely';
+import { OAuth } from '@seedcord/plugin-oauth';
+
+export const seedcord = new Seedcord(config)
+    .attach('db', Kysely, { path: './services', dialect })
+    .attach(
+        'oauth',
+        OAuth.with({
+            onLogin: async ({ user }) => {
+                const { rolls } = seedcord.db.services;
+                const count = await rolls.countFor(user.id);
+                return new Response(`You rolled ${count} times.`);
+            }
+        })
+    );
+```
+
+`onLogin` reads `seedcord.db`, and TypeScript needs the type of `seedcord` to check that line. It's still working that type out because `onLogin` is part of the statement that creates `seedcord`. The full message is "'seedcord' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer".
+
+Build the bot in two statements, and read the first one inside the option.
+
+```ts plain title="src/bot.ts"
+const withDatabase = new Seedcord(config).attach('db', Kysely, {
+    path: './services',
+    dialect
+});
+
+export const seedcord = withDatabase.attach(
+    'oauth',
+    OAuth.with({
+        onLogin: async ({ user }) => {
+            const { rolls } = withDatabase.db.services;
+            const count = await rolls.countFor(user.id);
+            return new Response(`You rolled ${count} times.`);
+        }
+    })
+);
+
+export default seedcord;
+```
+
+The type of `withDatabase` is finished before the second statement starts, so `withDatabase.db.services` has its type by the time `onLogin` reads it. A handler never gets this error because a handler isn't part of the statement that creates the bot.
