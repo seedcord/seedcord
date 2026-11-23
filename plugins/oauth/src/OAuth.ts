@@ -63,20 +63,19 @@ const FAILURE_PAGES = {
  * @typeParam TExtra - The `extraScopes` from the options. Leave it out.
  * @example
  * ```ts
- * new Seedcord(config).attach(
- *     'oauth',
- *     OAuth.with({
- *         scopes: ['guilds'],
- *         onLogin: ({ user, returnTo }) =>
- *             new Response(null, {
- *                 status: 302,
- *                 headers: {
- *                     location: returnTo ?? '/dashboard',
- *                     'set-cookie': sessions.create(user.id)
- *                 }
- *             })
- *     })
- * );
+ * const Login = OAuth.with({
+ *     scopes: ['guilds'],
+ *     onLogin: ({ user, returnTo }) =>
+ *         new Response(null, {
+ *             status: 302,
+ *             headers: {
+ *                 location: returnTo ?? '/dashboard',
+ *                 'set-cookie': sessions.create(user.id)
+ *             }
+ *         })
+ * });
+ *
+ * new Seedcord(config).attach('oauth', Login);
  *
  * // in a handler or your own routes
  * const guilds = await this.core.oauth.as(userId).guilds();
@@ -93,7 +92,9 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
      *
      * @example
      * ```ts
-     * seedcord.attach('oauth', OAuth.with({ scopes: ['guilds'], extraScopes: ['connections'] }));
+     * const Login = OAuth.with({ scopes: ['guilds'], extraScopes: ['connections'] });
+     *
+     * seedcord.attach('oauth', Login);
      * ```
      */
     public static with<TScopes extends OAuthScope = never, TExtra extends OAuthScope = never>(

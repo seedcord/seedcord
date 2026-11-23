@@ -12,6 +12,8 @@ import fsDriver from 'unstorage/drivers/fs';
 import { PingCounter } from './plugins/PingCounter';
 import { Uptime } from './plugins/Uptime';
 
+const Login = OAuth.with({ scopes: ['guilds'] });
+
 const withDatabase = new Seedcord({
     kv: new UnstorageDriver(createStorage({ driver: fsDriver({ base: './.kv' }) })),
     bot: {
@@ -44,26 +46,25 @@ const withDatabase = new Seedcord({
         migrations: { path: './migrations' }
     })
     .attach('i18n', I18n, { path: './locales' })
-    .attach('oauth', OAuth.with({ scopes: ['guilds'] }));
+    .attach('oauth', Login);
 
-export const seedcord = withDatabase.attach(
-    'linkedRoles',
-    LinkedRoles.with({
-        records: {
-            rolls: {
-                type: RecordType.IntegerGreaterThanOrEqual,
-                name: 'Rolls',
-                description: 'Dice rolled with /roll'
-            }
-        },
-        keepTokens: true,
-        values: async ({ user }) => {
-            // reads `withDatabase` because typescript can't type `seedcord` inside its own declaration
-            const rolls = await withDatabase.db.services.rolls.countFor(user.id);
-            if (rolls === 0) return { refuse: 'Use /roll once, then open the link again.' };
-            return { platformUsername: user.username, metadata: { rolls } };
+const RollCount = LinkedRoles.with({
+    records: {
+        rolls: {
+            type: RecordType.IntegerGreaterThanOrEqual,
+            name: 'Rolls',
+            description: 'Dice rolled with /roll'
         }
-    })
-);
+    },
+    keepTokens: true,
+    values: async ({ user }) => {
+        // reads `withDatabase` because the type of `seedcord` depends on what this function returns
+        const rolls = await withDatabase.db.services.rolls.countFor(user.id);
+        if (rolls === 0) return { refuse: 'Use /roll once, then open the link again.' };
+        return { platformUsername: user.username, metadata: { rolls } };
+    }
+});
+
+export const seedcord = withDatabase.attach('linkedRoles', RollCount);
 
 export default seedcord;

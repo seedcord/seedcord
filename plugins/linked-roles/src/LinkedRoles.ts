@@ -158,19 +158,19 @@ export abstract class LinkedRoles<
      *
      * @example
      * ```ts
-     * seedcord.attach(
-     *     'linkedRoles',
-     *     LinkedRoles.with({
-     *         records: {
-     *             level: {
-     *                 type: RecordType.IntegerGreaterThanOrEqual,
-     *                 name: 'Level',
-     *                 description: 'Your level'
-     *             }
-     *         },
-     *         values: async ({ user }) => ({ metadata: { level: await levels.get(user.id) } })
-     *     })
-     * );
+     * const Ranked = LinkedRoles.with({
+     *     records: {
+     *         matches_won: {
+     *             type: RecordType.IntegerGreaterThanOrEqual,
+     *             name: 'Matches won',
+     *             description: 'or more matches won'
+     *         }
+     *     },
+     *     // `matches` is your own code, with what your game has for each Discord user
+     *     values: async ({ user }) => ({ metadata: { matches_won: await matches.wonBy(user.id) } })
+     * });
+     *
+     * seedcord.attach('linkedRoles', Ranked);
      * ```
      */
     public static with<
@@ -256,7 +256,7 @@ export abstract class LinkedRoles<
 
     /**
      * Runs your `values` again for a user who connected, and writes what it returns. Call it when
-     * something a role depends on changes, like after a level-up.
+     * something a role depends on changes, like after a match in your game.
      *
      * It resolves to a {@link ConnectionResult}. Its `kind` is `'connected'` after a write. When your
      * `values` refused this user, its `kind` is `'refused'` and it has the `message`.

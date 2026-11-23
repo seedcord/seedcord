@@ -128,49 +128,159 @@ export class History extends SlashHandler<'history'> {
 
 ## Referenced directly or indirectly in its own initializer
 
-TypeScript reports this error when an option you pass to `attach` reads the bot that the same statement creates.
+TypeScript reports this error when a plugin's option reads the bot that the plugin gets attached to.
 
-```ts plain title="src/bot.ts"
+```ts twoslash title="src/bot.ts"
+// @errors: 7022 7023 2345
+// ---cut-start---
+// @filename: config.ts
+import { GatewayIntentBits } from 'discord.js';
+
+export const config = {
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+};
+
+// @filename: plugins/Rolls.ts
+import { Plugin } from '@seedcord/gateway';
+
+export class Rolls extends Plugin {
+    public async init(): Promise<void> {}
+
+    public async countFor(userId: string): Promise<number> {
+        return userId.length;
+    }
+}
+
+// @filename: bot.ts
+// ---cut-end---
 import { Seedcord } from '@seedcord/gateway';
-import { Kysely } from '@seedcord/plugin-kysely';
 import { OAuth } from '@seedcord/plugin-oauth';
 
-export const seedcord = new Seedcord(config)
-    .attach('db', Kysely, { path: './services', dialect })
-    .attach(
-        'oauth',
-        OAuth.with({
-            onLogin: async ({ user }) => {
-                const { rolls } = seedcord.db.services;
-                const count = await rolls.countFor(user.id);
-                return new Response(`You rolled ${count} times.`);
-            }
-        })
-    );
-```
+import { config } from './config';
+import { Rolls } from './plugins/Rolls';
 
-`onLogin` reads `seedcord.db`, and TypeScript needs the type of `seedcord` to check that line. It's still working that type out because `onLogin` is part of the statement that creates `seedcord`. The full message is "'seedcord' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer".
-
-Build the bot in two statements, and read the first one inside the option.
-
-```ts plain title="src/bot.ts"
-const withDatabase = new Seedcord(config).attach('db', Kysely, {
-    path: './services',
-    dialect
+const Login = OAuth.with({
+    onLogin: async ({ user }) => {
+        const count = await seedcord.rolls.countFor(user.id);
+        return new Response(`You rolled ${count} times.`);
+    }
 });
 
-export const seedcord = withDatabase.attach(
-    'oauth',
-    OAuth.with({
-        onLogin: async ({ user }) => {
-            const { rolls } = withDatabase.db.services;
-            const count = await rolls.countFor(user.id);
-            return new Response(`You rolled ${count} times.`);
-        }
-    })
-);
+export const seedcord = new Seedcord(config)
+    .attach('rolls', Rolls)
+    .attach('oauth', Login);
+```
+
+`Rolls` is a plugin of your own with a `countFor()` method. `onLogin` reads `seedcord.rolls`, and TypeScript needs the type of `seedcord` to check that line. The type of `seedcord` includes `Login`, and the type of `Login` includes `onLogin`, so none of them can finish. TypeScript reports every name on that path. The error on `new Seedcord` follows from the others, and TypeScript stops reporting it once they're fixed.
+
+Nothing is wrong when the bot runs. `onLogin` only runs when someone logs in, and `seedcord` exists by then. The problem is only in the types, and there are two ways to fix it.
+
+### Write the option's return type
+
+```ts twoslash title="src/bot.ts"
+// ---cut-start---
+// @filename: config.ts
+import { GatewayIntentBits } from 'discord.js';
+
+export const config = {
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+};
+
+// @filename: plugins/Rolls.ts
+import { Plugin } from '@seedcord/gateway';
+
+export class Rolls extends Plugin {
+    public async init(): Promise<void> {}
+
+    public async countFor(userId: string): Promise<number> {
+        return userId.length;
+    }
+}
+
+// @filename: bot.ts
+import { Seedcord } from '@seedcord/gateway';
+import { OAuth } from '@seedcord/plugin-oauth';
+
+import { config } from './config';
+import { Rolls } from './plugins/Rolls';
+// ---cut-end---
+const Login = OAuth.with({
+    onLogin: async ({ user }): Promise<Response> => {
+        const count = await seedcord.rolls.countFor(user.id);
+        return new Response(`You rolled ${count} times.`);
+    }
+});
+
+export const seedcord = new Seedcord(config)
+    .attach('rolls', Rolls)
+    .attach('oauth', Login);
 
 export default seedcord;
 ```
 
-The type of `withDatabase` is finished before the second statement starts, so `withDatabase.db.services` has its type by the time `onLogin` reads it. A handler never gets this error because a handler isn't part of the statement that creates the bot.
+With `Promise<Response>` written on `onLogin`, TypeScript has the type of `Login` without reading the function's body. It checks the body afterwards, and `seedcord` has its type by then.
+
+### Build the bot in two statements
+
+Some return types are long to write, like the one for `values` in [`LinkedRoles.with()`](/plugins/linked-roles#what-values-gets). For those, attach the plugin you read in a first statement, and read that bot inside the option.
+
+```ts twoslash title="src/bot.ts"
+// ---cut-start---
+// @filename: config.ts
+import { GatewayIntentBits } from 'discord.js';
+
+export const config = {
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+};
+
+// @filename: plugins/Rolls.ts
+import { Plugin } from '@seedcord/gateway';
+
+export class Rolls extends Plugin {
+    public async init(): Promise<void> {}
+
+    public async countFor(userId: string): Promise<number> {
+        return userId.length;
+    }
+}
+
+// @filename: bot.ts
+import { Seedcord } from '@seedcord/gateway';
+import { OAuth } from '@seedcord/plugin-oauth';
+
+import { config } from './config';
+import { Rolls } from './plugins/Rolls';
+// ---cut-end---
+const withRolls = new Seedcord(config).attach('rolls', Rolls);
+
+const Login = OAuth.with({
+    onLogin: async ({ user }) => {
+        const count = await withRolls.rolls.countFor(user.id);
+        return new Response(`You rolled ${count} times.`);
+    }
+});
+
+export const seedcord = withRolls.attach('oauth', Login);
+
+export default seedcord;
+```
+
+The type of `withRolls` is finished before `Login` is created, so `withRolls.rolls` has its type by the time `onLogin` reads it. A handler never gets this error because the bot's type doesn't include your handlers.

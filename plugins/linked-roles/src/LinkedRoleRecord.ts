@@ -13,7 +13,7 @@ import type {
 } from 'type-fest';
 
 /**
- * One value that Discord compares for a Linked Role, like a level or a "verified" flag. A server admin
+ * One value that Discord compares for a Linked Role, like matches won or a "verified" flag. A server admin
  * sets a role's requirement against it.
  *
  * Its key in `records` can only use `a-z`, `0-9`, and `_`, and can be 50 characters long at most.
