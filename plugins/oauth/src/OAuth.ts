@@ -1,5 +1,5 @@
 import { MemoryDriver } from '@seedcord/core';
-import { currentApplication, keepRequestOpenFor } from '@seedcord/core/internal';
+import { keepRequestOpenFor } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
@@ -128,11 +128,11 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
         // gets asked once a day
         const confirmed = this.kv.collection<string>('portal');
         try {
-            const callback = this.#client().redirectUri;
+            const client = this.#client();
+            const callback = client.redirectUri;
             if ((await confirmed.get('redirect')) === callback) return;
 
-            const application = await currentApplication(this.core.rest);
-            if (application.redirect_uris?.includes(callback)) {
+            if (await client.isRedirectListed()) {
                 await confirmed.set('redirect', callback, RECHECK_REDIRECT_MS);
                 return;
             }
