@@ -28,12 +28,14 @@ declare module '@seedcord/http' {
     interface PluginTypes {
         '@seedcord/plugin-i18n': { messages: { 'isolate-pings': { count: 'text' }; pong: {}; roundtrip: { ms: 'number' }; 'total-pings': { count: 'text' } } };
     }
-    interface PluginTypeChecks {
-        '@seedcord/plugin-i18n': [Fits<(typeof Bot)['i18n'], { messages: { 'isolate-pings': { count: 'text' }; pong: {}; roundtrip: { ms: 'number' }; 'total-pings': { count: 'text' } } }>];
-    }
     interface DispatchMemberValues {
         t: Awaited<ReturnType<(typeof Bot)['i18n']['dispatchMembers']['t']>>;
     }
 }
+
+// prettier-ignore
+export type PluginTypeChecks = {
+    '@seedcord/plugin-i18n': [Fits<(typeof Bot)['i18n'], { messages: { 'isolate-pings': { count: 'text' }; pong: {}; roundtrip: { ms: 'number' }; 'total-pings': { count: 'text' } } }>];
+};
 
 export {};

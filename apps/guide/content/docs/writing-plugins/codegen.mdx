@@ -81,17 +81,19 @@ export class Tags extends Plugin {
 interface PluginTypes {
     'seedcord-tags': { replies: { rules: true; welcome: true } };
 }
-interface PluginTypeChecks {
+
+// at the end of the file
+export type PluginTypeChecks = {
     'seedcord-tags': [
         Fits<
             (typeof Bot)['tags'],
             { replies: { rules: true; welcome: true } }
         >
     ];
-}
+};
 ```
 
-Codegen writes the row a second time under `PluginTypeChecks`, inside `Fits`, a type defined at the top of that file. It writes one `Fits` for every key the bot attached your plugin under. When the row doesn't match your `codegen()` return type, the bot's type check fails on that line. Your plugin only reads the row in `PluginTypes`.
+Codegen writes the row a second time in `PluginTypeChecks`, a type at the end of that file. There the row is inside `Fits`, a type defined at the top of the file. Codegen writes one `Fits` for every key the bot attached your plugin under. When the row doesn't match your `codegen()` return type, the bot's type check fails on that line. Your plugin only reads the row in `PluginTypes`.
 
 `Replies` reads its keys from that row, so `tag()` accepts `'rules'` or `'welcome'`, and the bot author's editor offers both:
 

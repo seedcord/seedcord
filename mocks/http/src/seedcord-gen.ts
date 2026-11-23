@@ -35,14 +35,16 @@ declare module '@seedcord/http' {
         '@seedcord/plugin-i18n': { messages: { 'asked-in': { locale: 'text' }; greet: { name: 'text' }; pings: { count: 'number' }; roll: { actor: 'text'; count: 'text'; sides: 'text'; value: 'text' }; 'roll-again': {}; roundtrip: { ms: 'number' }; uptime: { seconds: 'number' } } };
         '@seedcord/plugin-kysely': { services: { rolls: (typeof import('./services/Rolls'))['Rolls'] } };
     }
-    interface PluginTypeChecks {
-        '@seedcord/plugin-i18n': [Fits<(typeof Bot)['i18n'], { messages: { 'asked-in': { locale: 'text' }; greet: { name: 'text' }; pings: { count: 'number' }; roll: { actor: 'text'; count: 'text'; sides: 'text'; value: 'text' }; 'roll-again': {}; roundtrip: { ms: 'number' }; uptime: { seconds: 'number' } } }>];
-        '@seedcord/plugin-kysely': [Fits<(typeof Bot)['db'], { services: { rolls: (typeof import('./services/Rolls'))['Rolls'] } }>];
-    }
     interface DispatchMemberValues {
         askedIn: Awaited<ReturnType<(typeof Bot)['stats']['pings']['dispatchMembers']['askedIn']>>;
         t: Awaited<ReturnType<(typeof Bot)['i18n']['dispatchMembers']['t']>>;
     }
 }
+
+// prettier-ignore
+export type PluginTypeChecks = {
+    '@seedcord/plugin-i18n': [Fits<(typeof Bot)['i18n'], { messages: { 'asked-in': { locale: 'text' }; greet: { name: 'text' }; pings: { count: 'number' }; roll: { actor: 'text'; count: 'text'; sides: 'text'; value: 'text' }; 'roll-again': {}; roundtrip: { ms: 'number' }; uptime: { seconds: 'number' } } }>];
+    '@seedcord/plugin-kysely': [Fits<(typeof Bot)['db'], { services: { rolls: (typeof import('./services/Rolls'))['Rolls'] } }>];
+};
 
 export {};

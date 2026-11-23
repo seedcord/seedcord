@@ -60,6 +60,8 @@ function errorCodes(types: PluginTypeTable, bot = BOT): number[] {
     ]);
     const options = {
         strict: true,
+        // nothing reads the check rows, and a bot with this on still has to compile
+        noUnusedLocals: true,
         noEmit: true,
         lib: ['lib.es2022.d.ts'],
         module: ts.ModuleKind.ESNext,

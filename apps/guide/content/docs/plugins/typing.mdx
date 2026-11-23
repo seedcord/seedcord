@@ -47,13 +47,15 @@ declare module '@seedcord/gateway' {
     interface PluginTypes {
         '@seedcord/plugin-i18n': { messages: { bye: {}; greet: { user: 'text' } } };
     }
-    interface PluginTypeChecks {
-        '@seedcord/plugin-i18n': [Fits<(typeof Bot)['i18n'], { messages: { bye: {}; greet: { user: 'text' } } }>];
-    }
     interface DispatchMemberValues {
         t: Awaited<ReturnType<(typeof Bot)['i18n']['dispatchMembers']['t']>>;
     }
 }
+
+// prettier-ignore
+export type PluginTypeChecks = {
+    '@seedcord/plugin-i18n': [Fits<(typeof Bot)['i18n'], { messages: { bye: {}; greet: { user: 'text' } } }>];
+};
 
 export {};
 ```
@@ -83,7 +85,7 @@ These rows need the bot file's default export to be the value `attach` returns:
 
 The [i18n plugin](/plugins/i18n), attached as `i18n`, writes the row in the sample. It lists the message keys in your `locales` folder and the variables each one takes, so `this.t()` accepts `'bye'` or `'greet'` and rejects a typo.
 
-[Writing types from codegen](/writing-plugins/codegen) covers the `PluginTypeChecks` block under it, and how to add a row from your own plugin.
+[Writing types from codegen](/writing-plugins/codegen) covers the `PluginTypeChecks` type at the end of the file, and how to add a row from your own plugin.
 
 ### The DispatchMemberValues rows
 

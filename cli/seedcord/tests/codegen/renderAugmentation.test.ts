@@ -555,14 +555,16 @@ export {};
         expect(output).toContain(String.raw`import type Bot from './a\\b/bot';`);
     });
 
-    it('checks a plugin attached inside a group against the plugin at that path', () => {
+    it('checks a plugin attached inside a group against the plugin at that path, after the augmentation', () => {
         const output = renderAugmentation(empty, AUGMENT_TARGET, {
             ...NO_PLUGINS,
             keys: ['services.users'],
             types: new Map([['users-plugin', [{ key: 'services.users', type: '{ ready: true }' }]]])
         });
 
-        expect(output).toContain("        'users-plugin': [Fits<(typeof Bot)['services']['users'], { ready: true }>];");
+        expect(output).toContain(
+            "}\n\n// prettier-ignore\nexport type PluginTypeChecks = {\n    'users-plugin': [Fits<(typeof Bot)['services']['users'], { ready: true }>];\n};\n\nexport {};\n"
+        );
     });
 });
 
