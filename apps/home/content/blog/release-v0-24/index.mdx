@@ -12,7 +12,7 @@ keywords: [release, plugins, web routes, cron, emojis, i18n, oauth, tasks, kysel
 
 Four new plugins in the box this time. Tasks, translations, Discord OAuth, and Kysely on any database. Plugins can also answer web requests on your bot's own server now, and `seedcord emojis` manages all your bot's emojis from one folder in your repo, with a typed key for each.
 
-81 changes since v0.23, and 21 of them are breaking. Don't worry though, most of those only touch one API. I'll go through the ones you'll actually notice at the end.
+73 changes since v0.23, and 21 of them are breaking. Don't worry though, most of those only touch one API. I'll go through the ones you'll actually notice at the end.
 
 Anyway, here's what's new.
 
@@ -182,7 +182,7 @@ And if you're moving a bot over from plain discord.js, there's a [new guide page
 
 ## Fixes
 
-18 this time. Here are a few you might have hit:
+20 this time. Here are a few you might have hit:
 
 - A second `send()` after `defer()` replaced the first message when it should've sent a new one.
 - After `defer({ ephemeral: false })`, an error card meant only for the user posted publicly.

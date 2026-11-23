@@ -1,5 +1,6 @@
 ---
 '@seedcord/plugin-kysely': patch
+'@seedcord/plugin-mongoose': patch
 ---
 
-Fixed `connection` reading `undefined` before `init()`. It now throws `PluginNotReady`, the same as `services`.
+Fixed `connection` reading `undefined` before `init()`, and on Mongoose the closed connection after `dispose()`. Both now throw `PluginNotReady`, the same as `services`.
