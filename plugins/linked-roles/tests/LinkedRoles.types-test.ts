@@ -3,8 +3,8 @@ import { expectTypeOf } from 'vite-plus/test';
 
 import { LinkedRoles, RecordType } from '#src/index';
 
-import type { LinkedRoleRecords, LinkedRolesResult } from '#src/index';
-import type { PluginHost } from '@seedcord/core/plugin';
+import type { ConnectionResult, LinkedRoleRecords, LinkedRolesResult } from '#src/index';
+import type { AttachedPlugin, PluginHost } from '@seedcord/core/plugin';
 import type { APIUser, RESTGetAPICurrentUserConnectionsResult } from 'discord-api-types/v10';
 
 declare const gateway: PluginHost<'gateway', 'server'>;
@@ -41,7 +41,7 @@ function typesWhatValuesGets(): void {
 }
 
 function typesWhatValuesReturns(): void {
-    LinkedRoles.with({ records, values: () => 'Use the bot once, then try again.' });
+    LinkedRoles.with({ records, values: () => ({ refuse: 'Use the bot once, then try again.' }) });
     LinkedRoles.with({
         records,
         // @ts-expect-error merged_prs is an integer record
@@ -127,7 +127,7 @@ function leavesTextItCannotReadToTheRuntimeCheck(name: string, loose: LinkedRole
         records: { level: { type: RecordType.IntegerEqual, name, description: 'Your level' } },
         values: () => ({ metadata: { level: 1 } })
     });
-    LinkedRoles.with({ records: loose, values: () => 'Not yet.' });
+    LinkedRoles.with({ records: loose, values: () => ({ refuse: 'Not yet.' }) });
 }
 
 function attachesOnEveryRuntime(): void {
@@ -138,6 +138,24 @@ function attachesOnEveryRuntime(): void {
     void gateway.attach('linkedRoles', LinkedRoles);
 }
 
+function onlyUpdatesWithSavedTokens(): void {
+    const kept = gateway.attach(
+        'linkedRoles',
+        LinkedRoles.with({ records, keepTokens: true, values: () => ({ metadata }) })
+    );
+    // seedcord codegen types Core's member this way
+    const keeping: AttachedPlugin<typeof kept.linkedRoles> = kept.linkedRoles;
+    expectTypeOf(keeping.push('1')).resolves.toEqualTypeOf<ConnectionResult>();
+    expectTypeOf(keeping.clear('1')).resolves.toBeVoid();
+
+    const { linkedRoles } = gateway.attach('linkedRoles', LinkedRoles.with({ records, values: () => ({ metadata }) }));
+    // @ts-expect-error push() needs keepTokens: true
+    void linkedRoles.push('1');
+    // @ts-expect-error clear() needs keepTokens: true
+    void linkedRoles.clear('1');
+}
+
+void onlyUpdatesWithSavedTokens;
 void typesWhatValuesGets;
 void typesWhatValuesReturns;
 void typesWhatOnResultGets;

@@ -334,6 +334,8 @@ const messages = {
 
     [SeedcordErrorCode.PluginLinkedRolesValueRejected]: (key: string, got: string, fix: string) =>
         `${paint.bold('values')} returned ${quoted(got)} for ${paint.sky(key)}. ${fix}`,
+    [SeedcordErrorCode.PluginLinkedRolesTokensNotKept]: (method: 'push' | 'clear') =>
+        `${paint.bold(`${method}()`)} writes with the tokens that a user approved when they connected, and this bot doesn't save them. Set ${paint.bold('keepTokens: true')} in ${paint.bold('LinkedRoles.with()')}. Users who connected before that have to connect again.`,
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 
     [SeedcordErrorCode.CliConfigInvalidExport]: () =>

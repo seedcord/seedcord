@@ -293,6 +293,8 @@ export enum SeedcordErrorCode {
 
     /** A Linked Roles `values` function returned something that the plugin can't send to Discord. */
     PluginLinkedRolesValueRejected = 2601,
+    /** `push()` or `clear()` was called on a Linked Roles plugin that doesn't keep tokens. */
+    PluginLinkedRolesTokensNotKept = 2602,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,

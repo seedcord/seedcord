@@ -45,6 +45,7 @@ function discordListing(redirects: string[]): Parameters<typeof fakeDiscord>[0] 
         if (route === '/oauth2/@me') return { json: { user: USER, scopes: GRANTED } };
         if (route === '/applications/@me') return { json: { redirect_uris: redirects } };
         if (route === '/users/@me/connections') return { json: [{ type: 'github', name: 'dhruv', verified: true }] };
+        if (route === '/users/@me') return { json: USER };
         return { json: {} };
     };
 }
@@ -63,7 +64,7 @@ async function botWith({
     const discord = await fakeDiscord(answer);
     const { linkedRoles } = new TestHost({ api: discord.api, ...host }).attach(
         'linkedRoles',
-        LinkedRoles.with({ records: { level }, values: () => 'Not yet.', ...options })
+        LinkedRoles.with({ records: { level }, values: () => ({ refuse: 'Not yet.' }), ...options })
     );
     const env = bindEnv(Envapter, new PortableSource({ DISCORD_CLIENT_SECRET: 'client-secret' }));
     onTestFinished(() => {
@@ -109,7 +110,7 @@ describe('LinkedRoles startup', () => {
         records = { level },
         keepTokens = false
     }: Start = {}): unknown {
-        const Attached = LinkedRoles.with({ records, keepTokens, values: () => 'Not yet.' });
+        const Attached = LinkedRoles.with({ records, keepTokens, values: () => ({ refuse: 'Not yet.' }) });
         const { linkedRoles } = new TestHost({ api: 'http://discord.test/api', ...host }).attach(
             'linkedRoles',
             Attached
@@ -158,7 +159,9 @@ describe('LinkedRoles startup', () => {
     });
 
     it('attaches as a class called `LinkedRoles`, the name that the logger shows', () => {
-        expect(LinkedRoles.with({ records: { level }, values: () => 'Not yet.' }).name).toBe('LinkedRoles');
+        expect(LinkedRoles.with({ records: { level }, values: () => ({ refuse: 'Not yet.' }) }).name).toBe(
+            'LinkedRoles'
+        );
     });
 });
 
@@ -276,7 +279,7 @@ describe('LinkedRoles routes', () => {
                 scopes: ['connections'],
                 values: async ({ user, asUser }) => {
                     seen.push(user, await asUser.connections());
-                    return 'Not yet.';
+                    return { refuse: 'Not yet.' };
                 }
             }
         });
@@ -287,8 +290,8 @@ describe('LinkedRoles routes', () => {
         expect(sent(bot.requests, 'GET', '/users/@me/connections')[0]?.headers.authorization).toBe('Bearer user-token');
     });
 
-    it("shows the string that `values` returns and doesn't write", async () => {
-        const bot = await botWith({ options: { values: () => 'Use the bot once, then try again.' } });
+    it("shows the message that `values` refuses with and doesn't write", async () => {
+        const bot = await botWith({ options: { values: () => ({ refuse: 'Use the bot once, then try again.' }) } });
 
         const page = await visit(bot);
 
@@ -370,5 +373,72 @@ describe('LinkedRoles routes', () => {
         const { linkedRoles } = await botWith();
 
         expect(await linkedRoles.fetch(new Request('https://bot.test/oauth/login'))).toBeUndefined();
+    });
+});
+
+describe('LinkedRoles with `keepTokens`', () => {
+    // a bot that restarted after the user connected, on the same kv
+    async function restartedAfterConnecting(values: Options['values']): Promise<Bot> {
+        const kv = new MapDriver();
+        const before = await botWith({
+            options: { keepTokens: true, values: () => ({ refuse: 'Not yet.' }) },
+            host: { kv }
+        });
+        await visit(before);
+        return botWith({ options: { keepTokens: true, values }, host: { kv } });
+    }
+
+    it('`push()` runs `values` again for a connected user and writes it with their saved token', async () => {
+        const seen: unknown[] = [];
+        const bot = await restartedAfterConnecting(({ user }) => {
+            seen.push(user);
+            return { metadata: { level: 30 } };
+        });
+
+        const result = await bot.linkedRoles.push(USER.id);
+
+        expect(result).toEqual({ kind: 'connected', user: USER });
+        expect(seen).toEqual([USER]);
+        const [write] = sent(bot.requests, 'PUT', CONNECTION_ROUTE);
+        expect(JSON.parse(write?.body ?? '')).toEqual({ metadata: { level: '30' } });
+        expect(write?.headers.authorization).toBe('Bearer user-token');
+    });
+
+    it("`push()` doesn't write for a user that `values` refuses, and returns the message", async () => {
+        const bot = await restartedAfterConnecting(() => ({ refuse: 'Your account was removed.' }));
+
+        expect(await bot.linkedRoles.push(USER.id)).toEqual({
+            kind: 'refused',
+            user: USER,
+            message: 'Your account was removed.'
+        });
+        expect(sent(bot.requests, 'PUT', CONNECTION_ROUTE)).toEqual([]);
+    });
+
+    it('`clear()` writes an empty connection with the saved token', async () => {
+        const bot = await restartedAfterConnecting(() => ({ refuse: 'Not yet.' }));
+
+        await bot.linkedRoles.clear(USER.id);
+
+        const [write] = sent(bot.requests, 'PUT', CONNECTION_ROUTE);
+        expect(JSON.parse(write?.body ?? '')).toEqual({});
+        expect(write?.headers.authorization).toBe('Bearer user-token');
+    });
+
+    it.for(['push', 'clear'] as const)('`%s()` throws for a user who never connected', async (method) => {
+        const { linkedRoles } = await botWith({ options: { keepTokens: true } });
+
+        await expect(linkedRoles[method]('999')).rejects.toMatchObject({
+            code: SeedcordErrorCode.PluginOAuthLoginNeeded
+        });
+    });
+
+    it.for(['push', 'clear'] as const)("`%s()` throws when the plugin doesn't keep tokens", async (method) => {
+        const bot = await botWith({ options: { values: () => ({ metadata: { level: 12 } }) } });
+        await visit(bot);
+
+        await expect(bot.linkedRoles[method](USER.id)).rejects.toMatchObject({
+            code: SeedcordErrorCode.PluginLinkedRolesTokensNotKept
+        });
     });
 });

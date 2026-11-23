@@ -4,8 +4,8 @@ export { LinkedRoles } from './LinkedRoles';
 export { ApplicationRoleConnectionMetadataType as RecordType } from 'discord-api-types/v10';
 
 export type { LinkedRoleRecord, LinkedRoleRecords, RoleConnection, RoleMetadata } from './LinkedRoleRecord';
-export type { ConnectingUser, LinkedRolesOptions } from './LinkedRoles';
-export type { LinkedRolesResult } from './LinkedRolesResult';
+export type { ConnectingUser, LinkedRolesOptions, Refusal } from './LinkedRoles';
+export type { ConnectionResult, LinkedRolesResult } from './LinkedRolesResult';
 
 /** Package version */
 export const version = process.env.PACKAGE_VERSION ?? '0.0.0';

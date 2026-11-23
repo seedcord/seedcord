@@ -10,11 +10,11 @@ import { Converters, Envapter } from 'envapt';
 import { RecordSet } from './RecordSet';
 
 import type { LinkedRoleRecords, RecordProblems, RoleConnection } from './LinkedRoleRecord';
-import type { LinkedRolesResult } from './LinkedRolesResult';
+import type { ConnectionResult, LinkedRolesResult } from './LinkedRolesResult';
 import type { CoreBase } from '@seedcord/core';
 import type { LoginOutcome, OAuthScope, UserCalls } from '@seedcord/plugin-oauth';
 import type { APIUser, RESTPatchCurrentApplicationJSONBody } from 'discord-api-types/v10';
-import type { ExcludeStrict, Promisable } from 'type-fest';
+import type { ExcludeStrict, If, Promisable } from 'type-fest';
 
 /**
  * What your `values` gets about the person who is connecting.
@@ -30,6 +30,12 @@ export interface ConnectingUser<TScopes extends OAuthScope = never> {
      * A call like that needs its scope in your `scopes`, or it doesn't compile.
      */
     asUser: UserCalls<TScopes | 'role_connections.write'>;
+}
+
+/** Return this from your `values` to refuse someone. */
+export interface Refusal {
+    /** What to tell them. The callback page shows it, and it's the `message` of a `refused` result. */
+    refuse: string;
 }
 
 /**
@@ -58,8 +64,9 @@ export interface LinkedRolesOptions<
      */
     keepTokens?: TKeep | undefined;
     /**
-     * Returns a user's value for every record. Return a string to refuse them, like when they have to do
-     * something in your bot first. The plugin shows them the string and doesn't write anything.
+     * Returns a user's value for every record. Return `{ refuse: 'your message' }` to refuse them, like
+     * when they have to do something in your bot first. The plugin shows them the message and doesn't write
+     * anything.
      *
      * @example
      * ```ts
@@ -68,12 +75,12 @@ export interface LinkedRolesOptions<
      * values: async ({ asUser }) => {
      *     const accounts = await asUser.connections();
      *     const github = accounts.find((account) => account.type === ConnectionService.GitHub && account.verified);
-     *     if (!github) return 'Connect your GitHub account on Discord, then try again.';
+     *     if (!github) return { refuse: 'Connect your GitHub account on Discord, then try again.' };
      *     return { platformUsername: github.name, metadata: { merged_prs: await mergedPullRequests(github.name) } };
      * }
      * ```
      */
-    values(connecting: ConnectingUser<TScopes>): Promisable<RoleConnection<TRecords> | string>;
+    values(connecting: ConnectingUser<TScopes>): Promisable<RoleConnection<TRecords> | Refusal>;
     /**
      * Returns the page that a visitor gets after the callback route, for every `kind` of
      * {@link LinkedRolesResult}. Without it, they get a plain page that says what happened.
@@ -86,6 +93,16 @@ export interface LinkedRolesOptions<
      */
     onResult?: ((result: LinkedRolesResult, request: Request) => Promisable<Response>) | undefined;
 }
+
+type SavedTokenMethod = 'push' | 'clear';
+
+// without `keepTokens: true` the sentence is the parameter's type. no user id fits it, and typescript
+// prints it in the error
+type SavedTokenUserId<TKeep extends boolean, TMethod extends SavedTokenMethod> = If<
+    TKeep,
+    string,
+    `${TMethod}() needs the saved tokens. Set keepTokens: true in LinkedRoles.with().`
+>;
 
 const CLIENT_SECRET_KEY = 'DISCORD_CLIENT_SECRET';
 // two deployments of one application overwrite each other's verification URL. once this much time
@@ -237,6 +254,37 @@ export abstract class LinkedRoles<
         return this.#client().loginUrl();
     }
 
+    /**
+     * Runs your `values` again for a user who connected, and writes what it returns. Call it when
+     * something a role depends on changes, like after a level-up.
+     *
+     * It resolves to a {@link ConnectionResult}. Its `kind` is `'connected'` after a write. When your
+     * `values` refused this user, its `kind` is `'refused'` and it has the `message`.
+     *
+     * Discord takes about one write per user every five seconds. If you call `push()` for the same user
+     * sooner than that, the call waits until Discord takes it.
+     *
+     * @throws A **SeedcordError** with the code `PluginOAuthLoginNeeded` when the user never connected,
+     * or took your application off their account since. They have to open {@link LinkedRoles.verifyUrl} again.
+     * @throws A **SeedcordError** when the plugin doesn't have `keepTokens: true`.
+     */
+    public async push(userId: SavedTokenUserId<TKeep, 'push'>): Promise<ConnectionResult> {
+        const asUser = this.#asUserWithSavedTokens('push', userId);
+        return this.#connect(await asUser.user());
+    }
+
+    /**
+     * Empties the values that Discord has for a user, for when they shouldn't have your roles anymore.
+     * The plugin keeps their tokens, and a later {@link LinkedRoles.push} writes their values again.
+     *
+     * @throws A **SeedcordError** with the code `PluginOAuthLoginNeeded` when the user never connected,
+     * or took your application off their account since.
+     * @throws A **SeedcordError** when the plugin doesn't have `keepTokens: true`.
+     */
+    public async clear(userId: SavedTokenUserId<TKeep, 'clear'>): Promise<void> {
+        await this.#asUserWithSavedTokens('clear', userId).setRoleConnection({});
+    }
+
     public override fetch(request: Request): Promise<Response | undefined> {
         return this.#client().fetch(request, async (outcome) => {
             const result = await this.#resultOf(outcome);
@@ -252,8 +300,7 @@ export abstract class LinkedRoles<
 
         const { user } = outcome.login;
         try {
-            const refusal = await this.#connect(user);
-            return refusal === undefined ? { kind: 'connected', user } : { kind: 'refused', user, message: refusal };
+            return await this.#connect(user);
         } catch (error) {
             return { kind: 'failed', error };
         } finally {
@@ -261,8 +308,7 @@ export abstract class LinkedRoles<
         }
     }
 
-    // resolves to the string when `values` refuses the user, and to undefined after a write
-    async #connect(user: APIUser): Promise<string | undefined> {
+    async #connect(user: APIUser): Promise<ConnectionResult> {
         const asUser = this.#client().as(user.id);
         const returned = await this.options.values({
             user,
@@ -270,10 +316,18 @@ export abstract class LinkedRoles<
             // for the bot author
             asUser: asUser as UserCalls<TScopes | 'role_connections.write'>
         });
-        // a string is the bot author's message for someone they refuse, like 'Use the bot once first.'
-        if (typeof returned === 'string') return returned;
+        if ('refuse' in returned) return { kind: 'refused', user, message: returned.refuse };
         await asUser.setRoleConnection(this.#records().connectionBody(returned));
-        return undefined;
+        return { kind: 'connected', user };
+    }
+
+    // the types refuse these calls without `keepTokens: true`, but not when the option is a boolean
+    // variable
+    #asUserWithSavedTokens(method: SavedTokenMethod, userId: string): UserCalls<OAuthScope> {
+        if (!this.#keepsTokens) {
+            throw new SeedcordError(SeedcordErrorCode.PluginLinkedRolesTokensNotKept, [method]);
+        }
+        return this.#client().as(userId);
     }
 
     get #keepsTokens(): boolean {

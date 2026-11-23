@@ -42,7 +42,8 @@ export async function fakeDiscord(reply: (request: SeenRequest) => Promisable<Re
             const url = new URL(request.url ?? '', 'http://localhost');
             const seen: SeenRequest = {
                 method: request.method ?? '',
-                route: url.pathname.replace(/^\/api\/v\d+/u, ''),
+                // decoded because discord-api-types writes the current user's route as /users/%40me
+                route: decodeURIComponent(url.pathname.replace(/^\/api\/v\d+/u, '')),
                 search: url.search,
                 headers: request.headers,
                 body: Buffer.concat(chunks).toString()
