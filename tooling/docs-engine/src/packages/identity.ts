@@ -42,6 +42,10 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
         displayName: 'plugin-oauth',
         aliases: ['plugin-oauth', 'oauth', 'oauth2', 'login', 'tokens']
     },
+    '@seedcord/plugin-linked-roles': {
+        displayName: 'plugin-linked-roles',
+        aliases: ['plugin-linked-roles', 'linked-roles', 'linked roles', 'role connections', 'verification']
+    },
     '@seedcord/types': {
         displayName: 'types',
         aliases: ['types']

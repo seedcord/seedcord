@@ -98,6 +98,7 @@ export default {
         'packages/utils': { entry: [TYPE_TESTS], ignore: ['tests/files/fixtures/**'] },
         'plugins/i18n': typeTestsAndFixtures,
         'plugins/kysely': typeTestsOnly,
+        'plugins/linked-roles': typeTestsOnly,
         'plugins/mongoose': typeTestsOnly,
         'plugins/oauth': typeTestsOnly,
         'plugins/tasks': typeTestsAndFixtures,

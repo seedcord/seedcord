@@ -25,6 +25,9 @@
 '📦 plugin-oauth':
   - changed-files:
       - any-glob-to-any-file: 'plugins/oauth/**'
+'📦 plugin-linked-roles':
+  - changed-files:
+      - any-glob-to-any-file: 'plugins/linked-roles/**'
 '📦 custom-id':
   - changed-files:
       - any-glob-to-any-file: 'packages/custom-id/**'

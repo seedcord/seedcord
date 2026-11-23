@@ -24,6 +24,7 @@
                 "@seedcord/logger#build",
                 "@seedcord/plugin-i18n#build",
                 "@seedcord/plugin-kysely#build",
+                "@seedcord/plugin-linked-roles#build",
                 "@seedcord/plugin-mongoose#build",
                 "@seedcord/plugin-oauth#build",
                 "@seedcord/plugin-tasks#build",

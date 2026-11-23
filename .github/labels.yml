@@ -19,6 +19,8 @@
   color: 4fbc62
 - name: '📦 plugin-oauth'
   color: 3fbc62
+- name: '📦 plugin-linked-roles'
+  color: 2fbc62
 - name: '📦 custom-id'
   color: 8a62bc
   description: typed customId codec
