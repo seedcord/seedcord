@@ -206,6 +206,17 @@ describe('LinkedRoles portal sync', () => {
         expect(bodiesSent(after.requests, 'PUT', RECORDS_ROUTE)).toEqual([[expect.objectContaining({ name: 'Rank' })]]);
     });
 
+    it('registers the records for another application that starts on the same `kv`', async () => {
+        const kv = new MapDriver();
+        const before = await botWith({ host: { kv } });
+        await before.linkedRoles.ready();
+
+        const after = await botWith({ host: { kv, applicationId: '222' } });
+        await after.linkedRoles.ready();
+
+        expect(sent(after.requests, 'PUT', '/applications/222/role-connections/metadata')).toHaveLength(1);
+    });
+
     it('syncs again a day later, in case someone changed the application since', async () => {
         vi.useFakeTimers({ toFake: ['Date'] });
         const { linkedRoles, requests } = await botWith();

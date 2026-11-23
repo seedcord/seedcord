@@ -232,13 +232,12 @@ export abstract class LinkedRoles<
     }
 
     async #syncRecords(portal: KvCollection<string>, verifyUrl: string): Promise<void> {
+        const { applicationId } = this.core;
         const records = this.#records().recordsBody();
-        const wanted = JSON.stringify({ records, verifyUrl });
+        const wanted = JSON.stringify({ applicationId, records, verifyUrl });
         if ((await portal.get('synced')) === wanted) return;
 
-        await this.core.rest.put(Routes.applicationRoleConnectionMetadata(this.core.applicationId), {
-            body: records
-        });
+        await this.core.rest.put(Routes.applicationRoleConnectionMetadata(applicationId), { body: records });
         await this.core.rest.patch(Routes.currentApplication(), {
             body: { role_connections_verification_url: verifyUrl } satisfies RESTPatchCurrentApplicationJSONBody
         });
@@ -268,7 +267,8 @@ export abstract class LinkedRoles<
      * returns a value that doesn't fit its record, or a key that isn't in `records`.
      * @throws A **SeedcordRangeError** with the code `PluginLinkedRolesValueRejected` when `platformName`
      * or `platformUsername` is longer than Discord takes.
-     * @throws A **SeedcordTypeError** when the plugin doesn't have `keepTokens: true`.
+     * @throws A **SeedcordTypeError** with the code `PluginLinkedRolesTokensNotKept` when the plugin doesn't
+     * have `keepTokens: true`.
      */
     public async push(userId: SavedTokenUserId<TKeep, 'push'>): Promise<ConnectionResult> {
         const asUser = this.#asUserWithSavedTokens('push', userId);
@@ -282,7 +282,8 @@ export abstract class LinkedRoles<
      *
      * @throws A **SeedcordError** with the code `PluginOAuthLoginNeeded` when the user never connected,
      * or took your application off their account since.
-     * @throws A **SeedcordTypeError** when the plugin doesn't have `keepTokens: true`.
+     * @throws A **SeedcordTypeError** with the code `PluginLinkedRolesTokensNotKept` when the plugin doesn't
+     * have `keepTokens: true`.
      */
     public async clear(userId: SavedTokenUserId<TKeep, 'clear'>): Promise<void> {
         await this.#asUserWithSavedTokens('clear', userId).setRoleConnection({});

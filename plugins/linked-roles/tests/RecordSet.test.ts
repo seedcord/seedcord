@@ -36,13 +36,23 @@ describe('RecordSet', () => {
     });
 
     it.for<[what: string, wrong: LinkedRoleRecords, says: string]>([
-        ['a sixth record', { a: one, b: one, c: one, d: one, e: one, f: one }, 'has 6 records'],
+        ['a sixth record', { a: one, b: one, c: one, d: one, e: one, f: one }, 'You passed 6 records'],
         ['an uppercase key', { Level: one }, "'Level' can only use"],
         ['an empty key', { '': one }, 'is empty'],
         ['a key of 51 characters', { ['k'.repeat(51)]: one }, 'has 51 characters'],
         ['an empty name', { level: { ...one, name: '' } }, 'name of the record level is empty'],
         ['a name of 101 characters', { level: { ...one, name: 'n'.repeat(101) } }, 'has 101 characters'],
-        ['a description of 201 characters', { level: { ...one, description: 'd'.repeat(201) } }, 'has 201 characters']
+        ['a description of 201 characters', { level: { ...one, description: 'd'.repeat(201) } }, 'has 201 characters'],
+        [
+            'a translated name of 101 characters',
+            { level: { ...one, nameLocalizations: { fr: 'n'.repeat(101) } } },
+            'The fr name of the record level has 101 characters'
+        ],
+        [
+            'an empty translated description',
+            { level: { ...one, descriptionLocalizations: { de: '' } } },
+            'The de description of the record level is empty'
+        ]
     ])('reports %s', ([, wrong, says]) => {
         // the problem text has color codes around the names and numbers
         expect(stripVTControlCharacters(new RecordSet(wrong).firstProblem() ?? '')).toContain(says);
@@ -88,7 +98,11 @@ describe('RecordSet', () => {
 
     it.for<[what: string, wrong: Record<string, unknown>, says: string]>([
         ['a number with a fraction', { merged_prs: 1.5 }, 'returned 1.5 for merged_prs'],
-        ['a number that prints with an exponent', { merged_prs: 1e21 }, 'returned 1e+21 for merged_prs'],
+        [
+            'a whole number too large to print as digits',
+            { merged_prs: 1e21 },
+            'returned 1e+21 for merged_prs. An integer record needs a whole number between -9007199254740991 and'
+        ],
         ['a date that never parsed', { first_merge: new Date('soon') }, 'returned an invalid Date for first_merge'],
         ['a date in an integer record', { merged_prs: new Date(0) }, 'returned a Date for merged_prs'],
         ['text in a boolean record', { is_maintainer: 'yes' }, 'returned "yes" for is_maintainer'],

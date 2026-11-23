@@ -3,16 +3,16 @@ import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal
 import { keepDefined } from '@seedcord/utils';
 import { difference, mapValues } from 'es-toolkit';
 
-import { DISCORD_LIMITS, RECORD_KINDS } from './LinkedRoleRecord';
+import { DISCORD_LIMITS, KEY_CHARACTERS, KEY_CHARACTERS_RULE, RECORD_KINDS } from './LinkedRoleRecord';
 
 import type {
+    LimitedConnectionField,
+    LimitedRecordField,
     LinkedRoleRecord,
     LinkedRoleRecords,
-    PlatformField,
     RecordKind,
     RoleConnection,
-    RoleMetadata,
-    TextField
+    RoleMetadata
 } from './LinkedRoleRecord';
 import type {
     RESTPutAPIApplicationRoleConnectionMetadataJSONBody,
@@ -29,7 +29,7 @@ const KIND_FORMATS = {
     integer: {
         // isInteger passes 1e21, which prints as 1e+21
         text: (value) => (Number.isSafeInteger(value) ? String(value) : undefined),
-        needs: 'An integer record needs a whole number.'
+        needs: `An integer record needs a whole number between ${paint.iris(Number.MIN_SAFE_INTEGER)} and ${paint.iris(Number.MAX_SAFE_INTEGER)}.`
     },
     datetime: {
         text: (value) => (value instanceof Date && !Number.isNaN(value.getTime()) ? value.toISOString() : undefined),
@@ -58,7 +58,7 @@ function rejected(key: string, value: unknown, fix: string): SeedcordTypeError {
     return new SeedcordTypeError(SeedcordErrorCode.PluginLinkedRolesValueRejected, [key, shown(value), fix]);
 }
 
-function withinLimit(field: PlatformField, text: string | undefined): string | undefined {
+function withinLimit(field: LimitedConnectionField, text: string | undefined): string | undefined {
     const max = DISCORD_LIMITS[field];
     if (text !== undefined && text.length > max) {
         throw new SeedcordRangeError(SeedcordErrorCode.PluginLinkedRolesValueRejected, [
@@ -80,15 +80,27 @@ function lengthProblem(what: string, text: string, max: number): string | undefi
 
 function keyProblem(key: string): string | undefined {
     const what = `The record key ${paint.sky(`'${key}'`)}`;
-    return (
-        lengthProblem(what, key, DISCORD_LIMITS.key) ??
-        (/^[a-z0-9_]+$/.test(key) ? undefined : `${what} can only use a-z, 0-9, and _`)
-    );
+    const allowed = [...key].every((character) => KEY_CHARACTERS.includes(character));
+    return lengthProblem(what, key, DISCORD_LIMITS.key) ?? (allowed ? undefined : `${what} ${KEY_CHARACTERS_RULE}`);
 }
 
-function fieldProblem(key: string, record: LinkedRoleRecord, field: TextField): string | undefined {
-    const what = `The ${paint.bold(field)} of the record ${paint.sky(key)}`;
-    return lengthProblem(what, record[field], DISCORD_LIMITS[field]);
+const LOCALIZATIONS = {
+    name: 'nameLocalizations',
+    description: 'descriptionLocalizations'
+} as const satisfies Record<LimitedRecordField, keyof LinkedRoleRecord>;
+
+// the plugin checks a translation against its field's limit because discord's docs don't give a limit
+// for translations
+function fieldProblem(key: string, record: LinkedRoleRecord, field: LimitedRecordField): string | undefined {
+    const texts = Object.entries({ '': record[field], ...record[LOCALIZATIONS[field]] });
+    for (const [locale, text] of texts) {
+        // discord-api-types lets a locale's text be null
+        if (typeof text !== 'string') continue;
+        const which = locale === '' ? paint.bold(field) : `${locale} ${paint.bold(field)}`;
+        const problem = lengthProblem(`The ${which} of the record ${paint.sky(key)}`, text, DISCORD_LIMITS[field]);
+        if (problem !== undefined) return problem;
+    }
+    return undefined;
 }
 
 // the records a bot author gave the plugin, and the two request bodies that get built from them.
@@ -103,7 +115,7 @@ export class RecordSet<TRecords extends LinkedRoleRecords> {
     public firstProblem(): string | undefined {
         const entries = Object.entries(this.records);
         if (entries.length > DISCORD_LIMITS.records) {
-            return `${paint.bold('records')} has ${paint.iris(entries.length)} records. Discord takes ${paint.iris(DISCORD_LIMITS.records)} at most`;
+            return `You passed ${paint.iris(entries.length)} records. Discord takes ${paint.iris(DISCORD_LIMITS.records)} at most`;
         }
         for (const [key, record] of entries) {
             const problem =

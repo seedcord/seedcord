@@ -13,8 +13,8 @@ interface RedirectingClient {
     isRedirectListed(): Promise<boolean>;
 }
 
-// an edge bot runs ready() every time an isolate starts. with the confirmed address in `confirmed`,
-// discord gets asked once a day
+// an edge bot runs ready() in every new isolate. keeping the confirmed address for a day means discord
+// gets one call a day
 export async function warnUnlessRedirectListed(
     client: RedirectingClient,
     confirmed: KvCollection<string>,

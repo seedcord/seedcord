@@ -3,9 +3,9 @@ import { expectTypeOf } from 'vite-plus/test';
 
 import { LinkedRoles, RecordType } from '#src/index';
 
-import type { ConnectionResult, LinkedRoleRecords, LinkedRolesResult } from '#src/index';
+import type { ConnectionResult, LinkedRoleRecords } from '#src/index';
 import type { AttachedPlugin, PluginHost } from '@seedcord/core/plugin';
-import type { APIUser, RESTGetAPICurrentUserConnectionsResult } from 'discord-api-types/v10';
+import type { RESTGetAPICurrentUserConnectionsResult } from 'discord-api-types/v10';
 
 declare const gateway: PluginHost<'gateway', 'server'>;
 declare const edge: PluginHost<'http', 'edge'>;
@@ -23,7 +23,6 @@ function typesWhatValuesGets(): void {
         records,
         scopes: ['connections'],
         values: ({ user, asUser }) => {
-            expectTypeOf(user).toEqualTypeOf<APIUser>();
             expectTypeOf(asUser.connections()).resolves.toEqualTypeOf<RESTGetAPICurrentUserConnectionsResult>();
             // @ts-expect-error guilds isn't in scopes
             void asUser.guilds();
@@ -51,18 +50,6 @@ function typesWhatValuesReturns(): void {
         records,
         // @ts-expect-error first_merge is missing
         values: () => ({ metadata: { merged_prs: 3, is_maintainer: true } })
-    });
-}
-
-function typesWhatOnResultGets(): void {
-    LinkedRoles.with({
-        records,
-        values: () => ({ metadata }),
-        onResult: (result, request) => {
-            expectTypeOf(result).toEqualTypeOf<LinkedRolesResult>();
-            expectTypeOf(request).toEqualTypeOf<Request>();
-            return new Response();
-        }
     });
 }
 
@@ -158,7 +145,6 @@ function onlyUpdatesWithSavedTokens(): void {
 void onlyUpdatesWithSavedTokens;
 void typesWhatValuesGets;
 void typesWhatValuesReturns;
-void typesWhatOnResultGets;
 void rejectsWhatDiscordRejects;
 void leavesTextItCannotReadToTheRuntimeCheck;
 void attachesOnEveryRuntime;

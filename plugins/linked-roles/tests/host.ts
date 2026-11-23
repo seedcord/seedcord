@@ -38,19 +38,21 @@ interface TestHostOptions {
     api: string;
     url?: string | typeof SERVER_URL_UNSET;
     kv?: CoreBase['config']['kv'];
+    applicationId?: string;
 }
 
 export class TestHost extends PluginHost<'http', 'server'> {
     // justified: nothing under test reads the config
     public readonly config = {} as CoreBase['config'];
     public readonly rest: REST;
-    public readonly applicationId = APP_ID;
+    public readonly applicationId: string;
     private readonly configuredUrl: string | typeof SERVER_URL_UNSET;
 
-    constructor({ api, url = 'https://bot.test/', kv = new MapDriver() }: TestHostOptions) {
+    constructor({ api, url = 'https://bot.test/', kv = new MapDriver(), applicationId = APP_ID }: TestHostOptions) {
         super('http', 'server', kv);
         this.rest = new REST({ api }).setToken('bot-token');
         this.configuredUrl = url;
+        this.applicationId = applicationId;
     }
 
     public get url(): URL {

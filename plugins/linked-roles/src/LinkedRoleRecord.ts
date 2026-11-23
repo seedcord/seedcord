@@ -1,16 +1,7 @@
 import { ApplicationRoleConnectionMetadataType as RecordType } from 'discord-api-types/v10';
 
 import type { LocalizationMap } from 'discord-api-types/v10';
-import type {
-    DigitCharacter,
-    GreaterThan,
-    IsStringLiteral,
-    LowercaseLetter,
-    Simplify,
-    Split,
-    StringLength,
-    UnionLength
-} from 'type-fest';
+import type { GreaterThan, IsStringLiteral, Simplify, Split, StringLength, UnionLength } from 'type-fest';
 
 /**
  * One value that Discord compares for a Linked Role, like matches won or a "verified" flag. A server admin
@@ -50,7 +41,12 @@ export const DISCORD_LIMITS = {
 } as const;
 
 type Limits = typeof DISCORD_LIMITS;
-type KeyCharacter = LowercaseLetter | DigitCharacter | '_';
+
+// the compile-time check and RecordSet's run-time check both read these two
+export const KEY_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz0123456789_';
+export const KEY_CHARACTERS_RULE = 'can only use a-z, 0-9, and _';
+
+type KeyCharacter = Split<typeof KEY_CHARACTERS, ''>[number];
 
 type TooLong<TText extends string, TMax extends number> = GreaterThan<StringLength<TText>, TMax>;
 
@@ -62,13 +58,12 @@ type KeyProblem<TKey extends string> =
           ? TooLong<TKey, Limits['key']> extends true
               ? `A record key can be ${Limits['key']} characters long at most.`
               : never
-          : `'${TKey}' can only use a-z, 0-9, and _.`;
+          : `'${TKey}' ${typeof KEY_CHARACTERS_RULE}.`;
 
-// the fields of a record with a length limit
-export type TextField = 'name' | 'description';
+export type LimitedRecordField = 'name' | 'description';
 
 type TextProblems<TRecord extends LinkedRoleRecord> = {
-    [Field in TextField as TooLong<TRecord[Field], Limits[Field]> extends true ? Field : never]: {
+    [Field in LimitedRecordField as TooLong<TRecord[Field], Limits[Field]> extends true ? Field : never]: {
         error: `A record ${Field} can be ${Limits[Field]} characters long at most.`;
     };
 };
@@ -113,15 +108,14 @@ export type RoleMetadata<TRecords extends LinkedRoleRecords> = Simplify<{
     -readonly [Key in keyof TRecords]: KindValues[(typeof RECORD_KINDS)[TRecords[Key]['type']]];
 }>;
 
+export type LimitedConnectionField = 'platformName' | 'platformUsername';
+
 /**
  * A user's Linked Roles connection. Discord shows the platform name and username on the
  * user's profile, and compares `metadata` to each role's requirements.
  *
  * @typeParam TRecords - The `records` you pass.
  */
-// the fields of a role connection with a length limit
-export type PlatformField = 'platformName' | 'platformUsername';
-
 export interface RoleConnection<TRecords extends LinkedRoleRecords> {
     /** The name of your service. 50 characters at most. */
     platformName?: string | undefined;
