@@ -1,7 +1,8 @@
 import { HOME } from '@seedcord/ui';
 import { OG_SIZE } from '@seedcord/ui/og';
 
-export { AUTHOR_GITHUB_URL, AUTHOR_URL, DISCORD_URL, GUIDE_URL, NPM_ORG_URL, REPO_URL } from '@seedcord/ui';
+export { DISCORD_URL } from '@seedcord/brand';
+export { AUTHOR_GITHUB_URL, AUTHOR_URL, GUIDE_URL, NPM_ORG_URL, REPO_URL } from '@seedcord/ui';
 
 export const SITE_URL = HOME.url;
 export const SITE_NAME = 'seedcord';

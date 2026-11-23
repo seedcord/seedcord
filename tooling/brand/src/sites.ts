@@ -24,6 +24,7 @@ export class SiteAddress {
 }
 
 export const PRODUCTION_ORIGIN = 'https://seedcord.org';
+export const DISCORD_URL = `${PRODUCTION_ORIGIN}/chat/`;
 
 export const PRODUCTION_SITES = {
     home: new SiteAddress(PRODUCTION_ORIGIN),

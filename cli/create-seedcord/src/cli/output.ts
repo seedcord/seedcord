@@ -7,7 +7,7 @@ import { CommandFailed } from '#scaffold/exec';
 
 import type { StepUi } from '#cli/steps';
 
-const SUMMARY_LABELS = ['intents', 'next', 'invite', 'again', 'guide'] as const;
+const SUMMARY_LABELS = ['intents', 'next', 'invite', 'again', 'guide', 'discord'] as const;
 
 type SummaryLabel = (typeof SUMMARY_LABELS)[number];
 

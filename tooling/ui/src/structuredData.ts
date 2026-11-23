@@ -1,4 +1,6 @@
-import { AUTHOR_GITHUB_URL, AUTHOR_URL, DISCORD_URL, GITHUB_ORG_URL, HOME_URL, NPM_ORG_URL, REPO_URL } from './sites';
+import { DISCORD_URL } from '@seedcord/brand';
+
+import { AUTHOR_GITHUB_URL, AUTHOR_URL, GITHUB_ORG_URL, HOME_URL, NPM_ORG_URL, REPO_URL } from './sites';
 
 // matches the GitHub repository description
 const SEEDCORD_DESCRIPTION =
