@@ -7,9 +7,9 @@ Templates that worked on the Vite release. Fill in the `<angle brackets>`, and k
 Run it in the main session.
 
 ```txt
-Read every changeset on this branch against the actual diff (git diff main...HEAD for each package). Merge the ones that describe one change in several steps, and delete the ones that describe something a later change undid. Rewrite each survivor per the changeset-guidelines skill, and keep **BREAKING:** on the majors.
+Read every changeset on this branch against the actual diff (git diff origin/main...HEAD for each package). Merge the ones that describe one change in several steps, and delete the ones that describe something a later change undid. Rewrite each survivor per the changeset-guidelines skill, and keep **BREAKING:** on the majors.
 
-Then dedupe against each package's version on main. A fix for a bug that only exists on this branch gets folded into the changeset that introduced the code, or deleted. A bug that exists on main keeps its own entry. Check each one against main's source.
+Then dedupe against each package's version on origin/main. A fix for a bug that only exists in this release gets folded into the changeset that introduced the code, or deleted. A bug that exists on origin/main keeps its own entry. Check each one against origin/main's source.
 
 Then list the breaking changes, and which of them change behavior with nothing to warn the user, like a different error code or a different return value.
 ```
