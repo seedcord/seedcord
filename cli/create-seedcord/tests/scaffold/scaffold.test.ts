@@ -61,23 +61,17 @@ const EDGE: ScaffoldAnswers = { ...HTTP, runtime: 'edge' };
 
 const SEEDCORD_CLI = resolve(import.meta.dirname, '../../../seedcord');
 
-async function seedcordTestedVersion(name: string): Promise<string> {
-    const manifest = await readFile(join(SEEDCORD_CLI, 'node_modules', name, 'package.json'), 'utf8');
-    // justified: a package manifest has its version
-    return (JSON.parse(manifest) as { version: string }).version;
-}
-
-// pnpm swaps catalog:peer for the real range only when it publishes
-async function seedcordPeerRange(name: string): Promise<string> {
+// pnpm swaps a catalog: range for the real one only when it publishes
+async function seedcordRange(catalogName: 'deps' | 'peer', name: string): Promise<string> {
     const workspace = await readFile(join(SEEDCORD_CLI, '../../pnpm-workspace.yaml'), 'utf8');
     const lines = workspace.split('\n');
-    const catalog = lines.slice(lines.indexOf('  peer:') + 1);
+    const catalog = lines.slice(lines.indexOf(`  ${catalogName}:`) + 1);
     const entries = catalog.slice(
         0,
         catalog.findIndex((line) => !line.startsWith('    '))
     );
     const entry = entries.find((line) => line.trim().replaceAll("'", '').startsWith(`${name}: `));
-    if (entry === undefined) throw new Error(`${name} is missing from the peer catalog`);
+    if (entry === undefined) throw new Error(`${name} is missing from the ${catalogName} catalog`);
     return entry.split(': ')[1] ?? '';
 }
 
@@ -242,18 +236,17 @@ describe('scaffold', () => {
         }
     });
 
-    it.each(['cf', '@cloudflare/vite-plugin'])(
-        'installs the %s version that seedcord tests its edge build on',
-        async (name) => {
-            const target = await scratchTarget();
-            const { runner, calls } = recorder();
+    it.each([
+        ['deps', 'cf'],
+        ['peer', '@cloudflare/vite-plugin']
+    ] as const)('installs the range seedcord has in its %s catalog for %s', async (catalogName, name) => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder();
 
-            await scaffold({ ...baseInput(target), answers: EDGE }, runner);
+        await scaffold({ ...baseInput(target), answers: EDGE }, runner);
 
-            const pinned = installs(calls).dev.find((arg) => arg.startsWith(`${name}@`));
-            expect(pinned).toBe(`${name}@${await seedcordTestedVersion(name)}`);
-        }
-    );
+        expect(installs(calls).dev).toContain(`${name}@${await seedcordRange(catalogName, name)}`);
+    });
 
     it.each([GATEWAY, HTTP, EDGE])('installs vite at the range seedcord takes as a peer', async (answers) => {
         const target = await scratchTarget();
@@ -261,7 +254,7 @@ describe('scaffold', () => {
 
         await scaffold({ ...baseInput(target), answers }, runner);
 
-        expect(installs(calls).dev).toContain(`vite@${await seedcordPeerRange('vite')}`);
+        expect(installs(calls).dev).toContain(`vite@${await seedcordRange('peer', 'vite')}`);
     });
 
     it('pins typescript to the last major typescript-eslint supports', async () => {

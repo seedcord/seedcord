@@ -142,7 +142,7 @@ jobs:
           persist-credentials: false
       - uses: $/.github/actions/setup
         with:
-          node-version: '24.22.1'
+          node-version: '24.11.0'
       - run: vp exec turbo test --continue --filter='!@seedcord/scripts'
 
   bun:

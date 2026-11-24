@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/mock-http",
-    "version": "0.0.19",
+    "version": "0.0.20-next.0",
     "private": true,
     "description": "Http-transport mock bot for demonstration and testing",
     "repository": {

@@ -25,10 +25,15 @@ function readPackageFacts(): PackageFacts {
     try {
         const pkgPath = resolve(process.cwd(), 'package.json');
         const pkgRaw = readFileSync(pkgPath, 'utf8');
-        const pkg = JSON.parse(pkgRaw) as { version?: unknown; engines?: { node?: unknown; bun?: unknown } };
+        const pkg = JSON.parse(pkgRaw) as {
+            version?: unknown;
+            seedcord?: { runtime?: { node?: unknown; bun?: unknown } };
+        };
         if (typeof pkg.version === 'string' && pkg.version.length > 0) version = pkg.version;
-        if (typeof pkg.engines?.node === 'string') nodeRange = pkg.engines.node;
-        if (typeof pkg.engines?.bun === 'string') bunRange = pkg.engines.bun;
+        // engines lists the patched versions. seedcord.runtime lists the oldest versions that the code runs on
+        const runtime = pkg.seedcord?.runtime;
+        if (typeof runtime?.node === 'string') nodeRange = runtime.node;
+        if (typeof runtime?.bun === 'string') bunRange = runtime.bun;
     } catch (error) {
         // eslint-disable-next-line no-console -- build-config helper has no Logger
         console.warn(`[tsdown-config] could not read package.json, using defaults: ${String(error)}`);

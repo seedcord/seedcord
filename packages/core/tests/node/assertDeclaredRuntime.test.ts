@@ -1,9 +1,10 @@
 import { createRequire } from 'node:module';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { captureLogs } from '@seedcord/logger/internal';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
+import { assertDeclaredRuntime } from '#node/assertDeclaredRuntime';
 import { TestServerHost } from '#tests/utils/TestServerHost';
 
 interface Runtime {
@@ -11,24 +12,21 @@ interface Runtime {
     bunRange?: string;
     node?: string;
     bun?: string;
+    deno?: string;
 }
 
 const realNode = Object.getOwnPropertyDescriptor(process.versions, 'node');
 
-function setVersion(key: 'node' | 'bun', value: string): void {
+function setVersion(key: 'node' | 'bun' | 'deno', value: string): void {
     Object.defineProperty(process.versions, key, { value, configurable: true });
 }
 
-function onRuntime({
-    nodeRange = '^24.22.1 || >=26.12.1',
-    bunRange = '>=1.4.2',
-    node = '26.12.1',
-    bun
-}: Runtime): () => void {
+function onRuntime({ nodeRange = '>=24.11', bunRange = '>=1.4.2', node = '24.11.0', bun, deno }: Runtime): () => void {
     vi.stubEnv('PACKAGE_NODE_RANGE', nodeRange);
     vi.stubEnv('PACKAGE_BUN_RANGE', bunRange);
     setVersion('node', node);
     if (bun !== undefined) setVersion('bun', bun);
+    if (deno !== undefined) setVersion('deno', deno);
     return () => assertDeclaredRuntime();
 }
 
@@ -40,20 +38,17 @@ afterEach(() => {
     vi.unstubAllEnvs();
     if (realNode) Object.defineProperty(process.versions, 'node', realNode);
     Reflect.deleteProperty(process.versions, 'bun');
+    Reflect.deleteProperty(process.versions, 'deno');
     TestServerHost.resetHost();
 });
 
 describe('the runtime check on node', () => {
-    it.each(['22.18.0', '24.22.0', '25.0.0', '26.12.0'])('rejects unsupported Node %s', (node) => {
+    it.each(['22.18.0', '24.10.0'])('rejects Node %s below the floor', (node) => {
         expectUnsupported(onRuntime({ node }));
     });
 
-    it.each(['24.22.1', '24.23.0', '26.12.1'])('accepts patched Node %s', (node) => {
+    it.each(['24.11.0', '24.22.0', '25.0.0', '26.5.1'])('accepts Node %s', (node) => {
         expect(onRuntime({ node })).not.toThrow();
-    });
-
-    it('passes a newer major even when its minor is lower', () => {
-        expect(onRuntime({ node: '27.0.0' })).not.toThrow();
     });
 
     it('reads a range with only a major', () => {
@@ -100,14 +95,24 @@ describe('the runtime check on bun', () => {
     });
 });
 
+describe('the runtime check on deno', () => {
+    it('constructs a host with one warning that deno is untested, whatever node version it reports', () => {
+        using logs = captureLogs();
+        onRuntime({ nodeRange: '>=99', deno: '2.9.8' });
+
+        expect(() => new TestServerHost()).not.toThrow();
+        expect(logs.at('warn')).toEqual([expect.stringContaining("isn't tested on Deno")]);
+    });
+});
+
 describe('the ranges this package declares', () => {
     const declared = createRequire(import.meta.url)('../../package.json') as {
-        engines: { node: string; bun: string };
+        seedcord: { runtime: { node: string; bun: string } };
     };
 
     it('reject a far older node and bun', () => {
-        expectUnsupported(onRuntime({ nodeRange: declared.engines.node, node: '1.0.0' }));
-        expectUnsupported(onRuntime({ bunRange: declared.engines.bun, bun: '0.1.0' }));
+        expectUnsupported(onRuntime({ nodeRange: declared.seedcord.runtime.node, node: '1.0.0' }));
+        expectUnsupported(onRuntime({ bunRange: declared.seedcord.runtime.bun, bun: '0.1.0' }));
     });
 });
 

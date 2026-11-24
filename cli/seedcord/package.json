@@ -1,6 +1,6 @@
 {
     "name": "seedcord",
-    "version": "0.24.3-next.0",
+    "version": "0.24.3-next.1",
     "description": "The seedcord CLI. Dev server, build, and codegen for a typed Discord bot.",
     "keywords": [
         "cli",
@@ -63,8 +63,6 @@
         "coverage": "vp test run --coverage"
     },
     "dependencies": {
-        "@cloudflare/build-output-utils": "1.0.0-rc.0",
-        "@cloudflare/config": "1.0.0-rc.0",
         "@commander-js/extra-typings": "^15.0.0",
         "@discordjs/rest": "catalog:deps",
         "@leeoniya/ufuzzy": "catalog:deps",
@@ -80,6 +78,7 @@
         "discord-api-types": "catalog:deps",
         "es-toolkit": "catalog:deps",
         "handlebars": "catalog:deps",
+        "import-meta-resolve": "^4.2.0",
         "ink": "catalog:deps",
         "minimatch": "^10.2.6",
         "react": "catalog:react",
@@ -90,6 +89,8 @@
         "wrap-ansi": "^10.0.0"
     },
     "devDependencies": {
+        "@cloudflare/build-output-utils": "^1.0.0-rc.0",
+        "@cloudflare/config": "^1.0.0-rc.0",
         "@cloudflare/vite-plugin": "catalog:peer",
         "@eslint-react/eslint-plugin": "catalog:eslint",
         "@seedcord/brand": "workspace:^",

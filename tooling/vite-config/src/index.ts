@@ -31,9 +31,13 @@ const base = defineConfig({
 });
 
 // configUrl is expected to be the caller's import.meta.url
+function tsconfigPath(configUrl: string): string {
+    return fileURLToPath(new URL('tsconfig.json', configUrl));
+}
+
 export function aliasFromTsconfig(configUrl: string): Alias[] {
     // parseTsconfig because tsconfig can be jsonc
-    const paths = parseTsconfig(fileURLToPath(new URL('tsconfig.json', configUrl))).compilerOptions?.paths ?? {};
+    const paths = parseTsconfig(tsconfigPath(configUrl)).compilerOptions?.paths ?? {};
     // vite takes the first alias that matches. tsc takes an exact key first, then the longest wildcard prefix
     const byMatchOrder = Object.entries(paths).toSorted(
         ([a], [b]) => wildcardPrefixLength(b) - wildcardPrefixLength(a)
@@ -55,7 +59,14 @@ function wildcardPrefixLength(key: string): number {
 
 export function createViteConfig(configUrl: string, overrides: UserConfig = {}): UserConfig {
     return mergeConfig(
-        mergeConfig(base, defineConfig({ resolve: { alias: aliasFromTsconfig(configUrl) } })),
+        mergeConfig(
+            base,
+            defineConfig({
+                // oxc reads compilerOptions only for files that the tsconfig includes, and tests write decorated files to the excluded tests/temp
+                tsconfig: tsconfigPath(configUrl),
+                resolve: { alias: aliasFromTsconfig(configUrl) }
+            })
+        ),
         overrides
     );
 }

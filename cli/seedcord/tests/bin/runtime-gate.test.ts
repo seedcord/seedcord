@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vite-plus/test';
 const run = promisify(execFile);
 const BIN = path.join(import.meta.dirname, '..', '..', 'bin', 'seedcord.mjs');
 
-// only a real process reaches the bin's own copy of the version check
+// only a real process runs the check at the bin's top level
 async function runBinOn(versions: { node: string; bun?: string }): Promise<{ code: number; stderr: string }> {
     const script = [
         ...Object.entries(versions).map(
@@ -26,14 +26,14 @@ async function runBinOn(versions: { node: string; bun?: string }): Promise<{ cod
 }
 
 describe('the seedcord bin', () => {
-    it.each(['22.18.0', '24.22.0', '25.0.0', '26.12.0'])('rejects unsupported Node %s', async (node) => {
+    it.each(['22.18.0', '24.10.0'])('rejects Node %s below the floor', async (node) => {
         const { code, stderr } = await runBinOn({ node });
 
         expect(code).toBe(1);
-        expect(stderr).toContain(`seedcord requires Node ^24.22.1 || >=26.12.1 but this process runs ${node}.`);
+        expect(stderr).toContain(`seedcord requires Node >=24.11 but this process runs ${node}.`);
     });
 
-    it.each(['24.22.1', '26.12.1', '27.0.0'])('runs the cli on supported Node %s', async (node) => {
+    it.each(['24.11.0', '24.22.0', '25.0.0', '26.5.1'])('runs the cli on Node %s', async (node) => {
         const { code, stderr } = await runBinOn({ node });
 
         expect(stderr).toBe('');

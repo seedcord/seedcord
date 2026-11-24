@@ -4,9 +4,12 @@ import { join } from 'node:path';
 import { satisfies } from 'verkit';
 import { describe, expect, it } from 'vite-plus/test';
 
+import { importFromCloudflarePlugin } from '#core/modules/cloudflarePlugin';
+
 const CLI_ROOT = join(import.meta.dirname, '../../..');
 
 interface Manifest {
+    version?: string;
     dependencies?: Record<string, string>;
     bundledVersions?: Record<string, string>;
 }
@@ -20,14 +23,20 @@ function dependencies(packageJson: string): Record<string, string> {
     return manifest(packageJson).dependencies ?? {};
 }
 
-describe('cloudflare pins', () => {
-    // another version can parse cloudflare.config.ts or .cloudflare/output differently from the plugin's copy
+describe("the cloudflare plugin's dependencies", () => {
+    it('loads a package that only the plugin depends on', async () => {
+        const miniflare = await importFromCloudflarePlugin<{ Miniflare: unknown }>('miniflare');
+
+        expect(miniflare.Miniflare).toBeTypeOf('function');
+    });
+
+    // the CLI takes its types from its own copy and runs the plugin's copy
     it.each(['@cloudflare/config', '@cloudflare/build-output-utils'])(
-        'pins %s to the version @cloudflare/vite-plugin depends on',
+        'installs the %s version that @cloudflare/vite-plugin depends on',
         (name) => {
             const plugin = dependencies(join(CLI_ROOT, 'node_modules/@cloudflare/vite-plugin/package.json'));
 
-            expect(dependencies(join(CLI_ROOT, 'package.json'))[name]).toBe(plugin[name]);
+            expect(manifest(join(CLI_ROOT, 'node_modules', name, 'package.json')).version).toBe(plugin[name]);
         }
     );
 });

@@ -1,4 +1,4 @@
-import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
+import { assertDeclaredRuntime } from '#node/assertDeclaredRuntime';
 
 // the edge bundle never reaches this entry
 assertDeclaredRuntime();
