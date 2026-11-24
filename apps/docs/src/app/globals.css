@@ -43,7 +43,7 @@
     }
 }
 
-/* both stay inline or the logo shifts when the theme flips */
+/* the logo shifts when the theme flips unless both are inline */
 .readme-img-light {
     display: inline;
 }

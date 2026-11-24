@@ -126,7 +126,7 @@
     }
 
     .twoslash .twoslash-query-line {
-        /* a full line box would drop the popup to its bottom */
+        /* a full line box would put the popup at its bottom */
         line-height: 0;
         margin: 0.6rem 0 0.5rem;
     }

@@ -1,6 +1,6 @@
 @layer components {
     [data-callout] {
-        /* a kind with no rule below would leave every color-mix invalid */
+        /* fallback hue for a callout type without its own rule below. every color-mix breaks without one */
         --cal-hue: var(--border);
         --cal-border: color-mix(in oklab, var(--cal-hue) 65%, var(--border));
         --cal-bg: color-mix(in oklab, var(--cal-hue) 20%, var(--surface));

@@ -113,7 +113,7 @@
         white-space: pre-wrap;
         overflow-wrap: anywhere;
     }
-    /* a flex column drops the newline between two lines, so each line can be a block */
+    /* each line can be a block in a flex column because flex ignores the newline between two lines */
     .code-card .shiki code {
         display: flex;
         flex-direction: column;

@@ -108,7 +108,7 @@
     /* Popover/Tooltip surface */
     --bg-popover: color-mix(in oklab, var(--bg) 98%, var(--color-base-dark) 2%);
 
-    /* Shadows. a shadow stays dark in both themes. --color-text flips and paints a pale line on dark */
+    /* Shadows. a shadow is dark in both themes. --color-text flips and paints a pale line on dark */
     --shadow-ink: var(--color-base-dark);
     --shadow-soft-token: 0 28px 60px -36px color-mix(in oklab, var(--shadow-ink) 28%, transparent);
     --shadow-card:
@@ -187,7 +187,7 @@
     --jump-bottom: 2.5rem;
     --jump-clearance: calc(var(--jump-bottom) + var(--jump-size) + 1.5rem);
 
-    /* pulls a ghost row's box left so its icon lands on the column edge. 12px of px-3 plus the 2px lucide leaves blank */
+    /* pulls a ghost row's box left to line its icon up with the column edge. 12px of px-3 plus the 2px of empty space lucide puts around an icon */
     --ghost-row-pull: 0.875rem;
 }
 

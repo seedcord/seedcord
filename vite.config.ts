@@ -7,7 +7,7 @@ export default defineConfig({
     staged: {
         '*': 'vp fmt --no-error-on-unmatched-pattern',
         '*.{ts,tsx,js,jsx,cjs,mjs}': runEslint,
-        '*.{md,mdx,ts,tsx,mts,cts,yml,yaml}': runProse
+        '*.{md,mdx,ts,tsx,mts,cts,css,yml,yaml}': runProse
     },
     fmt: {
         ignorePatterns: [
