@@ -374,6 +374,31 @@ describe('LinkedRoles routes', () => {
         );
     });
 
+    it('finishes both visits when one user starts two at once, without `keepTokens`', async () => {
+        const firstMayReturn = Promise.withResolvers<undefined>();
+        let calls = 0;
+        const bot = await botWith({
+            options: {
+                values: async () => {
+                    calls += 1;
+                    if (calls === 1) await firstMayReturn.promise;
+                    return { metadata: { level: 12 } };
+                }
+            }
+        });
+
+        const first = visit(bot);
+        await vi.waitFor(() => {
+            expect(calls).toBe(1);
+        });
+        const secondPage = await visit(bot);
+        firstMayReturn.resolve(undefined);
+        const firstPage = await first;
+
+        expect(secondPage.status).toBe(200);
+        expect(firstPage.status).toBe(200);
+    });
+
     it("doesn't save the user's tokens in `kv` without `keepTokens`", async () => {
         const kv = new MapDriver();
         const bot = await botWith({ options: { values: connected() }, host: { kv } });

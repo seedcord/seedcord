@@ -232,9 +232,11 @@ If `push()` throws in a route, seedcord [answers the request with a 500](/writin
 
 [`clear()`](ref:plugin-linked-roles/LinkedRoles.clear) empties the values that Discord has for a member. Use it for a member who shouldn't keep the roles that depend on your records. It takes the member's id, needs `keepTokens: true`, and throws `PluginOAuthLoginNeeded` in the same cases as `push()`. The plugin keeps their tokens, so a later `push()` writes their values again.
 
+A cleared member can open the verify link again, and the plugin then writes what your `values` returns for them. To keep them out, you have to refuse them in `values`, like the first sample on this page does for a member without a player.
+
 ## What Discord does with the role
 
-Discord compares the values you wrote to each role's requirement. If a member's values stop meeting it, Discord removes the role right away, and the member doesn't have to do anything. If their values meet it again later, Discord doesn't give the role back by itself. The member has to claim it again from the **Linked Roles** menu.
+Discord compares the values you wrote to each role's requirement. If a member's values stop meeting it, Discord removes the role right away, and the member doesn't have to do anything. If their values meet it again later, Discord doesn't give the role back by itself. The member has to claim it again from the **Linked Roles** menu because Discord [only gives a linked role to a member who opts in](https://support.discord.com/hc/en-us/articles/10388356626711-Connections-Linked-Roles-Admins).
 
 ## Sending a member to connect again
 

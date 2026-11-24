@@ -151,6 +151,9 @@ export abstract class LinkedRoles<
     // typed with every scope because typescript can't resolve a typed call's arguments while `TScopes`
     // is still a type parameter
     #built?: OAuthClient<OAuthScope> | undefined;
+    // callbacks in progress, by user id. without `keepTokens` two of them for one user share a token,
+    // and deleting it when the first one ends makes the other fail
+    readonly #visiting = new Map<string, number>();
 
     /**
      * Returns the plugin class to attach, with your options in it. Attaching `LinkedRoles` directly
@@ -280,6 +283,9 @@ export abstract class LinkedRoles<
      * depend on your records. The plugin keeps their tokens, and a later {@link LinkedRoles.push} writes
      * their values again.
      *
+     * A cleared user can open {@link LinkedRoles.verifyUrl} again, and the plugin then writes what your
+     * `values` returns for them. To keep them out, you have to refuse them in `values`.
+     *
      * @throws A **SeedcordError** with the code `PluginOAuthLoginNeeded` when the user never connected,
      * or took your application off their account since.
      * @throws A **SeedcordTypeError** with the code `PluginLinkedRolesTokensNotKept` when the plugin doesn't
@@ -303,13 +309,24 @@ export abstract class LinkedRoles<
         if (outcome.kind !== 'login') return outcome;
 
         const { user } = outcome.login;
+        this.#visiting.set(user.id, (this.#visiting.get(user.id) ?? 0) + 1);
         try {
             return await this.#connect(user);
         } catch (error) {
             return { kind: 'failed', error };
         } finally {
-            if (!this.#keepsTokens) await this.#client().forget(user.id);
+            await this.#visitEnded(user.id);
         }
+    }
+
+    async #visitEnded(userId: string): Promise<void> {
+        const stillVisiting = (this.#visiting.get(userId) ?? 1) - 1;
+        if (stillVisiting > 0) {
+            this.#visiting.set(userId, stillVisiting);
+            return;
+        }
+        this.#visiting.delete(userId);
+        if (!this.#keepsTokens) await this.#client().forget(userId);
     }
 
     async #connect(user: APIUser): Promise<ConnectionResult> {

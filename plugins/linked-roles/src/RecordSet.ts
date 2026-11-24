@@ -1,7 +1,7 @@
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { keepDefined } from '@seedcord/utils';
-import { difference, mapValues } from 'es-toolkit';
+import { difference } from 'es-toolkit';
 
 import { DISCORD_LIMITS, KEY_CHARACTERS, KEY_CHARACTERS_RULE, RECORD_KINDS } from './LinkedRoleRecord';
 
@@ -161,12 +161,14 @@ export class RecordSet<TRecords extends LinkedRoleRecords> {
     }
 
     private metadataText(metadata: RoleMetadata<TRecords>): Record<string, string> {
-        return mapValues(this.records, (record, key) => {
-            const format = KIND_FORMATS[RECORD_KINDS[record.type]];
-            const value = metadata[key];
-            const text = format.text(value);
-            if (text === undefined) throw rejected(String(key), value, format.needs);
-            return text;
-        });
+        return Object.fromEntries(
+            Object.entries(this.records).map(([key, record]) => {
+                const format = KIND_FORMATS[RECORD_KINDS[record.type]];
+                const value = metadata[key];
+                const text = format.text(value);
+                if (text === undefined) throw rejected(key, value, format.needs);
+                return [key, text];
+            })
+        );
     }
 }

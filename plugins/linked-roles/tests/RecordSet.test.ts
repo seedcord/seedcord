@@ -96,6 +96,12 @@ describe('RecordSet', () => {
         });
     });
 
+    it('sends a record keyed `__proto__`, which a plain assignment would lose', () => {
+        const body = new RecordSet({ ['__proto__']: one }).connectionBody({ metadata: { ['__proto__']: 3 } });
+
+        expect(Object.entries(body.metadata ?? {})).toEqual([['__proto__', '3']]);
+    });
+
     it.for<[what: string, wrong: Record<string, unknown>, says: string]>([
         ['a number with a fraction', { merged_prs: 1.5 }, 'returned 1.5 for merged_prs'],
         [

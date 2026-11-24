@@ -86,11 +86,15 @@ With `keepTokens: true`, the plugin saves each member's tokens in your bot's `kv
 // in a handler, after the member finished a match
 const result = await this.core.linkedRoles.push(this.user.id);
 if (result.kind === 'refused') await this.reply(result.message);
+```
 
+`push()` runs your `values` for that member again and writes what it returns.
+
+```ts
 // for a member who shouldn't keep the roles that depend on your records
 await this.core.linkedRoles.clear(this.user.id);
 ```
 
-`push()` runs your `values` for that member again and writes what it returns. Both calls only compile with `keepTokens: true`.
+`clear()` empties the values that Discord has for them. They can open the verify link again, so you have to refuse them in `values` to keep them out. Both calls only compile with `keepTokens: true`.
 
 Check out the [Linked Roles guide](https://seedcord.org/guide/plugins/linked-roles) for more details on how to use the plugin.
