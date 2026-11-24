@@ -1,8 +1,7 @@
-import { cn } from '@seedcord/ui';
+import { cn, PosterSection, SECTION_HEADING } from '@seedcord/ui';
 
 import { CodeCard } from '#components/code/CodeCard';
 import { GateEvaluator } from '#components/home/GateEvaluator';
-import { SECTION_HEADING, Section } from '#components/home/Section';
 import { Code } from '#components/ui/Code';
 import { CODE_MARK_DARK } from '#lib/code/marks';
 import { gatesSample } from '#lib/code/samples';
@@ -11,7 +10,7 @@ import type { ReactNode } from 'react';
 
 export function Gates(): ReactNode {
     return (
-        <Section ground="rind">
+        <PosterSection ground="rind">
             <GateEvaluator
                 card={
                     <CodeCard
@@ -39,6 +38,6 @@ export function Gates(): ReactNode {
                     refusals stay out of your logs, and the ones you mark as faults get logged and reported.
                 </p>
             </GateEvaluator>
-        </Section>
+        </PosterSection>
     );
 }

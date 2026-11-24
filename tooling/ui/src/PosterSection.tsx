@@ -1,15 +1,17 @@
-import { cn, tw } from '@seedcord/ui';
+import { cn } from 'cn';
+
+import { tw } from './lib/tw';
 
 import type { ReactNode } from 'react';
 
-export type Ground = 'pith' | 'rind' | 'flesh' | 'ink';
+export type PosterGround = 'pith' | 'rind' | 'flesh' | 'ink';
 
 // cn groups text-[<length>] with leading-* since text-lg/7 sets both. composing a size
 // onto a shared base through cn() loses the leading. each size keeps its own complete string.
 export const SECTION_HEADING = tw`font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight`;
 export const SECTION_HEADING_LG = tw`font-display text-[clamp(2.6rem,6vw,5rem)] leading-[0.95] font-semibold tracking-tight`;
 
-const GROUND: Record<Ground, string> = {
+const GROUND: Record<PosterGround, string> = {
     pith: tw`bg-(--pith) text-(--seed-dark)`,
     rind: tw`bg-(--rind-deep) text-(--pith)`,
     flesh: tw`bg-(--flesh-deep) text-(--pith)`,
@@ -19,12 +21,12 @@ const GROUND: Record<Ground, string> = {
 
 const AFTER_INK = tw`[[data-ground=ink]+&]:border-t-[3px] [[data-ground=ink]+&]:border-t-(--pith)`;
 
-export function Section({
+export function PosterSection({
     ground,
     className,
     children
 }: {
-    ground: Ground;
+    ground: PosterGround;
     className?: string;
     children: ReactNode;
 }): ReactNode {

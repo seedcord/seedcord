@@ -1,8 +1,7 @@
-import { cn, tw } from '@seedcord/ui';
+import { cn, PosterSection, SECTION_HEADING, tw } from '@seedcord/ui';
 import { FolderInput, Layers, Puzzle, Zap } from 'lucide-react';
 
 import { CodeCard } from '#components/code/CodeCard';
-import { SECTION_HEADING, Section } from '#components/home/Section';
 import { Chips } from '#components/ui/Chips';
 import { Code } from '#components/ui/Code';
 import { SiteLink } from '#components/ui/SiteLink';
@@ -23,7 +22,7 @@ const INLINE_LINK = tw`font-semibold text-(--pith) underline underline-offset-4 
 
 export function Vite(): ReactNode {
     return (
-        <Section ground="ink">
+        <PosterSection ground="ink">
             <div className={cn('grid items-start gap-x-10 gap-y-6 lg:grid-cols-2')}>
                 <h2 className={cn(SECTION_HEADING)}>
                     Your bot runs on Vite.
@@ -66,6 +65,6 @@ export function Vite(): ReactNode {
                     className={cn('blk-pith rule-pith')}
                 />
             </div>
-        </Section>
+        </PosterSection>
     );
 }

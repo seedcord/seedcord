@@ -1,7 +1,6 @@
-import { cn, tw } from '@seedcord/ui';
+import { cn, PosterSection, SECTION_HEADING, tw } from '@seedcord/ui';
 
 import { CodeCard } from '#components/code/CodeCard';
-import { SECTION_HEADING, Section } from '#components/home/Section';
 import { Code } from '#components/ui/Code';
 import { CODE_MARK_LIGHT } from '#lib/code/marks';
 import { pluginAttach, pluginSource, pluginUsage } from '#lib/code/samples';
@@ -12,7 +11,7 @@ const CARD = tw`blk-rind rule`;
 
 export function Plugins(): ReactNode {
     return (
-        <Section ground="pith">
+        <PosterSection ground="pith">
             <div className={cn('grid items-start gap-x-10 gap-y-6 lg:grid-cols-2')}>
                 <h2 className={cn(SECTION_HEADING)}>
                     Write your own Plugin.
@@ -45,6 +44,6 @@ export function Plugins(): ReactNode {
                     <CodeCard code={pluginUsage} filename="handlers/stars.ts" note="use it" className={cn(CARD)} />
                 </div>
             </div>
-        </Section>
+        </PosterSection>
     );
 }

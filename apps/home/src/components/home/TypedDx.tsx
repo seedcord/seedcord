@@ -1,8 +1,7 @@
-import { cn, Icon } from '@seedcord/ui';
+import { cn, Icon, PosterSection, SECTION_HEADING } from '@seedcord/ui';
 import { Braces, RefreshCw, ShieldCheck } from 'lucide-react';
 
 import { CodeCard } from '#components/code/CodeCard';
-import { SECTION_HEADING, Section } from '#components/home/Section';
 import { Thread } from '#components/home/Thread';
 import { Code } from '#components/ui/Code';
 import { CODE_MARK_LIGHT } from '#lib/code/marks';
@@ -20,7 +19,7 @@ const CHOICES = ["'books'", "'films'"] as const;
 
 export function TypedDx(): ReactNode {
     return (
-        <Section ground="pith">
+        <PosterSection ground="pith">
             <div className={cn('grid items-start gap-x-10 gap-y-6 lg:grid-cols-2')}>
                 <h2 className={cn(SECTION_HEADING)}>
                     The builder is the <span className={cn('text-(--flesh-deep)')}>source</span> of the types.
@@ -74,6 +73,6 @@ export function TypedDx(): ReactNode {
                     />
                 </div>
             </Thread>
-        </Section>
+        </PosterSection>
     );
 }

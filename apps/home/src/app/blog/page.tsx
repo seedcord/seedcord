@@ -1,4 +1,4 @@
-import { cn, MAIN_CONTENT_ID, PosterButton, serializeJsonLd } from '@seedcord/ui';
+import { cn, MAIN_CONTENT_ID, PosterButton, PosterSection, SECTION_HEADING_LG, serializeJsonLd } from '@seedcord/ui';
 import { PreviewCard } from '@seedcord/ui/LinkPreview';
 import { ComponentEmbed } from 'discord-component-embed/react';
 import { Rss } from 'lucide-react';
@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { Byline, PostDates } from '#components/blog/PostMeta';
 import { Footer } from '#components/home/Footer';
 import { Nav } from '#components/home/Nav';
-import { SECTION_HEADING_LG, Section } from '#components/home/Section';
 import { SiteLink } from '#components/ui/SiteLink';
 import { BLOG_DESCRIPTION } from '#lib/blog/about';
 import { listedPosts } from '#lib/blog/posts';
@@ -71,7 +70,7 @@ export default async function BlogPage(): Promise<ReactNode> {
             />
             <Nav onBlogIndex />
             <main id={MAIN_CONTENT_ID}>
-                <Section ground="pith">
+                <PosterSection ground="pith">
                     <div className={cn('grid grid-cols-[1fr_auto] gap-x-6')}>
                         <h1 className={cn(SECTION_HEADING_LG)}>
                             The <span className={cn('text-(--flesh-deep)')}>blog.</span>
@@ -106,7 +105,7 @@ export default async function BlogPage(): Promise<ReactNode> {
                             ))}
                         </ol>
                     )}
-                </Section>
+                </PosterSection>
             </main>
             <Footer />
         </>

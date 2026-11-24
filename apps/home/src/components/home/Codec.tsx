@@ -1,8 +1,7 @@
-import { cn } from '@seedcord/ui';
+import { cn, PosterSection, SECTION_HEADING } from '@seedcord/ui';
 
 import { CodeCard } from '#components/code/CodeCard';
 import { CustomIdDemo } from '#components/home/CustomIdDemo';
-import { SECTION_HEADING, Section } from '#components/home/Section';
 import { Code } from '#components/ui/Code';
 import { CODE_MARK_DARK } from '#lib/code/marks';
 import { codecComponent, codecHandler } from '#lib/code/samples';
@@ -11,7 +10,7 @@ import type { ReactNode } from 'react';
 
 export function Codec(): ReactNode {
     return (
-        <Section ground="flesh">
+        <PosterSection ground="flesh">
             <div className={cn('grid items-start gap-x-10 gap-y-6 lg:grid-cols-2')}>
                 <h2 className={cn(SECTION_HEADING)}>
                     Discord hands back a flat string.
@@ -53,6 +52,6 @@ export function Codec(): ReactNode {
                     }
                 />
             </div>
-        </Section>
+        </PosterSection>
     );
 }

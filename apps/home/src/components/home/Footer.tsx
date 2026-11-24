@@ -1,9 +1,7 @@
 import { PRODUCTION_SITES } from '@seedcord/brand';
-import { cn } from '@seedcord/ui';
-import { Materwelon } from '@seedcord/ui/Materwelon';
+import { cn, PosterFooter } from '@seedcord/ui';
 import { skillUrl } from '@seedcord/ui/skills';
 import { SEEDCORD_SKILL } from '@seedcord/ui/skills/seedcord';
-import Link from 'next/link';
 
 import { SiteLink } from '#components/ui/SiteLink';
 import { BLOG_PATH } from '#lib/blog/paths';
@@ -38,80 +36,32 @@ const COLUMNS = [
             { label: 'Blog', href: BLOG_PATH }
         ]
     }
-] as const;
-
-function LinkColumn({ column }: { column: (typeof COLUMNS)[number] }): ReactNode {
-    return (
-        <nav
-            aria-label={column.title}
-            className={cn(
-                'grid grid-cols-[7.5rem_1fr] items-baseline border-t-[1.5px] border-(--seed-dark)/15 py-3',
-                'lg:flex lg:flex-col lg:items-end lg:gap-3 lg:border-0 lg:py-0 lg:text-right'
-            )}
-        >
-            <span className={cn('font-mono-code text-xs font-semibold tracking-wide text-(--seed-dark)/55 uppercase')}>
-                {column.title}
-            </span>
-            <div className={cn('flex flex-wrap gap-x-4 gap-y-1.5 lg:contents')}>
-                {column.links.map((l) => (
-                    <SiteLink
-                        key={l.label}
-                        href={l.href}
-                        className={cn('text-sm font-medium text-(--seed-dark) transition-colors hover:text-(--flesh)')}
-                    >
-                        {l.label}
-                    </SiteLink>
-                ))}
-            </div>
-        </nav>
-    );
-}
+];
 
 export function Footer(): ReactNode {
     return (
-        <footer className={cn('border-t-[3px] border-(--seed-dark) bg-(--pith)')}>
-            <div className={cn('mx-auto max-w-(--shell-max) px-5 py-8 lg:py-14')}>
-                <div className={cn('flex flex-col gap-7 lg:flex-row lg:justify-between lg:gap-10')}>
-                    <div className={cn('flex flex-col gap-4')}>
-                        <Link href="/" className={cn('flex items-center gap-3')}>
-                            <Materwelon className={cn('drop-shadow-mark size-8')} />
-                            <span
-                                className={cn('font-display text-xl font-semibold tracking-tight text-(--seed-dark)')}
-                            >
-                                seedcord
-                            </span>
-                        </Link>
-                        <p className={cn('max-w-xs text-sm font-medium text-(--seed-dark)/70')}>
-                            An end-to-end typed framework for Discord bots.
-                        </p>
-                    </div>
-                    <div className={cn('flex flex-col lg:flex-row lg:gap-20')}>
-                        {COLUMNS.map((col) => (
-                            <LinkColumn key={col.title} column={col} />
-                        ))}
-                    </div>
-                </div>
-            </div>
-            <div className={cn('border-t-[3px] border-(--seed-dark)')}>
-                <div className={cn('mx-auto max-w-(--shell-max) px-5 py-6')}>
-                    <p className={cn('font-mono-code text-xs text-(--seed-dark)/70')}>
-                        Built by{' '}
-                        <SiteLink
-                            href={AUTHOR_URL}
-                            className={cn('font-semibold text-(--seed-dark) transition-colors hover:text-(--flesh)')}
-                        >
-                            materwelonDhruv
-                        </SiteLink>
-                        {' · '}
-                        <SiteLink
-                            href={AUTHOR_GITHUB_URL}
-                            className={cn('text-(--seed-dark) transition-colors hover:text-(--flesh)')}
-                        >
-                            GitHub
-                        </SiteLink>
-                    </p>
-                </div>
-            </div>
-        </footer>
+        <PosterFooter
+            tagline="An end-to-end typed framework for Discord bots."
+            columns={COLUMNS}
+            linkAs={SiteLink}
+            credit={
+                <>
+                    Built by{' '}
+                    <SiteLink
+                        href={AUTHOR_URL}
+                        className={cn('font-semibold text-(--seed-dark) transition-colors hover:text-(--flesh)')}
+                    >
+                        materwelonDhruv
+                    </SiteLink>
+                    {' · '}
+                    <SiteLink
+                        href={AUTHOR_GITHUB_URL}
+                        className={cn('text-(--seed-dark) transition-colors hover:text-(--flesh)')}
+                    >
+                        GitHub
+                    </SiteLink>
+                </>
+            }
+        />
     );
 }

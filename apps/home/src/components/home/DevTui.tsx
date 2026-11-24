@@ -1,6 +1,5 @@
-import { cn } from '@seedcord/ui';
+import { cn, PosterSection, SECTION_HEADING } from '@seedcord/ui';
 
-import { SECTION_HEADING, Section } from '#components/home/Section';
 import { Code } from '#components/ui/Code';
 import { CODE_MARK_INK } from '#lib/code/marks';
 import { CDN_URL } from '#lib/site';
@@ -14,7 +13,7 @@ const SHOT = `${CDN_URL}/assets/screenshots/dev-tui`;
 
 const SRCSET = WIDTHS.map((w) => `${SHOT}-${w}.webp ${w}w`).join(', ');
 
-// 1320 is Section's max-w-(--shell-max) plus its two 20px gutters
+// 1320 is PosterSection's max-w-(--shell-max) plus its two 20px gutters
 const SIZES = '(min-width: 1320px) 1240px, calc(100vw - 40px)';
 
 // the screenshot at 32px. jpeg still renders where the webp above fails
@@ -23,7 +22,7 @@ const BLUR =
 
 export function DevTui(): ReactNode {
     return (
-        <Section ground="ink">
+        <PosterSection ground="ink">
             <h2 className={cn(SECTION_HEADING)}>
                 The dev server has a <span className={cn('text-(--flesh)')}>UI</span>.
             </h2>
@@ -54,6 +53,6 @@ export function DevTui(): ReactNode {
                     className={cn('shot-img relative block h-auto w-full')}
                 />
             </figure>
-        </Section>
+        </PosterSection>
     );
 }

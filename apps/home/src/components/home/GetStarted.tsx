@@ -1,8 +1,7 @@
 import { stageNotice } from '@seedcord/brand';
-import { cn, PosterButton } from '@seedcord/ui';
+import { cn, PosterButton, PosterSection, SECTION_HEADING_LG } from '@seedcord/ui';
 
 import { CodeCard } from '#components/code/CodeCard';
-import { SECTION_HEADING_LG, Section } from '#components/home/Section';
 import { SiteLink } from '#components/ui/SiteLink';
 import { startTerminal } from '#lib/code/samples';
 import { DISCORD_URL, GUIDE_URL } from '#lib/site';
@@ -11,7 +10,7 @@ import type { ReactNode } from 'react';
 
 export function GetStarted(): ReactNode {
     return (
-        <Section ground="ink">
+        <PosterSection ground="ink">
             <div className={cn('grid items-center gap-10 lg:grid-cols-[1fr_0.8fr]')}>
                 <div>
                     <h2 className={cn(SECTION_HEADING_LG)}>
@@ -42,6 +41,6 @@ export function GetStarted(): ReactNode {
                     className={cn('blk-pith rule-pith')}
                 />
             </div>
-        </Section>
+        </PosterSection>
     );
 }

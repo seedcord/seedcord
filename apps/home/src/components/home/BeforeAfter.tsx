@@ -1,7 +1,6 @@
-import { cn, tw } from '@seedcord/ui';
+import { cn, PosterSection, SECTION_HEADING, tw } from '@seedcord/ui';
 
 import { CodeCard } from '#components/code/CodeCard';
-import { SECTION_HEADING, Section } from '#components/home/Section';
 import { afterSeedcord, beforeRawDjs } from '#lib/code/samples';
 
 import type { ReactNode } from 'react';
@@ -18,7 +17,7 @@ const FADE = tw`after:pointer-events-none after:absolute after:inset-x-0.75 afte
 
 export function BeforeAfter(): ReactNode {
     return (
-        <Section ground="rind">
+        <PosterSection ground="rind">
             <h2 className={cn(SECTION_HEADING)}>
                 Same command.
                 <br />
@@ -54,6 +53,6 @@ export function BeforeAfter(): ReactNode {
                     </div>
                 ))}
             </dl>
-        </Section>
+        </PosterSection>
     );
 }

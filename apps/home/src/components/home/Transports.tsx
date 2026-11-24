@@ -1,7 +1,5 @@
-import { cn, Icon } from '@seedcord/ui';
+import { cn, Icon, PosterSection, SECTION_HEADING } from '@seedcord/ui';
 import { PlugZap, Radio } from 'lucide-react';
-
-import { SECTION_HEADING, Section } from '#components/home/Section';
 
 import type { ReactNode } from 'react';
 
@@ -22,7 +20,7 @@ const TRANSPORTS = [
 
 export function Transports(): ReactNode {
     return (
-        <Section ground="rind">
+        <PosterSection ground="rind">
             <h2 className={cn(SECTION_HEADING)}>
                 Two transports.
                 <br />
@@ -44,6 +42,6 @@ export function Transports(): ReactNode {
                     </div>
                 ))}
             </div>
-        </Section>
+        </PosterSection>
     );
 }

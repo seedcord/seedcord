@@ -1,8 +1,7 @@
-import { cn } from '@seedcord/ui';
+import { cn, PosterSection, SECTION_HEADING } from '@seedcord/ui';
 
 import { CodeCard } from '#components/code/CodeCard';
 import { MistakePicker } from '#components/home/MistakePicker';
-import { SECTION_HEADING, Section } from '#components/home/Section';
 import { Code } from '#components/ui/Code';
 import { CODE_MARK_LIGHT } from '#lib/code/marks';
 import {
@@ -118,7 +117,7 @@ const TOOLING = [
 
 export function HardToGetWrong(): ReactNode {
     return (
-        <Section ground="pith">
+        <PosterSection ground="pith">
             <div className={cn('grid items-start gap-x-10 gap-y-8 lg:grid-cols-[0.9fr_1.1fr]')}>
                 <div className={cn('min-w-0')}>
                     <h2 className={cn(SECTION_HEADING)}>
@@ -165,6 +164,6 @@ export function HardToGetWrong(): ReactNode {
                     ))}
                 />
             </div>
-        </Section>
+        </PosterSection>
     );
 }
