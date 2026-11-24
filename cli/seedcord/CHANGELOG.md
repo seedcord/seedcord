@@ -1,5 +1,14 @@
 # seedcord
 
+## 0.24.2
+
+### 🩹 Patch
+
+- Fixed `seedcord dev` setting your interactions endpoint to the tunnel's base path, which meant a page at `/` conflicted with it. It now sets the tunnel address plus `/__seedcord/interactions`. ([`32d5073`](https://github.com/seedcord/seedcord/commit/32d5073a7b8ad98ab35eda49f1604aec7237209b))
+- Fixed `seedcord dev` answering 404 for every file on an edge bot, like a `public` file or a dashboard page. Vite now serves anything outside your bot's `root` folder (nobody can download the files inside it, though). ([`32d5073`](https://github.com/seedcord/seedcord/commit/32d5073a7b8ad98ab35eda49f1604aec7237209b))
+- Fixed `seedcord build` and `seedcord dev` failing for an edge bot with a page at `/`, like a dashboard's `index.html`. If your production bot has a page at `/`, point its interactions endpoint at a path like `/interactions`. ([`32d5073`](https://github.com/seedcord/seedcord/commit/32d5073a7b8ad98ab35eda49f1604aec7237209b))
+- Fixed `seedcord build` not shipping an edge bot's `public` folder. Files in it now ship as Workers static assets, so `public/logo.png` shows up at `/logo.png`. ([`32d5073`](https://github.com/seedcord/seedcord/commit/32d5073a7b8ad98ab35eda49f1604aec7237209b))
+
 ## 0.24.1
 
 ### 🩹 Patch
