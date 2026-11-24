@@ -1,5 +1,13 @@
 # @seedcord/mock-http
 
+## 0.0.20-next.1
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/plugin-linked-roles` 0.1.1-next.0 → 0.2.0-next.1
+
 ## 0.0.20-next.0
 
 ### 🩹 Patch
