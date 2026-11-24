@@ -2,9 +2,6 @@
     .font-display {
         font-family: var(--font-display), ui-monospace, monospace;
     }
-    .font-mono-code {
-        font-family: var(--font-mono), ui-monospace, monospace;
-    }
 
     /* two identical tracks slid -50% make the loop restart without a visible jump */
     .marquee-anim {

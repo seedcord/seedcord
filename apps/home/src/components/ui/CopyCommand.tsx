@@ -1,12 +1,10 @@
 'use client';
 
-import { Icon, LabelSwap, cn, useTimedToggle } from '@seedcord/ui';
+import { Icon, LabelSwap, cn, pressable, useTimedToggle } from '@seedcord/ui';
 import { easeOutStrong, layoutSpring } from '@seedcord/ui/lib/motion';
 import { Copy, DollarSign } from 'lucide-react';
 import { AnimatePresence, m } from 'motion/react';
 import { useRef, useState } from 'react';
-
-import { pressable } from './press';
 
 import type { ReactNode } from 'react';
 

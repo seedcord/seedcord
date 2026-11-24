@@ -1,9 +1,9 @@
 import { PRODUCTION_SITES } from '@seedcord/brand';
-import { cn } from '@seedcord/ui';
+import { cn, PosterButton } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 
 import { HeroStart } from '#components/home/HeroStart';
-import { PosterButton } from '#components/ui/PosterButton';
+import { SiteLink } from '#components/ui/SiteLink';
 import { GUIDE_URL } from '#lib/site';
 
 import type { ReactNode } from 'react';
@@ -44,19 +44,11 @@ export function Hero(): ReactNode {
                     </p>
                     <HeroStart />
                     <div className={cn('mt-3 flex flex-wrap items-center gap-3')}>
-                        <PosterButton
-                            href={GUIDE_URL}
-                            variant="solid"
-                            className={cn('font-display px-4 py-2.5 text-base sm:px-7 sm:py-3 sm:text-lg')}
-                        >
-                            Get started
+                        <PosterButton variant="solid">
+                            <SiteLink href={GUIDE_URL}>Get started</SiteLink>
                         </PosterButton>
-                        <PosterButton
-                            href={PRODUCTION_SITES.docs.url}
-                            variant="outline"
-                            className={cn('font-display px-4 py-2.5 text-base sm:px-7 sm:py-3 sm:text-lg')}
-                        >
-                            Browse the docs
+                        <PosterButton variant="outline">
+                            <SiteLink href={PRODUCTION_SITES.docs.url}>Browse the docs</SiteLink>
                         </PosterButton>
                     </div>
                 </div>

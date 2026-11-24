@@ -25,8 +25,8 @@ import { GuideSearch, SEARCH_LABEL } from './GuideSearch';
 import { useGuidePageKeys } from './useGuidePageKeys';
 
 import type { PageKeyTargets } from './useGuidePageKeys';
-import type { SiteDestination } from '@seedcord/ui';
-import type { ReactElement } from 'react';
+import type { Hotkey, SiteDestination } from '@seedcord/ui';
+import type { ReactElement, ReactNode } from 'react';
 
 const DESTINATIONS: readonly SiteDestination[] = [
     { label: 'Home', href: HOME_URL },
@@ -44,21 +44,23 @@ export function GithubLink(): ReactElement {
     );
 }
 
-export interface GuideNavbarProps {
-    targets: PageKeyTargets;
+// what a guide page adds to the bar. the 404 renders the bar without one
+interface GuidePageBar {
+    rows: readonly Hotkey[];
     navOpen: boolean;
-    onNavOpen: () => void;
+    menu: ReactNode;
+    tabs: ReactNode;
 }
 
-export function GuideNavbar({ targets, navOpen, onNavOpen }: GuideNavbarProps): ReactElement {
+const NO_PAGE: GuidePageBar = { rows: [], navOpen: false, menu: null, tabs: null };
+
+export function GuideBar({ page = NO_PAGE }: { page?: GuidePageBar }): ReactElement {
     const [searchOpen, setSearchOpen] = useState(false);
-    // GuideShell renders this navbar inside fumadocs' AnchorProvider
-    const pageRows = useGuidePageKeys(useRouter(), targets, useActiveAnchor());
     const site = useSiteHotkeys({
         searchLabel: SEARCH_LABEL,
         search: { open: searchOpen, setOpen: setSearchOpen },
-        panelOpen: navOpen,
-        pageRows
+        panelOpen: page.navOpen,
+        pageRows: page.rows
     });
 
     return (
@@ -74,12 +76,34 @@ export function GuideNavbar({ targets, navOpen, onNavOpen }: GuideNavbarProps): 
                             <GithubLink />
                         </span>
                         <ThemeToggle />
-                        <MobileNavButton open={navOpen} onOpen={onNavOpen} className={cn('lg:hidden')} />
+                        {page.menu}
                     </>
                 }
                 tabsClassName={cn('hidden lg:flex')}
-                tabs={<NavTabs items={targets.tabs} activeHref={targets.activeHref} linkAs={Link} />}
+                tabs={page.tabs}
             />
         </>
+    );
+}
+
+export interface GuideNavbarProps {
+    targets: PageKeyTargets;
+    navOpen: boolean;
+    onNavOpen: () => void;
+}
+
+export function GuideNavbar({ targets, navOpen, onNavOpen }: GuideNavbarProps): ReactElement {
+    // GuideShell renders this navbar inside fumadocs' AnchorProvider
+    const rows = useGuidePageKeys(useRouter(), targets, useActiveAnchor());
+
+    return (
+        <GuideBar
+            page={{
+                rows,
+                navOpen,
+                menu: <MobileNavButton open={navOpen} onOpen={onNavOpen} className={cn('lg:hidden')} />,
+                tabs: <NavTabs items={targets.tabs} activeHref={targets.activeHref} linkAs={Link} />
+            }}
+        />
     );
 }

@@ -104,6 +104,9 @@
     .font-display {
         font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
     }
+    .font-mono-code {
+        font-family: var(--font-mono), ui-monospace, monospace;
+    }
 
     .shiki {
         background-color: transparent !important;

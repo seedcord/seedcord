@@ -1,15 +1,13 @@
 import { stageNotice } from '@seedcord/brand';
-import { cn, tw } from '@seedcord/ui';
+import { cn, PosterButton } from '@seedcord/ui';
 
 import { CodeCard } from '#components/code/CodeCard';
 import { SECTION_HEADING_LG, Section } from '#components/home/Section';
-import { PosterButton } from '#components/ui/PosterButton';
+import { SiteLink } from '#components/ui/SiteLink';
 import { startTerminal } from '#lib/code/samples';
 import { DISCORD_URL, GUIDE_URL } from '#lib/site';
 
 import type { ReactNode } from 'react';
-
-const BUTTON = tw`font-display px-4 py-2.5 text-base sm:px-7 sm:py-3 sm:text-lg`;
 
 export function GetStarted(): ReactNode {
     return (
@@ -27,11 +25,11 @@ export function GetStarted(): ReactNode {
                         restarting your bot.
                     </p>
                     <div className={cn('mt-8 flex flex-wrap gap-3')}>
-                        <PosterButton href={GUIDE_URL} variant="solidDark" className={cn(BUTTON)}>
-                            Read the guide
+                        <PosterButton variant="solid">
+                            <SiteLink href={GUIDE_URL}>Read the guide</SiteLink>
                         </PosterButton>
-                        <PosterButton href={DISCORD_URL} variant="outlineDark" className={cn(BUTTON)}>
-                            Join the Discord
+                        <PosterButton variant="outline">
+                            <SiteLink href={DISCORD_URL}>Join the Discord</SiteLink>
                         </PosterButton>
                     </div>
                     <p className={cn('mt-8 max-w-md text-sm text-(--pith)/65')}>{stageNotice('your bot')}</p>

@@ -29,6 +29,11 @@
     --overlay: rgba(0, 0, 0, 0.6);
     --deprecated-dark: #cf3234;
 
+    /* PosterButton's border and offset block, and the red on a poster headline */
+    --poster-rule: var(--seed-dark);
+    --poster-socket: var(--seed-dark);
+    --poster-red: var(--flesh-deep);
+
     /* what bg-(--bg) and text-(--text) resolve to */
     --bg: var(--color-bg);
     --text: var(--color-text);
@@ -67,6 +72,15 @@
     --link: var(--rind);
 
     color-scheme: dark;
+}
+
+/* add poster-on-dark to a dark band on a light page. PosterButton's dark border and offset block don't
+   show on a dark background, and --flesh-deep is 3.1:1 on #1f1f1f where --flesh is 4.6:1 */
+[data-theme='dark'],
+.poster-on-dark {
+    --poster-rule: var(--pith);
+    --poster-socket: var(--rind);
+    --poster-red: var(--flesh);
 }
 
 :root {

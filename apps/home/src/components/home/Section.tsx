@@ -14,7 +14,7 @@ const GROUND: Record<Ground, string> = {
     rind: tw`bg-(--rind-deep) text-(--pith)`,
     flesh: tw`bg-(--flesh-deep) text-(--pith)`,
     // the dark rule can't show against ink. ink covers the one above it with a cream rule
-    ink: tw`relative -mt-0.75 border-t-[3px] border-t-(--pith) bg-(--seed-dark) text-(--pith)`
+    ink: tw`poster-on-dark relative -mt-0.75 border-t-[3px] border-t-(--pith) bg-(--seed-dark) text-(--pith)`
 };
 
 const AFTER_INK = tw`[[data-ground=ink]+&]:border-t-[3px] [[data-ground=ink]+&]:border-t-(--pith)`;
@@ -28,8 +28,12 @@ export function Section({
     className?: string;
     children: ReactNode;
 }): ReactNode {
+    // the footer draws the rule under the last section
     return (
-        <section data-ground={ground} className={cn('border-b-[3px] border-(--seed-dark)', AFTER_INK, GROUND[ground])}>
+        <section
+            data-ground={ground}
+            className={cn('border-b-[3px] border-(--seed-dark) last:border-b-0', AFTER_INK, GROUND[ground])}
+        >
             <div className={cn('mx-auto max-w-(--shell-max) px-5 py-14 lg:py-20', className)}>{children}</div>
         </section>
     );

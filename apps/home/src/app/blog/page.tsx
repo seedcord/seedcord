@@ -1,4 +1,4 @@
-import { cn, MAIN_CONTENT_ID, serializeJsonLd } from '@seedcord/ui';
+import { cn, MAIN_CONTENT_ID, PosterButton, serializeJsonLd } from '@seedcord/ui';
 import { PreviewCard } from '@seedcord/ui/LinkPreview';
 import { ComponentEmbed } from 'discord-component-embed/react';
 import { Rss } from 'lucide-react';
@@ -9,7 +9,7 @@ import { Byline, PostDates } from '#components/blog/PostMeta';
 import { Footer } from '#components/home/Footer';
 import { Nav } from '#components/home/Nav';
 import { SECTION_HEADING_LG, Section } from '#components/home/Section';
-import { PosterButton } from '#components/ui/PosterButton';
+import { SiteLink } from '#components/ui/SiteLink';
 import { BLOG_DESCRIPTION } from '#lib/blog/about';
 import { listedPosts } from '#lib/blog/posts';
 import { FEED_PATH } from '#lib/blog/paths';
@@ -77,14 +77,15 @@ export default async function BlogPage(): Promise<ReactNode> {
                             The <span className={cn('text-(--flesh-deep)')}>blog.</span>
                         </h1>
                         <PosterButton
-                            href={FEED_PATH}
                             variant="ink"
                             wrapperClassName={cn(
                                 'self-center justify-self-end sm:col-start-2 sm:row-start-2 sm:self-end'
                             )}
                         >
-                            <Rss aria-hidden className={cn('size-4')} />
-                            RSS
+                            <SiteLink href={FEED_PATH}>
+                                <Rss aria-hidden className={cn('size-4')} />
+                                RSS
+                            </SiteLink>
                         </PosterButton>
                         <p
                             className={cn(

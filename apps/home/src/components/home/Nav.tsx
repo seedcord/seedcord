@@ -1,12 +1,10 @@
 import { PRODUCTION_SITES, STAGE } from '@seedcord/brand';
-import { cn, GithubIcon } from '@seedcord/ui';
+import { cn, GithubIcon, PosterButton, pressable } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
 
 import { GithubStars } from '#components/GithubStars';
 import { NpmVersion } from '#components/NpmVersion';
-import { PosterButton } from '#components/ui/PosterButton';
-import { pressable } from '#components/ui/press';
 import { SiteLink } from '#components/ui/SiteLink';
 import { BLOG_PATH } from '#lib/blog/paths';
 import { GUIDE_URL, REPO_URL } from '#lib/site';
@@ -51,13 +49,10 @@ export function Nav({ onBlogIndex = false }: NavProps): ReactNode {
                     </span>
                 </Link>
                 <nav aria-label="Primary" className={cn('contents')}>
-                    <PosterButton
-                        href={BLOG_PATH}
-                        variant="ink"
-                        current={onBlogIndex}
-                        wrapperClassName={cn('order-3 sm:order-1')}
-                    >
-                        Blog
+                    <PosterButton variant="ink" wrapperClassName={cn('order-3 sm:order-1')}>
+                        <SiteLink href={BLOG_PATH} aria-current={onBlogIndex ? 'page' : undefined}>
+                            Blog
+                        </SiteLink>
                     </PosterButton>
                     <span className={cn('order-3 hidden items-center gap-1 sm:flex')}>
                         {SITES.map((site) => (
@@ -70,10 +65,12 @@ export function Nav({ onBlogIndex = false }: NavProps): ReactNode {
                     <span className={cn('contents max-[359px]:hidden')}>
                         <NpmVersion />
                     </span>
-                    <PosterButton href={REPO_URL} variant="ink">
-                        <GithubIcon variant="mark" size={20} aria-hidden className={cn('shrink-0 md:hidden')} />
-                        <span className={cn('sr-only md:not-sr-only')}>GitHub</span>
-                        <GithubStars />
+                    <PosterButton variant="ink">
+                        <SiteLink href={REPO_URL}>
+                            <GithubIcon variant="mark" size={20} aria-hidden className={cn('shrink-0 md:hidden')} />
+                            <span className={cn('sr-only md:not-sr-only')}>GitHub</span>
+                            <GithubStars />
+                        </SiteLink>
                     </PosterButton>
                 </span>
             </div>
