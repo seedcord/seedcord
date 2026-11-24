@@ -1,12 +1,3 @@
 @import '@seedcord/ui/styles/globals.css';
 @import '../styles/utilities.css';
-
-@layer base {
-    body {
-        background-color: var(--pith);
-        color: var(--seed-dark);
-        font-family: var(--font-sans);
-        min-height: 100vh;
-        -webkit-font-smoothing: antialiased;
-    }
-}
+@import '@seedcord/ui/styles/poster.css';

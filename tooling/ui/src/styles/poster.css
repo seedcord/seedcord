@@ -1,0 +1,44 @@
+/* a poster site imports this after globals.css. it isn't part of globals.css because docs and guide
+   are different */
+@layer base {
+    body {
+        background-color: var(--pith);
+        color: var(--seed-dark);
+        font-family: var(--font-sans);
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+    }
+}
+
+@utility rule {
+    border: 3px solid var(--seed-dark);
+}
+@utility rule-pith {
+    border: 3px solid var(--pith);
+}
+
+/* a full-width card reads left of centre below lg without the margin because the shadow draws outside the box */
+@utility blk {
+    box-shadow: 10px 10px 0 0 var(--seed-dark);
+    @media (width < 64rem) {
+        margin-right: 10px;
+    }
+}
+@utility blk-pith {
+    box-shadow: 10px 10px 0 0 var(--pith);
+    @media (width < 64rem) {
+        margin-right: 10px;
+    }
+}
+@utility blk-rind {
+    box-shadow: 10px 10px 0 0 var(--rind);
+    @media (width < 64rem) {
+        margin-right: 10px;
+    }
+}
+@utility blk-sm {
+    box-shadow: 6px 6px 0 0 var(--seed-dark);
+    @media (width < 64rem) {
+        margin-right: 6px;
+    }
+}
