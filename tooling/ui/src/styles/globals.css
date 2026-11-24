@@ -5,6 +5,8 @@
 @import './shiki.css';
 @import './search-dialog.css';
 
-/* scan the package's own source for class names — apps that consume
+/* scan the package's own source for class names. apps that consume
    @seedcord/ui via this entry inherit the scan */
 @source '..';
+/* tailwind scans dist too for the classes ui's components use. a site that installs this package only gets dist */
+@source '../../dist';

@@ -15,6 +15,9 @@
         "LICENSE"
     ],
     "type": "module",
+    "sideEffects": [
+        "*.css"
+    ],
     "types": "./dist/index.d.mts",
     "exports": {
         ".": {
