@@ -1,17 +1,23 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
+import { HostPlugins } from '@seedcord/types/internal';
 
 import { StartupPhase } from '#src/lifecycle/phases';
+import { HostHmr } from '#src/plugin/PluginHost';
 import { pluginLoggerOf } from '#src/plugin/pluginSlots';
 
 import { withTimeout } from './withTimeout';
 
 import type { ShutdownTasks } from '#node/Lifecycle/CoordinatedShutdown';
 import type { TaskShutdownPhase } from '#src/lifecycle/phases';
+import type { Runtime, Transport } from '#src/plugin/options';
+import type { PluginHost } from '#src/plugin/PluginHost';
 import type { Attachment } from '#src/plugin/PluginRegistry';
 import type { StartupTasks } from './CoordinatedStartup';
 import type { Promisable } from 'type-fest';
+
+type LifecycleHost = Pick<PluginHost<Transport, Runtime>, typeof HostPlugins | typeof HostHmr>;
 
 interface ReadyStep {
     readonly key: string;
@@ -28,15 +34,17 @@ export class PluginLifecycle {
     private registered = false;
 
     constructor(
+        private readonly host: LifecycleHost,
         private readonly startup: StartupTasks,
         private readonly shutdown: ShutdownTasks
     ) {}
 
     // one combined task per phase keeps plugin inits sequential while the phase's other tasks run concurrently
-    public register(attachments: readonly Attachment[]): void {
+    public register(): void {
         if (this.registered) return;
         this.registered = true;
-        this.attachments = [...attachments];
+        this.attachments = [...this.host[HostPlugins].attachments];
+        for (const { instance } of this.attachments) this.host[HostHmr]?.register(instance);
 
         const groups = Map.groupBy(this.attachments, (attachment) => attachment.spec.init.phase);
 

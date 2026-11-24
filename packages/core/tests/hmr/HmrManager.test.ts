@@ -1,38 +1,35 @@
-import { describe, it, expect, vi } from 'vite-plus/test';
+import { assert, describe, it, expect, vi } from 'vite-plus/test';
 
 import { HmrManager } from '#hmr/HmrManager';
 
 import type { CliChannel } from '#hmr/devChannel';
 
+function listening(): { manager: HmrManager; send: ReturnType<typeof vi.fn>; cliSends: (...args: unknown[]) => void } {
+    const listeners = new Map<string, (payload: unknown) => void>();
+    const send = vi.fn();
+    const channel = {
+        send,
+        on: (event: string, listener: (payload: unknown) => void) => void listeners.set(event, listener),
+        off: vi.fn()
+    };
+    // justified: listenTo reads only send and on
+    const manager = HmrManager.listenTo(channel as unknown as CliChannel);
+    assert(manager);
+    return { manager, send, cliSends: (event, payload) => listeners.get(String(event))?.(payload) };
+}
+
 describe('HmrManager', () => {
     it('tells the CLI when vite is about to reload every module', () => {
-        const listeners = new Map<string, () => void>();
-        const send = vi.fn();
-        const channel = {
-            send,
-            on: (event: string, listener: () => void) => void listeners.set(event, listener),
-            off: vi.fn()
-        };
-
-        // justified: init reads only send and on
-        new HmrManager().init(channel as unknown as CliChannel);
+        const { send, cliSends } = listening();
         expect(send).not.toHaveBeenCalled();
 
-        listeners.get('vite:beforeFullReload')?.();
+        cliSends('vite:beforeFullReload');
 
         expect(send).toHaveBeenCalledExactlyOnceWith('seedcord:full-reload', {});
     });
 
     it('finishes one save before it starts the next', async () => {
-        const listeners = new Map<string, (payload: unknown) => void>();
-        const channel = {
-            send: vi.fn(),
-            on: (event: string, listener: (payload: unknown) => void) => void listeners.set(event, listener),
-            off: vi.fn()
-        };
-        const manager = new HmrManager();
-        // justified: init reads only send and on
-        manager.init(channel as unknown as CliChannel);
+        const { manager, cliSends } = listening();
         const order: string[] = [];
         const { promise: firstImport, resolve: finishFirstImport } = Promise.withResolvers<undefined>();
         manager.register({
@@ -43,8 +40,8 @@ describe('HmrManager', () => {
             }
         });
 
-        listeners.get('seedcord:hmr')?.({ file: 'a.ts', type: 'update' });
-        listeners.get('seedcord:hmr')?.({ file: 'b.ts', type: 'update' });
+        cliSends('seedcord:hmr', { file: 'a.ts', type: 'update' });
+        cliSends('seedcord:hmr', { file: 'b.ts', type: 'update' });
         finishFirstImport(undefined);
 
         await vi.waitFor(() => expect(order).toHaveLength(4));
@@ -52,7 +49,7 @@ describe('HmrManager', () => {
     });
 
     it('a rejecting listener does not stop the other listeners', async () => {
-        const manager = new HmrManager();
+        const { manager, cliSends } = listening();
         const ran: string[] = [];
         manager.register({ onHmr: () => Promise.reject(new Error('boom')) });
         manager.register({
@@ -62,9 +59,8 @@ describe('HmrManager', () => {
             }
         });
 
-        // @ts-expect-error handleUpdate is private, the public path needs a vite hot context
-        await manager.handleUpdate({ file: 'x.ts', type: 'update' });
+        cliSends('seedcord:hmr', { file: 'x.ts', type: 'update' });
 
-        expect(ran).toEqual(['ok']);
+        await vi.waitFor(() => expect(ran).toEqual(['ok']));
     });
 });

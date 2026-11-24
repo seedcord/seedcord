@@ -23,16 +23,16 @@ export class HmrManager {
     private readonly listeners = new Set<HmrAware>();
     private readonly saves = new KeyedQueue();
 
-    public init(channel: CliChannel | undefined): void {
-        if (!channel) return;
-
-        if (!(Envapter.isDevelopment || Envapter.isTest)) {
-            return;
-        }
-
+    private constructor(channel: CliChannel) {
         this.logger.debug('Enabled');
         channel.on('seedcord:hmr', (payload) => void this.saves.run('hmr', () => this.handleUpdate(payload)));
         channel.on('vite:beforeFullReload', () => channel.send('seedcord:full-reload', {}));
+    }
+
+    // only seedcord dev opens a channel, and it only reloads files in the development and test modes
+    public static listenTo(channel: CliChannel | undefined): HmrManager | undefined {
+        if (!channel || !(Envapter.isDevelopment || Envapter.isTest)) return undefined;
+        return new HmrManager(channel);
     }
 
     public register(listener: HmrAware): void {

@@ -1,5 +1,5 @@
 import { REST } from '@discordjs/rest';
-import { bindBotColor, busLoggerOf, connectDevChannel, HmrManager } from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, connectDevChannel, HmrManager, HostHmr } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { StartupPhase } from '@seedcord/core/node/internal';
 import { Logger } from '@seedcord/logger';
@@ -35,7 +35,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     public readonly rest: REST;
 
     readonly #service: InteractionsService;
-    readonly #hmrManager: HmrManager;
     readonly #logger = new Logger('Bot', { channel: 'bot' });
 
     #fetchedUsername?: string | undefined;
@@ -55,8 +54,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         this.#service = new InteractionsService(this, config, new REST(config.bot.restOptions));
         this.rest = this.#service.rest;
 
-        this.#hmrManager = new HmrManager();
-        this.#hmrManager.init(connectDevChannel());
+        this[HostHmr] = HmrManager.listenTo(connectDevChannel());
 
         this.#registerStartupTasks();
     }
@@ -80,7 +78,8 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
     #registerStartupTasks(): void {
         const tasks = new HttpStartupTasks(this, this.#service);
-        if (Envapter.isDevelopment || Envapter.isTest) tasks.registerHmr(this.#hmrManager);
+        const hmr = this[HostHmr];
+        if (hmr) tasks.registerHmr(hmr);
 
         this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');

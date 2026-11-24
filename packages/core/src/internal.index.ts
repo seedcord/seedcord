@@ -22,7 +22,7 @@ export type { Runtime, Transport } from '#src/plugin/options';
 export { DEFAULT_SERVER_PORT, DEV_URL_HEADER, WORKER_PROBE } from '#src/webConstants';
 export { publicUrl } from '#src/publicUrl';
 export { keepRequestOpenFor, requestScope } from '#src/requestScope';
-export { sealAttachments } from '#src/plugin/PluginHost';
+export { HostHmr, sealAttachments } from '#src/plugin/PluginHost';
 export { PluginRegistry } from '#src/plugin/PluginRegistry';
 export { splitPluginKey } from '#src/plugin/splitPluginKey';
 export { CoordinatedStartup, type StartupTasks } from '#src/lifecycle/CoordinatedStartup';

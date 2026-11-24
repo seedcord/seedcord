@@ -14,6 +14,7 @@ import { PluginRegistry } from './PluginRegistry';
 import { constructAttached, declaredScopeOf, resolvedLifecycleSpecOf } from './pluginSlots';
 import { splitPluginKey } from './splitPluginKey';
 
+import type { HmrManager } from '#hmr/HmrManager';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DeclaredScope, Runtime, Transport } from './options';
 import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from './Plugin';
@@ -23,6 +24,8 @@ import type { Config, IRateLimiter } from '@seedcord/types';
 const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 
 const sealSlot = Symbol('seedcord:host:seal');
+
+export const HostHmr = Symbol('seedcord:host:hmr');
 
 /** Base class for a plugin host. */
 export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
@@ -47,6 +50,11 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
 
     /** @internal */
     public readonly [HostContract] = HOST_CONTRACT;
+
+    // each transport sets this under seedcord dev. a manager created in this constructor would log its first line
+    // before the edge bot forwards its logs to the CLI, and the CLI would never get that line
+    /** @internal */
+    public [HostHmr]?: HmrManager | undefined;
 
     constructor(transport: BotT, runtime: BotRt, driver: Config['kv']) {
         this.#scope = { transport, runtime };
@@ -73,7 +81,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
      * `start()`. An edge bot starts on its first request.
      *
      * Attaching a plugin whose `transport` or `runtime` differs from this host fails to compile.
-     * Take `CoreBase` as your constructor's first parameter. `attach()` passes it, so you don't.
+     * Take `CoreBase` as your constructor's first parameter. `attach()` passes it so make sure you don't.
      * A narrower one fails to compile here.
      *
      * @param key - Also the channel that the plugin logs on, dots included.

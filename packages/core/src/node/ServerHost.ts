@@ -68,7 +68,7 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
         // a getter returning the slot would expose run() and the signal handlers too
         this.shutdown = { addTask: shutdown.addTask.bind(shutdown) };
         this.startup = { addTask: startup.addTask.bind(startup) };
-        this.#lifecycle = new PluginLifecycle(this.startup, this.shutdown);
+        this.#lifecycle = new PluginLifecycle(this, this.startup, this.shutdown);
         shutdown.addTask(ShutdownPhase.Release, 'close-kv', async () => {
             await using _driver = this.kv.driver;
         });
@@ -155,7 +155,7 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
 
         installNodeDefaults(this.config.logger);
         sealAttachments(this);
-        this.#lifecycle.register(this[HostPlugins].attachments);
+        this.#lifecycle.register();
 
         // codegen and the build construct the bot without starting it.
         // under seedcord dev the CLI handles SIGINT and SIGTERM

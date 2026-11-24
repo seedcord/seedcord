@@ -6,6 +6,7 @@ import {
     DEV_URL_HEADER,
     forwardLogsToCli,
     HmrManager,
+    HostHmr,
     installLinks,
     keepRequestOpenFor,
     PluginLifecycle,
@@ -96,9 +97,8 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     readonly #service: InteractionsService;
     readonly #startup = new CoordinatedStartup();
     // workerd gives a worker no shutdown hook. dispose() runs only in a rollback.
-    readonly #plugins = new PluginLifecycle(this.#startup, { addTask: () => undefined });
+    readonly #plugins = new PluginLifecycle(this, this.#startup, { addTask: () => undefined });
 
-    readonly #hmr = new HmrManager();
     readonly #logger = new Logger('Bot', { channel: 'bot' });
     readonly #underDev: boolean;
 
@@ -122,16 +122,17 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
         const cli = connectDevChannel();
         this.#underDev = cli !== undefined;
-        if (cli) {
-            forwardLogsToCli();
-            this.#startWhenAsked(cli);
-        }
-        this.#hmr.init(cli);
+        if (!cli) return;
+
+        forwardLogsToCli();
+        this[HostHmr] = HmrManager.listenTo(cli);
+        this.#startWhenAsked(cli);
     }
 
     #startWhenAsked(cli: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>): void {
         const tasks = new HttpStartupTasks(this, this.#service);
-        tasks.registerHmr(this.#hmr);
+        const hmr = this[HostHmr];
+        if (hmr) tasks.registerHmr(hmr);
         tasks.addDiscordTasks();
         cli.on('seedcord:start', ({ colorLevel, url }) => {
             setColorLevel(colorLevel);
@@ -226,7 +227,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     async #runStartup(): Promise<void> {
-        this.#plugins.register(this[HostPlugins].attachments);
+        this.#plugins.register();
         try {
             await this.#startup.run();
         } catch (caught) {

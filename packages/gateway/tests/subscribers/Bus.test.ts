@@ -1,5 +1,5 @@
-import { HmrManager, PublishDefault, RegisteredCount, SubscriberLoader } from '@seedcord/core/internal';
-import { describe, expect, afterEach, vi } from 'vite-plus/test';
+import { PublishDefault, RegisteredCount, setDevChannel, SubscriberLoader } from '@seedcord/core/internal';
+import { describe, expect, afterEach, onTestFinished, vi } from 'vite-plus/test';
 
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
@@ -7,15 +7,12 @@ import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
 
 import type { HmrUpdateEvent } from '@seedcord/types';
+import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { Interaction } from 'discord.js';
 
 // UnknownException and HandledException
 const DEFAULT_SUBSCRIBERS = 2;
 const RUNS_SLOT = '__seedcordBusTestRuns';
-
-interface PrivateHmrManager {
-    handleUpdate(event: HmrUpdateEvent): Promise<void>;
-}
 
 // Seedcord builds the same loader from its config
 function loaderOf(instance: Seedcord): SubscriberLoader {
@@ -108,7 +105,7 @@ describe('Bus Integration', () => {
         await vi.waitFor(() => expect(runs).toEqual(['run']));
     });
 
-    it('registers the Bus with the HMR manager, so an update dispatch reaches it', async ({ testEnv }) => {
+    it('passes a saved file to the subscriber loader under seedcord dev', async ({ testEnv }) => {
         const subscribersDir = 'subscribers';
         const filePath = await testEnv.createFile(
             `${subscribersDir}/LogSubscriber.ts`,
@@ -126,18 +123,22 @@ describe('Bus Integration', () => {
 
         const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
-        const register = vi.spyOn(HmrManager.prototype, 'register');
+        const cliSends = new Map<string, (payload: unknown) => void>();
+        // justified: this fake has send, on and off like a DevChannel. only their types are looser
+        setDevChannel({
+            send: vi.fn(),
+            on: (event: string, listener: (payload: unknown) => void) => void cliSends.set(event, listener),
+            off: vi.fn()
+        } as unknown as DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>);
+        onTestFinished(() => setDevChannel(undefined));
+        const onHmr = vi.spyOn(SubscriberLoader.prototype, 'onHmr');
+
         await using seedcord = new Seedcord(config);
         // hmr registration runs in Configuration. Login rejects later without a real token
         await seedcord.start().catch(() => undefined);
-
-        // justified: only the vite dev channel calls the private handleUpdate
-        const hmrManager = register.mock.contexts[0] as PrivateHmrManager;
-        const subscribers = register.mock.calls.map(([module]) => module).find((m) => m instanceof SubscriberLoader)!;
-        const onHmr = vi.spyOn(subscribers, 'onHmr');
         const event: HmrUpdateEvent = { file: filePath, type: 'update' };
-        await hmrManager.handleUpdate(event);
+        cliSends.get('seedcord:hmr')?.(event);
 
-        expect(onHmr).toHaveBeenCalledWith(event);
+        await vi.waitFor(() => expect(onHmr).toHaveBeenCalledWith(event));
     });
 });
