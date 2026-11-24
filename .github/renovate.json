@@ -1,12 +1,13 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": ["config:recommended"],
+    "extends": ["config:recommended", "group:vitePlus"],
     "enabledManagers": ["npm", "github-actions"],
     "schedule": ["* 0-3 * * 1"],
     "prConcurrentLimit": 2,
     "prHourlyLimit": 2,
     "rangeStrategy": "bump",
     "minimumReleaseAge": "3 days",
+    "rebaseWhen": "conflicted",
     "packageRules": [
         {
             "matchManagers": ["npm"],
@@ -26,6 +27,10 @@
         },
         {
             "matchDepTypes": ["engines"],
+            "enabled": false
+        },
+        {
+            "matchPackageNames": ["fumadocs-core", "fumadocs-mdx"],
             "enabled": false
         }
     ]
