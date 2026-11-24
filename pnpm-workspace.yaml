@@ -56,7 +56,7 @@ catalogs:
     '@types/mdx': ^2.0.14
     '@types/node': ^26.1.2
     better-sqlite3: ^13.2.0
-    cf: 1.0.0-rc.0
+    cf: ^1.0.0-rc.0
     chalk: ^6.0.0
     cli-spinners: ^3.4.0
     cross-env: ^10.1.0
@@ -108,7 +108,7 @@ catalogs:
     eslint-plugin-unicorn: ^76.0.0
     typescript-eslint: ^8.65.0
   peer:
-    '@cloudflare/vite-plugin': 2.0.0-rc.0
+    '@cloudflare/vite-plugin': ^2.0.0-rc.0
     '@discordjs/builders': ^1.14.1
     discord.js: ^14.27.0
     envapt: ^9.2.0

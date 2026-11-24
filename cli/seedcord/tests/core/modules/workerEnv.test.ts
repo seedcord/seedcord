@@ -7,6 +7,7 @@ import { assert, describe, expect, it, onTestFinished, vi } from 'vite-plus/test
 
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { cloudflareConfigSource, edgeFolder } from '#tests/edgeFolder';
+import { packageNotFound } from '#tests/packageNotFound';
 
 const SECRET_AND_TEXT = cloudflareConfigSource('DISCORD_BOT_TOKEN: bindings.secret(), ENV: bindings.text(mode)');
 
@@ -56,6 +57,19 @@ describe('WorkerEnv', () => {
         assert(isSeedcordError(caught));
         expect(caught.code).toBe(SeedcordErrorCode.CliDependencyMissing);
         expect(stripVTControlCharacters(caught.message)).toContain('Add cf to');
+    });
+
+    it('throws CliDependencyMissing when the project lacks the plugin that the config loader comes from', async () => {
+        const { cloudflareConfig } = await edgeFolder(SECRET_AND_TEXT);
+        const missing = packageNotFound('@cloudflare/vite-plugin', '/bot/node_modules/seedcord/dist/cli.mjs');
+
+        const caught: unknown = await WorkerEnv.load(cloudflareConfig, 'development', () =>
+            Promise.reject(missing)
+        ).catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught));
+        expect(caught.code).toBe(SeedcordErrorCode.CliDependencyMissing);
+        expect(stripVTControlCharacters(caught.message)).toContain('Add @cloudflare/vite-plugin to');
     });
 
     it('throws CliEdgeOnBun on bun', async () => {

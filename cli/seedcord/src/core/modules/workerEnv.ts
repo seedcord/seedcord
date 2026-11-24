@@ -9,9 +9,16 @@ import { asError } from '@seedcord/utils/internal';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { loadEnv } from 'vite';
 
-import { isPackageMissing } from './cloudflarePlugin';
+import {
+    CLOUDFLARE_PLUGIN,
+    cloudflarePluginMissing,
+    importFromCloudflarePlugin,
+    isPackageMissing
+} from './cloudflarePlugin';
 import { viteEnvFiles } from './viteEnvFiles';
 
+import type { ImportFromCloudflarePlugin } from './cloudflarePlugin';
+import type * as CloudflareConfig from '@cloudflare/config';
 import type { ParsedWorkerConfig } from '@cloudflare/config';
 
 type LocalVars = Record<string, string | undefined>;
@@ -30,10 +37,19 @@ function unreadable(cloudflareConfig: string, problem: string, cause?: unknown):
     });
 }
 
-async function loadWorker(cloudflareConfig: string, mode: string): Promise<ParsedWorkerConfig> {
+async function loadWorker(
+    cloudflareConfig: string,
+    mode: string,
+    importDependency: ImportFromCloudflarePlugin
+): Promise<ParsedWorkerConfig> {
     assertNotBun();
     // a gateway or node http bot never loads it
-    const { loadAndParseConfig } = await import('@cloudflare/config');
+    const { loadAndParseConfig } = await importDependency<typeof CloudflareConfig>('@cloudflare/config').catch(
+        (error: unknown) => {
+            if (!isPackageMissing(error, CLOUDFLARE_PLUGIN)) throw error;
+            throw cloudflarePluginMissing(dirname(cloudflareConfig), error);
+        }
+    );
     // the plugin passes its own isPreviewBuild() here. it doesn't export that function
     const { result } = await loadAndParseConfig(cloudflareConfig, { isPreview: false, mode }).catch(
         (error: unknown) => {
@@ -75,8 +91,12 @@ export class WorkerEnv {
         this.files = [...this.devVarsFiles, ...viteEnvFiles(mode)];
     }
 
-    public static async load(cloudflareConfig: string, mode: string): Promise<WorkerEnv> {
-        return new WorkerEnv(await loadWorker(cloudflareConfig, mode), cloudflareConfig, mode);
+    public static async load(
+        cloudflareConfig: string,
+        mode: string,
+        importDependency: ImportFromCloudflarePlugin = importFromCloudflarePlugin
+    ): Promise<WorkerEnv> {
+        return new WorkerEnv(await loadWorker(cloudflareConfig, mode, importDependency), cloudflareConfig, mode);
     }
 
     public bindToCli(stack: AsyncDisposableStack): void {

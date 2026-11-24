@@ -29,7 +29,7 @@ A bot from `pnpm create seedcord` that picked Cloudflare Workers already has eve
 
 A `cloudflare.config.ts` beside `seedcord.config.ts` turns your bot into an edge bot. Install the two packages that read it, the Cloudflare Vite plugin and `cf`, Cloudflare's CLI:
 
-<Shell add="-D @cloudflare/vite-plugin@2.0.0-rc.0 cf@1.0.0-rc.0" />
+<Shell add="-D @cloudflare/vite-plugin@^2.0.0-rc.0 cf@^1.0.0-rc.0" />
 
 seedcord's CLI runs your bot through the Vite plugin, and `cloudflare.config.ts` imports its helpers from `cf`. If either one is missing, `seedcord dev` and `seedcord build` throw `CliDependencyMissing` with the package to add.
 
