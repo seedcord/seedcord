@@ -28,5 +28,5 @@
         "target": "ESNext",
         "useDefineForClassFields": true
     },
-    "exclude": ["node_modules"]
+    "exclude": ["${configDir}/node_modules", "${configDir}/dist", "${configDir}/coverage", "${configDir}/tests/temp"]
 }

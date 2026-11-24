@@ -5,13 +5,14 @@ import { pathToFileURL } from 'node:url';
 import { afterAll, describe, expect, it, vi } from 'vite-plus/test';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { scratchPath } from '#tests/scratchPath';
 
 import { devContextFor } from './devConfigFor';
 import { saveUntil } from './saveUntil';
 
 import type { DevEvent } from '#commands/dev/runtime/events';
 
-const SCRATCH_ROOT = join(import.meta.dirname, '.hmr-fixture');
+const SCRATCH_ROOT = scratchPath('hmr-fixture');
 
 // imports by file url, the same way FolderExports loads a changed file
 const ENTRY = 'export async function read(url: string): Promise<string> { return (await import(url)).value; }\n';

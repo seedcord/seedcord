@@ -7,6 +7,5 @@
             "#src/*": ["./src/*"]
         }
     },
-    "include": ["src/**/*.ts", "tests/**/*.ts", "eslint.config.ts", "vite.config.ts"],
-    "exclude": ["node_modules"]
+    "include": ["src/**/*.ts", "tests/**/*.ts", "eslint.config.ts", "vite.config.ts"]
 }

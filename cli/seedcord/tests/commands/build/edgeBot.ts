@@ -8,6 +8,7 @@ import { onTestFinished } from 'vite-plus/test';
 
 import { EdgeBuild } from '#commands/build/builder/EdgeBuild';
 import { ShellMode } from '#src/core/ShellMode';
+import { scratchPath } from '#tests/scratchPath';
 
 import { quickBuildRunner } from './quickBuildRunner';
 import { APP_ID, ED25519_KEY_BYTES, FAKE_TOKEN } from './smoke';
@@ -30,9 +31,8 @@ interface EdgeBotCopy {
     remove: () => Promise<void>;
 }
 
-// the fixture's imports resolve only from inside this package
 export async function copyEdgeBot(): Promise<EdgeBotCopy> {
-    const projectDir = join(import.meta.dirname, '../../temp', `edge-bot-${randomUUID()}`);
+    const projectDir = scratchPath(`edge-bot-${randomUUID()}`);
     await cp(EDGE_BOT, projectDir, { recursive: true, filter: (source) => !BUILD_OUTPUT.has(basename(source)) });
     // vite keeps its dep cache beside the nearest package.json. one cache per copy lets test files run at once
     await writeFile(join(projectDir, 'package.json'), JSON.stringify({ name: 'edge-bot', type: 'module' }));

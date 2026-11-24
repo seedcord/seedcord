@@ -7,6 +7,5 @@
         "allowJs": true,
         "checkJs": false
     },
-    "include": ["./src", "eslint.config.ts", "./vite.config.ts"],
-    "exclude": ["node_modules", "dist"]
+    "include": ["./src", "eslint.config.ts", "./vite.config.ts"]
 }

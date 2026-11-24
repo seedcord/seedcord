@@ -10,6 +10,7 @@ import { afterAll, describe, expect, it, onTestFinished, vi } from 'vite-plus/te
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
+import { scratchPath } from '#tests/scratchPath';
 
 import { devContextFor } from './devConfigFor';
 import { fakeBot } from './fakes';
@@ -19,7 +20,7 @@ import type { DevRuntimeContext } from '#commands/dev/runtime/DevRuntime';
 import type { ILogSink } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
-const SCRATCH_ROOT = join(import.meta.dirname, '.root-fixture');
+const SCRATCH_ROOT = scratchPath('root-fixture');
 
 const ENTRY = [
     "import { readFiles } from '@seedcord/utils';",

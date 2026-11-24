@@ -12,6 +12,5 @@
         "seedcord.config.ts",
         "cloudflare.config.ts",
         ".cloudflare/types/index.d.ts"
-    ],
-    "exclude": ["node_modules", "dist"]
+    ]
 }

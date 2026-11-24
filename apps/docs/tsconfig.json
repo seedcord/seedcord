@@ -35,6 +35,5 @@
         ".next/types/**/*.ts",
         "worker.ts",
         "check-links.ts"
-    ],
-    "exclude": ["node_modules", "dist"]
+    ]
 }

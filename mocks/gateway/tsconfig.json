@@ -5,6 +5,5 @@
         "rootDir": "./",
         "outDir": "./dist"
     },
-    "include": ["src/**/*.ts", "eslint.config.ts", "seedcord.config.ts"],
-    "exclude": ["node_modules", "dist"]
+    "include": ["src/**/*.ts", "eslint.config.ts", "seedcord.config.ts"]
 }

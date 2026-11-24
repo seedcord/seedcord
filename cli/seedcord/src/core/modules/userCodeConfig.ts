@@ -36,7 +36,7 @@ export function userCodeConfig(resolve: ResolveConditions, configDir: string): I
                     external: ['@seedcord/logger', '@seedcord/logger/node'],
                     noExternal: [
                         // node throws on the decorators in the project files these import.
-                        // HmrManager.init also reads import.meta.hot. vite adds it only to modules it transforms
+                        // connectDevChannel also reads import.meta.hot. vite adds it only to modules it transforms
                         /^@seedcord\//,
                         // node would load these plugin packages with their own copy of @seedcord/core
                         ...seedcordDependents(configDir)

@@ -5,6 +5,5 @@
         "rootDir": "./",
         "outDir": "./dist"
     },
-    "include": ["src/**/*.ts", "eslint.config.ts", "vite.config.ts"],
-    "exclude": ["node_modules", "dist"]
+    "include": ["src/**/*.ts", "eslint.config.ts", "vite.config.ts"]
 }

@@ -9,6 +9,5 @@
             "#src/*": ["./src/*"]
         }
     },
-    "include": ["**/*.ts"],
-    "exclude": ["node_modules", "dist", "coverage"]
+    "include": ["**/*.ts"]
 }

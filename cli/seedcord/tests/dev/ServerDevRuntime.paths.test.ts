@@ -4,10 +4,11 @@ import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vite-plus/test';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { scratchPath } from '#tests/scratchPath';
 
 import { devContextFor } from './devConfigFor';
 
-const SCRATCH_ROOT = join(import.meta.dirname, '.build-fixture');
+const SCRATCH_ROOT = scratchPath('build-fixture');
 
 const TSCONFIG = {
     compilerOptions: {

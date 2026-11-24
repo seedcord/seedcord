@@ -33,6 +33,5 @@
         "source.config.ts",
         ".next/types/**/*.ts",
         "worker.ts"
-    ],
-    "exclude": ["node_modules", "dist"]
+    ]
 }

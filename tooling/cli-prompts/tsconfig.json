@@ -16,6 +16,5 @@
         "playground/**/*.ts",
         "eslint.config.ts",
         "vite.config.ts"
-    ],
-    "exclude": ["node_modules", "dist"]
+    ]
 }

@@ -26,5 +26,5 @@
         "eslint.config.ts",
         "vite.config.ts"
     ],
-    "exclude": ["node_modules", "dist", "tests/fixtures"]
+    "exclude": ["node_modules", "dist", "tests/fixtures", "tests/temp"]
 }
