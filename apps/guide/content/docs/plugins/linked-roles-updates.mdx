@@ -148,7 +148,7 @@ export class Sync extends SlashHandler<'sync'> {
 
 | `result.kind` | what happened |
 | --- | --- |
-| `connected` | the plugin wrote the member's values. `result.user` is their Discord account |
+| `connected` | the plugin sent `result.connection` to Discord as the member's values. `result.user` is their Discord account |
 | `refused` | your `values` returned a refusal, and the plugin didn't write. `result.message` is its text |
 
 {/* prettier-ignore-end */}

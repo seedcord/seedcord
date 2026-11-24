@@ -255,7 +255,7 @@ export const WithOwnPage = LinkedRoles.with({
 
 | `result.kind` | what happened | the plain page's status |
 | --- | --- | --- |
-| `connected` | the plugin wrote the member's values. `result.user` is who connected | 200 |
+| `connected` | the plugin sent `result.connection` to Discord as the member's values. `result.user` is who connected | 200 |
 | `refused` | your `values` returned a refusal. `result.message` is its text | 200, with your message |
 | `denied` | the member pressed **Cancel**, or Discord refused the request. `result.error` has Discord's reason | 400 |
 | `invalid` | the link expired, the page was reloaded, or this browser didn't start the visit | 400 |

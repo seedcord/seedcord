@@ -91,7 +91,7 @@ export interface LinkedRolesOptions<
      * onResult: (result) => Response.redirect(`https://example.com/linked?result=${result.kind}`)
      * ```
      */
-    onResult?: ((result: LinkedRolesResult, request: Request) => Promisable<Response>) | undefined;
+    onResult?: ((result: LinkedRolesResult<TRecords>, request: Request) => Promisable<Response>) | undefined;
 }
 
 type SavedTokenMethod = 'push' | 'clear';
@@ -119,9 +119,12 @@ const PLAIN_PAGES = {
         status: SERVER_ERROR,
         text: "We couldn't connect you because of a problem on our side. Try again in a bit."
     }
-} satisfies Record<ExcludeStrict<LinkedRolesResult['kind'], 'refused'>, { status: number; text: string }>;
+} satisfies Record<
+    ExcludeStrict<LinkedRolesResult<LinkedRoleRecords>['kind'], 'refused'>,
+    { status: number; text: string }
+>;
 
-function plainPage(result: LinkedRolesResult): Response {
+function plainPage(result: LinkedRolesResult<LinkedRoleRecords>): Response {
     if (result.kind === 'refused') return new Response(result.message);
     const { status, text } = PLAIN_PAGES[result.kind];
     return new Response(text, { status });
@@ -260,8 +263,9 @@ export abstract class LinkedRoles<
      * Runs your `values` again for a user who connected, and writes what it returns. Call it when
      * something a role depends on changes, like after a match in your game.
      *
-     * It resolves to a {@link ConnectionResult}. Its `kind` is `'connected'` after a write. When your
-     * `values` refused this user, its `kind` is `'refused'` and it has the `message`.
+     * It resolves to a {@link ConnectionResult}. After a write, its `kind` is `'connected'` and its
+     * `connection` holds the values sent to Discord. When your `values` refused this user, its `kind` is
+     * `'refused'` and it has the `message`.
      *
      * @throws Whatever your `values` throws.
      * @throws A **SeedcordError** with the code `PluginOAuthLoginNeeded` when the user never connected,
@@ -273,7 +277,7 @@ export abstract class LinkedRoles<
      * @throws A **SeedcordTypeError** with the code `PluginLinkedRolesTokensNotKept` when the plugin doesn't
      * have `keepTokens: true`.
      */
-    public async push(userId: SavedTokenUserId<TKeep, 'push'>): Promise<ConnectionResult> {
+    public async push(userId: SavedTokenUserId<TKeep, 'push'>): Promise<ConnectionResult<TRecords>> {
         const asUser = this.#asUserWithSavedTokens('push', userId);
         return this.#connect(await asUser.user());
     }
@@ -303,7 +307,7 @@ export abstract class LinkedRoles<
         });
     }
 
-    async #resultOf(outcome: LoginOutcome): Promise<LinkedRolesResult> {
+    async #resultOf(outcome: LoginOutcome): Promise<LinkedRolesResult<TRecords>> {
         // the verify link never lists scopes. this is a visitor who added `?scopes=` to it by hand
         if (outcome.kind === 'unlisted') return { kind: 'invalid' };
         if (outcome.kind !== 'login') return outcome;
@@ -329,7 +333,7 @@ export abstract class LinkedRoles<
         if (!this.#keepsTokens) await this.#client().forget(userId);
     }
 
-    async #connect(user: APIUser): Promise<ConnectionResult> {
+    async #connect(user: APIUser): Promise<ConnectionResult<TRecords>> {
         const asUser = this.#client().as(user.id);
         const returned = await this.options.values({
             user,
@@ -339,7 +343,7 @@ export abstract class LinkedRoles<
         });
         if ('refuse' in returned) return { kind: 'refused', user, message: returned.refuse };
         await asUser.setRoleConnection(this.#records().connectionBody(returned));
-        return { kind: 'connected', user };
+        return { kind: 'connected', user, connection: returned };
     }
 
     // the types refuse these calls without `keepTokens: true`, but not when the option is a boolean
