@@ -33,7 +33,7 @@ export default {
             entry: [
                 'src/*.ts',
                 'src/docs/{build-docs-artifacts,extract-docs,published-payload,preview-docs,prune-docs-site,purge-cdn-cache,sync-docs-to-artifacts,upload-docs-site}.ts',
-                'src/release/{changelog,lint-changesets,release-notes,tidy-changelogs}.ts',
+                'src/release/{changelog,lint-changesets,release-notes,release-plan,tidy-changelogs}.ts',
                 'src/guide/embed-guide-sections.ts',
                 'src/release/preview-release.ts',
                 'tests/**/*.test.ts'

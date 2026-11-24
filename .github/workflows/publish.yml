@@ -37,8 +37,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     outputs:
-      published: ${{ steps.changesets.outputs.published }}
-      publishedPackages: ${{ steps.changesets.outputs['published-packages'] }}
+      published: ${{ steps.plan.outputs.packages != '[]' }}
+      publishedPackages: ${{ steps.plan.outputs.packages }}
     permissions:
       contents: write
       id-token: write
@@ -58,6 +58,12 @@ jobs:
         with:
           cache: false
           registry-url: https://registry.npmjs.org
+
+      - name: Plan the release
+        id: plan
+        run: |
+          vp run release:plan --out "$RUNNER_TEMP/release-packages.json"
+          echo "packages=$(jq -c . "$RUNNER_TEMP/release-packages.json")" >> "$GITHUB_OUTPUT"
 
       - id: changesets
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2

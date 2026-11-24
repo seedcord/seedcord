@@ -1,8 +1,6 @@
 /* eslint-disable no-console -- CLI script */
-import { execFile } from 'node:child_process';
 import { writeFile } from 'node:fs/promises';
 import process from 'node:process';
-import { promisify } from 'node:util';
 
 import { CliFlags } from '#src/lib/CliFlags';
 import { PUBLISHED_FLAGS, readPublished, readStatusReleases } from '#src/lib/published-packages';
@@ -12,20 +10,13 @@ import { resolvePackages } from '#src/release/release-packages';
 import { ReleaseEntries } from '#src/release/ReleaseEntries';
 import { ReleaseName } from '#src/release/ReleaseName';
 import { ReleaseNotes } from '#src/release/ReleaseNotes';
-
-const run = promisify(execFile);
+import { releaseTags } from '#src/release/releaseTags';
 
 const flags = new CliFlags('vp run release:notes [options]', {
     ...PUBLISHED_FLAGS,
     repo: { type: 'string', describe: 'GitHub repo slug, defaulting to seedcord/seedcord' },
     out: { type: 'string', describe: 'File to write the release body to' }
 });
-
-async function releaseTags(...extra: string[]): Promise<string[]> {
-    const { stdout } = await run('git', ['tag', '--list', 'release-*', ...extra]);
-
-    return stdout.split('\n').filter((tag) => tag !== '');
-}
 
 async function main(): Promise<void> {
     const argv = process.argv.slice(2);
@@ -41,8 +32,8 @@ async function main(): Promise<void> {
     const entries = flagged ? await readPublished(parsed) : await readStatusReleases(workspace);
     const published = await resolvePackages(workspace, entries);
 
-    const tags = await releaseTags();
-    const [onCommit] = await releaseTags('--points-at', 'HEAD');
+    const tags = await releaseTags(workspace.rootDir);
+    const [onCommit] = await releaseTags(workspace.rootDir, '--points-at', 'HEAD');
     const name = onCommit ? ReleaseName.fromTag(onCommit) : ReleaseName.next(Temporal.Now.instant(), tags);
     const notes = new ReleaseNotes({
         repo,

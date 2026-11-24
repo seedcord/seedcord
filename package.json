@@ -50,6 +50,7 @@
         "cs:version:run": "changeset version && vpx scripts/src/release/tidy-changelogs.ts && vp fmt '**/CHANGELOG.md'",
         "release": "vp run build && vp run cs:publish",
         "release:notes": "vpx scripts/src/release/release-notes.ts",
+        "release:plan": "vpx scripts/src/release/release-plan.ts",
         "release:preview": "vpx scripts/src/release/preview-release.ts",
         "deps:check": "taze major",
         "deps:bump": "taze major -w -i",

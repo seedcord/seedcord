@@ -10,6 +10,14 @@ const TITLE = new Intl.DateTimeFormat('en-US', {
 });
 
 export class ReleaseName {
+    // plain string order matches release order while the day's suffix is a single letter
+    static latestIn(tags: readonly string[]): string | undefined {
+        return tags
+            .filter((tag) => TAG.test(tag))
+            .toSorted()
+            .at(-1);
+    }
+
     static next(at: Temporal.Instant, tags: readonly string[]): ReleaseName {
         const day = at.toZonedDateTimeISO('UTC').toPlainDate();
 
@@ -35,12 +43,8 @@ export class ReleaseName {
         return `${baseTag(this.day)}${this.letter}`;
     }
 
-    // plain string order matches release order while the day's suffix is a single letter
     previousIn(tags: readonly string[]): string | undefined {
-        return tags
-            .filter((one) => TAG.test(one) && one < this.tag)
-            .sort()
-            .at(-1);
+        return ReleaseName.latestIn(tags.filter((tag) => tag < this.tag));
     }
 
     get title(): string {
