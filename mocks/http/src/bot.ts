@@ -1,6 +1,7 @@
 import { Seedcord, UnstorageDriver, WinstonConsoleSink, WinstonFileSink } from '@seedcord/http';
 import { I18n } from '@seedcord/plugin-i18n';
 import { Kysely } from '@seedcord/plugin-kysely';
+import { LinkedRoles, RecordType } from '@seedcord/plugin-linked-roles';
 import { OAuth } from '@seedcord/plugin-oauth';
 import Database from 'better-sqlite3';
 import { Converters, Envapter } from 'envapt';
@@ -11,7 +12,9 @@ import fsDriver from 'unstorage/drivers/fs';
 import { PingCounter } from './plugins/PingCounter';
 import { Uptime } from './plugins/Uptime';
 
-export const seedcord = new Seedcord({
+const Login = OAuth.with({ scopes: ['guilds'] });
+
+const withDatabase = new Seedcord({
     kv: new UnstorageDriver(createStorage({ driver: fsDriver({ base: './.kv' }) })),
     bot: {
         interactions: {
@@ -43,6 +46,25 @@ export const seedcord = new Seedcord({
         migrations: { path: './migrations' }
     })
     .attach('i18n', I18n, { path: './locales' })
-    .attach('oauth', OAuth.with({ scopes: ['guilds'] }));
+    .attach('oauth', Login);
+
+const RollCount = LinkedRoles.with({
+    records: {
+        rolls: {
+            type: RecordType.IntegerGreaterThanOrEqual,
+            name: 'Rolls',
+            description: 'Dice rolled with /roll'
+        }
+    },
+    keepTokens: true,
+    values: async ({ user }) => {
+        // reads `withDatabase` because the type of `seedcord` depends on what this function returns
+        const rolls = await withDatabase.db.services.rolls.countFor(user.id);
+        if (rolls === 0) return { refuse: 'Use /roll once, then open the link again.' };
+        return { platformUsername: user.username, metadata: { rolls } };
+    }
+});
+
+export const seedcord = withDatabase.attach('linkedRoles', RollCount);
 
 export default seedcord;

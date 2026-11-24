@@ -16,7 +16,7 @@ import type { OAuthClientOptions } from './OAuthClientOptions';
 import type { SavedTokens } from './TokenVault';
 import type { GuildJoin, GuildJoinOptions, OAuthScope, UserCalls, UserRest } from './UserCalls';
 import type { REST, RequestData } from '@discordjs/rest';
-import type { APIGuildMember } from 'discord-api-types/v10';
+import type { APIGuildMember, RESTGetCurrentApplicationResult } from 'discord-api-types/v10';
 import type { Promisable } from 'type-fest';
 
 const UNAUTHORIZED = 401;
@@ -244,6 +244,18 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
      */
     public async revoke(userId: string): Promise<void> {
         await this.#tokens.revoke(userId);
+    }
+
+    /**
+     * Whether the application has {@link OAuthClient.redirectUri} under Redirects on its OAuth2 page.
+     * Discord refuses every login until it does, and only a person can add it there.
+     *
+     * It reads the application with the bot token on your `rest` client.
+     */
+    public async isRedirectListed(): Promise<boolean> {
+        // justified: discord documents this body for the route
+        const application = (await this.#rest.get(Routes.currentApplication())) as RESTGetCurrentApplicationResult;
+        return application.redirect_uris?.includes(this.redirectUri) ?? false;
     }
 
     // nothing checks TResult. each typed call passes the type that discord documents for its route

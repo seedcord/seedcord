@@ -196,7 +196,8 @@ export async function highlightInlineToHtml(code: string, lang: HighlightLanguag
     try {
         const highlighter = await ensureHighlighter();
         const tokens = highlighter.codeToHtml(code, {
-            lang,
+            // otherwise the `//` in an address would highlight as a comment
+            lang: /^[a-z][a-z\d+.-]*:\/\//i.test(code) ? 'text' : lang,
             ...BOTH_THEMES,
             structure: 'inline'
         });

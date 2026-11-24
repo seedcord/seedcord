@@ -18,6 +18,8 @@ import { GatewayIntentBits } from 'discord.js';
 import { createStorage } from 'unstorage';
 import fsDriver from 'unstorage/drivers/fs';
 
+const Login = OAuth.with({ scopes: ['guilds'] });
+
 export const seedcord = new Seedcord({
     // the address people reach your bot at
     server: { url: 'https://bot.example.com' },
@@ -31,12 +33,12 @@ export const seedcord = new Seedcord({
         events: { path: null }
     },
     subscribers: { path: null }
-}).attach('oauth', OAuth.with({ scopes: ['guilds'] }));
+}).attach('oauth', Login);
 
 export default seedcord;
 ```
 
-[`OAuth.with()`](ref:plugin-oauth/OAuth.with) returns the class to attach, with your options in it. The `scopes` you pass there set which calls `this.core.oauth` has. Most plugins take their options as an argument to `attach` after the class. Passed that way, your scopes wouldn't reach the types, so `OAuth` takes its options in `with()`. The plugin authoring guide [shows how to write a `with()`](/writing-plugins/typing#taking-the-type-from-an-option).
+[`OAuth.with()`](ref:plugin-oauth/OAuth.with) returns a plugin class with your options in it, and `Login` is that class. The `scopes` you pass there set which calls `this.core.oauth` has. Most plugins take their options as an argument to `attach` after the class. Passed that way, your scopes wouldn't reach the types, so `OAuth` takes its options in `with()`. The plugin authoring guide [shows how to write a `with()`](/writing-plugins/typing#taking-the-type-from-an-option).
 
 [`OAuth`](ref:plugin-oauth/OAuth) works on gateway, on http, and on [Cloudflare Workers](/build/workers). It needs these, and your bot doesn't start without them:
 

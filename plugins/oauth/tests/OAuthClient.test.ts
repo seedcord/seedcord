@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { OAuthClient } from '#src/OAuthClient';
 
-import { APP_ID, discordGranting, USER } from './discordGranting';
+import { APP_ID, CLIENT_SECRET, discordGranting, USER } from './discordGranting';
 import { ABOUT_TO_EXPIRE_SECONDS, fakeDiscord, WEEK_SECONDS } from './fakeDiscord';
 
 import type { TokenStore } from '#src/TokenVault';
@@ -192,6 +192,23 @@ describe('OAuthClient', () => {
         await expect(oauth.as(USER.id).get('/users/@me')).rejects.toMatchObject({
             code: SeedcordErrorCode.PluginOAuthLoginNeeded
         });
+    });
+
+    it('reports whether the application has the callback under Redirects', async () => {
+        const application = { redirect_uris: ['https://other.test/callback'] };
+        const discord = await fakeDiscord(() => ({ json: application }));
+        const oauth = new OAuthClient({
+            rest: new REST({ api: discord.api }).setToken('bot-token'),
+            store: new Map(),
+            clientId: APP_ID,
+            clientSecret: CLIENT_SECRET,
+            baseUrl: 'https://bot.test/'
+        });
+
+        expect(await oauth.isRedirectListed()).toBe(false);
+
+        application.redirect_uris.push(oauth.redirectUri);
+        expect(await oauth.isRedirectListed()).toBe(true);
     });
 });
 

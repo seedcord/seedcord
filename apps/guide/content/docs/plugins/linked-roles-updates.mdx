@@ -1,0 +1,247 @@
+---
+title: Updating values
+description: Write a member's Linked Roles values again after they change, like after another match in your game, from a handler or a webhook.
+---
+
+[The Linked Roles plugin](/plugins/linked-roles) only writes a member's values when they connect. Say a member has won more matches in your game since then, or has left your GitHub organization. Without [`push()`](ref:plugin-linked-roles/LinkedRoles.push), Discord keeps the old value for them.
+
+## Keeping tokens
+
+Discord [only takes a member's values with that member's own token](https://docs.discord.com/developers/resources/user). Without [`keepTokens`](ref:plugin-linked-roles/LinkedRolesOptions.keepTokens), the plugin deletes the token once the callback finishes, so it can't write for them later. Set `keepTokens: true` to save each member's tokens in your bot's `kv`.
+
+```ts twoslash title="src/bot.ts"
+// ---cut-start---
+// @filename: players.ts
+export declare const players: {
+    byDiscordId(
+        userId: string
+    ): Promise<{ wins: number } | undefined>;
+};
+
+// @filename: bot.ts
+// ---cut-end---
+import { Seedcord, UnstorageDriver } from '@seedcord/gateway';
+import {
+    LinkedRoles,
+    RecordType
+} from '@seedcord/plugin-linked-roles';
+import { GatewayIntentBits } from 'discord.js';
+import { createStorage } from 'unstorage';
+import fsDriver from 'unstorage/drivers/fs';
+
+import { players } from './players';
+
+const Ranked = LinkedRoles.with({
+    records: {
+        matches_won: {
+            type: RecordType.IntegerGreaterThanOrEqual,
+            name: 'Matches won',
+            description: 'or more matches won'
+        }
+    },
+    keepTokens: true,
+    values: async ({ user }) => {
+        const player = await players.byDiscordId(user.id);
+        if (!player) {
+            return { refuse: 'Link Discord in the game first.' };
+        }
+        return { metadata: { matches_won: player.wins } };
+    }
+});
+
+export const seedcord = new Seedcord({
+    server: { url: 'https://bot.example.com' },
+    // keepTokens needs a driver that saves to a file or a database
+    kv: new UnstorageDriver(
+        createStorage({ driver: fsDriver({ base: './.kv' }) })
+    ),
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+}).attach('linkedRoles', Ranked);
+
+export default seedcord;
+```
+
+The default [kv driver](/built-ins/drivers) keeps everything in memory, so a restart would delete every member's tokens. With `keepTokens: true` on that driver, your bot stops at startup with `PluginOAuthTokensInMemory`. The plugin encrypts the tokens before it saves them, the same way the [OAuth plugin](/plugins/oauth) does.
+
+Leave `keepTokens` out when a member's values never change after they connect. The plugin then doesn't save anything about them.
+
+<Callout type="transport" only="edge">
+
+The `fs` driver in the sample needs a disk, which a worker doesn't have. Use [D1 through unstorage](/built-ins/drivers#on-cloudflare-workers) there.
+
+</Callout>
+
+## Writing the values again
+
+With the tokens saved, `push()` writes a member's values again. This handler does it for the member who runs `/sync`.
+
+```ts twoslash title="src/handlers/Sync.ts"
+import {
+    isSeedcordError,
+    SeedcordErrorCode
+} from '@seedcord/errors';
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+import type {
+    LinkedRoles,
+    RecordType
+} from '@seedcord/plugin-linked-roles';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        sync: { options: {}; cache: 'cached' };
+    }
+    interface Core {
+        linkedRoles: LinkedRoles<
+            {
+                matches_won: {
+                    type: RecordType.IntegerGreaterThanOrEqual;
+                    name: string;
+                    description: string;
+                };
+            },
+            never,
+            true
+        >;
+    }
+}
+// ---cut-end---
+
+@SlashRoute('sync')
+export class Sync extends SlashHandler<'sync'> {
+    public async execute(): Promise<void> {
+        const { linkedRoles } = this.core;
+        await this.defer();
+        try {
+            const result = await linkedRoles.push(this.user.id);
+            await this.edit(
+                result.kind === 'connected'
+                    ? 'Sent your match count to Discord.'
+                    : result.message
+            );
+        } catch (error) {
+            if (!this.needsLogin(error)) throw error;
+            await this.edit(
+                `Connect first: ${linkedRoles.verifyUrl()}`
+            );
+        }
+    }
+
+    private needsLogin(error: unknown): boolean {
+        return isSeedcordError(
+            error,
+            'SeedcordError',
+            SeedcordErrorCode.PluginOAuthLoginNeeded
+        );
+    }
+}
+```
+
+`push()` takes a member's id, here `this.user.id`. It runs your `values` for them again and writes what it returns. It resolves to a [`ConnectionResult`](ref:plugin-linked-roles/ConnectionResult), which is the `connected` or the `refused` result from [`onResult`'s table](/plugins/linked-roles#the-page-after-connecting):
+
+{/* prettier-ignore-start */}
+
+| `result.kind` | what happened |
+| --- | --- |
+| `connected` | the plugin wrote the member's values. `result.user` is their Discord account |
+| `refused` | your `values` returned a refusal, and the plugin didn't write. `result.message` is its text |
+
+{/* prettier-ignore-end */}
+
+If the member never connected, or removed your application from their account since then, `push()` throws a [`SeedcordError`](ref:errors/SeedcordError) with the code `PluginOAuthLoginNeeded`. `needsLogin()` checks for that one code, and the handler replies with [`verifyUrl()`](ref:plugin-linked-roles/LinkedRoles.verifyUrl), which returns the address of your verify route.
+
+Run [`seedcord codegen`](/plugins/typing) to type `this.core.linkedRoles`. It adds each attached plugin to the `Core` type, under the name you passed to `attach`. Without `keepTokens: true` in your options, `push()` doesn't compile, and the error says to set it.
+
+## Updating from a webhook
+
+A value often changes in a system that your bot doesn't listen to. Say a member leaves your GitHub organization. GitHub can send a webhook for that, and a plugin's [`fetch()`](/writing-plugins/web-requests) can receive it and call `push()`.
+
+```ts twoslash title="src/plugins/GithubWebhook.ts"
+// ---cut-start---
+// @filename: github.ts
+export declare function signedByGithub(
+    request: Request,
+    body: string
+): Promise<boolean>;
+export declare function discordIdFor(
+    body: string
+): Promise<string | undefined>;
+
+// @filename: plugins/GithubWebhook.ts
+import type {
+    LinkedRoles,
+    RecordType
+} from '@seedcord/plugin-linked-roles';
+declare module '@seedcord/gateway' {
+    interface Core {
+        linkedRoles: LinkedRoles<
+            {
+                is_member: {
+                    type: RecordType.BooleanEqual;
+                    name: string;
+                    description: string;
+                };
+            },
+            'connections',
+            true
+        >;
+    }
+}
+// ---cut-end---
+import { Plugin } from '@seedcord/gateway';
+
+import { discordIdFor, signedByGithub } from '../github';
+
+const WEBHOOK = new URLPattern({ pathname: '/github' });
+
+export class GithubWebhook extends Plugin {
+    public async init(): Promise<void> {}
+
+    public override async fetch(
+        request: Request
+    ): Promise<Response | undefined> {
+        if (request.method !== 'POST') return undefined;
+        if (!WEBHOOK.test(request.url)) return undefined;
+
+        const body = await request.text();
+        if (!(await signedByGithub(request, body))) {
+            return new Response(null, { status: 401 });
+        }
+
+        const userId = await discordIdFor(body);
+        if (userId) await this.core.linkedRoles.push(userId);
+        return new Response(null, { status: 204 });
+    }
+}
+```
+
+`fetch()` calls `push(userId)`, and the plugin runs your `values` for that member. In `values`, you ask GitHub whether they're still in the organization and return the answer, which the plugin writes to Discord.
+
+`signedByGithub` and `discordIdFor` are functions of your own. GitHub's webhook has the member's GitHub login, so your bot needs a way to look up a Discord id from that login. When someone connects, your `values` has both: the `user`, and their GitHub account from `asUser.connections()`. Save the pair in your own database there.
+
+In `fetch()`, you check the method and the path before you read the body. [A request's body can only be read once](/writing-plugins/web-requests#reading-the-body), and the steps after your plugin may need it.
+
+If `push()` throws in a route, seedcord [answers the request with a 500](/writing-plugins/web-requests#when-fetch-throws). One case is a member who removed your application since they connected. To answer 204 for them, catch `PluginOAuthLoginNeeded` the way `Sync` does.
+
+## Clearing a member's values
+
+[`clear()`](ref:plugin-linked-roles/LinkedRoles.clear) empties the values that Discord has for a member. Use it for a member who shouldn't keep the roles that depend on your records. It takes the member's id, needs `keepTokens: true`, and throws `PluginOAuthLoginNeeded` in the same cases as `push()`. The plugin keeps their tokens, so a later `push()` writes their values again.
+
+A cleared member can open the verify link again, and the plugin then writes what your `values` returns for them. To keep them out, you have to refuse them in `values`, like the first sample on this page does for a member without a player.
+
+## What Discord does with the role
+
+Discord compares the values you wrote to each role's requirement. If a member's values stop meeting it, Discord removes the role right away, and the member doesn't have to do anything. If their values meet it again later, Discord doesn't give the role back by itself. The member has to claim it again from the **Linked Roles** menu because Discord [only gives a linked role to a member who opts in](https://support.discord.com/hc/en-us/articles/10388356626711-Connections-Linked-Roles-Admins).
+
+## Sending a member to connect again
+
+The verify link also works for a member who is already connected. When they open it, they have to approve the consent screen again. The plugin then runs your `values` for them and writes the result. You can also make a command that replies with `verifyUrl()` to let members refresh their own values. It works with or without `keepTokens`.
+
+### With the OAuth plugin
+
+A bot can attach this plugin and [`OAuth`](/plugins/oauth) together, and each one keeps its own tokens for a user. If one of a user's grants is revoked, Discord [ends every grant that the user gave your application](https://docs.discord.com/developers/topics/oauth2#authorization-code-grant-token-revocation-example). The OAuth plugin's [`revoke()`](/plugins/oauth-calls#logging-a-user-out) therefore also ends what this plugin saved for that user, and their next `push()` throws `PluginOAuthLoginNeeded`.

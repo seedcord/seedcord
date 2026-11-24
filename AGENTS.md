@@ -123,6 +123,8 @@ Both start with `build`, which builds everything except the three sites in `apps
 
 `vp run lint:prose` checks docs, comments, and string literals against the writing rules, and `vp staged` runs it on what you stage. Fix a prose error by rewriting the sentence. Switch a rule off only where the flagged wording is correct, like a quote, and give the reason, the same as an `eslint-disable`. [CONTRIBUTING](.github/CONTRIBUTING.md#hooks) has the syntax.
 
+`lint:prose` only reports errors. Before you hand a change over, also run `vp exec vale --minAlertLevel=suggestion <paths>` on the files you wrote or changed, and read every suggestion. A suggestion depends on what the sentence means, so rewrite where it fits and leave the line where it doesn't.
+
 `vp run knip` (dead code) and `vp run react-doctor` (React patterns) run in CI and in both `prePush` chains.
 
 Zero lint errors, zero lint warnings, zero from `tc`, every test passing. Fix the cause. Never comment out a test, weaken an assertion, or add a broad `eslint-disable` to get past a failure. Disable a rule inline with a reason, `// eslint-disable-next-line <rule> -- <why>`, never file-wide.

@@ -53,12 +53,17 @@
     "dependencies": {
         "@seedcord/errors": "workspace:^",
         "@seedcord/plugin-oauth": "workspace:^",
+        "@seedcord/utils": "workspace:^",
         "discord-api-types": "catalog:deps",
+        "es-toolkit": "catalog:deps",
         "type-fest": "catalog:deps"
     },
     "devDependencies": {
+        "@discordjs/rest": "catalog:deps",
         "@seedcord/core": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/logger": "workspace:^",
+        "@seedcord/plugin-utils": "workspace:^",
         "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",

@@ -134,7 +134,7 @@ describe('CodegenRunner plugin capabilities', () => {
         expect(output).toContain("import type Bot from './bot';");
         expect(output).toContain("        db: AttachedPlugin<(typeof Bot)['db']>;");
         expect(output).toContain(
-            "    interface PluginTypes {\n        cron: Fits<(typeof Bot)['cron'], { ready: true }>;\n        'seedcord-locales': Fits<(typeof Bot)['i18n'], { messages: { greet: true } }>;\n    }"
+            "    interface PluginTypes {\n        cron: { ready: true };\n        'seedcord-locales': { messages: { greet: true } };\n    }"
         );
         expect(output).toContain(
             "    interface DispatchMemberValues {\n        label: Awaited<ReturnType<(typeof Bot)['tagging']['dispatchMembers']['label']>>;\n        tag: Awaited<ReturnType<(typeof Bot)['tagging']['dispatchMembers']['tag']>>;\n    }"

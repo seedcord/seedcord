@@ -721,6 +721,9 @@ importers:
       '@seedcord/plugin-kysely':
         specifier: workspace:^
         version: link:../../plugins/kysely
+      '@seedcord/plugin-linked-roles':
+        specifier: workspace:^
+        version: link:../../plugins/linked-roles
       '@seedcord/plugin-mongoose':
         specifier: workspace:^
         version: link:../../plugins/mongoose
@@ -1289,6 +1292,9 @@ importers:
       '@seedcord/plugin-kysely':
         specifier: workspace:^
         version: link:../../plugins/kysely
+      '@seedcord/plugin-linked-roles':
+        specifier: workspace:^
+        version: link:../../plugins/linked-roles
       '@seedcord/plugin-oauth':
         specifier: workspace:^
         version: link:../../plugins/oauth
@@ -1901,9 +1907,15 @@ importers:
       '@seedcord/plugin-oauth':
         specifier: workspace:^
         version: link:../oauth
+      '@seedcord/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
       discord-api-types:
         specifier: ^0.38.59
         version: 0.38.59
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.2
       type-fest:
         specifier: catalog:deps
         version: 5.10.0
@@ -1911,12 +1923,21 @@ importers:
         specifier: catalog:consumerTypes
         version: 6.0.3
     devDependencies:
+      '@discordjs/rest':
+        specifier: catalog:deps
+        version: 2.6.3
       '@seedcord/core':
         specifier: workspace:^
         version: link:../../packages/core
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
+      '@seedcord/logger':
+        specifier: workspace:^
+        version: link:../../packages/logger
+      '@seedcord/plugin-utils':
+        specifier: workspace:^
+        version: link:../../tooling/plugin-utils
       '@seedcord/prose':
         specifier: workspace:^
         version: link:../../tooling/prose
@@ -2027,6 +2048,9 @@ importers:
       '@seedcord/logger':
         specifier: workspace:^
         version: link:../../packages/logger
+      '@seedcord/plugin-utils':
+        specifier: workspace:^
+        version: link:../../tooling/plugin-utils
       '@seedcord/prose':
         specifier: workspace:^
         version: link:../../tooling/prose
@@ -2656,6 +2680,9 @@ importers:
       '@seedcord/vite-config':
         specifier: workspace:^
         version: link:../vite-config
+      envapt:
+        specifier: catalog:peer
+        version: 9.2.0
       type-fest:
         specifier: catalog:deps
         version: 5.10.0

@@ -69,8 +69,12 @@ const renderer: TwoslashRenderer = {
     lineError(error) {
         const nodes = rich.lineError?.call(this, error) ?? [];
         const [first] = nodes;
+        // without this cap, an error that spans several lines puts the middle hundreds of columns out, and
+        // the css makes its box that wide
+        const firstLine = this.meta.twoslash?.code.split('\n')[error.line];
+        const end = Math.min(error.character + error.length, firstLine?.length ?? Infinity);
         // css reads this to put the caret under the middle of the squiggle
-        const middle = error.character + error.length / 2;
+        const middle = (error.character + end) / 2;
         if (first?.type === 'element') {
             first.properties = { ...first.properties, style: `--ts-col:${String(middle)}` };
         }

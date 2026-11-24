@@ -274,4 +274,13 @@ describe('highlightInlineToHtml', () => {
         expect(html).not.toContain('<pre');
         expect(html).not.toContain('class="line"');
     });
+
+    it.each(['https://bot.example.com/oauth/callback', 'discord://-/channels/123', 'wss://gateway.discord.gg'])(
+        'renders the address %s as one token',
+        async (address) => {
+            const html = (await highlightInlineToHtml(address)) ?? '';
+
+            expect(html).toContain(`>${address}</span>`);
+        }
+    );
 });

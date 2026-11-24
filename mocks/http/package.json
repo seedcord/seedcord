@@ -25,6 +25,7 @@
         "@seedcord/http": "workspace:^",
         "@seedcord/plugin-i18n": "workspace:^",
         "@seedcord/plugin-kysely": "workspace:^",
+        "@seedcord/plugin-linked-roles": "workspace:^",
         "@seedcord/plugin-oauth": "workspace:^",
         "better-sqlite3": "catalog:deps",
         "discord-api-types": "catalog:deps",

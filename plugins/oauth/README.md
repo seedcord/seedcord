@@ -37,7 +37,7 @@ pnpm add @seedcord/plugin-oauth
 
 ## Usage
 
-The plugin needs three things from your bot: its public address in `server.url`, a `kv` driver that saves to a file or a database, and `DISCORD_CLIENT_SECRET` in the environment. Then attach what `OAuth.with()` returns:
+The plugin needs three things from your bot: its public address in `server.url`, a `kv` driver that saves to a file or a database, and `DISCORD_CLIENT_SECRET` in the environment. `OAuth.with()` returns a plugin class with your options in it. Attach that class:
 
 ```ts
 // src/bot.ts
@@ -45,6 +45,11 @@ import { Seedcord, UnstorageDriver } from '@seedcord/http';
 import { OAuth } from '@seedcord/plugin-oauth';
 import { createStorage } from 'unstorage';
 import fsDriver from 'unstorage/drivers/fs';
+
+const Login = OAuth.with({
+    scopes: ['guilds'],
+    onLogin: ({ returnTo }) => Response.redirect(`https://bot.example.com${returnTo ?? '/'}`)
+});
 
 export default new Seedcord({
     server: { url: 'https://bot.example.com' },
@@ -54,13 +59,7 @@ export default new Seedcord({
         commands: { path: './commands' }
     },
     subscribers: { path: null }
-}).attach(
-    'oauth',
-    OAuth.with({
-        scopes: ['guilds'],
-        onLogin: ({ returnTo }) => Response.redirect(`https://bot.example.com${returnTo ?? '/'}`)
-    })
-);
+}).attach('oauth', Login);
 ```
 
 Add `https://bot.example.com/oauth/callback` under Redirects on your application's OAuth2 page in the Developer Portal. The plugin logs the exact address at startup if it isn't there yet.
