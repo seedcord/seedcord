@@ -1,5 +1,12 @@
 # seedcord
 
+## 0.24.3-next.0
+
+### 🩹 Patch
+
+- Fixed `seedcord build` printing dozens of `MODULE_LEVEL_DIRECTIVE` warnings for a bot that imports a React component library, one for each file with `'use client'` at the top. ([`4cb0ba6`](https://github.com/seedcord/seedcord/commit/4cb0ba657375ea7b0c8b8458f67f47cb2e9facd7))
+- Fixed `seedcord dev` answering 404 for a stylesheet, image, font or other asset that an edge bot imports with `?url` from inside its `root` folder, like `import styles from './styles.css?url'`. ([`6ec156c`](https://github.com/seedcord/seedcord/commit/6ec156c83b53ba62a101b7a02430fb103f253042))
+
 ## 0.24.2
 
 ### 🩹 Patch
