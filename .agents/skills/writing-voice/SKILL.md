@@ -31,6 +31,8 @@ A compressed noun phrase is shorter than the plain sentence it replaces and cost
 - **Did you invent the noun?** Two abstract nouns that name an idea you had a minute ago are jargon. Say what happens, with a verb. "Performs a validation of the payload" is "validates the payload".
 - **Did you borrow it as a picture?** A word from another field that stands for what you mean makes the reader unpack it. Write the thing itself. A real term of the domain, like debounce, shard, or snowflake, passes.
 
+**Keep a verb as a verb.** A verb used as a noun, like "a save", "a read", or "a reload", drops the person who acts and needs extra words to say which one. "The CLI shows its restart card for a save that reaches the bot file" reads twice. "The CLI shows its restart card when you save a file that the bot file imports" reads once. Use the noun sparingly, mostly when the code has a thing by that name, like the update event that the CLI sends.
+
 ## 3. One claim per sentence
 
 Write the claim and end the sentence. Add a second clause only when the reader would get the first one wrong without it. Then pick the connector for how the halves relate: `but` contrasts, `so` gives a result, `because` gives a reason, `if` sets a condition, `and` adds more of the same. When none of them fits, write two sentences. An instruction joined to its result by `and` reads as two facts: "Pass `true` and the getter throws". A result the reader wants takes `to`, as in "Pass `true` to make the getter throw". A mistake takes `if`.

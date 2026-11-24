@@ -16,6 +16,12 @@ export interface DeployedHashes {
     scopes: Record<string, string>; // keyed by guild id, or 'global'
 }
 
+// what the CLI sends for a saved file
+export interface HmrSave extends HmrUpdateEvent {
+    // the files among affectedModules that the bot file imports. the bot replaces the plugins that they export
+    botImports?: string[];
+}
+
 // the bot sends these to the CLI
 export interface SeedcordFrameworkEvents {
     'seedcord:register-critical-files': { patterns: string[] };
@@ -26,11 +32,17 @@ export interface SeedcordFrameworkEvents {
     'seedcord:read-deployed': { applicationId: string };
     'seedcord:commands-deployed': DeployedHashes;
     'seedcord:full-reload': EmptyObject;
+    // sent once every plugin has started. from then on the CLI adds botImports to seedcord:hmr
+    'seedcord:read-bot-imports': EmptyObject;
+    // the bot's answer when it couldn't reload the plugins in botImports
+    'seedcord:restart-required': { file: string };
 }
 
 // the CLI sends these back
 export interface SeedcordCliEvents {
-    'seedcord:hmr': HmrUpdateEvent;
+    'seedcord:hmr': HmrSave;
+    // every file that the bot file imports
+    'seedcord:bot-imports': { files: string[] };
     'seedcord:refresh-commands': { shouldRefresh: boolean };
     // core.url falls back to url when server.url is unset
     // eslint-disable-next-line no-magic-numbers -- chalk's ColorSupportLevel for the CLI's terminal, copied to keep chalk out of types

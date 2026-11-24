@@ -4,26 +4,21 @@ import { Logger } from '@seedcord/logger';
 import { HostPlugins } from '@seedcord/types/internal';
 
 import { StartupPhase } from '#src/lifecycle/phases';
-import { HostHmr } from '#src/plugin/PluginHost';
+import { HostHmr, replaceAttachment } from '#src/plugin/PluginHost';
 import { pluginLoggerOf } from '#src/plugin/pluginSlots';
 
 import { withTimeout } from './withTimeout';
 
+import type { HmrManager } from '#hmr/HmrManager';
 import type { ShutdownTasks } from '#node/Lifecycle/CoordinatedShutdown';
 import type { TaskShutdownPhase } from '#src/lifecycle/phases';
 import type { Runtime, Transport } from '#src/plugin/options';
+import type { PluginCtor } from '#src/plugin/Plugin';
 import type { PluginHost } from '#src/plugin/PluginHost';
 import type { Attachment } from '#src/plugin/PluginRegistry';
 import type { StartupTasks } from './CoordinatedStartup';
-import type { Promisable } from 'type-fest';
 
-type LifecycleHost = Pick<PluginHost<Transport, Runtime>, typeof HostPlugins | typeof HostHmr>;
-
-interface ReadyStep {
-    readonly key: string;
-    readonly run: () => Promisable<void>;
-    readonly timeout: number;
-}
+type LifecycleHost = PluginHost<Transport, Runtime>;
 
 export class PluginLifecycle {
     private readonly logger = new Logger('Plugins', { channel: 'plugins' });
@@ -44,7 +39,8 @@ export class PluginLifecycle {
         if (this.registered) return;
         this.registered = true;
         this.attachments = [...this.host[HostPlugins].attachments];
-        for (const { instance } of this.attachments) this.host[HostHmr]?.register(instance);
+        const hmr = this.host[HostHmr];
+        if (hmr) for (const { instance } of this.attachments) hmr.register(instance);
 
         const groups = Map.groupBy(this.attachments, (attachment) => attachment.spec.init.phase);
 
@@ -54,7 +50,21 @@ export class PluginLifecycle {
             const budget = group.reduce((sum, a) => sum + a.spec.init.timeout, 0);
             this.startup.addTask(phase, 'plugins-init', () => this.runInits(group), budget);
         }
-        this.registerReadyTask(groups.get(StartupPhase.Ready) ?? []);
+        this.registerReadyTask(groups.get(StartupPhase.Ready) ?? [], hmr);
+    }
+
+    // seedcord dev calls this for a plugin whose file was saved, once every plugin has started
+    public async replace(old: Attachment, Plugin: PluginCtor): Promise<Attachment> {
+        await this.dispose(old).catch((caught: unknown) =>
+            this.logger.warn(`${old.key} dispose failed before its reload`, caught)
+        );
+        this.completedInits.delete(old);
+
+        const next = replaceAttachment(this.host, old, Plugin);
+        this.attachments = this.attachments.map((attachment) => (attachment === old ? next : attachment));
+        await this.runInits([next]);
+        await this.ready(next);
+        return next;
     }
 
     public async rollback(): Promise<void> {
@@ -91,44 +101,48 @@ export class PluginLifecycle {
 
     // disposeCompleted skips a plugin missing from completedInits
     private disposeWhenInitResolves(attachment: Attachment, running: Promise<void>): void {
-        const { key, instance, spec } = attachment;
-        const dispose = instance.dispose?.bind(instance);
+        const { key } = attachment;
 
         const settled = running.then(
-            async () => {
-                if (!dispose) return;
-                await withTimeout(`Plugin:${key}:dispose`, dispose, spec.dispose.timeout).catch((caught: unknown) =>
+            () =>
+                this.dispose(attachment).catch((caught: unknown) =>
                     this.logger.warn(`${key} dispose failed after a timed-out init`, caught)
-                );
-            },
+                ),
             (caught: unknown) => this.logger.warn(`${key} init failed after its timeout`, caught)
         );
         this.timedOutInits.add(settled);
         void settled.finally(() => this.timedOutInits.delete(settled));
     }
 
-    private registerReadyTask(readyInits: readonly Attachment[]): void {
-        const steps = this.attachments.reduce<ReadyStep[]>((acc, { key, instance, spec }) => {
-            const ready = instance.ready?.bind(instance);
-
-            if (ready) acc.push({ key, run: ready, timeout: spec.ready.timeout });
-            return acc;
-        }, []);
-        if (readyInits.length === 0 && steps.length === 0) return;
+    private registerReadyTask(readyInits: readonly Attachment[], hmr: HmrManager | undefined): void {
+        const withReady = this.attachments.filter(({ instance }) => instance.ready);
+        if (readyInits.length === 0 && withReady.length === 0 && !hmr) return;
         const budget =
             readyInits.reduce((sum, a) => sum + a.spec.init.timeout, 0) +
-            steps.reduce((sum, step) => sum + step.timeout, 0);
+            withReady.reduce((sum, a) => sum + a.spec.ready.timeout, 0);
         this.startup.addTask(
             StartupPhase.Ready,
             'plugins-ready',
             async () => {
                 await this.runInits(readyInits);
-                for (const step of steps) {
-                    await withTimeout(`Plugin:${step.key}:ready`, step.run, step.timeout);
-                }
+                for (const attachment of withReady) await this.ready(attachment);
+                hmr?.reloadPlugins({
+                    attachments: () => this.attachments,
+                    replace: (old, Plugin) => this.replace(old, Plugin)
+                });
             },
             budget
         );
+    }
+
+    private async ready({ key, instance, spec }: Attachment): Promise<void> {
+        const ready = instance.ready?.bind(instance);
+        if (ready) await withTimeout(`Plugin:${key}:ready`, ready, spec.ready.timeout);
+    }
+
+    private async dispose({ key, instance, spec }: Attachment): Promise<void> {
+        const dispose = instance.dispose?.bind(instance);
+        if (dispose) await withTimeout(`Plugin:${key}:dispose`, dispose, spec.dispose.timeout);
     }
 
     private registerDisposeTask(phase: TaskShutdownPhase): void {
@@ -155,16 +169,9 @@ export class PluginLifecycle {
     ): Promise<void> {
         for (const attachment of [...this.attachments].reverse()) {
             if (!this.completedInits.has(attachment)) continue;
-            const { key, instance, spec } = attachment;
-            const dispose = instance.dispose?.bind(instance);
-            if (!dispose) continue;
-            if (phase !== undefined && spec.dispose.phase !== phase) continue;
+            if (phase !== undefined && attachment.spec.dispose.phase !== phase) continue;
 
-            try {
-                await withTimeout(`Plugin:${key}:dispose`, dispose, spec.dispose.timeout);
-            } catch (caught) {
-                onError(caught);
-            }
+            await this.dispose(attachment).catch(onError);
         }
     }
 }

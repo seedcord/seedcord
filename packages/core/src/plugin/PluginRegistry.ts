@@ -17,6 +17,8 @@ export interface Attachment {
     readonly key: string;
     readonly instance: PluginLike;
     readonly spec: ResolvedPluginLifecycleSpec;
+    // what attach() got after the plugin class. seedcord dev builds a saved plugin's new class with them
+    readonly args: readonly unknown[];
 }
 
 export type DispatchMemberFunctions = Readonly<Record<string, (origin: DispatchOrigin) => unknown>>;
@@ -140,12 +142,25 @@ export class PluginRegistry {
     }
 
     public add(attachment: Attachment): void {
+        this.claimMembers(attachment);
+        this.list.push(attachment);
+    }
+
+    // keeps the attach order, which init, dispose and fetch all follow
+    public replace(old: Attachment, next: Attachment): void {
+        for (const [member, { instance }] of this.claimed) {
+            if (instance === old.instance) this.claimed.delete(member);
+        }
+        this.claimMembers(next);
+        this.list[this.list.indexOf(old)] = next;
+    }
+
+    private claimMembers(attachment: Attachment): void {
         const { key, instance } = attachment;
         const plugin = labelOf(attachment);
         const functions = Object.entries(instance.dispatchMembers ?? {});
         for (const [member] of functions) this.assertFree(member, key, plugin, instance);
         for (const [member, build] of functions) this.claimed.set(member, { key, plugin, instance, build });
-        this.list.push(attachment);
     }
 
     private assertFree(member: string, key: string, plugin: string, instance: PluginLike): void {

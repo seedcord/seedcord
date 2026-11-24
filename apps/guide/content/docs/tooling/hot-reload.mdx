@@ -13,7 +13,8 @@ A saved file reloads when it holds one of these.
 - a command after you answer `y` to the [refresh prompt](#saving-a-command)
 - an event handler (gateway only)
 - a bus subscriber
-- files a plugin loads itself if the plugin implements `onHmr`. Saving the plugin's own file needs a restart. [Reloading in dev](/writing-plugins/hot-reload) has both
+- a plugin that your bot file attaches. seedcord [starts it again](/writing-plugins/hot-reload#saving-the-plugins-own-source) from the saved code
+- files a plugin loads itself if the plugin implements `onHmr`. [Reloading in dev](/writing-plugins/hot-reload) shows how
 
 Any other file, like a component or a helper, reloads through the files that import it. Editing a file that none of those groups imports doesn't trigger a reload. Reloading works only in the `development` and `test` modes, so `ENV=staging seedcord dev` never reloads.
 
@@ -42,7 +43,7 @@ A plugin can show the same prompt for files that change your commands, like the 
 
 Node can't unload a module once it has imported it. A plain watcher like `node --watch`, `nodemon`, or `tsx watch` works around that by restarting the process. For a gateway bot that means logging in to Discord again, and Discord limits how many [sessions](https://discord.com/developers/docs/events/gateway#session-start-limit-object) a bot may start per day. `seedcord dev` runs your bot inside Vite's module runner instead, which keeps its own graph of the modules it evaluated. seedcord removes the saved file from that graph and imports it again, inside the process that's already running.
 
-The graph also records which modules imported which, so seedcord reloads the modules that imported your saved file, and the ones that imported those. Saving a component every handler builds therefore updates all of them. Vite's watcher reports each save, and its transform step reads your TypeScript and your tsconfig paths. Its message channel passes what the CLI and your bot say to each other, like the restart prompt below.
+The graph also records which modules imported which, so seedcord reloads the modules that imported your saved file, and the ones that imported those. Saving a component every handler builds therefore updates all of them. Vite's watcher reports each file you save, and its transform step reads your TypeScript and your tsconfig paths. Its message channel passes what the CLI and your bot say to each other, like the restart prompt below.
 
 A few files can't be swapped this way because something read them once when the bot started.
 
@@ -54,12 +55,14 @@ seedcord asks for a full restart when you save one of these since the CLI or the
 - a `.env`, `.env.local`, `.env.<mode>`, or `.env.<mode>.local` file beside `seedcord.config.ts`
 - on an edge bot, `cloudflare.config.ts`, `.dev.vars`, and `.dev.vars.<mode>`
 - the file `instance` points at
-- a file `instance` imports, directly or through another file, like a plugin your bot file attaches
+- a file that `instance` imports for something other than a plugin, like a `settings.ts` that your bot file reads its config from, and any file that one of those imports
 - an image in your [emojis folder](/components#emojis-by-name), added, changed, or deleted
 
 These sit beside the config, so they count even when `root` is `./src`. A `package.json` deeper in the project reloads like any other file. The `build.start` file isn't one of them because `seedcord dev` never loads it.
 
-After one of those saves, your bot keeps running the old code, and the terminal prints this.
+A plugin that your bot file imports and attaches isn't on this list. When you save it, seedcord stops the running plugin and [starts a new one](/writing-plugins/hot-reload#saving-the-plugins-own-source) from the saved code. If you save it before the bot has finished starting, or the new plugin throws while it starts, seedcord asks for a restart.
+
+After you save one of those, your bot keeps running the old code, and the terminal prints this.
 
 ```txt output
 Restart required. Press r to restart.

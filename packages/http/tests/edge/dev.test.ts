@@ -165,6 +165,7 @@ describe('the edge Seedcord under seedcord dev', () => {
                 'seedcord:read-deployed',
                 'seedcord:commands-deployed',
                 'seedcord:commands-deployed',
+                'seedcord:read-bot-imports',
                 'seedcord:started'
             ])
         );
@@ -245,6 +246,7 @@ describe('the edge Seedcord under seedcord dev', () => {
                 'seedcord:read-deployed',
                 'seedcord:commands-deployed',
                 'seedcord:commands-deployed',
+                'seedcord:read-bot-imports',
                 'seedcord:started'
             ])
         );
@@ -267,7 +269,7 @@ describe('the edge Seedcord under seedcord dev', () => {
         const seedcord = new Seedcord(config).attach('cache', Cache);
         stubDiscord(seedcord);
         cli.start();
-        await vi.waitFor(() => expect(cli.events()).toEqual(['seedcord:started']));
+        await vi.waitFor(() => expect(cli.events()).toEqual(['seedcord:read-bot-imports', 'seedcord:started']));
 
         cli.save({ file: '/bot/config/cache.json', type: 'update' });
 

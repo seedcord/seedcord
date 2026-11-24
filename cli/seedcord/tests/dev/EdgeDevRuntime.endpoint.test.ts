@@ -41,6 +41,18 @@ export class WaveHandler extends SlashHandler<'wave'> {
 }
 `;
 
+const greeterPlugin = (says: string): string => `import { Plugin } from '@seedcord/http';
+
+export class Greeter extends Plugin {
+    public init(): void {}
+
+    public override fetch(request: Request): Response | undefined {
+        if (new URL(request.url).pathname !== '/greeting') return undefined;
+        return new Response('${says}');
+    }
+}
+`;
+
 const COUNTER_CLASS = `import { DurableObject } from 'cloudflare:workers';
 
 export class Counter extends DurableObject {
@@ -225,6 +237,30 @@ describe('EdgeDevRuntime endpoint', () => {
         });
         const unsigned = await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body: '{}' });
         expect(unsigned.status).toBe(401);
+    }, 120_000);
+
+    it("answers with a plugin's new code after its file is saved", async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        const greeter = join(projectDir, 'src/Greeter.ts');
+        await writeFile(greeter, greeterPlugin('before'));
+        await editFile(
+            join(projectDir, 'src/bot.ts'),
+            (text) => `import { Greeter } from './Greeter';\n${text.replace(/;\s*$/, ".attach('greeter', Greeter);\n")}`
+        );
+        const events: DevEvent[] = [];
+        await using started = await startedRuntime(projectDir, (event) => events.push(event));
+        await started.runtime.startBot(started.instance);
+        const greeting = async (): Promise<string> => {
+            const response = await fetch(`http://localhost:${started.port()}/greeting`);
+            return response.text();
+        };
+        expect(await greeting()).toBe('before');
+
+        await writeFile(greeter, greeterPlugin('after'));
+
+        await vi.waitFor(async () => expect(await greeting()).toBe('after'), { timeout: 20_000, interval: 250 });
+        expect(events).not.toContainEqual({ type: 'restart-required' });
     }, 120_000);
 
     it('reloads a handler saved after a file that bot.ts imports', async () => {

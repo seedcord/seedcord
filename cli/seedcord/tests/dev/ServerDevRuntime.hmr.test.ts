@@ -129,6 +129,84 @@ describe('dev runtime hot reload', () => {
         await saveUntilRestartRequired(join(src, 'greeting.ts'), "export const greeting = 'after';\n", events);
     }, 60_000);
 
+    // records what the CLI sends, the way a started bot would get it
+    const ASKING_BOT = `export { greeting } from './plugin';
+
+export const received: [string, unknown][] = [];
+import.meta.hot?.on('seedcord:bot-imports', (answer) => received.push(['seedcord:bot-imports', answer]));
+import.meta.hot?.on('seedcord:hmr', (save) => {
+    received.push(['seedcord:hmr', save]);
+    if (save.file.endsWith('refused.ts')) import.meta.hot?.send('seedcord:restart-required', { file: save.file });
+});
+import.meta.hot?.send('seedcord:read-bot-imports', {});
+`;
+
+    async function startedAskingBot(files: Record<string, string>): Promise<{
+        src: string;
+        events: DevEvent[];
+        received: [string, unknown][];
+    }> {
+        const { src, runtime, events } = await startedProject({ 'index.ts': ASKING_BOT, ...files });
+        const { module } = await runtime.loadEntry();
+        // justified: ASKING_BOT above exports received
+        const { received } = module as { received: [string, unknown][] };
+        // saving before the CLI gets the bot's question shows the restart card
+        await vi.waitFor(() => expect(received).toHaveLength(1));
+        return { src, events, received };
+    }
+
+    it('answers the bot with the files that the bot file imports', async () => {
+        const { src, received } = await startedAskingBot({ 'plugin.ts': "export const greeting = 'before';\n" });
+
+        expect(received).toEqual([['seedcord:bot-imports', { files: [join(src, 'plugin.ts')] }]]);
+    }, 60_000);
+
+    it('sends the bot a save that reaches the bot file, once the bot has asked for its imports', async () => {
+        const { src, received } = await startedAskingBot({
+            'plugin.ts': "export { greeting } from './greeting';\n",
+            'greeting.ts': "export const greeting = 'before';\n"
+        });
+        const [greeting, plugin] = [join(src, 'greeting.ts'), join(src, 'plugin.ts')];
+
+        await saveUntil(greeting, "export const greeting = 'after';\n", () =>
+            expect(received).toContainEqual([
+                'seedcord:hmr',
+                expect.objectContaining({ file: greeting, affectedModules: [greeting, plugin], botImports: [plugin] })
+            ])
+        );
+    }, 60_000);
+
+    it('sends the bot the plugin that loads the saved file with import()', async () => {
+        // the plugin has to start again to get the saved page because its import() may only run once, like in an init()
+        const { src, received } = await startedAskingBot({
+            'plugin.ts': "export const greeting = 'hello';\n\nexport const page = () => import('./page');\n",
+            'page.ts': "export const text = 'before';\n"
+        });
+        const [pageFile, plugin] = [join(src, 'page.ts'), join(src, 'plugin.ts')];
+
+        await saveUntil(pageFile, "export const text = 'after';\n", () =>
+            expect(received).toContainEqual([
+                'seedcord:hmr',
+                expect.objectContaining({ file: pageFile, botImports: [plugin] })
+            ])
+        );
+    }, 60_000);
+
+    it("asks for a restart when the bot answers that it can't reload the save", async () => {
+        const { src, events } = await startedAskingBot({
+            'plugin.ts': "export { greeting } from './refused';\n",
+            'refused.ts': "export const greeting = 'before';\n"
+        });
+
+        await saveUntilRestartRequired(join(src, 'refused.ts'), "export const greeting = 'after';\n", events);
+    }, 60_000);
+
+    it('asks for a restart when the bot file is saved, even after the bot asked for its imports', async () => {
+        const { src, events } = await startedAskingBot({ 'plugin.ts': "export const greeting = 'before';\n" });
+
+        await saveUntilRestartRequired(join(src, 'index.ts'), `${ASKING_BOT}\n`, events);
+    }, 60_000);
+
     it('asks for a restart when a file that an hmr.restart match imports is saved', async () => {
         const { src, runtime, events } = await startedProject(
             {

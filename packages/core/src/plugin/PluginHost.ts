@@ -18,12 +18,14 @@ import type { HmrManager } from '#hmr/HmrManager';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DeclaredScope, Runtime, Transport } from './options';
 import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from './Plugin';
+import type { Attachment } from './PluginRegistry';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
 
 const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 
 const sealSlot = Symbol('seedcord:host:seal');
+const replaceSlot = Symbol('seedcord:host:replace');
 
 export const HostHmr = Symbol('seedcord:host:hmr');
 
@@ -128,6 +130,21 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         }
         this.#assertFree(head, leaf, key);
 
+        const attachment = this.#construct(key, Plugin, args);
+        this[HostPlugins].add(attachment);
+        this.#place(attachment);
+        return this as this & Attached<Key, InstanceType<Ctor>>;
+    }
+
+    /** @internal */
+    public [replaceSlot](old: Attachment, Plugin: PluginCtor): Attachment {
+        const next = this.#construct(old.key, Plugin, old.args);
+        this[HostPlugins].replace(old, next);
+        this.#place(next);
+        return next;
+    }
+
+    #construct(key: string, Plugin: PluginCtor, args: readonly unknown[]): Attachment {
         if (!extendsThisCorePlugin(Plugin)) {
             throw new SeedcordTypeError(SeedcordErrorCode.CorePluginFromOtherCore, [Plugin.name]);
         }
@@ -135,14 +152,14 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         const kv = new Kv(this.kv.driver, 'plugins', key);
         const instance = constructAttached(key, kv, () => new Plugin(this, ...args));
         this.#assertScope(Plugin.name, declaredScopeOf(instance));
-        this[HostPlugins].add({ key, instance, spec: resolvedLifecycleSpecOf(instance) });
+        return { key, instance, spec: resolvedLifecycleSpecOf(instance), args };
+    }
 
-        if (leaf === undefined) {
-            return Object.assign(this, { [key]: instance }) as this & Attached<Key, InstanceType<Ctor>>;
-        }
-
-        this.#groupFor(head)[leaf] = instance;
-        return this as this & Attached<Key, InstanceType<Ctor>>;
+    // a key with a dot reads back as core[head][leaf] since grouped attach exists
+    #place({ key, instance }: Attachment): void {
+        const { head, leaf } = splitPluginKey(key);
+        if (leaf === undefined) Object.assign(this, { [key]: instance });
+        else this.#groupFor(head)[leaf] = instance;
     }
 
     #assertFree(head: string, leaf: string | undefined, key: string): void {
@@ -188,4 +205,13 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
 
 export function sealAttachments(host: Pick<PluginHost<Transport, Runtime>, typeof sealSlot>): void {
     host[sealSlot]();
+}
+
+// builds Plugin with the arguments the old attachment got, and puts it where the old one was
+export function replaceAttachment(
+    host: Pick<PluginHost<Transport, Runtime>, typeof replaceSlot>,
+    old: Attachment,
+    Plugin: PluginCtor
+): Attachment {
+    return host[replaceSlot](old, Plugin);
 }
