@@ -10,6 +10,10 @@ import type { Rolldown } from 'vite';
 
 export const ENTRY_FILE_NAME = 'index.mjs';
 
+// rolldown warns once for each file that starts with 'use client', and a react library has dozens.
+// the directive doesn't mean anything in a bot bundle because it doesn't have a client
+export const BOT_CHECKS = { moduleLevelDirective: false } satisfies Rolldown.ChecksOptions;
+
 export interface BundleStats {
     modules: number;
     listedFiles: number;
@@ -28,7 +32,7 @@ export function bundleStats(chunks: Rolldown.OutputChunk[], layout: BotLayout, e
     };
 }
 
-// a plugin hook can throw a seedcord error that already says what to fix
+// a seedcord error from a plugin hook already has the fix in its message, and wrapping it would bury that
 export function bundleFailed(error: unknown): never {
     if (isSeedcordError(error)) throw error;
     throw (

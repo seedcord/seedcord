@@ -8,7 +8,7 @@ import { envBootstrap } from '#core/modules/envBootstrap';
 
 import { assertOutDirSafe } from './assertOutDirSafe';
 import { isListedFileId, listedFileOf } from './builtFiles';
-import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
+import { BOT_CHECKS, bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
 import { TargetBuild } from './TargetBuild';
@@ -74,6 +74,7 @@ export abstract class ServerBuild<Target extends ResolvedServerTarget = Resolved
                 rolldownOptions: {
                     input: [ENTRY_ID, ...(await files.modulePaths())],
                     preserveEntrySignatures: 'strict',
+                    checks: BOT_CHECKS,
                     output: {
                         format: 'esm',
                         entryFileNames: fileName,

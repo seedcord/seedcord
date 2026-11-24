@@ -17,7 +17,7 @@ import { functionExportsOf } from '#core/modules/workerExports';
 import { assertNodeCompat } from './assertNodeCompat';
 import { bootWorker } from './bootWorker';
 import { CloudflareWorker } from './CloudflareWorker';
-import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
+import { BOT_CHECKS, bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { readDiscord } from './readDiscord';
 import { TargetBuild } from './TargetBuild';
@@ -62,7 +62,7 @@ function workerEnvironment(): Record<string, EnvironmentOptions> {
                 minify: false,
                 rolldownOptions: {
                     // the glob lazily imports files that bot.ts also imports. both get the same module.
-                    checks: { ineffectiveDynamicImport: false },
+                    checks: { ...BOT_CHECKS, ineffectiveDynamicImport: false },
                     output: {
                         entryFileNames: ENTRY_FILE_NAME,
                         // runs bind-env and the built files before bot.ts, even when a top-level await splits bot.ts into its own chunk
