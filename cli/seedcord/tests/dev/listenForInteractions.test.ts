@@ -4,6 +4,7 @@ import { createServer as createNetServer } from 'node:net';
 import { DEV_URL_HEADER } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
+import { resolveConfig } from 'vite';
 import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { listenForInteractions } from '#commands/dev/runtime/listenForInteractions';
@@ -21,7 +22,9 @@ function middlewares(handle: Handle): Connect.Server {
         handle(request, next)) as unknown as Connect.Server;
 }
 
-const QUICK = { port: 0, host: '127.0.0.1', configFile: 'seedcord.config.ts', rootKey: '/src' };
+// .glb is a type a bot author would add through a vite plugin. vite doesn't count it as an asset by default
+const { assetsInclude } = await resolveConfig({ configFile: false, assetsInclude: ['**/*.glb'] }, 'serve');
+const QUICK = { port: 0, host: '127.0.0.1', configFile: 'seedcord.config.ts', rootKey: '/src', assetsInclude };
 
 async function listening(app: Connect.Server): Promise<string> {
     const { server, port } = await listenForInteractions(app, QUICK);
@@ -48,6 +51,11 @@ describe('listenForInteractions', () => {
 
     it.each([
         ['/src/bot.ts', '/'],
+        ['/src/locales/en.json', '/'],
+        ['/src/pages/styles.css', '/src/pages/styles.css'],
+        ['/src/pages/logo.png', '/src/pages/logo.png'],
+        ['/src/pages/intro.mp4', '/src/pages/intro.mp4'],
+        ['/src/models/ship.glb', '/src/models/ship.glb'],
         ['/@fs/home/bot/src/bot.ts', '/'],
         ['/dash/', '/dash/'],
         ['/logo.png', '/logo.png'],

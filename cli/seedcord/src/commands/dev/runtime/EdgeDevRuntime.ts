@@ -119,7 +119,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             port: this.target.port,
             host: listenHostFor(config.tunnel),
             configFile: config.configFile,
-            rootKey
+            rootKey,
+            assetsInclude: server.config.assetsInclude
         });
         resources.use(endpoint.server);
         // close() waits on open keep-alive sockets
