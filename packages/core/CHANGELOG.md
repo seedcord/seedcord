@@ -1,5 +1,12 @@
 # @seedcord/core
 
+## 0.14.1-next.0
+
+### 🩹 Patch
+
+- A bot now starts on Deno with a warning that seedcord isn't tested there. It used to throw because it compared the Node version that Deno reports against the Node requirement. ([`9dfd1e5`](https://github.com/seedcord/seedcord/commit/9dfd1e509cac889bcda5866ce7c9e758f81c75f7))
+- A bot now starts on any Node from 24.11. It used to throw on a Node 24 older than 24.22.1 and a Node 26 older than 26.12.1. ([`9dfd1e5`](https://github.com/seedcord/seedcord/commit/9dfd1e509cac889bcda5866ce7c9e758f81c75f7))
+
 ## 0.14.0
 
 ### 💥 Breaking

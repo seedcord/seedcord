@@ -1,5 +1,11 @@
 # create-seedcord
 
+## 0.7.2-next.0
+
+### 🩹 Patch
+
+- A new edge bot now gets the newest `cf` 1.0 and `@cloudflare/vite-plugin` 2.0 releases. It used to get `1.0.0-rc.0` and `2.0.0-rc.0`. ([`5333349`](https://github.com/seedcord/seedcord/commit/53333493fbecf6e4e1d4c32a923f93d4ee48a0f0))
+
 ## 0.7.1
 
 ### 🩹 Patch

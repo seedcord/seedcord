@@ -1,5 +1,16 @@
 # seedcord
 
+## 0.24.3-next.1
+
+### 🩹 Patch
+
+- An edge bot can now use any `@cloudflare/vite-plugin` 2.0 release from `2.0.0-rc.0`. It used to need exactly `2.0.0-rc.0`, so a newer release candidate gave a peer warning. ([`5333349`](https://github.com/seedcord/seedcord/commit/53333493fbecf6e4e1d4c32a923f93d4ee48a0f0))
+- CLI commands now run on any Node from 24.11. They used to exit on a Node 24 older than 24.22.1 and a Node 26 older than 26.12.1. ([`9dfd1e5`](https://github.com/seedcord/seedcord/commit/9dfd1e509cac889bcda5866ce7c9e758f81c75f7))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.14.0 → 0.14.1-next.0
+
 ## 0.24.3-next.0
 
 ### 🩹 Patch

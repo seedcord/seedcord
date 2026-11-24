@@ -1,5 +1,11 @@
 # @seedcord/tsconfig
 
+## 3.0.1-next.0
+
+### 🩹 Patch
+
+- Fixed the base config's `exclude`, which pointed at the folder this package is installed in. It now skips `node_modules`, `dist`, `coverage` and `tests/temp` in your own project. ([`930c4a1`](https://github.com/seedcord/seedcord/commit/930c4a14c25dd82cdeea0b4b01b486b505c53a91))
+
 ## 3.0.0
 
 ### 💥 Breaking
