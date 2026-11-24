@@ -28,7 +28,7 @@ With that file, `bun run dev` runs the CLI on Bun, along with the bot it loads. 
 
 A `cloudflare.config.ts` beside `seedcord.config.ts` makes the bot an edge bot, which [Workers](/build/workers) sets up. `seedcord dev` runs it in workerd, the runtime Cloudflare runs a Worker on, through Cloudflare's Vite plugin. The Worker listens on `dev.port` from `seedcord.config.ts`, 3000 by default, and [the dev tunnel](/tooling/tunnel) points Discord at it. A saved handler reloads in place, as it does for a server bot.
 
-Saving `cloudflare.config.ts`, `.dev.vars`, `.dev.vars.<mode>`, or an `.env` file needs a restart with `r`. [Hot reload](/tooling/hot-reload#saves-that-need-a-restart) lists every save that does.
+Saving `cloudflare.config.ts`, `.dev.vars`, `.dev.vars.<mode>`, or an `.env` file needs a restart with `r`. [Hot reload](/tooling/hot-reload#files-that-need-a-restart) lists every file that does.
 
 Edge dev can't run on Bun. If the CLI runs on Bun, `seedcord dev` throws `CliEdgeOnBun`. `bun create seedcord` doesn't add a `bunfig.toml` to an edge bot, so `bun run dev` starts on Node.
 

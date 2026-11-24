@@ -47,7 +47,7 @@ The graph also records which modules imported which, so seedcord reloads the mod
 
 A few files can't be swapped this way because something read them once when the bot started.
 
-## Saves that need a restart
+## Files that need a restart
 
 seedcord asks for a full restart when you save one of these since the CLI or the bot reads each of them once at startup:
 
@@ -87,7 +87,7 @@ export default defineConfig({
 
 With this config, saving anything under `src/config/` or `src/constants.ts` needs a restart, and so does saving a file that one of them imports. A plugin can add patterns to the same list with [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles).
 
-## A save that throws on import
+## A file that throws on import
 
 Typos happen. If a file throws while seedcord imports it, its handlers would disappear and the route would stop answering until you fixed it. seedcord keeps the last working version of those handlers registered instead.
 
