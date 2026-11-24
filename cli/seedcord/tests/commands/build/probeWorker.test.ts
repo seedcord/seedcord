@@ -55,6 +55,18 @@ describe('probeWorker', () => {
         expect(failure?.reason.includes('default-exports')).toBe(hinted);
     });
 
+    it('sends the check to /__seedcord/start', async () => {
+        const paths: (string | undefined)[] = [];
+        await using worker = await serve((request, response) => {
+            paths.push(request.url);
+            response.writeHead(WORKER_PROBE.status).end();
+        });
+
+        await probeWorker(worker.url);
+
+        expect(paths).toEqual(['/__seedcord/start']);
+    });
+
     it('reports the wait when the worker never answers', async () => {
         await using worker = await serve(() => undefined);
 

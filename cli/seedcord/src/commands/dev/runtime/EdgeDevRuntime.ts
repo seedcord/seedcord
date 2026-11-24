@@ -73,6 +73,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const { config } = context;
         const { files } = context;
         const { viteRoot } = this.target;
+        const rootKey = BotLayout.keyUnder(viteRoot, config.root);
         resources.use(fenceSignals());
         // ServerHost installs these for a server bot. the edge Seedcord does not
         installNodeDefaults();
@@ -102,7 +103,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                         layout: files.layout,
                         lists,
                         instanceKey: BotLayout.keyUnder(viteRoot, config.instance),
-                        rootKey: BotLayout.keyUnder(viteRoot, config.root),
+                        rootKey,
                         functionExports: () => (functionExports ??= this.readFunctionExports(context, nodeCopy)),
                         mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
                     }),
@@ -117,7 +118,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const endpoint = await listenForInteractions(server.middlewares, {
             port: this.target.port,
             host: listenHostFor(config.tunnel),
-            configFile: config.configFile
+            configFile: config.configFile,
+            rootKey
         });
         resources.use(endpoint.server);
         // close() waits on open keep-alive sockets

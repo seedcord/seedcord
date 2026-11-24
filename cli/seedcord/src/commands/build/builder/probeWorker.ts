@@ -4,6 +4,8 @@ import { asError } from '@seedcord/utils/internal';
 
 // a cold dev start answered in about 2s on the edge test bot. this only has to catch a request nobody answers
 const PROBE_TIMEOUT_MS = 60_000;
+// a page at / would answer the check first. cloudflare serves it before the worker runs
+const PROBE_PATH = '/__seedcord/start';
 
 export interface ProbeFailure {
     reason: string;
@@ -42,7 +44,7 @@ async function fetchUntilConnected(url: string, signal: AbortSignal): Promise<Re
 export async function probeWorker(url: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<ProbeFailure | undefined> {
     let response: Response;
     try {
-        response = await fetchUntilConnected(url, AbortSignal.timeout(timeoutMs));
+        response = await fetchUntilConnected(new URL(PROBE_PATH, url).href, AbortSignal.timeout(timeoutMs));
     } catch (error: unknown) {
         return { reason: unanswered(error, timeoutMs), cause: error };
     }

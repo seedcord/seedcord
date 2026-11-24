@@ -137,7 +137,6 @@ export class EdgeBuild extends TargetBuild {
             root: viteRoot,
             mode: config.viteMode,
             configFile: false,
-            publicDir: false,
             logLevel: 'warn',
             plugins: [
                 workerEntry({

@@ -79,13 +79,17 @@ describe('InteractionsEndpoint', () => {
         expect(discord.routes).toEqual([Routes.currentApplication()]);
     });
 
-    it('patches the application with the url', async () => {
+    it.each([
+        [TUNNEL, `${TUNNEL}/__seedcord/interactions`],
+        [`${TUNNEL}/`, `${TUNNEL}/__seedcord/interactions`],
+        ['https://bot.example.com/app', 'https://bot.example.com/app/__seedcord/interactions']
+    ])('patches the application with %s plus /__seedcord/interactions', async (tunnel, written) => {
         const { rest: client, patch } = rest();
 
-        await endpointFor(client).set(TUNNEL, RUNNING, INSTANCE);
+        await endpointFor(client).set(tunnel, RUNNING, INSTANCE);
 
         expect(patch).toHaveBeenCalledExactlyOnceWith(Routes.currentApplication(), {
-            body: { interactions_endpoint_url: TUNNEL }
+            body: { interactions_endpoint_url: written }
         });
     });
 

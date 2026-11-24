@@ -21,7 +21,7 @@ function middlewares(handle: Handle): Connect.Server {
         handle(request, next)) as unknown as Connect.Server;
 }
 
-const QUICK = { port: 0, host: '127.0.0.1', configFile: 'seedcord.config.ts' };
+const QUICK = { port: 0, host: '127.0.0.1', configFile: 'seedcord.config.ts', rootKey: '/src' };
 
 async function listening(app: Connect.Server): Promise<string> {
     const { server, port } = await listenForInteractions(app, QUICK);
@@ -46,18 +46,25 @@ describe('listenForInteractions', () => {
         expect(seen).toEqual(['/']);
     });
 
-    it('rewrites a GET to / and sends its real path in a header', async () => {
+    it.each([
+        ['/src/bot.ts', '/'],
+        ['/@fs/home/bot/src/bot.ts', '/'],
+        ['/dash/', '/dash/'],
+        ['/logo.png', '/logo.png'],
+        ['/node_modules/.vite/deps/react.js', '/node_modules/.vite/deps/react.js'],
+        ['/@fs/home/bot/node_modules/vite/client/env.mjs', '/@fs/home/bot/node_modules/vite/client/env.mjs']
+    ])('hands a GET for %s to vite as %s, with its real path in a header', async (path, handed) => {
         const seen: { url: string | undefined; devUrl: unknown }[] = [];
         const url = await listening(
-            middlewares(({ url: path, headers }, next) => {
-                seen.push({ url: path, devUrl: headers[DEV_URL_HEADER] });
+            middlewares(({ url: requested, headers }, next) => {
+                seen.push({ url: requested, devUrl: headers[DEV_URL_HEADER] });
                 next();
             })
         );
 
-        await fetch(`${url}/src/bot.ts`);
+        await fetch(`${url}${path}`);
 
-        expect(seen).toEqual([{ url: '/', devUrl: '/src/bot.ts' }]);
+        expect(seen).toEqual([{ url: handed, devUrl: path }]);
     });
 
     it('throws PortInUse when another process holds the port on 127.0.0.1', async () => {

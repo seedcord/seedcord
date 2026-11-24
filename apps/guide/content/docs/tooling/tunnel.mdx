@@ -47,7 +47,7 @@ Each start follows these steps.
 2. seedcord starts `cloudflared` pointed at that port, then waits up to 60 seconds for Cloudflare to assign a hostname.
 3. seedcord waits four more seconds because Cloudflare publishes the DNS record a couple of seconds after it assigns the hostname. Discord's resolver keeps a failed lookup for about half an hour, so an early check would burn that hostname for Discord while the address answered fine from your machine.
 4. seedcord posts an unsigned request to the new address until it gets a `401`. After 60 seconds seedcord continues either way. Your bot rejects an unsigned request with exactly that status, so a `401` means the tunnel reaches your port.
-5. seedcord writes the address into your Discord application as its interactions endpoint.
+5. seedcord writes the address plus `/__seedcord/interactions` into your Discord application as its interactions endpoint.
 
 <Image
     src="/tunnel-connecting.webp"

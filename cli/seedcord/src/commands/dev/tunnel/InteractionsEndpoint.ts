@@ -13,6 +13,12 @@ import type { RESTPatchCurrentApplicationJSONBody } from 'discord-api-types/v10'
 
 const FIELD = 'interactions_endpoint_url';
 
+// the bot answers interactions on any path. on an edge bot, cloudflare answers a POST to a page at / with a
+// 405 before the bot runs, and plugin routes are unlikely to sit under /__seedcord/
+function interactionsUrl(tunnel: string): string {
+    return new URL('__seedcord/interactions', tunnel.endsWith('/') ? tunnel : `${tunnel}/`).href;
+}
+
 export type EndpointRest = Pick<REST, 'patch'>;
 
 // discord verifies by posting a signed ping to the url, which fails until the hostname resolves on its side
@@ -65,11 +71,12 @@ export class InteractionsEndpoint {
         signal.throwIfAborted();
         const { applicationId } = this.token();
         const rest = this.rest(instance);
+        const endpoint = interactionsUrl(url);
         try {
-            await write(rest, url);
+            await write(rest, endpoint);
         } catch (error: unknown) {
             if (!unverified(error)) throw error;
-            throw new SeedcordError(SeedcordErrorCode.CliTunnelNotVerified, [url]);
+            throw new SeedcordError(SeedcordErrorCode.CliTunnelNotVerified, [endpoint]);
         }
 
         this.written = { applicationId, url, rest };
