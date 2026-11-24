@@ -52,6 +52,12 @@
                 "default": "./dist/env-internal.index.mjs"
             }
         },
+        "./internal/runtime": {
+            "import": {
+                "types": "./dist/runtime-internal.index.d.mts",
+                "default": "./dist/runtime-internal.index.mjs"
+            }
+        },
         "./node": {
             "import": {
                 "types": "./dist/node.index.d.mts",
@@ -113,5 +119,11 @@
     "engines": {
         "bun": ">=1.4.2",
         "node": "^24.22.1 || >=26.12.1"
+    },
+    "seedcord": {
+        "runtime": {
+            "bun": ">=1.4.2",
+            "node": ">=24.11"
+        }
     }
 }

@@ -1,11 +1,11 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { LoggerChannelRegistry } from '@seedcord/logger';
+import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeConsole, installNodeDefaults } from '@seedcord/logger/node';
 import { HostDevUrl, HostListenHost, HostPlugins, HostShutdown, HostStartup } from '@seedcord/types/internal';
 import { runsUnderSeedcordDev } from '@seedcord/utils/internal';
 
-import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
+import { assertDeclaredRuntime } from '#node/assertDeclaredRuntime';
 import { getDevChannel } from '#src/hmr/devChannel';
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 import { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
@@ -52,13 +52,19 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
 
     constructor(transport: BotT, shutdown: CoordinatedShutdown, startup: CoordinatedStartup, driver: Config['kv']) {
         // a `sideEffects: false` build would remove the same call from the node entry
-        assertDeclaredRuntime();
+        const runtime = assertDeclaredRuntime();
         super(transport, 'server', driver);
 
         if (ServerHost.#isInstantiated) throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
 
         // init() opens the log file
         installNodeConsole();
+
+        if (runtime.status === 'untested') {
+            new Logger('Runtime').warn(
+                `seedcord isn't tested on ${runtime.name} and some things may not work. It supports Node and Bun.`
+            );
+        }
 
         ServerHost.#isInstantiated = true;
         ServerHost.#liveHost = this;
