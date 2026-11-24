@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/errors",
-    "version": "0.16.0",
+    "version": "0.16.1",
     "description": "Typed errors with registered codes for seedcord bots",
     "keywords": [
         "discord-bot",

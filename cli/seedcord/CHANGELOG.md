@@ -1,5 +1,16 @@
 # seedcord
 
+## 0.24.1
+
+### 🩹 Patch
+
+- Fixed the header of `seedcord-gen.ts`, which told you to run `seedcord codegen` after changing your "emoji config". It now asks you to rerun it after changing your emojis. ([#477](https://github.com/seedcord/seedcord/pull/477))
+- Fixed the "referenced directly or indirectly in its own initializer" error when a plugin option calls a plugin that the bot attached in an earlier statement, like a Kysely service. `seedcord codegen` wrote `typeof Bot` into every `PluginTypes` row, so run it again to rewrite them. ([#477](https://github.com/seedcord/seedcord/pull/477))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.16.0 → 0.16.1
+
 ## 0.24.0
 
 ### 💥 Breaking

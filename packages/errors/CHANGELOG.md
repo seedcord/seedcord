@@ -1,5 +1,11 @@
 # @seedcord/errors
 
+## 0.16.1
+
+### 🩹 Patch
+
+- Added the error codes that `@seedcord/plugin-linked-roles` throws. ([#477](https://github.com/seedcord/seedcord/pull/477))
+
 ## 0.16.0
 
 ### 💥 Breaking

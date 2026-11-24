@@ -1,5 +1,14 @@
 # @seedcord/mock-http
 
+## 0.0.19
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/plugin-oauth` 0.1.0 → 0.2.0
+- `@seedcord/plugin-linked-roles` 0.0.1 → 0.1.0
+
 ## 0.0.18
 
 ### 🩹 Patch

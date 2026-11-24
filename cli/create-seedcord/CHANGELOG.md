@@ -1,5 +1,11 @@
 # create-seedcord
 
+## 0.7.1
+
+### 🩹 Patch
+
+- A new bot's summary now ends with a link to the seedcord Discord server, under the guide link. ([`977015c`](https://github.com/seedcord/seedcord/commit/977015c51998ec4d788f07baa0da97351a7c246f))
+
 ## 0.7.0
 
 ### ✨ Minor

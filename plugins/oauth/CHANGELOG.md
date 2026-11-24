@@ -1,5 +1,17 @@
 # @seedcord/plugin-oauth
 
+## 0.2.0
+
+### ✨ Minor
+
+- Added `isRedirectListed()` to `OAuthClient`. It tells you whether the client's `redirectUri` is under Redirects on your application's OAuth2 page. Discord refuses logins until it is. ([#477](https://github.com/seedcord/seedcord/pull/477))
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.16.0 → 0.16.1
+
 ## 0.1.0
 
 ### ✨ Minor
