@@ -1,6 +1,6 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": ["group:vitePlus", "config:recommended"],
+    "extends": ["config:recommended"],
     "enabledManagers": ["npm", "github-actions"],
     "schedule": ["* 0-3 * * 1"],
     "prConcurrentLimit": 2,
@@ -18,6 +18,10 @@
             "matchManagers": ["npm"],
             "matchUpdateTypes": ["minor", "patch"],
             "groupName": "all non major npm updates"
+        },
+        {
+            "extends": ["packages:vitePlus"],
+            "groupName": "Vite+ packages"
         },
         {
             "matchManagers": ["github-actions"],
