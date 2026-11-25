@@ -18,7 +18,7 @@ describe('toComponentEmbedJson', () => {
         expect(JSON.parse(json)).toEqual({ component: { type: 17, components: [{ type: 10, content }] } });
     });
 
-    it('leaves every other < as it is', () => {
+    it("doesn't escape any other <", () => {
         const content = 'Built with <:seedcord:1538077321318236281> by <@123>';
         const json = toComponentEmbedJson(h(Container, null, h(TextDisplay, null, content)));
 

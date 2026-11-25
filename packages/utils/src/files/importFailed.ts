@@ -24,7 +24,7 @@ export function recordThrownBy(caught: unknown, thrownBy: ThrownBy): Error {
     const error = asError(caught);
     // a hook that calls into another plugin passes that plugin's error up through its own wrapper
     if (thrownByOf(error) !== undefined) return error;
-    // Reflect.set leaves a frozen error as it was
+    // a plain assignment throws on a frozen error in strict mode. Reflect.set returns false
     Reflect.set(error, THROWN_BY_KEY, thrownBy);
     return error;
 }

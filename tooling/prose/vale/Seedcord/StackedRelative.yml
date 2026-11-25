@@ -1,0 +1,7 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' stacks one 'that' clause on another. Delete the clause if a type or field name repeats it, or split the sentence."
+level: error
+ignorecase: true
+tokens:
+  - '(?<!\b(?:after|before|like|than|with|of|from|for|about|on|in|at|to) )\b(?:that|which) (?:the|a|an|it|its|this|you|your|they|their|we|our|seedcord|discord|vite) [a-z]+(?:(?!\band\b)[^.;:!?]){1,60}?\b(?:that|which) (?:the|a|an|it|its|this|you|your|they|their|we|our|seedcord|discord|vite) [a-z]+'

@@ -37,7 +37,7 @@ A seedcord error starts with its code in brackets, like `[3116]`. The guide's pa
 
 {/* prettier-ignore-end */}
 
-The answer starts with `3116 is CliDependencyMissing`. Inside a longer question, the command leaves a bare four-digit number as it is since it could be a port, year, or something else entirely. If that number is also an error code, the answer adds a command like `seedcord ask "error 3116"` that looks up the code.
+The answer starts with `3116 is CliDependencyMissing`. Inside a longer question, the command doesn't read a bare four-digit number as an error code since it could be a port, year, or something else entirely. If that number is also an error code, the answer adds a command like `seedcord ask "error 3116"` that looks up the code.
 
 ## Running it from a script or an agent
 

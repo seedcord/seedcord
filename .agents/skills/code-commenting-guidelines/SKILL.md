@@ -241,6 +241,7 @@ A TSDoc block needs a caller who would read the signature and still guess wrong.
 ## 7. Delete on sight
 
 - Anything restating the line below it.
+- Anything restating the name of the type, field, or function it sits on. A comment saying `BotImport` is "a file that the bot file imports" adds nothing to the name. Keep only what the name can't carry, like what `'all'` means on its `names` field.
 - `// We do X here because Y`. The next line shows you doing X. Keep the because.
 - A comment explaining a type that sits two lines above. Fix the type name.
 - Per-overload captions. One block on the implementation signature covers the family.
