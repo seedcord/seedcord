@@ -1,6 +1,6 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": ["config:recommended", "group:vitePlus"],
+    "extends": ["group:vitePlus", "config:recommended"],
     "enabledManagers": ["npm", "github-actions"],
     "schedule": ["* 0-3 * * 1"],
     "prConcurrentLimit": 2,
