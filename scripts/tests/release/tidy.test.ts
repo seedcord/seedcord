@@ -44,6 +44,86 @@ describe('tidyChangelog', () => {
         expect(tidyChangelog(out)).toBe(out);
     });
 
+    it('starts a graduated dependency bump at the last stable version', () => {
+        const out = tidyChangelog(
+            lines(
+                '# @seedcord/gateway',
+                '',
+                '## 0.11.1',
+                '',
+                '### 🩹 Patch',
+                '',
+                '#### 📦 Seedcord packages',
+                '',
+                '- `@seedcord/core` 0.14.1-next.1 → 0.14.1',
+                '',
+                '## 0.11.1-next.1',
+                '',
+                '### 🩹 Patch',
+                '',
+                '#### 📦 Seedcord packages',
+                '',
+                '- `@seedcord/core` 0.14.1-next.0 → 0.14.1-next.1',
+                '',
+                '## 0.11.1-next.0',
+                '',
+                '### 🩹 Patch',
+                '',
+                '#### 📦 Seedcord packages',
+                '',
+                '- `@seedcord/core` 0.14.0 → 0.14.1-next.0',
+                '',
+                '## 0.11.0',
+                ''
+            )
+        );
+
+        expect(out).toContain(
+            '## 0.11.1\n\n### 🩹 Patch\n\n#### 📦 Seedcord packages\n\n- `@seedcord/core` 0.14.0 → 0.14.1\n'
+        );
+        expect(tidyChangelog(out)).toBe(out);
+    });
+
+    it('adds a peer bump that only a prerelease entry lists', () => {
+        const out = tidyChangelog(
+            lines(
+                '# @seedcord/plugin-i18n',
+                '',
+                '## 0.1.1',
+                '',
+                'No changes in this release.',
+                '',
+                '## 0.1.1-next.0',
+                '',
+                '### 🩹 Patch',
+                '',
+                '#### 📦 Seedcord packages',
+                '',
+                '- `@seedcord/core` 0.14.0 → 0.14.1-next.0',
+                '',
+                '## 0.1.0',
+                ''
+            )
+        );
+
+        expect(out).toBe(
+            lines(
+                '# @seedcord/plugin-i18n',
+                '',
+                '## 0.1.1',
+                '',
+                '### 🩹 Patch',
+                '',
+                '#### 📦 Seedcord packages',
+                '',
+                '- `@seedcord/core` 0.14.0 → 0.14.1',
+                '',
+                '## 0.1.0'
+            )
+        );
+        expect(tidyChangelog(out)).toBe(out);
+    });
+
     it('prunes a breaking prerelease in the same run that graduates it', () => {
         const out = tidyChangelog(
             lines(

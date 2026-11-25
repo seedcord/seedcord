@@ -1,11 +1,22 @@
 import { readFile } from 'node:fs/promises';
 
-import { isStable, bodyWithoutNested, SECTION_START, splitEntries, VERSION_START } from '#src/release/changelog-format';
+import {
+    bodyWithoutNested,
+    DEPENDENCIES,
+    HEADING,
+    isStable,
+    SECTION_START,
+    splitEntries,
+    VERSION_START
+} from '#src/release/changelog-format';
+import { ChangelogSections } from '#src/release/ChangelogSections';
 
 const VERSION_HEADING = /^## (\S+)/;
 const PRERELEASE = /^(\d+\.\d+\.\d+)-/;
 const NOTE = /^---$/m;
 const DEPENDENCY_NAME = /^- `([^`]+)` \S+/gm;
+const DEPENDENCY_BUMP = /^- `[^`]+` \S+ → \S+$/gm;
+const PRERELEASE_TO = /(\d+\.\d+\.\d+)-\S+$/;
 
 const versionOf = (section: string): string | undefined => VERSION_HEADING.exec(section)?.[1];
 
@@ -52,7 +63,8 @@ export class ChangelogFile {
                     (compareCore(base, stable.version) < 0 && carriesEveryEntry(stable.section, section)));
 
             if (superseded) {
-                // a --- block is a note someone added by hand
+                kept.push(bumpsOf(section));
+                // a --- block is a hand written note
                 const note = NOTE.exec(section);
                 if (note) kept.push(section.slice(note.index));
                 continue;
@@ -68,8 +80,18 @@ export class ChangelogFile {
     }
 }
 
-// history rewritten by hand left some prerelease entries that the stable sections don't repeat
-function carriesEveryEntry(stable: string, prerelease: string): boolean {
+// changesets starts a stable entry's bumps at the last prerelease and skips a peer that a prerelease moved into range
+function bumpsOf(prerelease: string): string {
+    const bumps = prerelease.match(DEPENDENCY_BUMP)?.map((line) => line.replace(PRERELEASE_TO, '$1'));
+
+    return bumps ? `${HEADING.patch}\n\n${DEPENDENCIES}\n\n${bumps.join('\n')}\n\n` : '';
+}
+
+// history rewritten by hand left some prerelease entries that the stable sections don't repeat.
+// both sides compare in their regrouped form because changesets marks a breaking entry inline
+function carriesEveryEntry(rawStable: string, rawPrerelease: string): boolean {
+    const stable = new ChangelogSections(rawStable).regrouped().contents;
+    const prerelease = new ChangelogSections(rawPrerelease).regrouped().contents;
     const entries = prerelease
         .split(SECTION_START)
         .slice(1)

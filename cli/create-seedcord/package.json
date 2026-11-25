@@ -1,6 +1,6 @@
 {
     "name": "create-seedcord",
-    "version": "0.7.2-next.0",
+    "version": "0.7.2",
     "description": "Scaffold a new seedcord bot",
     "keywords": [
         "create",

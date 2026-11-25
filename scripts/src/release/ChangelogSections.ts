@@ -14,8 +14,10 @@ import {
 
 import type { Bucket } from '#src/release/changelog-format';
 
-const DEPENDENCY = /^- `[^`]+` (?:\S+ → \S+|\S+ \(new\))$/;
+const DEPENDENCY = /^- `([^`]+)` (?:(\S+) → \S+|\S+ \(new\))$/;
 const NOTE = /^---$/m;
+// changesets writes this into an empty entry
+const NO_CHANGES = 'No changes in this release.';
 const LEADING_MARKER = `- ${MARKER} `;
 
 export class ChangelogSections {
@@ -49,11 +51,13 @@ function regroupHead(head: string): string | undefined {
 
     const sections = head
         .slice(firstLineEnd + 1)
+        .replace(NO_CHANGES, '')
         .split(SECTION_START)
         .filter((section) => section.trim() !== '');
+    if (sections.length === 0) return undefined;
 
     const buckets = new Map<Bucket, string[]>();
-    const dependencies: string[] = [];
+    const dependencies = new Map<string, string>();
 
     for (const section of sections) {
         const bucket = bucketOf(headingOf(section));
@@ -66,8 +70,9 @@ function regroupHead(head: string): string | undefined {
         const body = [own, ...nested.map((part) => part.slice(part.indexOf('\n') + 1))].join('');
 
         for (const entry of splitEntries(body)) {
-            if (DEPENDENCY.test(entry)) {
-                dependencies.push(entry);
+            const dependency = DEPENDENCY.exec(entry);
+            if (dependency) {
+                addDependency(dependencies, entry, dependency);
                 continue;
             }
 
@@ -78,11 +83,19 @@ function regroupHead(head: string): string | undefined {
         }
     }
 
-    const blocks = ORDER.filter((bucket) => buckets.has(bucket) || (bucket === 'patch' && dependencies.length > 0)).map(
-        (bucket) => block(bucket, buckets.get(bucket) ?? [], bucket === 'patch' ? dependencies : [])
+    const blocks = ORDER.filter((bucket) => buckets.has(bucket) || (bucket === 'patch' && dependencies.size > 0)).map(
+        (bucket) => block(bucket, buckets.get(bucket) ?? [], bucket === 'patch' ? [...dependencies.values()] : [])
     );
 
     return `${head.slice(0, firstLineEnd)}\n\n${blocks.join('\n')}\n`;
+}
+
+// lines further down come from older prereleases
+function addDependency(dependencies: Map<string, string>, entry: string, [, name = '', from]: RegExpExecArray): void {
+    const newer = dependencies.get(name);
+
+    if (newer === undefined) dependencies.set(name, entry);
+    else if (from !== undefined) dependencies.set(name, newer.replace(/ \S+ →/, ` ${from} →`));
 }
 
 function block(bucket: Bucket, entries: readonly string[], dependencies: readonly string[]): string {

@@ -1,12 +1,12 @@
 # @seedcord/plugin-kysely-postgres
 
-## 0.9.1-next.0
+## 0.9.1
 
 ### 🩹 Patch
 
 #### 📦 Seedcord packages
 
-- `@seedcord/core` 0.14.0 → 0.14.1-next.0
+- `@seedcord/core` 0.14.0 → 0.14.1
 
 ## 0.9.0
 

@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/plugin-oauth",
-    "version": "0.2.1-next.0",
+    "version": "0.2.1",
     "description": "Log people in with Discord from a seedcord bot and call the API as them",
     "keywords": [
         "discord-auth",

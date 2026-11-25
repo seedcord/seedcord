@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/gateway",
-    "version": "0.11.1-next.0",
+    "version": "0.11.1",
     "description": "Gateway transport for seedcord bots, using the discord.js client",
     "keywords": [
         "discord",

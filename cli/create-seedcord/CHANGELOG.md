@@ -1,6 +1,6 @@
 # create-seedcord
 
-## 0.7.2-next.0
+## 0.7.2
 
 ### 🩹 Patch
 

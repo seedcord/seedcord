@@ -1,6 +1,6 @@
 # @seedcord/core
 
-## 0.14.1-next.0
+## 0.14.1
 
 ### 🩹 Patch
 
