@@ -1,6 +1,7 @@
 import { mkdtempDisposableSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { setTimeout } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
 
 import { HostPlugins } from '@seedcord/types/internal';
@@ -22,6 +23,8 @@ type WebCtor = new (host: CoreBase, greeting: string) => Plugin;
 
 const PLUGIN_BASE = pathToFileURL(join(import.meta.dirname, '../../src/plugin/Plugin.ts')).href;
 const CALLS_SLOT = '__seedcordPluginReloadCalls';
+const INIT_GATE_SLOT = '__seedcordPluginReloadInitGate';
+const SHUTDOWN_WAIT_MS = 100;
 
 // each version logs what seedcord calls on it, and keeps the argument that attach() passed
 function webPlugin(version: string, init = ''): string {
@@ -36,9 +39,14 @@ export class Web extends Plugin {
         this.greeting = greeting;
     }
 
-    init() {
+    async init() {
         ${init}
+        this.started = '${version}';
         globalThis.${CALLS_SLOT}.push('init ${version}');
+    }
+
+    fetch() {
+        return new Response(this.started ?? 'not started');
     }
 
     ready() {
@@ -129,6 +137,7 @@ describe('reloading a plugin under seedcord dev', () => {
         return () => {
             TestServerHost.resetHost();
             Reflect.deleteProperty(globalThis, CALLS_SLOT);
+            Reflect.deleteProperty(globalThis, INIT_GATE_SLOT);
             folder.remove();
         };
     });
@@ -191,6 +200,43 @@ describe('reloading a plugin under seedcord dev', () => {
         }
 
         expect(calls).toEqual([...REPLACED, 'save reached after', 'dispose after']);
+    });
+
+    // resolves after the old instance's dispose(). the new one's init() then waits on the returned gate
+    async function savedWithInitWaiting(file: string, cli: FakeCli): Promise<PromiseWithResolvers<undefined>> {
+        const initGate = Promise.withResolvers<undefined>();
+        Reflect.set(globalThis, INIT_GATE_SLOT, initGate.promise);
+        write('Web.ts', webPlugin('after', `await globalThis.${INIT_GATE_SLOT};`));
+        cli.saves(file, [file]);
+        await vi.waitFor(() => expect(calls).toContain('dispose before'));
+        return initGate;
+    }
+
+    it('holds a request that arrives during a reload until the new instance has started', async () => {
+        const cli = fakeCli();
+        const file = write('Web.ts', webPlugin('before'));
+        await using host = await startedBot(file, cli);
+
+        const initGate = await savedWithInitWaiting(file, cli);
+        const answered = host.fetch(new Request('http://localhost/'));
+        initGate.resolve(undefined);
+        const response = await answered;
+
+        expect(await response.text()).toBe('after');
+    });
+
+    it('disposes a plugin that a reload is still starting when the bot shuts down', async () => {
+        const cli = fakeCli();
+        const file = write('Web.ts', webPlugin('before'));
+        await using host = await startedBot(file, cli);
+
+        const initGate = await savedWithInitWaiting(file, cli);
+        const stopped = host[Symbol.asyncDispose]();
+        // without the wait, shutdown ends first and init() finishes after it
+        void Promise.race([stopped, setTimeout(SHUTDOWN_WAIT_MS)]).then(() => initGate.resolve(undefined));
+        await stopped;
+
+        expect(calls).toEqual([...REPLACED, 'dispose after']);
     });
 
     it('keeps a replaced plugin at its place in the attach order', async () => {

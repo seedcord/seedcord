@@ -10,11 +10,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test'
 import { Plugin } from '#src/Plugin';
 import { Seedcord } from '#src/Seedcord';
 
+import { readyOnLogin } from './utils/readyOnLogin';
 import { testConfig } from './utils/test-config';
 
 import type { ILogSink } from '@seedcord/types';
 import type { Client } from 'discord.js';
-import type { Mock } from 'vite-plus/test';
 
 // port 0 has node pick a free port
 const ANY_PORT = { port: 0 } as const;
@@ -33,15 +33,6 @@ class Page extends Plugin {
 
 function get(seedcord: Seedcord, path: string): Promise<Response> {
     return fetch(`http://127.0.0.1:${String(seedcord.port)}${path}`);
-}
-
-// the mock client never connects, and login waits on ClientReady
-function readyOnLogin(seedcord: Seedcord): void {
-    vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
-    const client = seedcord.bot.client as unknown as { once: Mock };
-    client.once.mockImplementation((event: Events, onReady: () => void) => {
-        if (event === Events.ClientReady) onReady();
-    });
 }
 
 function reset(): void {

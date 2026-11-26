@@ -2,11 +2,11 @@ import { PublishDefault, RegisteredCount, setDevChannel, SubscriberLoader } from
 import { describe, expect, afterEach, onTestFinished, vi } from 'vite-plus/test';
 
 import { Seedcord } from '#src/Seedcord';
+import { readyOnLogin } from '#tests/utils/readyOnLogin';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
 
-import type { HmrUpdateEvent } from '@seedcord/types';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { Interaction } from 'discord.js';
 
@@ -105,23 +105,11 @@ describe('Bus Integration', () => {
         await vi.waitFor(() => expect(runs).toEqual(['run']));
     });
 
-    it('passes a saved file to the subscriber loader under seedcord dev', async ({ testEnv }) => {
-        const subscribersDir = 'subscribers';
-        const filePath = await testEnv.createFile(
-            `${subscribersDir}/LogSubscriber.ts`,
-            `
-            import { Subscriber, Subscribe } from '${seedcordPath}';
-
-            @Subscribe(['unknownException'])
-            export class LogSubscriber extends Subscriber {
-                public async execute() {
-                    console.log('Subscriber executed');
-                }
-            }
-            `
-        );
-
-        const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
+    it('runs the new code of a subscriber you save under seedcord dev', async ({ testEnv }) => {
+        const runs: string[] = [];
+        Reflect.set(globalThis, RUNS_SLOT, runs);
+        using _runsSlot = { [Symbol.dispose]: () => Reflect.deleteProperty(globalThis, RUNS_SLOT) };
+        const filePath = await testEnv.createFile('subscribers/LogSubscriber.ts', fixtureRecording('before'));
 
         const cliSends = new Map<string, (payload: unknown) => void>();
         // justified: this fake has send, on and off like a DevChannel. only their types are looser
@@ -131,14 +119,17 @@ describe('Bus Integration', () => {
             off: vi.fn()
         } as unknown as DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>);
         onTestFinished(() => setDevChannel(undefined));
-        const onHmr = vi.spyOn(SubscriberLoader.prototype, 'onHmr');
 
-        await using seedcord = new Seedcord(config);
-        // hmr registration runs in Configuration. Login rejects later without a real token
-        await seedcord.start().catch(() => undefined);
-        const event: HmrUpdateEvent = { file: filePath, type: 'update' };
-        cliSends.get('seedcord:hmr')?.(event);
+        await using seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
+        readyOnLogin(seedcord);
+        await seedcord.start();
+        await testEnv.createFile('subscribers/LogSubscriber.ts', fixtureRecording('after'));
+        cliSends.get('seedcord:hmr')?.({ file: filePath, type: 'update' });
 
-        await vi.waitFor(() => expect(onHmr).toHaveBeenCalledWith(event));
+        await vi.waitFor(() => {
+            // justified: the fixture subscriber ignores the payload
+            seedcord.bus[PublishDefault]('anyInteraction', { interaction: {} as Interaction });
+            expect(runs).toContain('after');
+        });
     });
 });

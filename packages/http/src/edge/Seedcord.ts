@@ -5,12 +5,14 @@ import {
     DEV_URL_HEADER,
     getDevChannel,
     HostHmr,
+    InFlight,
     installLinks,
     keepRequestOpenFor,
     PluginLifecycle,
     publicUrl,
     requestScope,
     sealAttachments,
+    SERVICE_UNAVAILABLE,
     settleWithin,
     toWireError,
     WORKER_PROBE
@@ -98,6 +100,8 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     readonly #plugins = new PluginLifecycle(this, this.#startup, { addTask: () => undefined });
 
     readonly #logger = new Logger('Bot', { channel: 'bot' });
+    // only seedcord dev reloads plugins
+    readonly #devRequests = this.#gateForReloads();
     readonly #underDev: boolean;
 
     #devUrl?: string;
@@ -121,6 +125,16 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         const cli = getDevChannel();
         this.#underDev = cli !== undefined;
         if (cli) this.#startWhenAsked(cli);
+    }
+
+    #gateForReloads(): InFlight | undefined {
+        const hmr = this[HostHmr];
+        if (!hmr) return undefined;
+        const gate = new InFlight(this.#logger, 'Requests');
+        // safe to open now because fetch() waits for startup before it calls admit()
+        gate.open();
+        hmr.pauseDuringReloads(gate);
+        return gate;
     }
 
     #startWhenAsked(cli: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>): void {
@@ -183,7 +197,10 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
         return requestScope.run(ctx, async () => {
             await this.#start();
-            return (await this[HostPlugins].answer(request)) ?? this.#service.engine.handle(request);
+            const answer = async (): Promise<Response> =>
+                (await this[HostPlugins].answer(request)) ?? this.#service.engine.handle(request);
+            if (!this.#devRequests) return answer();
+            return (await this.#devRequests.admit(answer)) ?? new Response(null, { status: SERVICE_UNAVAILABLE });
         });
     }
 

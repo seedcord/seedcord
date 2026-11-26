@@ -8,3 +8,4 @@ export const WORKER_PROBE = { header: 'x-seedcord-probe', status: 204 } as const
 export const DEFAULT_SERVER_PORT = 3000;
 
 export const INTERNAL_SERVER_ERROR = 500;
+export const SERVICE_UNAVAILABLE = 503;

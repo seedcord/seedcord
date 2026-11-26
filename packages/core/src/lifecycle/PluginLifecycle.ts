@@ -38,6 +38,11 @@ export class PluginLifecycle {
         return this.host[HostPlugins].attachments;
     }
 
+    // the longest a save can take when it replaces every plugin
+    public get replaceTimeout(): number {
+        return sumBy(this.attachments, ({ spec }) => spec.dispose.timeout + spec.init.timeout + spec.ready.timeout);
+    }
+
     // one combined task per phase keeps plugin inits sequential while the phase's other tasks run concurrently
     public register(): void {
         if (this.registered) return;
@@ -61,10 +66,9 @@ export class PluginLifecycle {
         return rebuildAttachment(this.host, old, Plugin);
     }
 
-    public async replace(replacement: Replacement): Promise<void> {
+    public async replace(replacement: Replacement, hmr: HmrManager): Promise<void> {
         const { old, next } = replacement;
-        const hmr = this.host[HostHmr];
-        hmr?.unregister(old.instance);
+        hmr.unregister(old.instance);
         replaceAttachment(this.host, replacement);
         await this.dispose(old).catch((caught: unknown) =>
             this.logger.warn(`${paint.sky.bold(old.key)} dispose failed before its reload`, caught)
@@ -72,7 +76,7 @@ export class PluginLifecycle {
         this.completedInits.delete(old);
         await this.runInits([next]);
         await this.ready(next);
-        hmr?.register(next.instance);
+        hmr.register(next.instance);
     }
 
     public async rollback(): Promise<void> {

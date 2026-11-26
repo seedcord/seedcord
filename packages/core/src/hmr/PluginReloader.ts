@@ -10,6 +10,7 @@ import { importFile, importSaved } from './importFile';
 import type { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
 import type { PluginCtor } from '#src/plugin/Plugin';
 import type { Attachment, Replacement } from '#src/plugin/PluginRegistry';
+import type { HmrManager } from './HmrManager';
 import type { BotImport } from '@seedcord/types/internal';
 
 export type ReloadablePlugins = Pick<PluginLifecycle, 'attachments' | 'rebuild' | 'replace'>;
@@ -22,7 +23,10 @@ export class PluginReloader {
     private readonly logger = new Logger('Plugins', { channel: 'hmr' });
     private readonly sources = new Map<string, BuiltFrom>();
 
-    constructor(private readonly plugins: ReloadablePlugins) {}
+    constructor(
+        private readonly plugins: ReloadablePlugins,
+        private readonly hmr: HmrManager
+    ) {}
 
     // run this before you save any of these files because it matches attachments by class and a saved file exports a new one
     public async learn(imports: readonly BotImport[]): Promise<void> {
@@ -55,10 +59,15 @@ export class PluginReloader {
         }
 
         const notReplaced = new Map(this.plugins.attachments.map((attachment) => [attachment.key, attachment]));
-        for (const [file, builtFrom] of sources) {
-            if (!(await this.reloadFile(file, builtFrom, notReplaced))) return false;
+        const resume = await this.hmr.pauseGates();
+        try {
+            for (const [file, builtFrom] of sources) {
+                if (!(await this.reloadFile(file, builtFrom, notReplaced))) return false;
+            }
+            return true;
+        } finally {
+            resume();
         }
-        return true;
     }
 
     private async reloadFile(
@@ -116,7 +125,7 @@ export class PluginReloader {
 
     private async replace(replacement: Replacement): Promise<boolean> {
         try {
-            await this.plugins.replace(replacement);
+            await this.plugins.replace(replacement, this.hmr);
             return true;
         } catch (error) {
             this.logger.error(`Failed to reload ${paint.sky.bold(replacement.next.key)}`, error);

@@ -86,6 +86,7 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
     }
 
     #registerHmrAwareModules(hmr: HmrManager): void {
+        this.bot.pauseDuringReloads(hmr);
         this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
             hmr.register(this.bot);
             hmr.register(this.#subscribers);

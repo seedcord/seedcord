@@ -5,10 +5,8 @@ import type { Logger } from '@seedcord/logger';
 
 export class InFlight {
     private readonly running = new Set<Promise<unknown>>();
-    private readonly opening = Promise.withResolvers<boolean>();
-    private state: 'held' | 'open' | 'closed' = 'held';
-    // what keepRequestOpenFor reaches from inside admitted work
-    private readonly context = { waitUntil: (work: Promise<unknown>): void => this.track(work) };
+    private opening = Promise.withResolvers<boolean>();
+    private state: 'held' | 'open' | 'paused' | 'closed' = 'held';
 
     constructor(
         private readonly logger: Logger,
@@ -32,11 +30,21 @@ export class InFlight {
 
     public admit<Result>(work: () => Promise<Result>): Promise<Result | undefined> {
         if (this.state === 'closed') return Promise.resolve(undefined);
-        const run = (): Promise<Result> => requestScope.run(this.context, work);
-        const admitted =
-            this.state === 'open' ? run() : this.opening.promise.then((opened) => (opened ? run() : undefined));
-        this.track(admitted);
-        return admitted;
+        if (this.state === 'open') return this.run(work);
+        return this.opening.promise.then((opened) => (opened ? this.run(work) : undefined));
+    }
+
+    // a plugin reload calls this so no request or event reaches a plugin that hasn't started yet
+    public async pause(timeoutMs: number): Promise<() => void> {
+        if (this.state !== 'open') return () => undefined;
+        this.state = 'paused';
+        this.opening = Promise.withResolvers();
+        await settleWithin(this.settleAll(), timeoutMs);
+        return () => {
+            if (this.state !== 'paused') return;
+            this.state = 'open';
+            this.opening.resolve(true);
+        };
     }
 
     public track(work: Promise<unknown>): void {
@@ -53,6 +61,22 @@ export class InFlight {
         if (this.running.size > 0) {
             this.logger.warn(`${this.label}: ${String(this.running.size)} still running when the drain window closed`);
         }
+    }
+
+    private run<Result>(work: () => Promise<Result>): Promise<Result> {
+        // also pass the work to the edge request's waitUntil, or cloudflare stops it after the response
+        const outer = requestScope.getStore();
+        const running = requestScope.run(
+            {
+                waitUntil: (kept) => {
+                    this.track(kept);
+                    outer?.waitUntil(kept);
+                }
+            },
+            work
+        );
+        this.track(running);
+        return running;
     }
 
     // settling work can track more work

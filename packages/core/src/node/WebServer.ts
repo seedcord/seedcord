@@ -6,15 +6,16 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { asError, isPortInUse } from '@seedcord/utils/internal';
 
+import { InFlight } from '#src/lifecycle/InFlight';
 import { ShutdownPhase } from '#src/lifecycle/phases';
 import { requestPath } from '#src/requestPath';
-import { DEFAULT_SERVER_PORT, INTERNAL_SERVER_ERROR } from '#src/webConstants';
+import { DEFAULT_SERVER_PORT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE } from '#src/webConstants';
 
 import { answerHealth } from './answerHealth';
 import { DRAIN_TASK_TIMEOUT_MS, DRAIN_WINDOW_MS } from './Lifecycle/drainWindow';
-import { InFlight } from './Lifecycle/InFlight';
 import { toWebRequest, writeWebResponse } from './webBridge';
 
+import type { HmrManager } from '#hmr/HmrManager';
 import type { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import type { PluginRegistry } from '#src/plugin/PluginRegistry';
 import type { ShutdownTasks } from './Lifecycle/CoordinatedShutdown';
@@ -27,7 +28,6 @@ const DEFAULT_HEALTH_PATH = '/health';
 const DEFAULT_BODY_LIMIT = 1_048_576;
 const NOT_FOUND = 404;
 const PAYLOAD_TOO_LARGE = 413;
-const SERVICE_UNAVAILABLE = 503;
 const STOP_TIMEOUT_MS = 5000;
 
 export interface WebServerOptions {
@@ -55,6 +55,10 @@ export class WebServer {
             () => this.inFlight.drain(DRAIN_WINDOW_MS),
             DRAIN_TASK_TIMEOUT_MS
         );
+    }
+
+    public pauseDuringReloads(hmr: HmrManager): void {
+        hmr.pauseDuringReloads(this.inFlight);
     }
 
     private get config(): ServerConfig {
