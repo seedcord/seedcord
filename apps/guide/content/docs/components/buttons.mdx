@@ -159,7 +159,7 @@ export class CloseTicket extends ButtonHandler<
 }
 ```
 
-`NotYourTicket` is a [`Notice`](ref:core/Notice), so seedcord [sends its refusal](/replying/throwing) to the person who clicked and leaves the message as it was.
+`NotYourTicket` is a [`Notice`](ref:core/Notice), so seedcord [sends its refusal](/replying/throwing) to the person who clicked and doesn't change the message.
 
 <Callout type="transport">
     [`this.user`](ref:gateway/RepliableHandler.user) is a discord.js

@@ -1,16 +1,16 @@
 # @seedcord/mock-http
 
-## 0.0.20-next.0
+## 0.0.20
 
 ### 🩹 Patch
 
 #### 📦 Seedcord packages
 
-- `@seedcord/http` 0.14.0 → 0.14.1-next.0
-- `@seedcord/plugin-i18n` 0.1.0 → 0.1.1-next.0
-- `@seedcord/plugin-kysely` 0.9.0 → 0.9.1-next.0
-- `@seedcord/plugin-linked-roles` 0.1.0 → 0.1.1-next.0
-- `@seedcord/plugin-oauth` 0.2.0 → 0.2.1-next.0
+- `@seedcord/plugin-linked-roles` 0.1.0 → 0.2.0
+- `@seedcord/http` 0.14.0 → 0.14.1
+- `@seedcord/plugin-i18n` 0.1.0 → 0.1.1
+- `@seedcord/plugin-kysely` 0.9.0 → 0.9.1
+- `@seedcord/plugin-oauth` 0.2.0 → 0.2.1
 
 ## 0.0.19
 

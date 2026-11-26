@@ -1,13 +1,17 @@
 # @seedcord/plugin-linked-roles
 
-## 0.1.1-next.0
+## 0.2.0
+
+### ✨ Minor
+
+- A `connected` result from `onResult` or `push()` now has a `connection` field with the values that the plugin sent to Discord, typed by your `records`. `ConnectionResult` and `LinkedRolesResult` now take your records as a type argument, like `LinkedRolesResult<typeof records>`. ([`f97a2e9`](https://github.com/seedcord/seedcord/commit/f97a2e9d05c3ad8d0e34f05509a363e74005609c))
 
 ### 🩹 Patch
 
 #### 📦 Seedcord packages
 
-- `@seedcord/core` 0.14.0 → 0.14.1-next.0
-- `@seedcord/plugin-oauth` 0.2.0 → 0.2.1-next.0
+- `@seedcord/core` 0.14.0 → 0.14.1
+- `@seedcord/plugin-oauth` 0.2.0 → 0.2.1
 
 ## 0.1.0
 

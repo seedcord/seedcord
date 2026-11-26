@@ -34,8 +34,11 @@ tokens:
   # an imperative "leave it out" is the reader acting, and "work out" is a different verb
   - '(?:leaves|leaving)\s+(?:(?!(?:work|figure)\b)\S+\s+){0,3}?(?:out|off)'
   - 'left\s+out'
+  # "in a way that someone notices" carries the mechanism. "in a way X skips" doesn't
+  - 'in a way (?!that\b)\w+'
+  - 'skips how'
   # a count before "leaves" makes it the plural of leaf
-  - '(?<!\b(?:no|zero|one|two|three|four|five|six|seven|eight|nine|ten|\d+) )(?:leaves|leaving)\s+(?:\S+\s+){0,4}?(?:empty|open|unchanged|untouched|intact|unset|blank|undefined|alone|behind|stale|dangling)\b'
+  - '(?<!\b(?:no|zero|one|two|three|four|five|six|seven|eight|nine|ten|\d+) )(?:leaves|leaving)\s+(?:\S+\s+){0,4}?(?:empty|open|unchanged|untouched|intact|unset|blank|undefined|alone|behind|stale|dangling|the same|as (?:it|they) (?:was|were|is|are))\b'
   # the plural noun is legal, and a determiner after it marks the verb
   - 'names\s+(?:the|a|an|that|this|these|those|your|its|their|our|every|each|both|it|them|which|what)'
   # left out on purpose: "only names" and "names you" are usually the noun

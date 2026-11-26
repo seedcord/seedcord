@@ -9,7 +9,7 @@ describe('workerdPath', () => {
         expect(workerdPath(String.raw`D:\bot\src\handlers`)).toBe('/D:/bot/src/handlers');
     });
 
-    it('leaves a POSIX path as it is', () => {
+    it("doesn't change a POSIX path", () => {
         expect(workerdPath('/home/bot/src')).toBe('/home/bot/src');
     });
 });

@@ -1,6 +1,6 @@
 # @seedcord/tsconfig
 
-## 3.0.1-next.0
+## 3.0.1
 
 ### 🩹 Patch
 

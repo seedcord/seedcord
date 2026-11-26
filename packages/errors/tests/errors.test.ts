@@ -37,7 +37,7 @@ describe('Seedcord error constructors', () => {
 describe('a reason that ends in a code frame', () => {
     const FRAME = 'YAMLException: bad indent\n\n 1 | reply: [broken\n-----^';
 
-    it('starts the fix on its own line and leaves the frame as it was', () => {
+    it("starts the fix on its own line and doesn't change the frame", () => {
         const error = new SeedcordError(SeedcordErrorCode.CoreVitePluginThrew, [
             'yaml',
             { hook: 'transform', loading: { kind: 'file', path: '/bot/src/ping.yaml' } },

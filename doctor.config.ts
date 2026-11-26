@@ -70,7 +70,7 @@ export default defineConfig({
                 rules: ['react-doctor/nextjs-no-img-element']
             },
             {
-                // the docs builder runs this server-side, with no security exposure
+                // the crypto warning doesn't apply because this formats public type signatures for the docs pages
                 files: ['**/lib/docs/builders/buildSignatureDetails.ts'],
                 rules: ['react-doctor/insecure-crypto-risk']
             },

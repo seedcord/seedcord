@@ -141,7 +141,7 @@ describe('the twoslash transformer', () => {
         expect(second).not.toContain("Type 'string' is not assignable to type 'number'.");
     });
 
-    it('leaves an unflagged fence as it is', async () => {
+    it("doesn't change an unflagged fence", async () => {
         const { html } = await twoslashBlock('const count = 12;', 'ts', 'off');
 
         expect(html).not.toContain('twoslash');

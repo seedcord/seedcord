@@ -1,9 +1,9 @@
 import { ChangelogFile } from '#src/release/ChangelogFile';
 import { ChangelogSections } from '#src/release/ChangelogSections';
 
-// the prune matches entries by their regrouped text
+// regroups last so it merges the bumps that the prune copies from each prerelease
 export function tidyChangelog(text: string): string {
-    const regrouped = new ChangelogSections(text).regrouped().contents;
+    const pruned = new ChangelogFile(text).withoutSupersededPrereleases().contents;
 
-    return new ChangelogFile(regrouped).withoutSupersededPrereleases().contents;
+    return new ChangelogSections(pruned).regrouped().contents;
 }

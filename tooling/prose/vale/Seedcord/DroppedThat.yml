@@ -1,6 +1,6 @@
 extends: existence
 link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
-message: "'%s' leaves out the 'that' before who does it. Put 'that' back, or lead with the actor."
+message: "'%s' is missing the 'that' before who does it. Lead with the actor and hand it the verb. Put 'that' back only if the sentence doesn't already have a 'that' clause."
 level: suggestion
 ignorecase: true
 tokens:

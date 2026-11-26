@@ -7,6 +7,7 @@
     "prHourlyLimit": 2,
     "rangeStrategy": "bump",
     "minimumReleaseAge": "3 days",
+    "rebaseWhen": "conflicted",
     "packageRules": [
         {
             "matchManagers": ["npm"],
@@ -19,6 +20,10 @@
             "groupName": "all non major npm updates"
         },
         {
+            "extends": ["packages:vitePlus"],
+            "groupName": "Vite+ packages"
+        },
+        {
             "matchManagers": ["github-actions"],
             "groupName": "github actions",
             "semanticCommitType": "ci",
@@ -26,6 +31,10 @@
         },
         {
             "matchDepTypes": ["engines"],
+            "enabled": false
+        },
+        {
+            "matchPackageNames": ["fumadocs-core", "fumadocs-mdx"],
             "enabled": false
         }
     ]

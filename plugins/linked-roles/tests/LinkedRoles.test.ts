@@ -350,7 +350,7 @@ describe('LinkedRoles routes', () => {
     });
 
     it('hands every result to `onResult` and answers with what it returns', async () => {
-        const results: LinkedRolesResult[] = [];
+        const results: LinkedRolesResult<LinkedRoleRecords>[] = [];
         const onResult: Options['onResult'] = (result) => {
             results.push(result);
             return Response.redirect('https://bot.test/linked');
@@ -365,7 +365,7 @@ describe('LinkedRoles routes', () => {
         ];
 
         expect(results).toEqual([
-            { kind: 'connected', user: USER },
+            { kind: 'connected', user: USER, connection: { platformUsername: 'dhruv', metadata: { level: 12 } } },
             { kind: 'refused', user: USER, message: 'Not yet.' },
             { kind: 'denied', error: 'access_denied' }
         ]);
@@ -436,7 +436,7 @@ describe('LinkedRoles with `keepTokens`', () => {
 
         const result = await bot.linkedRoles.push(USER.id);
 
-        expect(result).toEqual({ kind: 'connected', user: USER });
+        expect(result).toEqual({ kind: 'connected', user: USER, connection: { metadata: { level: 30 } } });
         expect(seen).toEqual([USER]);
         const [write] = sent(bot.requests, 'PUT', CONNECTION_ROUTE);
         expect(JSON.parse(write?.body ?? '')).toEqual({ metadata: { level: '30' } });

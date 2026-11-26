@@ -1,14 +1,14 @@
 # @seedcord/plugin-tasks
 
-## 0.1.1-next.0
+## 0.1.1
 
 ### 🩹 Patch
 
 #### 📦 Seedcord packages
 
-- `@seedcord/core` 0.14.0 → 0.14.1-next.0
-- `@seedcord/gateway` 0.11.0 → 0.11.1-next.0
-- `@seedcord/http` 0.14.0 → 0.14.1-next.0
+- `@seedcord/core` 0.14.0 → 0.14.1
+- `@seedcord/gateway` 0.11.0 → 0.11.1
+- `@seedcord/http` 0.14.0 → 0.14.1
 
 ## 0.1.0
 

@@ -132,7 +132,7 @@ function onlyUpdatesWithSavedTokens(): void {
     );
     // seedcord codegen types Core's member this way
     const keeping: AttachedPlugin<typeof kept.linkedRoles> = kept.linkedRoles;
-    expectTypeOf(keeping.push('1')).resolves.toEqualTypeOf<ConnectionResult>();
+    expectTypeOf(keeping.push('1')).resolves.toEqualTypeOf<ConnectionResult<typeof records>>();
     expectTypeOf(keeping.clear('1')).resolves.toBeVoid();
 
     const { linkedRoles } = gateway.attach('linkedRoles', LinkedRoles.with({ records, values: () => ({ metadata }) }));
@@ -142,7 +142,19 @@ function onlyUpdatesWithSavedTokens(): void {
     void linkedRoles.clear('1');
 }
 
+function typesWhatWasWritten(): void {
+    LinkedRoles.with({
+        records,
+        values: () => ({ metadata }),
+        onResult: (result) => {
+            if (result.kind === 'connected') expectTypeOf(result.connection.metadata.is_maintainer).toBeBoolean();
+            return new Response();
+        }
+    });
+}
+
 void onlyUpdatesWithSavedTokens;
+void typesWhatWasWritten;
 void typesWhatValuesGets;
 void typesWhatValuesReturns;
 void rejectsWhatDiscordRejects;
