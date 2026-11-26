@@ -1,7 +1,8 @@
 import { isNotNil } from 'es-toolkit';
-import { parseSync } from 'vite';
+import { parseSync, Visitor } from 'vite';
 
 import type { BotImport } from '@seedcord/types/internal';
+import type { ESTree } from 'vite';
 
 type ModuleRecord = ReturnType<typeof parseSync>['module'];
 type Entry =
@@ -14,13 +15,20 @@ function exportName({ importName }: Entry): string | undefined {
     return importName.kind === 'Name' && importName.name !== null ? importName.name : undefined;
 }
 
+// a save keeps the restart for import(name) or a template with ${} because they can load any file
+function fixedPath(source: ESTree.Expression): string | undefined {
+    if (source.type === 'Literal') return typeof source.value === 'string' ? source.value : undefined;
+    if (source.type !== 'TemplateLiteral' || source.expressions.length > 0) return undefined;
+    return source.quasis[0]?.value.cooked ?? undefined;
+}
+
 export function mergeNames(first: BotImport['names'], second: BotImport['names']): BotImport['names'] {
     return first === 'all' || second === 'all' ? 'all' : [...first, ...second];
 }
 
 // skips type-only imports. typescript removes them before the code runs
 export function importedNames(code: string, file: string): Map<string, BotImport['names']> {
-    const { module } = parseSync(file, code);
+    const { module, program } = parseSync(file, code);
     const names = new Map<string, BotImport['names']>();
     const read = (source: string, entries: readonly Entry[]): void => {
         const values = entries.filter((entry) => !entry.isType).map(exportName);
@@ -31,5 +39,12 @@ export function importedNames(code: string, file: string): Map<string, BotImport
     for (const { entries } of module.staticExports) {
         for (const entry of entries) if (entry.moduleRequest) read(entry.moduleRequest.value, [entry]);
     }
+    // 'all' because the parser can't tell which exports the bot reads from what import() returns
+    new Visitor({
+        ImportExpression: ({ source }) => {
+            const path = fixedPath(source);
+            if (path !== undefined) names.set(path, 'all');
+        }
+    }).visit(program);
     return names;
 }

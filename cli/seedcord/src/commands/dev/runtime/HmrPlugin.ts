@@ -199,9 +199,6 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         const type = deleteIfGone(ctx.type, file);
         const modules =
             type === 'delete' ? this.code.forget(ctx.modules) : await this.code.changed(environment, ctx.modules);
-        // the bot would run the same code as before
-        if (ctx.modules.length > 0 && modules.length === 0) return [];
-
         const chain = affectedFiles(ctx.file, modules).map((viteFile) => ({ viteFile, file: resolve(viteFile) }));
         // importing the bot file again would build a second bot
         const reloadable = chain.filter((link) => !this.restartFiles.isBotFile(link.file));
@@ -216,6 +213,8 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             this.reportRestartRequired(file);
             return [];
         }
+        // the bot would run the same code as before
+        if (ctx.modules.length > 0 && modules.length === 0) return [];
 
         const { moduleGraph } = environment;
         for (const { viteFile } of reloadable) {

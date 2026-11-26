@@ -11,10 +11,10 @@ import { devContextFor } from './devConfigFor';
 import { saveUntil } from './saveUntil';
 
 // a plain ServerHost runs the real reload path without a Discord bot
-const BOT = `import { REST } from '@discordjs/rest';
+const botFile = (loadsWeb: string): string => `import { REST } from '@discordjs/rest';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 
-import { Web } from './Web';
+${loadsWeb}
 
 class Bot extends ServerHost {
     config = { server: { port: false } };
@@ -56,26 +56,33 @@ interface BotModule {
 }
 
 describe('dev runtime on a node bot', () => {
-    it("runs a plugin's new code after you save its file", async () => {
-        await using project = await mkdtempDisposable(join(tmpdir(), 'seedcord-dev-reload-'));
-        const src = join(project.path, 'src');
-        await mkdir(src, { recursive: true });
-        await linkPackages(project.path, ['@seedcord', '@discordjs', 'envapt']);
-        await writeFile(join(project.path, 'package.json'), JSON.stringify({ name: 'bot', type: 'module' }));
-        await writeFile(join(project.path, 'seedcord.config.ts'), 'export default {};\n');
-        await writeFile(join(src, 'bot.ts'), BOT);
-        await writeFile(join(src, 'Web.ts'), webPlugin('before'));
+    it.each([
+        ['an import', "import { Web } from './Web';"],
+        ['await import()', "const { Web } = await import('./Web');"]
+    ])(
+        "runs a plugin's new code after you save its file when the bot file loads it with %s",
+        async (_how, loadsWeb) => {
+            await using project = await mkdtempDisposable(join(tmpdir(), 'seedcord-dev-reload-'));
+            const src = join(project.path, 'src');
+            await mkdir(src, { recursive: true });
+            await linkPackages(project.path, ['@seedcord', '@discordjs', 'envapt']);
+            await writeFile(join(project.path, 'package.json'), JSON.stringify({ name: 'bot', type: 'module' }));
+            await writeFile(join(project.path, 'seedcord.config.ts'), 'export default {};\n');
+            await writeFile(join(src, 'bot.ts'), botFile(loadsWeb));
+            await writeFile(join(src, 'Web.ts'), webPlugin('before'));
 
-        const runtime = new ServerDevRuntime();
-        await using _runtime = { [Symbol.asyncDispose]: () => runtime.stop() };
-        await runtime.start(devContextFor(project.path, 'bot.ts'));
-        const { module } = await runtime.loadEntry();
-        // justified: BOT above exports a ServerHost, which disposes itself, with a Web plugin at web
-        const { bot: started, answered } = module as BotModule;
-        await using bot = started;
-        expect(bot.web.version).toBe('before');
-        await answered;
+            const runtime = new ServerDevRuntime();
+            await using _runtime = { [Symbol.asyncDispose]: () => runtime.stop() };
+            await runtime.start(devContextFor(project.path, 'bot.ts'));
+            const { module } = await runtime.loadEntry();
+            // justified: botFile() above exports a ServerHost, which disposes itself, with a Web plugin at web
+            const { bot: started, answered } = module as BotModule;
+            await using bot = started;
+            expect(bot.web.version).toBe('before');
+            await answered;
 
-        await saveUntil(join(src, 'Web.ts'), webPlugin('after'), () => expect(bot.web.version).toBe('after'));
-    }, 60_000);
+            await saveUntil(join(src, 'Web.ts'), webPlugin('after'), () => expect(bot.web.version).toBe('after'));
+        },
+        60_000
+    );
 });

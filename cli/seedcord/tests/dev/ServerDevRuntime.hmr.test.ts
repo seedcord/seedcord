@@ -307,37 +307,55 @@ import.meta.hot?.send('seedcord:read-bot-imports', {});
         await saveUntilRestartRequired(join(src, 'index.ts'), `${ASKING_BOT}export const saved = true;\n`, events);
     }, 60_000);
 
-    it('asks for a restart when a file that an hmr.restart match imports is saved', async () => {
-        const { src, runtime, events } = await startedProject(
-            {
-                'index.ts': 'export const ready = true;\n',
-                'schema/user.ts': "export { field } from '../field';\n",
-                'field.ts': "export const field = 'before';\n"
-            },
-            ['schema/**']
-        );
-        await runtime.importModule(join(src, 'schema', 'user.ts'));
+    describe('with hmr.restart', () => {
+        it('asks for a restart when a file that an hmr.restart match imports is saved', async () => {
+            const { src, runtime, events } = await startedProject(
+                {
+                    'index.ts': 'export const ready = true;\n',
+                    'schema/user.ts': "export { field } from '../field';\n",
+                    'field.ts': "export const field = 'before';\n"
+                },
+                ['schema/**']
+            );
+            await runtime.importModule(join(src, 'schema', 'user.ts'));
 
-        await saveUntilRestartRequired(join(src, 'field.ts'), "export const field = 'after';\n", events);
-    }, 60_000);
+            await saveUntilRestartRequired(join(src, 'field.ts'), "export const field = 'after';\n", events);
+        }, 60_000);
 
-    it('asks for a restart when a file that no module imports matches hmr.restart', async () => {
-        const { src, events } = await startedProject(
-            { 'index.ts': 'export const ready = true;\n', 'schema/user.prisma': 'model User {}\n' },
-            ['schema/**']
-        );
+        it('asks for a restart when a file that no module imports matches hmr.restart', async () => {
+            const { src, events } = await startedProject(
+                { 'index.ts': 'export const ready = true;\n', 'schema/user.prisma': 'model User {}\n' },
+                ['schema/**']
+            );
 
-        await saveUntilRestartRequired(join(src, 'schema', 'user.prisma'), 'model User { id Int }\n', events);
-    }, 60_000);
+            await saveUntilRestartRequired(join(src, 'schema', 'user.prisma'), 'model User { id Int }\n', events);
+        }, 60_000);
 
-    it('asks for a restart when an hmr.restart match outside root is saved', async () => {
-        const { src, events } = await startedProject({ 'index.ts': 'export const ready = true;\n' }, ['../prisma/**']);
-        const prisma = join(dirname(src), 'prisma');
-        await mkdir(prisma, { recursive: true });
-        await writeFile(join(prisma, 'schema.prisma'), 'model User {}\n');
+        it('asks for a restart when an hmr.restart match that the bot imports with ?url is saved', async () => {
+            const { src, runtime, events } = await startedProject(
+                {
+                    'index.ts': 'export const ready = true;\n',
+                    'schema/user.ts': "import stylesheet from './page.css?url';\n\nexport const page = stylesheet;\n",
+                    'schema/page.css': 'body { color: red; }\n'
+                },
+                ['schema/page.css']
+            );
+            await runtime.importModule(join(src, 'schema', 'user.ts'));
 
-        await saveUntilRestartRequired(join(prisma, 'schema.prisma'), 'model User { id Int }\n', events);
-    }, 60_000);
+            await saveUntilRestartRequired(join(src, 'schema', 'page.css'), 'body { color: blue; }\n', events);
+        }, 60_000);
+
+        it('asks for a restart when an hmr.restart match outside root is saved', async () => {
+            const { src, events } = await startedProject({ 'index.ts': 'export const ready = true;\n' }, [
+                '../prisma/**'
+            ]);
+            const prisma = join(dirname(src), 'prisma');
+            await mkdir(prisma, { recursive: true });
+            await writeFile(join(prisma, 'schema.prisma'), 'model User {}\n');
+
+            await saveUntilRestartRequired(join(prisma, 'schema.prisma'), 'model User { id Int }\n', events);
+        }, 60_000);
+    });
 
     it.each([
         ['seedcord.config.ts', 'export default { dev: { idleAnimation: false } };\n'],

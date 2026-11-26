@@ -293,6 +293,24 @@ describe('reloading a plugin under seedcord dev', () => {
         expect(restartsAsked(cli)).toEqual([]);
     });
 
+    it('still reloads a plugin when another file the bot file imports throws', async () => {
+        const cli = fakeCli();
+        const file = write('Web.ts', webPlugin('before'));
+        const broken = write('broken.ts', "throw new Error('typo');\n");
+        await using host = await startedBot(file, cli, {
+            imports: [
+                { file: broken, names: ['greeting'] },
+                { file, names: ['Web'] }
+            ]
+        });
+
+        write('Web.ts', webPlugin('after'));
+        cli.saves(file, [file]);
+
+        await vi.waitFor(() => expect(Reflect.get(host, 'web')).toMatchObject({ version: 'after' }));
+        expect(restartsAsked(cli)).toEqual([]);
+    });
+
     it("asks for a restart when the saved file doesn't export an attached plugin", async () => {
         const cli = fakeCli();
         const settings = write('settings.ts', "export const greeting = 'hello';\n");

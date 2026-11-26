@@ -12,6 +12,9 @@ describe('importedNames', () => {
             "export { greeting } from './greeting';",
             "import { farewell } from './greeting';",
             "export * from './more';",
+            "const { Tasks } = await import('./Tasks');",
+            'const { Admin } = await import(`./Admin`);',
+            'const picked = await import(`./plugins/${name}`);',
             'export const local = 1;'
         ].join('\n');
 
@@ -21,7 +24,9 @@ describe('importedNames', () => {
             './settings': 'all',
             './side-effect': [],
             './greeting': ['farewell', 'greeting'],
-            './more': 'all'
+            './more': 'all',
+            './Tasks': 'all',
+            './Admin': 'all'
         });
     });
 });

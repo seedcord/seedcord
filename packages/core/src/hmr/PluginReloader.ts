@@ -34,7 +34,12 @@ export class PluginReloader {
         const { attachments } = this.plugins;
 
         for (const { file, names } of imports) {
-            const exported = await importFile(file);
+            const exported = await importFile(file).catch((error: unknown) => {
+                // saving this file asks for a restart since it isn't in sources
+                this.logger.warn(`Couldn't read the exports of ${paint.mute(formatFilePath(file))}`, error);
+                return undefined;
+            });
+            if (!exported) continue;
             const builtFrom: BuiltFrom = new Map();
             for (const [name, value] of Object.entries(exported)) {
                 const built = attachments.filter(({ instance }) => instance.constructor === value);
