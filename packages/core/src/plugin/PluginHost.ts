@@ -3,6 +3,7 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS, LoggerChannelRegistry } from '@seedcord/logger';
 import { HOST_CONTRACT, HostContract, HostPlugins } from '@seedcord/types/internal';
 
+import { connectDevChannel, HmrManager } from '#hmr/HmrManager';
 import { Kv } from '#src/kv/Kv';
 import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { KvRateLimiter } from '#src/rateLimiter/KvRateLimiter';
@@ -14,7 +15,6 @@ import { PluginRegistry } from './PluginRegistry';
 import { constructAttached, declaredScopeOf, resolvedLifecycleSpecOf } from './pluginSlots';
 import { splitPluginKey } from './splitPluginKey';
 
-import type { HmrManager } from '#hmr/HmrManager';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DeclaredScope, Runtime, Transport } from './options';
 import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from './Plugin';
@@ -25,6 +25,7 @@ import type { Config, IRateLimiter } from '@seedcord/types';
 const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 
 const sealSlot = Symbol('seedcord:host:seal');
+const rebuildSlot = Symbol('seedcord:host:rebuild');
 const replaceSlot = Symbol('seedcord:host:replace');
 
 export const HostHmr = Symbol('seedcord:host:hmr');
@@ -48,15 +49,13 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     readonly #scope: { readonly transport: BotT; readonly runtime: BotRt };
 
     /** @internal */
+    public readonly [HostHmr]: HmrManager | undefined = HmrManager.listenTo(connectDevChannel());
+
+    /** @internal */
     public readonly [HostPlugins] = new PluginRegistry();
 
     /** @internal */
     public readonly [HostContract] = HOST_CONTRACT;
-
-    // each transport sets this under seedcord dev. a manager created in this constructor would log its first line
-    // before the edge bot forwards its logs to the CLI, and the CLI would never get that line
-    /** @internal */
-    public [HostHmr]?: HmrManager | undefined;
 
     constructor(transport: BotT, runtime: BotRt, driver: Config['kv']) {
         this.#scope = { transport, runtime };
@@ -83,7 +82,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
      * `start()`. An edge bot starts on its first request.
      *
      * Attaching a plugin whose `transport` or `runtime` differs from this host fails to compile.
-     * Take `CoreBase` as your constructor's first parameter. `attach()` passes it so make sure you don't.
+     * Take `CoreBase` as your constructor's first parameter. `attach()` passes it for you.
      * A narrower one fails to compile here.
      *
      * @param key - Also the channel that the plugin logs on, dots included.
@@ -137,25 +136,29 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     }
 
     /** @internal */
-    public [replaceSlot](old: Attachment, Plugin: PluginCtor): Attachment {
+    public [rebuildSlot](old: Attachment, Plugin: PluginCtor): Attachment {
         const next = this.#construct(old.key, Plugin, old.args);
-        this[HostPlugins].replace(old, next);
-        this.#place(next);
+        this[HostPlugins].assertClaimable(next, old);
         return next;
     }
 
+    /** @internal */
+    public [replaceSlot](old: Attachment, next: Attachment): void {
+        this[HostPlugins].replace(old, next);
+        this.#place(next);
+    }
+
     #construct(key: string, Plugin: PluginCtor, args: readonly unknown[]): Attachment {
-        if (!extendsThisCorePlugin(Plugin)) {
-            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginFromOtherCore, [Plugin.name]);
-        }
+        const { name } = Plugin;
+        if (!extendsThisCorePlugin(Plugin))
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginFromOtherCore, [name]);
 
         const kv = new Kv(this.kv.driver, 'plugins', key);
         const instance = constructAttached(key, kv, () => new Plugin(this, ...args));
-        this.#assertScope(Plugin.name, declaredScopeOf(instance));
+        this.#assertScope(name, declaredScopeOf(instance));
         return { key, instance, spec: resolvedLifecycleSpecOf(instance), args };
     }
 
-    // a key with a dot reads back as core[head][leaf] since grouped attach exists
     #place({ key, instance }: Attachment): void {
         const { head, leaf } = splitPluginKey(key);
         if (leaf === undefined) Object.assign(this, { [key]: instance });
@@ -207,11 +210,18 @@ export function sealAttachments(host: Pick<PluginHost<Transport, Runtime>, typeo
     host[sealSlot]();
 }
 
-// builds Plugin with the arguments the old attachment got, and puts it where the old one was
-export function replaceAttachment(
-    host: Pick<PluginHost<Transport, Runtime>, typeof replaceSlot>,
+export function rebuildAttachment(
+    host: Pick<PluginHost<Transport, Runtime>, typeof rebuildSlot>,
     old: Attachment,
     Plugin: PluginCtor
 ): Attachment {
-    return host[replaceSlot](old, Plugin);
+    return host[rebuildSlot](old, Plugin);
+}
+
+export function replaceAttachment(
+    host: Pick<PluginHost<Transport, Runtime>, typeof replaceSlot>,
+    old: Attachment,
+    next: Attachment
+): void {
+    host[replaceSlot](old, next);
 }

@@ -13,6 +13,7 @@ import type { CliChannel } from './devChannel';
 import type { ReloadablePlugins } from './PluginReloader';
 import type { HmrAware } from '@seedcord/types';
 import type { HmrSave, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
+import type { Except } from 'type-fest';
 
 // the only raw `import.meta.hot` read in the framework
 export function connectDevChannel(): CliChannel | undefined {
@@ -27,12 +28,11 @@ export class HmrManager {
     private plugins?: PluginReloader;
 
     private constructor(private readonly channel: CliChannel) {
-        this.logger.debug('Enabled');
         channel.on('seedcord:hmr', (payload) => void this.saves.run('hmr', () => this.handleUpdate(payload)));
         channel.on('vite:beforeFullReload', () => channel.send('seedcord:full-reload', {}));
     }
 
-    // only seedcord dev opens a channel, and it only reloads files in the development and test modes
+    // only seedcord dev opens a channel. even then, files reload only in development and test mode
     public static listenTo(channel: CliChannel | undefined): HmrManager | undefined {
         if (!channel || !(Envapter.isDevelopment || Envapter.isTest)) return undefined;
         return new HmrManager(channel);
@@ -46,21 +46,25 @@ export class HmrManager {
         this.listeners.delete(listener);
     }
 
-    // until the bot asks for these files, the CLI shows its restart card when you save a file that the bot file imports
-    public reloadPlugins(plugins: Pick<ReloadablePlugins, 'attachments' | 'replace'>): void {
+    public reloadPlugins(plugins: Except<ReloadablePlugins, 'listeners'>): void {
         // an edge bot runs its startup again when the first run fails
         if (this.plugins) return;
 
+        // logged here because the edge bot builds this manager before it forwards logs to the CLI
+        this.logger.debug('Enabled');
         const reloader = new PluginReloader({ ...plugins, listeners: this });
         this.plugins = reloader;
-        // on the same queue as the updates because the reloader has to read these files before you save one of them
-        this.channel.on('seedcord:bot-imports', ({ files }) => void this.saves.run('hmr', () => reloader.learn(files)));
+        // queued with the updates because learn() has to finish before the next update runs
+        this.channel.on(
+            'seedcord:bot-imports',
+            ({ imports }) => void this.saves.run('hmr', () => reloader.learn(imports))
+        );
         this.channel.send('seedcord:read-bot-imports', {});
     }
 
     private async handleUpdate(save: HmrSave): Promise<void> {
-        // the plugins go first. if the listeners ran first, a replaced plugin's old instance would get this update too
-        if (save.botImports && !(await this.plugins?.reload(save.botImports))) {
+        // plugins go first so a replaced plugin's old instance doesn't get this update
+        if (save.botImports && !(await this.plugins?.reloadedWithoutRestart(save.botImports))) {
             this.channel.send('seedcord:restart-required', { file: save.file });
         }
 

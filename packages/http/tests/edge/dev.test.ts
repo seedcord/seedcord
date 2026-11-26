@@ -376,18 +376,6 @@ describe('the edge Seedcord under seedcord dev', () => {
         expect(lines().filter((line) => line.includes('first'))).toHaveLength(2);
     });
 
-    it('sends the logs its own constructor wrote', async () => {
-        connectCli();
-        await liveEnv();
-        const lines = consoleLines();
-
-        void new Seedcord(config);
-
-        expect(lines().map(fromDevLogLine)).toContainEqual(
-            expect.objectContaining({ label: 'HMR', message: 'Enabled' })
-        );
-    });
-
     it('sends the error back when the start fails, and requests fail with it too', async () => {
         const cli = connectCli();
         Envapter.useSource(new PortableSource({}));

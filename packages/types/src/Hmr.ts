@@ -1,5 +1,5 @@
 import type { HmrUpdateEvent } from './Types/Hmr';
-import type { EmptyObject } from 'type-fest';
+import type { EmptyObject, NonEmptyTuple } from 'type-fest';
 
 // how a bot in workerd sends a thrown error to the CLI
 export interface WireError {
@@ -16,10 +16,14 @@ export interface DeployedHashes {
     scopes: Record<string, string>; // keyed by guild id, or 'global'
 }
 
-// what the CLI sends for a saved file
+export interface BotImport {
+    file: string;
+    names: string[] | 'all'; // 'all' for import * or export *
+}
+
 export interface HmrSave extends HmrUpdateEvent {
-    // the files among affectedModules that the bot file imports. the bot replaces the plugins that they export
-    botImports?: string[];
+    // the bot file's imports among affectedModules
+    botImports?: NonEmptyTuple<string>;
 }
 
 // the bot sends these to the CLI
@@ -41,8 +45,7 @@ export interface SeedcordFrameworkEvents {
 // the CLI sends these back
 export interface SeedcordCliEvents {
     'seedcord:hmr': HmrSave;
-    // every file that the bot file imports
-    'seedcord:bot-imports': { files: string[] };
+    'seedcord:bot-imports': { imports: BotImport[] };
     'seedcord:refresh-commands': { shouldRefresh: boolean };
     // core.url falls back to url when server.url is unset
     // eslint-disable-next-line no-magic-numbers -- chalk's ColorSupportLevel for the CLI's terminal, copied to keep chalk out of types

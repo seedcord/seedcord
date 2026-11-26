@@ -1,7 +1,8 @@
 ---
-'seedcord': patch
-'@seedcord/gateway': patch
-'@seedcord/http': patch
+'seedcord': minor
+'@seedcord/core': minor
+'@seedcord/gateway': minor
+'@seedcord/http': minor
 ---
 
-Fixed `seedcord dev` asking for a restart each time you save a plugin that your bot file attaches, or a file that the plugin imports. It now disposes the running plugin and starts the saved one in its place, with the arguments you passed to `attach()`.
+`seedcord dev` now _hot_ reloads a plugin when you save its file or a file that file imports as long as your bot file attaches it. It disposes the running plugin and starts the saved class with the arguments you passed to `attach()`.

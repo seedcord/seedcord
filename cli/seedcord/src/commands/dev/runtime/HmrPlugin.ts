@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { wrapHot } from '@seedcord/core/internal';
@@ -7,16 +8,26 @@ import { displayPath } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 import { workerdPath } from '@seedcord/utils/internal';
+import { filterAsync, flatMapAsync, uniq } from 'es-toolkit';
 import { normalizePath } from 'vite';
 
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
+
+import { importedNames } from './importedNames';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { StateFolder } from '#core/state/StateFolder';
 import type { DevEvent } from './events';
 import type { RestartFiles } from './RestartFiles';
 import type { HmrEventType } from '@seedcord/types';
-import type { DevChannel, HmrSave, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
+import type {
+    BotImport,
+    DevChannel,
+    HmrSave,
+    SeedcordCliEvents,
+    SeedcordFrameworkEvents
+} from '@seedcord/types/internal';
+import type { BotLayout } from '@seedcord/utils/internal';
 import type { FSWatcher } from 'node:fs';
 import type { Except } from 'type-fest';
 import type {
@@ -41,9 +52,9 @@ const TYPE_COLOR = {
 export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
     private readonly lastUpdate = new Map<string, number>();
-    // a bot asks for the files its bot file imports once every plugin has started.
-    // until then, saving a file that the bot file imports, directly or through another file, shows the restart card
     private botReloadsPlugins = false;
+    // vite empties transformResult before hotUpdate. the mappings are kept too because a blank line shifts the lines in a stack trace
+    private readonly botCode = new Map<string, { code: string; mappings: string }>();
     private server: ViteDevServer | null = null;
     private restartFilesWatcher?: FSWatcher | undefined;
 
@@ -59,7 +70,8 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         private readonly config: ResolvedSeedcordConfig,
         private readonly state: StateFolder,
         private readonly botEnvironment: string,
-        private readonly restartFiles: RestartFiles
+        private readonly restartFiles: RestartFiles,
+        private readonly layout: BotLayout
     ) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
@@ -67,11 +79,18 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     public get plugin(): Plugin {
         const onHotUpdate = this.hotUpdate.bind(this);
-        const { restartFiles } = this;
+        const { restartFiles, botCode, botEnvironment } = this;
         return {
             name: 'seedcord:hmr',
             config: () => ({ server: { watch: { ignored: [restartFiles.hiddenFromVite] } } }),
             configureServer: this.configureServer.bind(this),
+            applyToEnvironment: (environment) => environment.name === botEnvironment,
+            transform: {
+                order: 'post',
+                handler(code, id) {
+                    botCode.set(id, { code, mappings: this.getCombinedSourcemap().mappings });
+                }
+            },
             hotUpdate(ctx) {
                 return onHotUpdate(this.environment, ctx);
             }
@@ -122,14 +141,17 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             this.logger.debug(`Registered ${String(data.patterns.length)} critical file patterns`);
         });
 
-        // a save after this imports a second copy of the framework and breaks the instanceof checks
+        // saving a file after this imports a second copy of the framework and breaks the instanceof checks
         this.dev?.on('seedcord:full-reload', () => {
             this.requireRestart(paint.coral('Vite reloaded every module.'));
         });
 
         this.dev?.on('seedcord:read-bot-imports', () => {
             this.botReloadsPlugins = true;
-            this.dev?.send('seedcord:bot-imports', { files: this.botImports().map((file) => this.botPath(file)) });
+            this.botImportNames().then(
+                (imports) => this.dev?.send('seedcord:bot-imports', { imports }),
+                (error: unknown) => this.logger.error('Failed to read what the bot file imports', error)
+            );
         });
 
         this.dev?.on('seedcord:restart-required', ({ file }) => {
@@ -163,12 +185,10 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     private send(save: Except<HmrSave, 'rollback'>): void {
         this.logger.trace(`${TYPE_COLOR[save.type](save.type.toUpperCase())} ${paint.mute(displayPath(save.file))}`);
-        const botPaths = (paths: string[]): string[] => paths.map((path) => this.botPath(path));
         this.dev?.send('seedcord:hmr', {
             ...save,
             file: this.botPath(save.file),
-            ...(save.affectedModules && { affectedModules: botPaths(save.affectedModules) }),
-            ...(save.botImports && { botImports: botPaths(save.botImports) }),
+            ...(save.affectedModules && { affectedModules: save.affectedModules.map((path) => this.botPath(path)) }),
             rollback: this.config.hmr?.rollback ?? true
         });
     }
@@ -178,36 +198,93 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     // vite passes file paths with forward slashes on windows
-    private hotUpdate(environment: DevEnvironment, ctx: HotUpdateOptions): EnvironmentModuleNode[] {
-        const { modules } = ctx;
+    private async hotUpdate(environment: DevEnvironment, ctx: HotUpdateOptions): Promise<EnvironmentModuleNode[]> {
         const file = resolve(ctx.file);
-        if (environment.name !== this.botEnvironment || this.isDebounced(file, ctx.type)) return [];
+        if (this.isDebounced(file, ctx.type)) return [];
+
+        const type = deleteIfGone(ctx.type, file);
+        const modules = type === 'delete' ? ctx.modules : await this.withNewCode(environment, ctx.modules);
+        // the bot would run the same code as before
+        if (ctx.modules.length > 0 && modules.length === 0) return [];
 
         const chain = affectedFiles(ctx.file, modules).map((viteFile) => ({ viteFile, file: resolve(viteFile) }));
-        // importing the bot file again would build a second bot
-        const reloadable = chain.filter((link) => !this.restartFiles.isBotFile(link.file));
-        const reachesBot = reloadable.length < chain.length;
         if (
-            reloadable.some((link) => this.restartFiles.needsRestart(link.file)) ||
-            (reachesBot && (!this.botReloadsPlugins || this.restartFiles.isBotFile(file)))
+            this.restartFiles.needsRestart(
+                file,
+                chain.map((link) => link.file),
+                this.botReloadsPlugins
+            )
         ) {
             this.reportRestartRequired(file);
             return [];
         }
+        // importing the bot file again would build a second bot
+        const reloadable = chain.filter((link) => !this.restartFiles.isBotFile(link.file));
+        const reachesBot = reloadable.length < chain.length;
 
         const { moduleGraph } = environment;
         for (const { viteFile } of reloadable) {
             for (const mod of moduleGraph.getModulesByFile(viteFile) ?? []) moduleGraph.invalidateModule(mod);
         }
 
-        const type = deleteIfGone(ctx.type, file);
+        if (!this.botMightLoad(file, modules)) return [];
+
         const affectedModules = reloadable.map((link) => link.file);
-        // an atomic save deletes the file first. the bot replaces the plugins on the create that follows
-        const botImports = reachesBot && type !== 'delete' ? this.importedByBot(affectedModules) : undefined;
-        this.send({ file, type, affectedModules, ...(botImports && { botImports }) });
+        if (!reachesBot || type === 'delete') {
+            this.send({ file, type, affectedModules });
+            if (reachesBot) this.restartUnlessWrittenAgain(file);
+            return [];
+        }
+        const [first, ...rest] = this.importedByBot(affectedModules).map((path) => this.botPath(path));
+        // empty when the bot file imports the saved file with a query, like './notes.md?raw'. botImports() skips query imports
+        if (first === undefined) this.reportRestartRequired(file);
+        else this.send({ file, type, affectedModules, botImports: [first, ...rest] });
 
         // [] skips vite's own hmr
         return [];
+    }
+
+    // an atomic save deletes the file and writes it again right after. the bot replaces the plugins on that write
+    private restartUnlessWrittenAgain(file: string): void {
+        setTimeout(() => {
+            if (!existsSync(file)) this.reportRestartRequired(file);
+        }, DEBOUNCE_MS).unref();
+    }
+
+    // a new handler under root isn't in the bot's imports yet
+    private botMightLoad(file: string, modules: readonly EnvironmentModuleNode[]): boolean {
+        return modules.length > 0 || (this.layout.holds(file) && !this.layout.isSkipped(file));
+    }
+
+    // a ?url import is just the file's path. editing the file doesn't change it
+    private withNewCode(
+        environment: DevEnvironment,
+        modules: EnvironmentModuleNode[]
+    ): Promise<EnvironmentModuleNode[]> {
+        return filterAsync(modules, async ({ id, url }) => {
+            if (id === null) return true;
+            const before = this.botCode.get(id);
+            if (!before) return true;
+            // a failed transform counts as a change. the bot unregisters a deleted file and reports a syntax error
+            const transformed = await environment.transformRequest(url).then(
+                () => true,
+                () => false
+            );
+            const after = this.botCode.get(id);
+            return !transformed || after?.code !== before.code || after.mappings !== before.mappings;
+        });
+    }
+
+    private async botImportNames(): Promise<BotImport[]> {
+        const { instance } = this.config;
+        const environment = this.server?.environments[this.botEnvironment];
+        const imported = new Set(this.botImports());
+        const read = importedNames(await readFile(instance, 'utf8'), instance);
+        return flatMapAsync([...read], async ([source, names]) => {
+            const resolvedId = await environment?.pluginContainer.resolveId(source, instance);
+            const file = resolvedId ? resolve(resolvedId.id) : undefined;
+            return file !== undefined && imported.has(file) ? [{ file: this.botPath(file), names }] : [];
+        });
     }
 
     private importedByBot(files: readonly string[]): string[] {
@@ -215,14 +292,16 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         return files.filter((file) => imports.has(file));
     }
 
-    // this skips a file in node_modules because the bot would run a second copy of that package to read it
+    // a ?raw module isn't the file's code. a node_modules file would load a second copy of its package
     private botImports(): string[] {
         const graph = this.server?.environments[this.botEnvironment]?.moduleGraph;
         const botModules = graph?.getModulesByFile(normalizePath(this.config.instance)) ?? [];
-        const files = [...botModules].flatMap((mod) => [...mod.importedModules].map((imported) => imported.file));
-        return [...new Set(files)]
-            .filter((file): file is string => typeof file === 'string' && !file.includes('/node_modules/'))
-            .map((file) => resolve(file));
+        const files = [...botModules].flatMap((mod) =>
+            [...mod.importedModules].flatMap(({ id, file }) =>
+                file !== null && id === file && !file.includes('/node_modules/') ? [resolve(file)] : []
+            )
+        );
+        return uniq(files);
     }
 }
 
@@ -231,7 +310,7 @@ function deleteIfGone(type: HotUpdateOptions['type'], file: string): HotUpdateOp
     return type === 'update' && !existsSync(file) ? 'delete' : type;
 }
 
-// vite can hold several modules for one file, each with its own importers.
+// vite can hold several modules for one file. each one has its own importers
 // an importer that loads the file with import() counts too because that line may never run again
 function affectedFiles(file: string, modules: EnvironmentModuleNode[]): string[] {
     const files = new Set([file]);

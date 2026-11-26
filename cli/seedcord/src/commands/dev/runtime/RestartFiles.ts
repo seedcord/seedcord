@@ -45,8 +45,13 @@ export class RestartFiles {
         return file === this.config.instance;
     }
 
-    // saving a file that the bot file imports may need one as well. HmrPlugin sends the update to the bot to find out
-    public needsRestart(file: string): boolean {
+    // chain is the saved file plus everything importing it
+    public needsRestart(saved: string, chain: readonly string[], botReloadsPlugins: boolean): boolean {
+        if (this.isBotFile(saved) || (!botReloadsPlugins && chain.some((file) => this.isBotFile(file)))) return true;
+        return chain.some((file) => this.restartsTheBot(file));
+    }
+
+    private restartsTheBot(file: string): boolean {
         if (this.hiddenFromVite(file) || this.layout.isProjectFile(file)) return true;
         // the bot only reads the emojis folder at startup
         if (isInside(this.config.emojis.dir, file)) return true;

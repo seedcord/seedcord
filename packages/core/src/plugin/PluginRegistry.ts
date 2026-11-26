@@ -17,7 +17,7 @@ export interface Attachment {
     readonly key: string;
     readonly instance: PluginLike;
     readonly spec: ResolvedPluginLifecycleSpec;
-    // what attach() got after the plugin class. seedcord dev builds a saved plugin's new class with them
+    // the arguments attach() got after the plugin class. seedcord dev constructs the saved class with them
     readonly args: readonly unknown[];
 }
 
@@ -142,33 +142,44 @@ export class PluginRegistry {
     }
 
     public add(attachment: Attachment): void {
-        this.claimMembers(attachment);
+        this.assertClaimable(attachment);
+        this.claim(attachment);
         this.list.push(attachment);
     }
 
-    // keeps the attach order, which init, dispose and fetch all follow
-    public replace(old: Attachment, next: Attachment): void {
-        for (const [member, { instance }] of this.claimed) {
-            if (instance === old.instance) this.claimed.delete(member);
+    // replaced's own members don't count as a clash
+    public assertClaimable(attachment: Attachment, replaced?: Attachment): void {
+        const { key, instance } = attachment;
+        const plugin = labelOf(attachment);
+        for (const member of Object.keys(instance.dispatchMembers ?? {})) {
+            this.assertFree(member, key, plugin, instance, replaced?.instance);
         }
-        this.claimMembers(next);
+    }
+
+    // keeps the attach order. init, dispose and fetch all run in that order.
+    // this doesn't check member clashes. PluginHost's rebuild already checked the new plugin's members
+    public replace(old: Attachment, next: Attachment): void {
+        for (const [member, owner] of this.claimed) {
+            if (owner.instance === old.instance) this.claimed.delete(member);
+        }
+        this.claim(next);
         this.list[this.list.indexOf(old)] = next;
     }
 
-    private claimMembers(attachment: Attachment): void {
+    private claim(attachment: Attachment): void {
         const { key, instance } = attachment;
         const plugin = labelOf(attachment);
-        const functions = Object.entries(instance.dispatchMembers ?? {});
-        for (const [member] of functions) this.assertFree(member, key, plugin, instance);
-        for (const [member, build] of functions) this.claimed.set(member, { key, plugin, instance, build });
+        for (const [member, build] of Object.entries(instance.dispatchMembers ?? {})) {
+            this.claimed.set(member, { key, plugin, instance, build });
+        }
     }
 
-    private assertFree(member: string, key: string, plugin: string, instance: PluginLike): void {
+    private assertFree(member: string, key: string, plugin: string, instance: PluginLike, replaced?: PluginLike): void {
         if (isReservedMember(member)) {
             throw new SeedcordTypeError(SeedcordErrorCode.CorePluginMemberReserved, [member, plugin]);
         }
         const owner = this.claimed.get(member);
-        if (!owner) return;
+        if (!owner || owner.instance === replaced) return;
         if (owner.instance.constructor === instance.constructor) {
             throw new SeedcordTypeError(SeedcordErrorCode.CorePluginAttachedTwice, [
                 instance.constructor.name,

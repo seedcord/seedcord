@@ -1,5 +1,5 @@
 import { REST } from '@discordjs/rest';
-import { bindBotColor, busLoggerOf, connectDevChannel, HmrManager, HostHmr } from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, HostHmr } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { StartupPhase } from '@seedcord/core/node/internal';
 import { Logger } from '@seedcord/logger';
@@ -53,8 +53,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
         this.#service = new InteractionsService(this, config, new REST(config.bot.restOptions));
         this.rest = this.#service.rest;
-
-        this[HostHmr] = HmrManager.listenTo(connectDevChannel());
 
         this.#registerStartupTasks();
     }

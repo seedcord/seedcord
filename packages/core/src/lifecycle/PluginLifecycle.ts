@@ -1,10 +1,11 @@
-import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
+import { SeedcordErrorCode, isSeedcordError, paint } from '@seedcord/errors';
 import { throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { HostPlugins } from '@seedcord/types/internal';
+import { sumBy } from 'es-toolkit';
 
 import { StartupPhase } from '#src/lifecycle/phases';
-import { HostHmr, replaceAttachment } from '#src/plugin/PluginHost';
+import { HostHmr, rebuildAttachment, replaceAttachment } from '#src/plugin/PluginHost';
 import { pluginLoggerOf } from '#src/plugin/pluginSlots';
 
 import { withTimeout } from './withTimeout';
@@ -25,7 +26,6 @@ export class PluginLifecycle {
     private readonly completedInits = new Set<Attachment>();
     private readonly disposePhases = new Set<TaskShutdownPhase>();
     private readonly timedOutInits = new Set<Promise<void>>();
-    private attachments: readonly Attachment[] = [];
     private registered = false;
 
     constructor(
@@ -34,11 +34,14 @@ export class PluginLifecycle {
         private readonly shutdown: ShutdownTasks
     ) {}
 
+    private get attachments(): readonly Attachment[] {
+        return this.host[HostPlugins].attachments;
+    }
+
     // one combined task per phase keeps plugin inits sequential while the phase's other tasks run concurrently
     public register(): void {
         if (this.registered) return;
         this.registered = true;
-        this.attachments = [...this.host[HostPlugins].attachments];
         const hmr = this.host[HostHmr];
         if (hmr) for (const { instance } of this.attachments) hmr.register(instance);
 
@@ -53,18 +56,19 @@ export class PluginLifecycle {
         this.registerReadyTask(groups.get(StartupPhase.Ready) ?? [], hmr);
     }
 
-    // seedcord dev calls this for a plugin whose file was saved, once every plugin has started
-    public async replace(old: Attachment, Plugin: PluginCtor): Promise<Attachment> {
+    // the old plugin keeps running if this throws because nothing has changed yet
+    public rebuild(old: Attachment, Plugin: PluginCtor): Attachment {
+        return rebuildAttachment(this.host, old, Plugin);
+    }
+
+    public async replace(old: Attachment, next: Attachment): Promise<void> {
+        replaceAttachment(this.host, old, next);
         await this.dispose(old).catch((caught: unknown) =>
-            this.logger.warn(`${old.key} dispose failed before its reload`, caught)
+            this.logger.warn(`${paint.sky.bold(old.key)} dispose failed before its reload`, caught)
         );
         this.completedInits.delete(old);
-
-        const next = replaceAttachment(this.host, old, Plugin);
-        this.attachments = this.attachments.map((attachment) => (attachment === old ? next : attachment));
         await this.runInits([next]);
         await this.ready(next);
-        return next;
     }
 
     public async rollback(): Promise<void> {
@@ -118,8 +122,7 @@ export class PluginLifecycle {
         const withReady = this.attachments.filter(({ instance }) => instance.ready);
         if (readyInits.length === 0 && withReady.length === 0 && !hmr) return;
         const budget =
-            readyInits.reduce((sum, a) => sum + a.spec.init.timeout, 0) +
-            withReady.reduce((sum, a) => sum + a.spec.ready.timeout, 0);
+            sumBy(readyInits, ({ spec }) => spec.init.timeout) + sumBy(withReady, ({ spec }) => spec.ready.timeout);
         this.startup.addTask(
             StartupPhase.Ready,
             'plugins-ready',
@@ -128,7 +131,8 @@ export class PluginLifecycle {
                 for (const attachment of withReady) await this.ready(attachment);
                 hmr?.reloadPlugins({
                     attachments: () => this.attachments,
-                    replace: (old, Plugin) => this.replace(old, Plugin)
+                    rebuild: (old, Plugin) => this.rebuild(old, Plugin),
+                    replace: (old, next) => this.replace(old, next)
                 });
             },
             budget

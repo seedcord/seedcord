@@ -5,7 +5,6 @@ import {
     CoordinatedStartup,
     DEV_URL_HEADER,
     forwardLogsToCli,
-    HmrManager,
     HostHmr,
     installLinks,
     keepRequestOpenFor,
@@ -125,7 +124,6 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         if (!cli) return;
 
         forwardLogsToCli();
-        this[HostHmr] = HmrManager.listenTo(cli);
         this.#startWhenAsked(cli);
     }
 

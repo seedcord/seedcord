@@ -98,7 +98,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         targetRestartFiles: readonly string[] = []
     ): HmrPlugin {
         const restartFiles = new RestartFiles(context.config, context.files.layout, targetRestartFiles);
-        const hmr = new HmrPlugin(context.config, context.state, environment, restartFiles);
+        const hmr = new HmrPlugin(context.config, context.state, environment, restartFiles, context.files.layout);
         hmr.on('event', (event) => this.emit(context, event));
         // a restart builds a new runtime in the same process
         resources.defer(() => hmr.close());

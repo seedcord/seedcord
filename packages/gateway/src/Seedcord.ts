@@ -1,11 +1,4 @@
-import {
-    bindBotColor,
-    busLoggerOf,
-    connectDevChannel,
-    HmrManager,
-    HostHmr,
-    SubscriberLoader
-} from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, HostHmr, SubscriberLoader } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { StartupPhase } from '@seedcord/core/node/internal';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
@@ -15,6 +8,7 @@ import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
 import type { REST } from '@discordjs/rest';
+import type { HmrManager } from '@seedcord/core/internal';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 /**
@@ -59,7 +53,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
 
         bindBotColor(() => this.config.botColor);
 
-        this[HostHmr] = HmrManager.listenTo(connectDevChannel());
         this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);
         this.rest = this.bot.client.rest;
