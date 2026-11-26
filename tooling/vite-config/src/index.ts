@@ -15,6 +15,7 @@ const base = defineConfig({
         ...(!process.env.CI && { maxWorkers: '25%' }),
         // mergeConfig puts these before a package's own setupFiles
         setupFiles: [fileURLToPath(new URL('freshModules.ts', import.meta.url))],
+        globalSetup: [fileURLToPath(new URL('clearScratch.ts', import.meta.url))],
         // node_modules packages that keep state between test files
         server: { deps: { inline: ['envapt', '@testing-library/react', '@cloudflare/vite-plugin'] } },
         testTimeout: 10_000,
