@@ -3,6 +3,7 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS, LoggerChannelRegistry } from '@seedcord/logger';
 import { HOST_CONTRACT, HostContract, HostPlugins } from '@seedcord/types/internal';
 
+import { forwardLogsToCli } from '#hmr/forwardLogsToCli';
 import { connectDevChannel, HmrManager } from '#hmr/HmrManager';
 import { Kv } from '#src/kv/Kv';
 import { MemoryDriver } from '#src/kv/MemoryDriver';
@@ -49,7 +50,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     readonly #scope: { readonly transport: BotT; readonly runtime: BotRt };
 
     /** @internal */
-    public readonly [HostHmr]: HmrManager | undefined = HmrManager.listenTo(connectDevChannel());
+    public readonly [HostHmr]: HmrManager | undefined;
 
     /** @internal */
     public readonly [HostPlugins] = new PluginRegistry();
@@ -58,6 +59,10 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     public readonly [HostContract] = HOST_CONTRACT;
 
     constructor(transport: BotT, runtime: BotRt, driver: Config['kv']) {
+        const cli = connectDevChannel();
+        // workerd's logs reach the CLI only as console lines. a node bot alrdy shares the CLI's process
+        if (cli && runtime === 'edge') forwardLogsToCli();
+        this[HostHmr] = HmrManager.listenTo(cli);
         this.#scope = { transport, runtime };
         this.bus = new Bus(this);
         LoggerChannelRegistry.instance.trackSinkRuns(keepRequestOpenFor);

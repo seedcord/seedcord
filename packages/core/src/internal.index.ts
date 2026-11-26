@@ -76,10 +76,9 @@ export { runCase, type CaseReturn, type MatchResult, type OnlyCases } from '#src
 export type { MiddlewareRoute } from '#src/handlers/MiddlewareRoute';
 
 export { getDevChannel, setDevChannel } from '#hmr/devChannel';
-export { connectDevChannel, HmrManager } from '#hmr/HmrManager';
+export { HmrManager } from '#hmr/HmrManager';
 export { wrapHot } from '#hmr/wrapHot';
 export { fromDevLogLine, fromWireError, toWireError } from '#hmr/wire';
-export { forwardLogsToCli } from '#hmr/forwardLogsToCli';
 
 export { MissingRole, NeedsAny, NotAllowed, NotInDm, NotInGuild, NotOwner, OnCooldown } from '#notices/index';
 

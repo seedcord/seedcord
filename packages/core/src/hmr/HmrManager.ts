@@ -28,6 +28,7 @@ export class HmrManager {
     private plugins?: PluginReloader;
 
     private constructor(private readonly channel: CliChannel) {
+        this.logger.debug('Enabled');
         channel.on('seedcord:hmr', (payload) => void this.saves.run('hmr', () => this.handleUpdate(payload)));
         channel.on('vite:beforeFullReload', () => channel.send('seedcord:full-reload', {}));
     }
@@ -50,8 +51,6 @@ export class HmrManager {
         // an edge bot runs its startup again when the first run fails
         if (this.plugins) return;
 
-        // logged here because the edge bot builds this manager before it forwards logs to the CLI
-        this.logger.debug('Enabled');
         const reloader = new PluginReloader({ ...plugins, listeners: this });
         this.plugins = reloader;
         // queued with the updates because learn() has to finish before the next update runs

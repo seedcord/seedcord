@@ -1,10 +1,9 @@
 import {
     BAKED_IDS_KEY,
     bindBotColor,
-    connectDevChannel,
     CoordinatedStartup,
     DEV_URL_HEADER,
-    forwardLogsToCli,
+    getDevChannel,
     HostHmr,
     installLinks,
     keepRequestOpenFor,
@@ -119,12 +118,9 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         this.#service = new InteractionsService(this, config, new RequestRest(edgeRestOptions(config.bot.restOptions)));
         this.rest = this.#service.rest;
 
-        const cli = connectDevChannel();
+        const cli = getDevChannel();
         this.#underDev = cli !== undefined;
-        if (!cli) return;
-
-        forwardLogsToCli();
-        this.#startWhenAsked(cli);
+        if (cli) this.#startWhenAsked(cli);
     }
 
     #startWhenAsked(cli: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>): void {
