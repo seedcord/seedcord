@@ -11,6 +11,7 @@ import { workerdPath } from '@seedcord/utils/internal';
 import { filterAsync, flatMapAsync, uniq } from 'es-toolkit';
 import { normalizePath } from 'vite';
 
+import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
 
 import { importedNames } from './importedNames';
@@ -32,6 +33,7 @@ import type { FSWatcher } from 'node:fs';
 import type { Except } from 'type-fest';
 import type {
     DevEnvironment,
+    EnvironmentModuleGraph,
     EnvironmentModuleNode,
     HotUpdateOptions,
     NormalizedHotChannel,
@@ -55,11 +57,12 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private botReloadsPlugins = false;
     // vite empties transformResult before hotUpdate. the mappings are kept too because a blank line shifts the lines in a stack trace
     private readonly botCode = new Map<string, { code: string; mappings: string }>();
+    private readonly restartTimers = new Set<NodeJS.Timeout>();
     private server: ViteDevServer | null = null;
     private restartFilesWatcher?: FSWatcher | undefined;
 
     private get hot(): NormalizedHotChannel | undefined {
-        return this.server?.environments[this.botEnvironment]?.hot;
+        return this.server?.environments[BOT_ENVIRONMENT]?.hot;
     }
 
     private get dev(): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> | undefined {
@@ -69,7 +72,6 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     constructor(
         private readonly config: ResolvedSeedcordConfig,
         private readonly state: StateFolder,
-        private readonly botEnvironment: string,
         private readonly restartFiles: RestartFiles,
         private readonly layout: BotLayout
     ) {
@@ -79,12 +81,12 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     public get plugin(): Plugin {
         const onHotUpdate = this.hotUpdate.bind(this);
-        const { restartFiles, botCode, botEnvironment } = this;
+        const { restartFiles, botCode } = this;
         return {
             name: 'seedcord:hmr',
             config: () => ({ server: { watch: { ignored: [restartFiles.hiddenFromVite] } } }),
             configureServer: this.configureServer.bind(this),
-            applyToEnvironment: (environment) => environment.name === botEnvironment,
+            applyToEnvironment: (environment) => environment.name === BOT_ENVIRONMENT,
             transform: {
                 order: 'post',
                 handler(code, id) {
@@ -102,6 +104,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     public close(): void {
+        for (const timer of this.restartTimers) clearTimeout(timer);
         this.restartFilesWatcher?.close();
         this.removeAllListeners('event');
     }
@@ -113,6 +116,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     private configureServer(server: ViteDevServer): void {
         this.server = server;
+        const bot = botEnvironment(server.environments);
         this.restartFilesWatcher = this.restartFiles.watch((file) => {
             this.reportChangeNeedingRestart(resolve(file));
         });
@@ -148,7 +152,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
         this.dev?.on('seedcord:read-bot-imports', () => {
             this.botReloadsPlugins = true;
-            this.botImportNames().then(
+            this.botImportNames(bot).then(
                 (imports) => this.dev?.send('seedcord:bot-imports', { imports }),
                 (error: unknown) => this.logger.error('Failed to read what the bot file imports', error)
             );
@@ -203,7 +207,8 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         if (this.isDebounced(file, ctx.type)) return [];
 
         const type = deleteIfGone(ctx.type, file);
-        const modules = type === 'delete' ? ctx.modules : await this.withNewCode(environment, ctx.modules);
+        const modules =
+            type === 'delete' ? this.forgetCode(ctx.modules) : await this.withNewCode(environment, ctx.modules);
         // the bot would run the same code as before
         if (ctx.modules.length > 0 && modules.length === 0) return [];
 
@@ -235,7 +240,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             if (reachesBot) this.restartUnlessWrittenAgain(file);
             return [];
         }
-        const [first, ...rest] = this.importedByBot(affectedModules).map((path) => this.botPath(path));
+        const [first, ...rest] = this.importedByBot(moduleGraph, affectedModules).map((path) => this.botPath(path));
         // empty when the bot file imports the saved file with a query, like './notes.md?raw'. botImports() skips query imports
         if (first === undefined) this.reportRestartRequired(file);
         else this.send({ file, type, affectedModules, botImports: [first, ...rest] });
@@ -246,9 +251,17 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     // an atomic save deletes the file and writes it again right after. the bot replaces the plugins on that write
     private restartUnlessWrittenAgain(file: string): void {
-        setTimeout(() => {
+        const timer = setTimeout(() => {
+            this.restartTimers.delete(timer);
             if (!existsSync(file)) this.reportRestartRequired(file);
         }, DEBOUNCE_MS).unref();
+        this.restartTimers.add(timer);
+    }
+
+    // clears the saved code so the bot gets the file again even if you write it back unchanged. the bot unregistered its handlers on the delete
+    private forgetCode(modules: EnvironmentModuleNode[]): EnvironmentModuleNode[] {
+        for (const { id } of modules) if (id !== null) this.botCode.delete(id);
+        return modules;
     }
 
     // a new handler under root isn't in the bot's imports yet
@@ -275,27 +288,25 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         });
     }
 
-    private async botImportNames(): Promise<BotImport[]> {
+    private async botImportNames(environment: DevEnvironment): Promise<BotImport[]> {
         const { instance } = this.config;
-        const environment = this.server?.environments[this.botEnvironment];
-        const imported = new Set(this.botImports());
+        const imported = new Set(this.botImports(environment.moduleGraph));
         const read = importedNames(await readFile(instance, 'utf8'), instance);
         return flatMapAsync([...read], async ([source, names]) => {
-            const resolvedId = await environment?.pluginContainer.resolveId(source, instance);
+            const resolvedId = await environment.pluginContainer.resolveId(source, instance);
             const file = resolvedId ? resolve(resolvedId.id) : undefined;
             return file !== undefined && imported.has(file) ? [{ file: this.botPath(file), names }] : [];
         });
     }
 
-    private importedByBot(files: readonly string[]): string[] {
-        const imports = new Set(this.botImports());
+    private importedByBot(graph: EnvironmentModuleGraph, files: readonly string[]): string[] {
+        const imports = new Set(this.botImports(graph));
         return files.filter((file) => imports.has(file));
     }
 
     // a ?raw module isn't the file's code. a node_modules file would load a second copy of its package
-    private botImports(): string[] {
-        const graph = this.server?.environments[this.botEnvironment]?.moduleGraph;
-        const botModules = graph?.getModulesByFile(normalizePath(this.config.instance)) ?? [];
+    private botImports(graph: EnvironmentModuleGraph): string[] {
+        const botModules = graph.getModulesByFile(normalizePath(this.config.instance)) ?? [];
         const files = [...botModules].flatMap((mod) =>
             [...mod.importedModules].flatMap(({ id, file }) =>
                 file !== null && id === file && !file.includes('/node_modules/') ? [resolve(file)] : []

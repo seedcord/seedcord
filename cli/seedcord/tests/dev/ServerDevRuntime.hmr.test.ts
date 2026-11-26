@@ -255,6 +255,20 @@ import.meta.hot?.send('seedcord:read-bot-imports', {});
         );
     }, 60_000);
 
+    it('sends the bot a file you delete and write back with the same code', async () => {
+        const code = "export const greeting = 'hello';\n";
+        const { src, received } = await startedAskingBot({ 'plugin.ts': code });
+        const plugin = join(src, 'plugin.ts');
+
+        await rm(plugin);
+        await vi.waitFor(() =>
+            expect(received).toContainEqual(['seedcord:hmr', expect.objectContaining({ file: plugin, type: 'delete' })])
+        );
+        await saveUntil(plugin, code, () =>
+            expect(received).toContainEqual(['seedcord:hmr', expect.objectContaining({ file: plugin, type: 'create' })])
+        );
+    }, 60_000);
+
     it("asks for a restart when the bot answers that it can't reload the save", async () => {
         const { src, events } = await startedAskingBot({
             'plugin.ts': "export { greeting } from './refused';\n",

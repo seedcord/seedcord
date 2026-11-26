@@ -9,9 +9,9 @@ type Entry =
     | ModuleRecord['staticExports'][number]['entries'][number];
 
 // undefined for a namespace import, export *, or export * as. those read every export
-function exportName({ importName }: Entry): string | null | undefined {
+function exportName({ importName }: Entry): string | undefined {
     if (importName.kind === 'Default') return 'default';
-    return importName.kind === 'Name' ? importName.name : undefined;
+    return importName.kind === 'Name' && importName.name !== null ? importName.name : undefined;
 }
 
 // skips type-only imports. typescript removes them before the code runs

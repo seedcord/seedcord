@@ -120,7 +120,7 @@ function restartFilesOf(config: ResolvedSeedcordConfig): RestartFiles {
 }
 
 function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0], state = STATE): ConfiguredPlugin {
-    const plugin = new HmrPlugin(config, state, 'seedcord', restartFilesOf(config), layoutOf(config));
+    const plugin = new HmrPlugin(config, state, restartFilesOf(config), layoutOf(config));
     onTestFinished(() => plugin.close());
     const listeners = new Map<string, (data: unknown) => void>();
     // justified: spy on the private `hot` getter
@@ -159,7 +159,7 @@ describe('HmrPlugin', () => {
             vi.spyOn(Logger.prototype, level).mockImplementation(() => undefined);
         }
         trace = vi.spyOn(Logger.prototype, 'trace').mockImplementation(() => undefined);
-        hmrPlugin = new HmrPlugin(mockConfig, STATE, 'seedcord', restartFilesOf(mockConfig), layoutOf(mockConfig));
+        hmrPlugin = new HmrPlugin(mockConfig, STATE, restartFilesOf(mockConfig), layoutOf(mockConfig));
     });
 
     afterEach(() => {
@@ -170,7 +170,6 @@ describe('HmrPlugin', () => {
         const plugin = new HmrPlugin(
             { ...mockConfig, hmr: { rollback: false } },
             STATE,
-            'seedcord',
             restartFilesOf(mockConfig),
             layoutOf(mockConfig)
         );
