@@ -5,11 +5,12 @@ import { installNodeConsole, installNodeDefaults } from '@seedcord/logger/node';
 import { HostDevUrl, HostListenHost, HostPlugins, HostShutdown, HostStartup } from '@seedcord/types/internal';
 import { runsUnderSeedcordDev } from '@seedcord/utils/internal';
 
+import { RELOAD_PAUSE_MS } from '#hmr/HmrManager';
 import { assertDeclaredRuntime } from '#node/assertDeclaredRuntime';
 import { getDevChannel } from '#src/hmr/devChannel';
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 import { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
-import { PluginHost, sealAttachments } from '#src/plugin/PluginHost';
+import { HostHmr, PluginHost, sealAttachments } from '#src/plugin/PluginHost';
 import { publicUrl } from '#src/publicUrl';
 
 import { registerProcessErrors } from './processErrors';
@@ -74,7 +75,7 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
         // a getter returning the slot would expose run() and the signal handlers too
         this.shutdown = { addTask: shutdown.addTask.bind(shutdown) };
         this.startup = { addTask: startup.addTask.bind(startup) };
-        this.#lifecycle = new PluginLifecycle(this.startup, this.shutdown);
+        this.#lifecycle = new PluginLifecycle(this, this.startup, this.shutdown);
         shutdown.addTask(ShutdownPhase.Release, 'close-kv', async () => {
             await using _driver = this.kv.driver;
         });
@@ -161,7 +162,13 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
 
         installNodeDefaults(this.config.logger);
         sealAttachments(this);
-        this.#lifecycle.register(this[HostPlugins].attachments);
+        this.#lifecycle.register();
+        const hmr = this[HostHmr];
+        if (hmr) {
+            this.#web.pauseDuringReloads(hmr);
+            const budget = RELOAD_PAUSE_MS + this.#lifecycle.replaceTimeout;
+            this.shutdown.addTask(ShutdownPhase.Unbind, 'finish-reload', () => hmr.stop(), budget);
+        }
 
         // codegen and the build construct the bot without starting it.
         // under seedcord dev the CLI handles SIGINT and SIGTERM

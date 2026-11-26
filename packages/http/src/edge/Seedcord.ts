@@ -1,17 +1,18 @@
 import {
     BAKED_IDS_KEY,
     bindBotColor,
-    connectDevChannel,
     CoordinatedStartup,
     DEV_URL_HEADER,
-    forwardLogsToCli,
-    HmrManager,
+    getDevChannel,
+    HostHmr,
+    InFlight,
     installLinks,
     keepRequestOpenFor,
     PluginLifecycle,
     publicUrl,
     requestScope,
     sealAttachments,
+    SERVICE_UNAVAILABLE,
     settleWithin,
     toWireError,
     WORKER_PROBE
@@ -96,10 +97,11 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     readonly #service: InteractionsService;
     readonly #startup = new CoordinatedStartup();
     // workerd gives a worker no shutdown hook. dispose() runs only in a rollback.
-    readonly #plugins = new PluginLifecycle(this.#startup, { addTask: () => undefined });
+    readonly #plugins = new PluginLifecycle(this, this.#startup, { addTask: () => undefined });
 
-    readonly #hmr = new HmrManager();
     readonly #logger = new Logger('Bot', { channel: 'bot' });
+    // only seedcord dev reloads plugins
+    readonly #devRequests = this.#gateForReloads();
     readonly #underDev: boolean;
 
     #devUrl?: string;
@@ -120,18 +122,25 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         this.#service = new InteractionsService(this, config, new RequestRest(edgeRestOptions(config.bot.restOptions)));
         this.rest = this.#service.rest;
 
-        const cli = connectDevChannel();
+        const cli = getDevChannel();
         this.#underDev = cli !== undefined;
-        if (cli) {
-            forwardLogsToCli();
-            this.#startWhenAsked(cli);
-        }
-        this.#hmr.init(cli);
+        if (cli) this.#startWhenAsked(cli);
+    }
+
+    #gateForReloads(): InFlight | undefined {
+        const hmr = this[HostHmr];
+        if (!hmr) return undefined;
+        const gate = new InFlight(this.#logger, 'Requests');
+        // safe to open now because fetch() waits for startup before it calls admit()
+        gate.open();
+        hmr.pauseDuringReloads(gate);
+        return gate;
     }
 
     #startWhenAsked(cli: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>): void {
         const tasks = new HttpStartupTasks(this, this.#service);
-        tasks.registerHmr(this.#hmr);
+        const hmr = this[HostHmr];
+        if (hmr) tasks.registerHmr(hmr);
         tasks.addDiscordTasks();
         cli.on('seedcord:start', ({ colorLevel, url }) => {
             setColorLevel(colorLevel);
@@ -188,7 +197,10 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
         return requestScope.run(ctx, async () => {
             await this.#start();
-            return (await this[HostPlugins].answer(request)) ?? this.#service.engine.handle(request);
+            const answer = async (): Promise<Response> =>
+                (await this[HostPlugins].answer(request)) ?? this.#service.engine.handle(request);
+            if (!this.#devRequests) return answer();
+            return (await this.#devRequests.admit(answer)) ?? new Response(null, { status: SERVICE_UNAVAILABLE });
         });
     }
 
@@ -226,7 +238,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     async #runStartup(): Promise<void> {
-        this.#plugins.register(this[HostPlugins].attachments);
+        this.#plugins.register();
         try {
             await this.#startup.run();
         } catch (caught) {

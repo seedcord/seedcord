@@ -3,7 +3,7 @@ import { setTimeout } from 'node:timers/promises';
 import { Logger } from '@seedcord/logger';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { InFlight } from '#node/Lifecycle/InFlight';
+import { InFlight } from '#src/lifecycle/InFlight';
 import { keepRequestOpenFor } from '#src/requestScope';
 
 const WORK_MS = 20;
@@ -37,5 +37,37 @@ describe('InFlight', () => {
         await inFlight.drain(WINDOW_MS);
 
         expect(finished).toEqual(['kept open']);
+    });
+
+    it('lets running work finish before a pause, then holds new work until resume', async () => {
+        const inFlight = new InFlight(new Logger('Test'), 'Test');
+        inFlight.open();
+        const order: string[] = [];
+
+        void inFlight.admit(() => setTimeout(WORK_MS).then(() => order.push('running')));
+        const resume = await inFlight.pause(WINDOW_MS);
+        order.push('paused');
+        const held = inFlight.admit(() => Promise.resolve(order.push('held')));
+        await setTimeout(0);
+        order.push('resumed');
+        resume();
+        await held;
+
+        expect(order).toEqual(['running', 'paused', 'resumed', 'held']);
+    });
+
+    it('holds work that waited for open() when a pause starts before it runs', async () => {
+        const inFlight = new InFlight(new Logger('Test'), 'Test');
+        const order: string[] = [];
+
+        const held = inFlight.admit(() => Promise.resolve(order.push('held')));
+        inFlight.open();
+        const pausing = inFlight.pause(WINDOW_MS);
+        await setTimeout(0);
+        order.push('resumed');
+        (await pausing)();
+        await held;
+
+        expect(order).toEqual(['resumed', 'held']);
     });
 });

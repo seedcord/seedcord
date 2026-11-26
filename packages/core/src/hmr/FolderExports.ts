@@ -1,7 +1,9 @@
 import { paint } from '@seedcord/errors';
 import { displayPath } from '@seedcord/errors/internal';
 import { formatFilePath, importFiles } from '@seedcord/utils';
-import { botFolder, fileUrl, vitePluginThrew } from '@seedcord/utils/internal';
+import { botFolder, vitePluginThrew } from '@seedcord/utils/internal';
+
+import { importSaved } from './importFile';
 
 import type { Logger } from '@seedcord/logger';
 import type { HmrUpdateEvent } from '@seedcord/types';
@@ -18,8 +20,6 @@ interface FolderExportsOptions<TUnit> {
 }
 
 const displayName = (unit: unknown): string => (typeof unit === 'function' ? unit.name : 'export');
-
-let testImports = 0;
 
 /**
  * Registers the values that the files in one folder export, and keeps them registered while you
@@ -181,7 +181,7 @@ export class FolderExports<TUnit> {
 
     async #load(file: string, lastGood: TUnit[], rollback: boolean): Promise<string[]> {
         try {
-            const units = this.#unitsIn(await this.#import(file));
+            const units = this.#unitsIn(await importSaved(file));
             const registered = this.#register(file, units);
             const lost = lastGood.filter((unit) => !this.#isTracked(unit));
             if (lost.length > 0 && units.length === 0) this.#warnUnitsLost(file, lost);
@@ -201,15 +201,6 @@ export class FolderExports<TUnit> {
         this.#hmrLogger.warn(
             `${paint.amber.bold('Unloaded')} ${names} because reloading ${path} didn't find them. If the file still exports them, restart dev.`
         );
-    }
-
-    async #import(file: string): Promise<Record<string, unknown>> {
-        let url = fileUrl(file);
-        // vitest runs without a real vite server managing the module graph
-        if (process.env.VITEST === 'true') url += `?update=${String(++testImports)}`;
-
-        // justified: a dynamic import resolves to an untyped export map
-        return (await import(/* @vite-ignore */ url)) as Record<string, unknown>;
     }
 
     // returns what it called register for, which excludes units another file already holds

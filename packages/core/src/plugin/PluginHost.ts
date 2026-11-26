@@ -3,6 +3,8 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS, LoggerChannelRegistry } from '@seedcord/logger';
 import { HOST_CONTRACT, HostContract, HostPlugins } from '@seedcord/types/internal';
 
+import { forwardLogsToCli } from '#hmr/forwardLogsToCli';
+import { connectDevChannel, HmrManager } from '#hmr/HmrManager';
 import { Kv } from '#src/kv/Kv';
 import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { KvRateLimiter } from '#src/rateLimiter/KvRateLimiter';
@@ -17,12 +19,17 @@ import { splitPluginKey } from './splitPluginKey';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DeclaredScope, Runtime, Transport } from './options';
 import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from './Plugin';
+import type { Attachment, Replacement } from './PluginRegistry';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
 
 const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 
 const sealSlot = Symbol('seedcord:host:seal');
+const rebuildSlot = Symbol('seedcord:host:rebuild');
+const replaceSlot = Symbol('seedcord:host:replace');
+
+export const HostHmr = Symbol('seedcord:host:hmr');
 
 /** Base class for a plugin host. */
 export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
@@ -43,12 +50,19 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     readonly #scope: { readonly transport: BotT; readonly runtime: BotRt };
 
     /** @internal */
+    public readonly [HostHmr]: HmrManager | undefined;
+
+    /** @internal */
     public readonly [HostPlugins] = new PluginRegistry();
 
     /** @internal */
     public readonly [HostContract] = HOST_CONTRACT;
 
     constructor(transport: BotT, runtime: BotRt, driver: Config['kv']) {
+        const cli = connectDevChannel();
+        // workerd's logs reach the CLI only as console lines. a node bot alrdy shares the CLI's process
+        if (cli && runtime === 'edge') forwardLogsToCli();
+        this[HostHmr] = HmrManager.listenTo(cli);
         this.#scope = { transport, runtime };
         this.bus = new Bus(this);
         LoggerChannelRegistry.instance.trackSinkRuns(keepRequestOpenFor);
@@ -73,7 +87,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
      * `start()`. An edge bot starts on its first request.
      *
      * Attaching a plugin whose `transport` or `runtime` differs from this host fails to compile.
-     * Take `CoreBase` as your constructor's first parameter. `attach()` passes it, so you don't.
+     * Take `CoreBase` as your constructor's first parameter. `attach()` passes it for you.
      * A narrower one fails to compile here.
      *
      * @param key - Also the channel that the plugin logs on, dots included.
@@ -120,21 +134,38 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         }
         this.#assertFree(head, leaf, key);
 
-        if (!extendsThisCorePlugin(Plugin)) {
-            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginFromOtherCore, [Plugin.name]);
-        }
+        const attachment = this.#construct(key, Plugin, args);
+        this[HostPlugins].add(attachment);
+        this.#place(attachment);
+        return this as this & Attached<Key, InstanceType<Ctor>>;
+    }
+
+    /** @internal */
+    public [rebuildSlot](old: Attachment, Plugin: PluginCtor): Replacement {
+        return this[HostPlugins].prepareReplace(old, this.#construct(old.key, Plugin, old.args));
+    }
+
+    /** @internal */
+    public [replaceSlot](replacement: Replacement): void {
+        this[HostPlugins].replace(replacement);
+        this.#place(replacement.next);
+    }
+
+    #construct(key: string, Plugin: PluginCtor, args: readonly unknown[]): Attachment {
+        const { name } = Plugin;
+        if (!extendsThisCorePlugin(Plugin))
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginFromOtherCore, [name]);
 
         const kv = new Kv(this.kv.driver, 'plugins', key);
         const instance = constructAttached(key, kv, () => new Plugin(this, ...args));
-        this.#assertScope(Plugin.name, declaredScopeOf(instance));
-        this[HostPlugins].add({ key, instance, spec: resolvedLifecycleSpecOf(instance) });
+        this.#assertScope(name, declaredScopeOf(instance));
+        return { key, instance, spec: resolvedLifecycleSpecOf(instance), args };
+    }
 
-        if (leaf === undefined) {
-            return Object.assign(this, { [key]: instance }) as this & Attached<Key, InstanceType<Ctor>>;
-        }
-
-        this.#groupFor(head)[leaf] = instance;
-        return this as this & Attached<Key, InstanceType<Ctor>>;
+    #place({ key, instance }: Attachment): void {
+        const { head, leaf } = splitPluginKey(key);
+        if (leaf === undefined) Object.assign(this, { [key]: instance });
+        else this.#groupFor(head)[leaf] = instance;
     }
 
     #assertFree(head: string, leaf: string | undefined, key: string): void {
@@ -180,4 +211,19 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
 
 export function sealAttachments(host: Pick<PluginHost<Transport, Runtime>, typeof sealSlot>): void {
     host[sealSlot]();
+}
+
+export function rebuildAttachment(
+    host: Pick<PluginHost<Transport, Runtime>, typeof rebuildSlot>,
+    old: Attachment,
+    Plugin: PluginCtor
+): Replacement {
+    return host[rebuildSlot](old, Plugin);
+}
+
+export function replaceAttachment(
+    host: Pick<PluginHost<Transport, Runtime>, typeof replaceSlot>,
+    replacement: Replacement
+): void {
+    host[replaceSlot](replacement);
 }

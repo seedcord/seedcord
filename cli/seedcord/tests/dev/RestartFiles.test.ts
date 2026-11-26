@@ -68,7 +68,8 @@ describe('RestartFiles', () => {
     ])('asks for a restart when %s is saved: %s', async (file, expected) => {
         const { files, config } = await configFiles();
 
-        expect(files.needsRestart(join(dirname(config), file))).toBe(expected);
+        const saved = join(dirname(config), file);
+        expect(files.needsRestart(saved, [saved])).toBe(expected);
     });
 
     it('applies a `!` pattern only to the patterns registered with it', async () => {
@@ -77,8 +78,9 @@ describe('RestartFiles', () => {
         files.addPatterns(['docs/**']);
         files.addPatterns(['locales/**', '!**/*.md']);
 
-        expect(files.needsRestart(join(root, 'docs', 'README.md'))).toBe(true);
-        expect(files.needsRestart(join(root, 'locales', 'README.md'))).toBe(false);
+        const [docs, locales] = [join(root, 'docs', 'README.md'), join(root, 'locales', 'README.md')];
+        expect(files.needsRestart(docs, [docs])).toBe(true);
+        expect(files.needsRestart(locales, [locales])).toBe(false);
     });
 
     it('leaves a .env in another folder out', async () => {

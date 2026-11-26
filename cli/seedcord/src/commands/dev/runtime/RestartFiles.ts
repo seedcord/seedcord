@@ -41,8 +41,17 @@ export class RestartFiles {
         return dirname(file) === this.configDir && this.hiddenNames.has(basename(file));
     };
 
-    public needsRestart(file: string): boolean {
-        if (this.hiddenFromVite(file) || this.layout.isProjectFile(file) || file === this.config.instance) return true;
+    public isBotFile(file: string): boolean {
+        return file === this.config.instance;
+    }
+
+    // chain is the saved file plus everything importing it
+    public needsRestart(saved: string, chain: readonly string[]): boolean {
+        return this.isBotFile(saved) || chain.some((file) => this.restartsTheBot(file));
+    }
+
+    private restartsTheBot(file: string): boolean {
+        if (this.hiddenFromVite(file) || this.layout.isProjectFile(file)) return true;
         // the bot only reads the emojis folder at startup
         if (isInside(this.config.emojis.dir, file)) return true;
         return this.patternGroups.some((patterns) => this.layout.matchesFiles(file, patterns));

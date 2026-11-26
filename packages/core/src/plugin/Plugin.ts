@@ -262,8 +262,8 @@ export abstract class Plugin<
 }
 
 /** @internal */
-export function extendsThisCorePlugin(ctor: PluginCtor): boolean {
-    return ctor.prototype instanceof Plugin;
+export function extendsThisCorePlugin(value: unknown): value is PluginCtor {
+    return typeof value === 'function' && value.prototype instanceof Plugin;
 }
 
 export type { PluginLifecycleSpec } from './lifecycle';

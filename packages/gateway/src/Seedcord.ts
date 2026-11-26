@@ -1,14 +1,14 @@
-import { bindBotColor, busLoggerOf, connectDevChannel, HmrManager, SubscriberLoader } from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, HostHmr, SubscriberLoader } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { StartupPhase } from '@seedcord/core/node/internal';
-import { HostAugmentTarget, HostPlugins, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
-import { Envapter } from 'envapt';
+import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 
 import { Bot } from './bot/Bot';
 import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
 import type { REST } from '@discordjs/rest';
+import type { HmrManager } from '@seedcord/core/internal';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 /**
@@ -24,8 +24,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
     public readonly [HostAugmentTarget] = '@seedcord/gateway';
     /** @internal */
     public readonly [HostVersion]: string = packageVersion;
-
-    readonly #hmrManager: HmrManager;
 
     readonly #subscribers: SubscriberLoader;
 
@@ -55,8 +53,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
 
         bindBotColor(() => this.config.botColor);
 
-        this.#hmrManager = new HmrManager();
-        this.#hmrManager.init(connectDevChannel());
         this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);
         this.rest = this.bot.client.rest;
@@ -70,7 +66,8 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
     }
 
     #registerStartupTasks(): void {
-        if (Envapter.isDevelopment || Envapter.isTest) this.#registerHmrAwareModules();
+        const hmr = this[HostHmr];
+        if (hmr) this.#registerHmrAwareModules(hmr);
 
         this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');
@@ -88,13 +85,11 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
         return this.init();
     }
 
-    #registerHmrAwareModules(): void {
+    #registerHmrAwareModules(hmr: HmrManager): void {
+        this.bot.pauseDuringReloads(hmr);
         this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
-            this.#hmrManager.register(this.bot);
-            this.#hmrManager.register(this.#subscribers);
-            for (const { instance } of this[HostPlugins].attachments) {
-                this.#hmrManager.register(instance);
-            }
+            hmr.register(this.bot);
+            hmr.register(this.#subscribers);
             await Promise.resolve();
         });
     }

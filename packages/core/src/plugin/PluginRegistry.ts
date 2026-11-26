@@ -12,12 +12,18 @@ import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
 import type { ResolvedPluginLifecycleSpec } from './lifecycle';
 import type { PluginLike } from './Plugin';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
+import type { Tagged } from 'type-fest';
 
 export interface Attachment {
     readonly key: string;
     readonly instance: PluginLike;
     readonly spec: ResolvedPluginLifecycleSpec;
+    // the arguments attach() got after the plugin class. seedcord dev constructs the saved class with them
+    readonly args: readonly unknown[];
 }
+
+// only prepareReplace() makes one. it checks the new plugin's members first
+export type Replacement = Tagged<{ readonly old: Attachment; readonly next: Attachment }, 'Replacement'>;
 
 export type DispatchMemberFunctions = Readonly<Record<string, (origin: DispatchOrigin) => unknown>>;
 
@@ -140,20 +146,50 @@ export class PluginRegistry {
     }
 
     public add(attachment: Attachment): void {
-        const { key, instance } = attachment;
-        const plugin = labelOf(attachment);
-        const functions = Object.entries(instance.dispatchMembers ?? {});
-        for (const [member] of functions) this.assertFree(member, key, plugin, instance);
-        for (const [member, build] of functions) this.claimed.set(member, { key, plugin, instance, build });
+        this.assertClaimable(attachment);
+        this.claim(attachment);
         this.list.push(attachment);
     }
 
-    private assertFree(member: string, key: string, plugin: string, instance: PluginLike): void {
+    // throws on a clash before anything changes
+    public prepareReplace(old: Attachment, next: Attachment): Replacement {
+        this.assertClaimable(next, old);
+        // justified: Tagged needs one cast where the checked value is made
+        return { old, next } as Replacement;
+    }
+
+    public replace({ old, next }: Replacement): void {
+        for (const [member, owner] of this.claimed) {
+            if (owner.instance === old.instance) this.claimed.delete(member);
+        }
+        this.claim(next);
+        // init, dispose and fetch run in list order
+        this.list[this.list.indexOf(old)] = next;
+    }
+
+    // replaced's own members don't count as a clash
+    private assertClaimable(attachment: Attachment, replaced?: Attachment): void {
+        const { key, instance } = attachment;
+        const plugin = labelOf(attachment);
+        for (const member of Object.keys(instance.dispatchMembers ?? {})) {
+            this.assertFree(member, key, plugin, instance, replaced?.instance);
+        }
+    }
+
+    private claim(attachment: Attachment): void {
+        const { key, instance } = attachment;
+        const plugin = labelOf(attachment);
+        for (const [member, build] of Object.entries(instance.dispatchMembers ?? {})) {
+            this.claimed.set(member, { key, plugin, instance, build });
+        }
+    }
+
+    private assertFree(member: string, key: string, plugin: string, instance: PluginLike, replaced?: PluginLike): void {
         if (isReservedMember(member)) {
             throw new SeedcordTypeError(SeedcordErrorCode.CorePluginMemberReserved, [member, plugin]);
         }
         const owner = this.claimed.get(member);
-        if (!owner) return;
+        if (!owner || owner.instance === replaced) return;
         if (owner.instance.constructor === instance.constructor) {
             throw new SeedcordTypeError(SeedcordErrorCode.CorePluginAttachedTwice, [
                 instance.constructor.name,

@@ -8,14 +8,19 @@ import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 import { workerdPath } from '@seedcord/utils/internal';
 
+import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
+
+import { BotImports } from './BotImports';
+import { ModuleCode } from './ModuleCode';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { StateFolder } from '#core/state/StateFolder';
 import type { DevEvent } from './events';
 import type { RestartFiles } from './RestartFiles';
-import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types';
-import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
+import type { HmrEventType } from '@seedcord/types';
+import type { DevChannel, HmrSave, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
+import type { BotLayout } from '@seedcord/utils/internal';
 import type { FSWatcher } from 'node:fs';
 import type { Except } from 'type-fest';
 import type {
@@ -40,11 +45,15 @@ const TYPE_COLOR = {
 export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
     private readonly lastUpdate = new Map<string, number>();
+    private botReloadsPlugins = false;
+    private readonly code = new ModuleCode();
+    private readonly imports: BotImports;
+    private readonly restartTimers = new Set<NodeJS.Timeout>();
     private server: ViteDevServer | null = null;
     private restartFilesWatcher?: FSWatcher | undefined;
 
     private get hot(): NormalizedHotChannel | undefined {
-        return this.server?.environments[this.botEnvironment]?.hot;
+        return this.server?.environments[BOT_ENVIRONMENT]?.hot;
     }
 
     private get dev(): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> | undefined {
@@ -54,11 +63,12 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     constructor(
         private readonly config: ResolvedSeedcordConfig,
         private readonly state: StateFolder,
-        private readonly botEnvironment: string,
-        private readonly restartFiles: RestartFiles
+        private readonly restartFiles: RestartFiles,
+        private readonly layout: BotLayout
     ) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
+        this.imports = new BotImports(config.instance);
     }
 
     public get plugin(): Plugin {
@@ -68,6 +78,8 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             name: 'seedcord:hmr',
             config: () => ({ server: { watch: { ignored: [restartFiles.hiddenFromVite] } } }),
             configureServer: this.configureServer.bind(this),
+            applyToEnvironment: (environment) => environment.name === BOT_ENVIRONMENT,
+            transform: this.code.transform,
             hotUpdate(ctx) {
                 return onHotUpdate(this.environment, ctx);
             }
@@ -79,6 +91,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     public close(): void {
+        for (const timer of this.restartTimers) clearTimeout(timer);
         this.restartFilesWatcher?.close();
         this.removeAllListeners('event');
     }
@@ -90,6 +103,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     private configureServer(server: ViteDevServer): void {
         this.server = server;
+        const bot = botEnvironment(server.environments);
         this.restartFilesWatcher = this.restartFiles.watch((file) => {
             this.reportChangeNeedingRestart(resolve(file));
         });
@@ -118,9 +132,24 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             this.logger.debug(`Registered ${String(data.patterns.length)} critical file patterns`);
         });
 
-        // a save after this imports a second copy of the framework and breaks the instanceof checks
+        // saving a file after this imports a second copy of the framework and breaks the instanceof checks
         this.dev?.on('seedcord:full-reload', () => {
             this.requireRestart(paint.coral('Vite reloaded every module.'));
+        });
+
+        this.dev?.on('seedcord:read-bot-imports', () => {
+            this.botReloadsPlugins = true;
+            this.imports.names(bot).then(
+                (imports) =>
+                    this.dev?.send('seedcord:bot-imports', {
+                        imports: imports.map(({ file, names }) => ({ file: this.botPath(file), names }))
+                    }),
+                (error: unknown) => this.logger.error('Failed to read what the bot file imports', error)
+            );
+        });
+
+        this.dev?.on('seedcord:restart-required', ({ file }) => {
+            this.reportRestartRequired(file);
         });
     }
 
@@ -148,12 +177,12 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         this.send({ file: dir, type });
     }
 
-    private send(event: Except<HmrUpdateEvent, 'rollback'>): void {
-        this.logger.trace(`${TYPE_COLOR[event.type](event.type.toUpperCase())} ${paint.mute(displayPath(event.file))}`);
+    private send(save: Except<HmrSave, 'rollback'>): void {
+        this.logger.trace(`${TYPE_COLOR[save.type](save.type.toUpperCase())} ${paint.mute(displayPath(save.file))}`);
         this.dev?.send('seedcord:hmr', {
-            ...event,
-            file: this.botPath(event.file),
-            ...(event.affectedModules && { affectedModules: event.affectedModules.map((path) => this.botPath(path)) }),
+            ...save,
+            file: this.botPath(save.file),
+            ...(save.affectedModules && { affectedModules: save.affectedModules.map((path) => this.botPath(path)) }),
             rollback: this.config.hmr?.rollback ?? true
         });
     }
@@ -163,27 +192,69 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     // vite passes file paths with forward slashes on windows
-    private hotUpdate(environment: DevEnvironment, ctx: HotUpdateOptions): EnvironmentModuleNode[] {
-        const { type, modules } = ctx;
+    private async hotUpdate(environment: DevEnvironment, ctx: HotUpdateOptions): Promise<EnvironmentModuleNode[]> {
         const file = resolve(ctx.file);
-        if (environment.name !== this.botEnvironment || this.isDebounced(file, type)) return [];
+        if (this.isDebounced(file, ctx.type)) return [];
 
-        const viteFiles = affectedFiles(ctx.file, modules);
-        const affectedModules = viteFiles.map((affected) => resolve(affected));
-        if (affectedModules.some((affected) => this.restartFiles.needsRestart(affected))) {
+        const type = deleteIfGone(ctx.type, file);
+        const modules =
+            type === 'delete' ? this.code.forget(ctx.modules) : await this.code.changed(environment, ctx.modules);
+        const chain = affectedFiles(ctx.file, modules).map((viteFile) => ({ viteFile, file: resolve(viteFile) }));
+        // importing the bot file again would build a second bot
+        const reloadable = chain.filter((link) => !this.restartFiles.isBotFile(link.file));
+        const reachesBot = reloadable.length < chain.length;
+        if (
+            this.needsRestart(
+                file,
+                chain.map((link) => link.file),
+                reachesBot
+            )
+        ) {
             this.reportRestartRequired(file);
             return [];
         }
+        // the bot would run the same code as before
+        if (ctx.modules.length > 0 && modules.length === 0) return [];
 
         const { moduleGraph } = environment;
-        for (const target of viteFiles) {
-            for (const mod of moduleGraph.getModulesByFile(target) ?? []) moduleGraph.invalidateModule(mod);
+        for (const { viteFile } of reloadable) {
+            for (const mod of moduleGraph.getModulesByFile(viteFile) ?? []) moduleGraph.invalidateModule(mod);
         }
 
-        this.send({ file, type: deleteIfGone(type, file), affectedModules });
+        if (!this.botMightLoad(file, modules)) return [];
+
+        const affectedModules = reloadable.map((link) => link.file);
+        if (!reachesBot || type === 'delete') {
+            this.send({ file, type, affectedModules });
+            if (reachesBot) this.restartUnlessWrittenAgain(file);
+            return [];
+        }
+        const [first, ...rest] = this.imports.among(moduleGraph, affectedModules).map((path) => this.botPath(path));
+        // empty when the bot file imports the saved file with a query, like './notes.md?raw'. BotImports skips query imports
+        if (first === undefined) this.reportRestartRequired(file);
+        else this.send({ file, type, affectedModules, botImports: [first, ...rest] });
 
         // [] skips vite's own hmr
         return [];
+    }
+
+    // until the bot asks for its imports, it can't replace a plugin
+    private needsRestart(saved: string, chain: readonly string[], reachesBot: boolean): boolean {
+        return (reachesBot && !this.botReloadsPlugins) || this.restartFiles.needsRestart(saved, chain);
+    }
+
+    // an atomic save deletes the file and writes it again right after. the bot replaces the plugins on that write
+    private restartUnlessWrittenAgain(file: string): void {
+        const timer = setTimeout(() => {
+            this.restartTimers.delete(timer);
+            if (!existsSync(file)) this.reportRestartRequired(file);
+        }, DEBOUNCE_MS).unref();
+        this.restartTimers.add(timer);
+    }
+
+    // the bot can still read a file it doesn't import, like a new handler or a folder a plugin's onHmr watches
+    private botMightLoad(file: string, modules: readonly EnvironmentModuleNode[]): boolean {
+        return modules.length > 0 || !this.layout.isSkipped(file);
     }
 }
 
@@ -192,7 +263,8 @@ function deleteIfGone(type: HotUpdateOptions['type'], file: string): HotUpdateOp
     return type === 'update' && !existsSync(file) ? 'delete' : type;
 }
 
-// vite can hold several modules for one file, each with its own importers
+// vite can hold several modules for one file. each one has its own importers
+// an importer that loads the file with import() counts too because that line may never run again
 function affectedFiles(file: string, modules: EnvironmentModuleNode[]): string[] {
     const files = new Set([file]);
     const visited = new Set<EnvironmentModuleNode>();

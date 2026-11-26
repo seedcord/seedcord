@@ -1,6 +1,5 @@
 import { StartupPhase } from '@seedcord/core';
 import { COMMAND_DEPLOY_TIMEOUT_MS, CommandRegistry } from '@seedcord/core/internal';
-import { HostPlugins } from '@seedcord/types/internal';
 
 import { EmojiInjector } from '#src/emojis/EmojiInjector';
 import { publicKeyOf } from '#src/publicKey';
@@ -22,13 +21,11 @@ export class HttpStartupTasks {
         this.emojis = new EmojiInjector(host);
     }
 
-    // a Configuration task because plugins attach after the constructor runs
     public registerHmr(hmr: HmrManager): void {
         this.host.startup.addTask(StartupPhase.Configuration, 'hmr-registration', () => {
             if (this.service.interactions) hmr.register(this.service.interactions);
             if (this.commands) hmr.register(this.commands);
             hmr.register(this.service.subscribers);
-            for (const { instance } of this.host[HostPlugins].attachments) hmr.register(instance);
             return Promise.resolve();
         });
     }

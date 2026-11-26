@@ -11,7 +11,7 @@ import { CloudflareWorker } from '#commands/build/builder/CloudflareWorker';
 import { workerEntry } from '#commands/build/builder/workerEntry';
 import { listenHostFor, stableUrlOf } from '#commands/dev/tunnel/listenHost';
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
-import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
+import { botEnvironment } from '#core/modules/botEnvironment';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { openViteServer } from '#core/modules/openViteServer';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
@@ -90,10 +90,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         resources.use(nodeCopy);
         // vite reruns the entry's load hook after any update that reaches the entry. bot.ts throws when it runs a second time
         let functionExports: Promise<string[]> | undefined;
-        const hmr = this.openHmr(context, BOT_ENVIRONMENT, resources, [
-            basename(this.target.cloudflareConfig),
-            ...workerEnv.files
-        ]);
+        const hmr = this.openHmr(context, resources, [basename(this.target.cloudflareConfig), ...workerEnv.files]);
         const server = await openViteServer(
             resources,
             mergeViteConfig(edgeViteConfig(files.layout, viteRoot), {

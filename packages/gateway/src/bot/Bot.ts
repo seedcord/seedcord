@@ -18,6 +18,7 @@ import { assertGuildsIntent } from '#miscellaneous/assertGuildsIntent';
 import { EmojiInjector } from './injectors/EmojiInjector';
 
 import type { Core } from '#interfaces/Core';
+import type { HmrManager } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { BitFieldResolvable, GatewayIntentsString } from 'discord.js';
 
@@ -61,6 +62,11 @@ export class Bot implements HmrAware {
         if (this.#interactions) await this.#interactions.onHmr(event);
         if (this.#events) await this.#events.onHmr(event);
         if (this.#commandRegistry) await this.#commandRegistry.onHmr(event);
+    }
+
+    /** @internal */
+    public pauseDuringReloads(hmr: HmrManager): void {
+        hmr.pauseDuringReloads(this.#inFlight);
     }
 
     /** @internal */

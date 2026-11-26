@@ -19,13 +19,14 @@ export { FaultBoundary, type FaultDetails } from '#src/notices/FaultBoundary';
 export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
 export type { Runtime, Transport } from '#src/plugin/options';
-export { DEFAULT_SERVER_PORT, DEV_URL_HEADER, WORKER_PROBE } from '#src/webConstants';
+export { DEFAULT_SERVER_PORT, DEV_URL_HEADER, SERVICE_UNAVAILABLE, WORKER_PROBE } from '#src/webConstants';
 export { publicUrl } from '#src/publicUrl';
 export { keepRequestOpenFor, requestScope } from '#src/requestScope';
-export { sealAttachments } from '#src/plugin/PluginHost';
+export { HostHmr, sealAttachments } from '#src/plugin/PluginHost';
 export { PluginRegistry } from '#src/plugin/PluginRegistry';
 export { splitPluginKey } from '#src/plugin/splitPluginKey';
 export { CoordinatedStartup, type StartupTasks } from '#src/lifecycle/CoordinatedStartup';
+export { InFlight } from '#src/lifecycle/InFlight';
 export { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
 export { settleWithin } from '#src/lifecycle/withTimeout';
 
@@ -76,10 +77,9 @@ export { runCase, type CaseReturn, type MatchResult, type OnlyCases } from '#src
 export type { MiddlewareRoute } from '#src/handlers/MiddlewareRoute';
 
 export { getDevChannel, setDevChannel } from '#hmr/devChannel';
-export { connectDevChannel, HmrManager } from '#hmr/HmrManager';
+export { HmrManager } from '#hmr/HmrManager';
 export { wrapHot } from '#hmr/wrapHot';
 export { fromDevLogLine, fromWireError, toWireError } from '#hmr/wire';
-export { forwardLogsToCli } from '#hmr/forwardLogsToCli';
 
 export { MissingRole, NeedsAny, NotAllowed, NotInDm, NotInGuild, NotOwner, OnCooldown } from '#notices/index';
 
