@@ -9,12 +9,13 @@ import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/
 import { setDevChannel } from '#hmr/devChannel';
 import { MemberValues } from '#src/dispatch/DispatchContext';
 import { Plugin } from '#src/plugin/Plugin';
+import { fakeCliChannel } from '#tests/utils/fakeCliChannel';
 import { TestServerHost } from '#tests/utils/TestServerHost';
 
-import type { CliChannel } from '#hmr/devChannel';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
+import type { FakeCliChannel } from '#tests/utils/fakeCliChannel';
 import type { BotImport } from '@seedcord/types/internal';
 
 type WebCtor = new (host: CoreBase, greeting: string) => Plugin;
@@ -59,29 +60,21 @@ const STARTED = ['init before', 'ready before'];
 // the new instance's onHmr also gets the update that created it
 const REPLACED = [...STARTED, 'dispose before', 'init after', 'ready after', 'save reached after'];
 
-interface FakeCli {
-    channel: CliChannel;
-    sent: [event: string, payload: unknown][];
-    sends: (event: string, payload: unknown) => void;
+interface FakeCli extends FakeCliChannel {
     saves: (file: string, botImports?: string[]) => void;
 }
 
 function fakeCli(): FakeCli {
-    const listeners = new Map<string, (payload: unknown) => void>();
-    const sent: FakeCli['sent'] = [];
-    const channel = {
-        send: (event: string, payload: unknown) => void sent.push([event, payload]),
-        on: (event: string, listener: (payload: unknown) => void) => void listeners.set(event, listener),
-        off: vi.fn()
-    };
-    const sends: FakeCli['sends'] = (event, payload) => listeners.get(event)?.(payload);
+    const cli = fakeCliChannel();
     return {
-        // justified: this fake has send, on and off like a CliChannel. only their types are looser
-        channel: channel as unknown as CliChannel,
-        sent,
-        sends,
+        ...cli,
         saves: (file, botImports) =>
-            sends('seedcord:hmr', { file, type: 'update', affectedModules: [file], ...(botImports && { botImports }) })
+            cli.sends('seedcord:hmr', {
+                file,
+                type: 'update',
+                affectedModules: [file],
+                ...(botImports && { botImports })
+            })
     };
 }
 
@@ -184,7 +177,7 @@ describe('reloading a plugin under seedcord dev', () => {
         expect(dispatch[MemberValues]).toEqual({ webVersion: 'after' });
     });
 
-    it('passes later saves to the new instance and disposes only that one at shutdown', async () => {
+    it('sends later updates to the new instance and disposes only that one at shutdown', async () => {
         const cli = fakeCli();
         const file = write('Web.ts', webPlugin('before'));
         {
@@ -316,6 +309,38 @@ describe('reloading a plugin under seedcord dev', () => {
         await vi.waitFor(() => expect(calls).toEqual([...STARTED, 'save reached before']));
 
         expect(Reflect.get(host, 'web')).toMatchObject({ version: 'before' });
+        expect(restartsAsked(cli)).toEqual([]);
+    });
+
+    it("still reloads the file's other plugins when one constructor throws", async () => {
+        // seedcord rebuilds Broken before Web because Broken comes first in the file
+        const withBroken = (version: string): string =>
+            webPlugin(version).replace(
+                'export class Web',
+                `export class Broken extends Plugin {
+    constructor(host) {
+        super(host);
+        ${version === 'after' ? "throw new Error('typo');" : ''}
+    }
+
+    init() {}
+}
+
+export class Web`
+            );
+        const cli = fakeCli();
+        const file = write('Web.ts', withBroken('before'));
+        // justified: withBroken() writes a Plugin subclass called Broken that takes only the host
+        const { Broken } = (await import(pathToFileURL(file).href)) as { Broken: new (host: CoreBase) => Plugin };
+        await using host = await startedBot(file, cli, {
+            imports: [{ file, names: ['Broken', 'Web'] }],
+            attachBefore: (bot) => void bot.attach('broken', Broken)
+        });
+
+        write('Web.ts', withBroken('after'));
+        cli.saves(file, [file]);
+
+        await vi.waitFor(() => expect(Reflect.get(host, 'web')).toMatchObject({ version: 'after' }));
         expect(restartsAsked(cli)).toEqual([]);
     });
 

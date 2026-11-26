@@ -92,7 +92,7 @@ export class PluginReloader {
                 notReplaced.delete(key);
                 const replacement = this.rebuilt(old, Plugin);
                 // the old plugin keeps running, like it does when the file throws while it imports
-                if (!replacement) return true;
+                if (!replacement) continue;
                 if (!(await this.replace(replacement))) return false;
                 reloaded.push(`${Plugin.name} at ${key}`);
             }

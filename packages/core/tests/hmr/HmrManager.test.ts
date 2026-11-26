@@ -1,35 +1,29 @@
 import { assert, describe, it, expect, vi } from 'vite-plus/test';
 
 import { HmrManager } from '#hmr/HmrManager';
+import { fakeCliChannel } from '#tests/utils/fakeCliChannel';
 
-import type { CliChannel } from '#hmr/devChannel';
+import type { FakeCliChannel } from '#tests/utils/fakeCliChannel';
 
-function listening(): { manager: HmrManager; send: ReturnType<typeof vi.fn>; cliSends: (...args: unknown[]) => void } {
-    const listeners = new Map<string, (payload: unknown) => void>();
-    const send = vi.fn();
-    const channel = {
-        send,
-        on: (event: string, listener: (payload: unknown) => void) => void listeners.set(event, listener),
-        off: vi.fn()
-    };
-    // justified: listenTo reads only send and on
-    const manager = HmrManager.listenTo(channel as unknown as CliChannel);
+function listening(): FakeCliChannel & { manager: HmrManager } {
+    const cli = fakeCliChannel();
+    const manager = HmrManager.listenTo(cli.channel);
     assert(manager);
-    return { manager, send, cliSends: (event, payload) => listeners.get(String(event))?.(payload) };
+    return { ...cli, manager };
 }
 
 describe('HmrManager', () => {
     it('tells the CLI when vite is about to reload every module', () => {
-        const { send, cliSends } = listening();
-        expect(send).not.toHaveBeenCalled();
+        const { sent, sends } = listening();
+        expect(sent).toEqual([]);
 
-        cliSends('vite:beforeFullReload');
+        sends('vite:beforeFullReload');
 
-        expect(send).toHaveBeenCalledExactlyOnceWith('seedcord:full-reload', {});
+        expect(sent).toEqual([['seedcord:full-reload', {}]]);
     });
 
     it('finishes one save before it starts the next', async () => {
-        const { manager, cliSends } = listening();
+        const { manager, sends: cliSends } = listening();
         const order: string[] = [];
         const { promise: firstImport, resolve: finishFirstImport } = Promise.withResolvers<undefined>();
         manager.register({
@@ -49,7 +43,7 @@ describe('HmrManager', () => {
     });
 
     it('a rejecting listener does not stop the other listeners', async () => {
-        const { manager, cliSends } = listening();
+        const { manager, sends: cliSends } = listening();
         const ran: string[] = [];
         manager.register({ onHmr: () => Promise.reject(new Error('boom')) });
         manager.register({
