@@ -9,16 +9,10 @@ import { importFile, importSaved } from './importFile';
 
 import type { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
 import type { PluginCtor } from '#src/plugin/Plugin';
-import type { Attachment } from '#src/plugin/PluginRegistry';
-import type { HmrManager } from './HmrManager';
+import type { Attachment, Replacement } from '#src/plugin/PluginRegistry';
 import type { BotImport } from '@seedcord/types/internal';
 
-export interface ReloadablePlugins {
-    readonly attachments: () => readonly Attachment[];
-    readonly rebuild: PluginLifecycle['rebuild'];
-    readonly replace: PluginLifecycle['replace'];
-    readonly listeners: Pick<HmrManager, 'register' | 'unregister'>;
-}
+export type ReloadablePlugins = Pick<PluginLifecycle, 'attachments' | 'rebuild' | 'replace'>;
 
 type ExportName = string;
 type AttachKey = string;
@@ -33,7 +27,7 @@ export class PluginReloader {
     // run this before you save any of these files because it matches attachments by class and a saved file exports a new one
     public async learn(imports: readonly BotImport[]): Promise<void> {
         this.sources.clear();
-        const attachments = this.plugins.attachments();
+        const { attachments } = this.plugins;
 
         for (const { file, names } of imports) {
             const exported = await importFile(file);
@@ -60,7 +54,7 @@ export class PluginReloader {
             sources.push([file, builtFrom]);
         }
 
-        const notReplaced = new Map(this.plugins.attachments().map((attachment) => [attachment.key, attachment]));
+        const notReplaced = new Map(this.plugins.attachments.map((attachment) => [attachment.key, attachment]));
         for (const [file, builtFrom] of sources) {
             if (!(await this.reloadFile(file, builtFrom, notReplaced))) return false;
         }
@@ -96,10 +90,10 @@ export class PluginReloader {
                 // another of the bot's imports, like a barrel, already replaced it
                 if (!old) continue;
                 notReplaced.delete(key);
-                const next = this.rebuilt(old, Plugin);
+                const replacement = this.rebuilt(old, Plugin);
                 // the old plugin keeps running, like it does when the file throws while it imports
-                if (!next) return true;
-                if (!(await this.replace(old, next))) return false;
+                if (!replacement) return true;
+                if (!(await this.replace(replacement))) return false;
                 reloaded.push(`${Plugin.name} at ${key}`);
             }
         }
@@ -111,7 +105,7 @@ export class PluginReloader {
         return true;
     }
 
-    private rebuilt(old: Attachment, Plugin: PluginCtor): Attachment | undefined {
+    private rebuilt(old: Attachment, Plugin: PluginCtor): Replacement | undefined {
         try {
             return this.plugins.rebuild(old, Plugin);
         } catch (error) {
@@ -120,15 +114,12 @@ export class PluginReloader {
         }
     }
 
-    private async replace(old: Attachment, next: Attachment): Promise<boolean> {
-        const { listeners } = this.plugins;
-        listeners.unregister(old.instance);
+    private async replace(replacement: Replacement): Promise<boolean> {
         try {
-            await this.plugins.replace(old, next);
-            listeners.register(next.instance);
+            await this.plugins.replace(replacement);
             return true;
         } catch (error) {
-            this.logger.error(`Failed to reload ${paint.sky.bold(next.key)}`, error);
+            this.logger.error(`Failed to reload ${paint.sky.bold(replacement.next.key)}`, error);
             // every file you save from here needs a restart because the old plugin may be disposed and the new one never started
             this.sources.clear();
             return false;

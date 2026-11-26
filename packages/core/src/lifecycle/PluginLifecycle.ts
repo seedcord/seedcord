@@ -16,7 +16,7 @@ import type { TaskShutdownPhase } from '#src/lifecycle/phases';
 import type { Runtime, Transport } from '#src/plugin/options';
 import type { PluginCtor } from '#src/plugin/Plugin';
 import type { PluginHost } from '#src/plugin/PluginHost';
-import type { Attachment } from '#src/plugin/PluginRegistry';
+import type { Attachment, Replacement } from '#src/plugin/PluginRegistry';
 import type { StartupTasks } from './CoordinatedStartup';
 
 type LifecycleHost = PluginHost<Transport, Runtime>;
@@ -34,7 +34,7 @@ export class PluginLifecycle {
         private readonly shutdown: ShutdownTasks
     ) {}
 
-    private get attachments(): readonly Attachment[] {
+    public get attachments(): readonly Attachment[] {
         return this.host[HostPlugins].attachments;
     }
 
@@ -57,18 +57,22 @@ export class PluginLifecycle {
     }
 
     // the old plugin keeps running if this throws because nothing has changed yet
-    public rebuild(old: Attachment, Plugin: PluginCtor): Attachment {
+    public rebuild(old: Attachment, Plugin: PluginCtor): Replacement {
         return rebuildAttachment(this.host, old, Plugin);
     }
 
-    public async replace(old: Attachment, next: Attachment): Promise<void> {
-        replaceAttachment(this.host, old, next);
+    public async replace(replacement: Replacement): Promise<void> {
+        const { old, next } = replacement;
+        const hmr = this.host[HostHmr];
+        hmr?.unregister(old.instance);
+        replaceAttachment(this.host, replacement);
         await this.dispose(old).catch((caught: unknown) =>
             this.logger.warn(`${paint.sky.bold(old.key)} dispose failed before its reload`, caught)
         );
         this.completedInits.delete(old);
         await this.runInits([next]);
         await this.ready(next);
+        hmr?.register(next.instance);
     }
 
     public async rollback(): Promise<void> {
@@ -129,11 +133,7 @@ export class PluginLifecycle {
             async () => {
                 await this.runInits(readyInits);
                 for (const attachment of withReady) await this.ready(attachment);
-                hmr?.reloadPlugins({
-                    attachments: () => this.attachments,
-                    rebuild: (old, Plugin) => this.rebuild(old, Plugin),
-                    replace: (old, next) => this.replace(old, next)
-                });
+                hmr?.reloadPlugins(this);
             },
             budget
         );

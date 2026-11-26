@@ -12,6 +12,7 @@ import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
 import type { ResolvedPluginLifecycleSpec } from './lifecycle';
 import type { PluginLike } from './Plugin';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
+import type { Tagged } from 'type-fest';
 
 export interface Attachment {
     readonly key: string;
@@ -20,6 +21,9 @@ export interface Attachment {
     // the arguments attach() got after the plugin class. seedcord dev constructs the saved class with them
     readonly args: readonly unknown[];
 }
+
+// only prepareReplace() makes one. it checks the new plugin's members first
+export type Replacement = Tagged<{ readonly old: Attachment; readonly next: Attachment }, 'Replacement'>;
 
 export type DispatchMemberFunctions = Readonly<Record<string, (origin: DispatchOrigin) => unknown>>;
 
@@ -147,23 +151,29 @@ export class PluginRegistry {
         this.list.push(attachment);
     }
 
+    // throws on a clash before anything changes
+    public prepareReplace(old: Attachment, next: Attachment): Replacement {
+        this.assertClaimable(next, old);
+        // justified: Tagged needs one cast where the checked value is made
+        return { old, next } as Replacement;
+    }
+
+    public replace({ old, next }: Replacement): void {
+        for (const [member, owner] of this.claimed) {
+            if (owner.instance === old.instance) this.claimed.delete(member);
+        }
+        this.claim(next);
+        // init, dispose and fetch run in list order
+        this.list[this.list.indexOf(old)] = next;
+    }
+
     // replaced's own members don't count as a clash
-    public assertClaimable(attachment: Attachment, replaced?: Attachment): void {
+    private assertClaimable(attachment: Attachment, replaced?: Attachment): void {
         const { key, instance } = attachment;
         const plugin = labelOf(attachment);
         for (const member of Object.keys(instance.dispatchMembers ?? {})) {
             this.assertFree(member, key, plugin, instance, replaced?.instance);
         }
-    }
-
-    // keeps the attach order. init, dispose and fetch all run in that order.
-    // this doesn't check member clashes. PluginHost's rebuild already checked the new plugin's members
-    public replace(old: Attachment, next: Attachment): void {
-        for (const [member, owner] of this.claimed) {
-            if (owner.instance === old.instance) this.claimed.delete(member);
-        }
-        this.claim(next);
-        this.list[this.list.indexOf(old)] = next;
     }
 
     private claim(attachment: Attachment): void {

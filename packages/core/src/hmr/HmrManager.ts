@@ -13,7 +13,6 @@ import type { CliChannel } from './devChannel';
 import type { ReloadablePlugins } from './PluginReloader';
 import type { HmrAware } from '@seedcord/types';
 import type { HmrSave, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
-import type { Except } from 'type-fest';
 
 // the only raw `import.meta.hot` read in the framework
 export function connectDevChannel(): CliChannel | undefined {
@@ -47,11 +46,11 @@ export class HmrManager {
         this.listeners.delete(listener);
     }
 
-    public reloadPlugins(plugins: Except<ReloadablePlugins, 'listeners'>): void {
+    public reloadPlugins(plugins: ReloadablePlugins): void {
         // an edge bot runs its startup again when the first run fails
         if (this.plugins) return;
 
-        const reloader = new PluginReloader({ ...plugins, listeners: this });
+        const reloader = new PluginReloader(plugins);
         this.plugins = reloader;
         // queued with the updates because learn() has to finish before the next update runs
         this.channel.on(
@@ -61,15 +60,16 @@ export class HmrManager {
         this.channel.send('seedcord:read-bot-imports', {});
     }
 
-    private async handleUpdate(save: HmrSave): Promise<void> {
+    private async handleUpdate({ botImports, ...update }: HmrSave): Promise<void> {
         // plugins go first so a replaced plugin's old instance doesn't get this update
-        if (save.botImports && !(await this.plugins?.reloadedWithoutRestart(save.botImports))) {
-            this.channel.send('seedcord:restart-required', { file: save.file });
+        if (botImports && !(await this.plugins?.reloadedWithoutRestart(botImports))) {
+            this.channel.send('seedcord:restart-required', { file: update.file });
+            return;
         }
 
         const promises = [...this.listeners].map(async (listener) => {
             try {
-                await listener.onHmr(save);
+                await listener.onHmr(update);
             } catch (error) {
                 this.logger.error(`Error handling HMR update in ${paint.sky.bold(listener.constructor.name)}`, error);
             }

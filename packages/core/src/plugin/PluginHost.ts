@@ -19,7 +19,7 @@ import { splitPluginKey } from './splitPluginKey';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DeclaredScope, Runtime, Transport } from './options';
 import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from './Plugin';
-import type { Attachment } from './PluginRegistry';
+import type { Attachment, Replacement } from './PluginRegistry';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
 
@@ -141,16 +141,14 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     }
 
     /** @internal */
-    public [rebuildSlot](old: Attachment, Plugin: PluginCtor): Attachment {
-        const next = this.#construct(old.key, Plugin, old.args);
-        this[HostPlugins].assertClaimable(next, old);
-        return next;
+    public [rebuildSlot](old: Attachment, Plugin: PluginCtor): Replacement {
+        return this[HostPlugins].prepareReplace(old, this.#construct(old.key, Plugin, old.args));
     }
 
     /** @internal */
-    public [replaceSlot](old: Attachment, next: Attachment): void {
-        this[HostPlugins].replace(old, next);
-        this.#place(next);
+    public [replaceSlot](replacement: Replacement): void {
+        this[HostPlugins].replace(replacement);
+        this.#place(replacement.next);
     }
 
     #construct(key: string, Plugin: PluginCtor, args: readonly unknown[]): Attachment {
@@ -219,14 +217,13 @@ export function rebuildAttachment(
     host: Pick<PluginHost<Transport, Runtime>, typeof rebuildSlot>,
     old: Attachment,
     Plugin: PluginCtor
-): Attachment {
+): Replacement {
     return host[rebuildSlot](old, Plugin);
 }
 
 export function replaceAttachment(
     host: Pick<PluginHost<Transport, Runtime>, typeof replaceSlot>,
-    old: Attachment,
-    next: Attachment
+    replacement: Replacement
 ): void {
-    host[replaceSlot](old, next);
+    host[replaceSlot](replacement);
 }

@@ -267,7 +267,7 @@ describe('reloading a plugin under seedcord dev', () => {
         cli.saves(settings, [settings]);
 
         await vi.waitFor(() => expect(restartsAsked(cli)).toEqual([{ file: settings }]));
-        expect(calls).toEqual([...STARTED, 'save reached before']);
+        expect(calls).toEqual(STARTED);
     });
 
     const READS: [string, BotImport['names']][] = [
@@ -286,7 +286,7 @@ describe('reloading a plugin under seedcord dev', () => {
             cli.saves(file, [file]);
 
             await vi.waitFor(() => expect(restartsAsked(cli)).toEqual([{ file }]));
-            expect(calls).toEqual([...STARTED, 'save reached before']);
+            expect(calls).toEqual(STARTED);
         }
     );
 
