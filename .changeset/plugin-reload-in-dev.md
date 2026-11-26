@@ -5,4 +5,4 @@
 '@seedcord/http': minor
 ---
 
-`seedcord dev` now _hot_ reloads a plugin when you save its file or a file that file imports as long as your bot file attaches it. It disposes the running plugin and starts the saved class with the arguments you passed to `attach()`.
+`seedcord dev` now _hot_ reloads a plugin that your bot file attaches when you save the plugin's file or a file it imports. It disposes the running plugin and starts the saved class with the arguments you passed to `attach()`.

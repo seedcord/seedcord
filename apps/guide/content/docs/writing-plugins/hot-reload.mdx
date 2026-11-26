@@ -3,7 +3,7 @@ title: Reloading in dev
 description: Reload the files that your plugin loads when you save them under seedcord dev, and ask for a restart or a command refresh for the rest.
 ---
 
-When you save a handler, a command, or a subscriber under [`seedcord dev`](/tooling/dev), seedcord reloads it in the running bot without a restart. When you save your plugin's own file, seedcord [starts the plugin again](#saving-the-plugins-own-source) from the saved code. A folder that your plugin loads itself reloads only if your plugin reloads it in `onHmr`. Otherwise the plugin keeps running the old code from that folder until you restart, and a restart reconnects a gateway bot to Discord.
+When you save a handler, a command, or a subscriber under [`seedcord dev`](/tooling/dev), seedcord reloads it in the running bot without a restart. When you save a plugin that your bot file attaches, seedcord [starts it again](#saving-the-plugins-own-source) from the saved code. If your plugin loads a folder itself, your plugin's `onHmr` has to reload that folder. Otherwise the plugin keeps running the old code from that folder until you restart, and a restart reconnects a gateway bot to Discord.
 
 ## What reaches `onHmr` when a file is saved
 
@@ -142,7 +142,7 @@ export class Tags extends Plugin {
 }
 ```
 
-Saving a file under `dir` now shows the **Restart required** card. A relative pattern resolves against `root`, and only `seedcord dev` reads the patterns. Register only the files that your plugin reads, since saving any file that matches restarts the bot. seedcord already covers its own startup files, like `seedcord.config.ts`.
+Saving a file under `dir` now shows the **Restart required** card. A relative pattern resolves against `root`, and only `seedcord dev` reads the patterns. Register only the files that your plugin reads because saving any file that matches shows the card. seedcord already covers its own startup files, like `seedcord.config.ts`.
 
 ## Files that change your commands
 
@@ -191,7 +191,7 @@ If a pattern starts with `!`, saving a file that it matches doesn't show the pro
 
 ## Saving the plugin's own source
 
-If you keep a plugin in `src/plugins` and your bot file imports it, saving it starts the plugin again without a restart. seedcord calls `dispose()` on the running plugin and builds the saved class with the arguments that your bot file passed to `attach()`. It then runs the new plugin's `init()` and `ready()`, and puts it under the same attach key. Saving a file that your plugin imports does the same because the plugin has to run again to use the saved code.
+If your bot file imports a plugin from your own source, like `src/plugins`, saving the plugin starts it again without a restart. seedcord builds the saved class with the arguments that your bot file passed to `attach()` and puts it under the same attach key. Then it calls `dispose()` on the running plugin and runs the new plugin's `init()` and `ready()`. Saving a file that your plugin imports does the same because the plugin has to run again to use the saved code.
 
 That changes three things for the code you write:
 
@@ -199,6 +199,6 @@ That changes three things for the code you write:
 - **`dispose()` has to stop everything that `init()` and `ready()` started,** like a timer, a listener, or a connection. seedcord calls it each time you save the plugin or a file it imports. Whatever it doesn't stop keeps running the old code beside the new plugin.
 - **You have to read the plugin from `core` each time you use it,** like `this.core.tags`. If you store the plugin in a field of a handler or of another plugin, that field still holds the old one after you save the plugin's file.
 
-To reload a file without starting the plugin again, load it from a folder with `FolderExports`, like [the responders above](#reloading-files-the-plugin-loaded). That fits a folder of pages that you edit often for example. If you load the file with `await import()`, saving it still starts the plugin again. seedcord treats an `import()` like any other import because that line may only run once, like one inside `init()`.
+To reload a file without starting the plugin again, load it from a folder with `FolderExports`, like [the responders above](#reloading-files-the-plugin-loaded). That suits files you edit often, like a folder of pages. If you load the file with `await import()`, saving it still starts the plugin again. seedcord treats an `import()` like any other import because that line may only run once, like one inside `init()`.
 
-If the saved file throws while seedcord imports it, the old plugin keeps running, and seedcord logs the error on the `hmr` channel. If the new plugin's constructor, `init()`, or `ready()` throws, the old plugin is already disposed, so the dev terminal shows the [**Restart required** card](/tooling/hot-reload#files-that-need-a-restart). It shows the same card if you save the plugin before the bot has finished starting.
+If the saved file throws while seedcord imports it, the old plugin keeps running, and seedcord logs the error on the `hmr` channel. The same happens if the new plugin's constructor throws, or if one of its [`dispatchMembers`](ref:core/Plugin.dispatchMembers) has the same name as another plugin's. If the new plugin's `init()` or `ready()` throws, the old plugin is already disposed, so the dev terminal shows the [**Restart required** card](/tooling/hot-reload#files-that-need-a-restart). It shows the same card if you save the plugin before the bot has finished starting.

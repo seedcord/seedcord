@@ -60,7 +60,7 @@ seedcord asks for a full restart when you save one of these since the CLI or the
 
 These sit beside the config, so they count even when `root` is `./src`. A `package.json` deeper in the project reloads like any other file. The `build.start` file isn't one of them because `seedcord dev` never loads it.
 
-A plugin that your bot file imports and attaches isn't on this list. When you save it, seedcord stops the running plugin and [starts a new one](/writing-plugins/hot-reload#saving-the-plugins-own-source) from the saved code. If you save it before the bot has finished starting, or the new plugin throws while it starts, seedcord asks for a restart.
+A plugin that your bot file attaches isn't on this list because it [reloads in place](#what-reloads-in-place). seedcord still asks for a restart if you save it before the bot has finished starting, or if the new plugin's `init()` or `ready()` throws.
 
 After you save one of those, your bot keeps running the old code, and the terminal prints this.
 
