@@ -46,9 +46,8 @@ export class RestartFiles {
     }
 
     // chain is the saved file plus everything importing it
-    public needsRestart(saved: string, chain: readonly string[], botReloadsPlugins: boolean): boolean {
-        if (this.isBotFile(saved) || (!botReloadsPlugins && chain.some((file) => this.isBotFile(file)))) return true;
-        return chain.some((file) => this.restartsTheBot(file));
+    public needsRestart(saved: string, chain: readonly string[]): boolean {
+        return this.isBotFile(saved) || chain.some((file) => this.restartsTheBot(file));
     }
 
     private restartsTheBot(file: string): boolean {

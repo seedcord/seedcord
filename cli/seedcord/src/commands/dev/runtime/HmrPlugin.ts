@@ -14,7 +14,7 @@ import { normalizePath } from 'vite';
 import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
 
-import { importedNames } from './importedNames';
+import { importedNames, mergeNames } from './importedNames';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { StateFolder } from '#core/state/StateFolder';
@@ -213,19 +213,19 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         if (ctx.modules.length > 0 && modules.length === 0) return [];
 
         const chain = affectedFiles(ctx.file, modules).map((viteFile) => ({ viteFile, file: resolve(viteFile) }));
+        // importing the bot file again would build a second bot
+        const reloadable = chain.filter((link) => !this.restartFiles.isBotFile(link.file));
+        const reachesBot = reloadable.length < chain.length;
         if (
-            this.restartFiles.needsRestart(
+            this.needsRestart(
                 file,
                 chain.map((link) => link.file),
-                this.botReloadsPlugins
+                reachesBot
             )
         ) {
             this.reportRestartRequired(file);
             return [];
         }
-        // importing the bot file again would build a second bot
-        const reloadable = chain.filter((link) => !this.restartFiles.isBotFile(link.file));
-        const reachesBot = reloadable.length < chain.length;
 
         const { moduleGraph } = environment;
         for (const { viteFile } of reloadable) {
@@ -249,6 +249,11 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         return [];
     }
 
+    // until the bot asks for its imports, it can't replace a plugin
+    private needsRestart(saved: string, chain: readonly string[], reachesBot: boolean): boolean {
+        return (reachesBot && !this.botReloadsPlugins) || this.restartFiles.needsRestart(saved, chain);
+    }
+
     // an atomic save deletes the file and writes it again right after. the bot replaces the plugins on that write
     private restartUnlessWrittenAgain(file: string): void {
         const timer = setTimeout(() => {
@@ -258,15 +263,15 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         this.restartTimers.add(timer);
     }
 
-    // clears the saved code so the bot gets the file again even if you write it back unchanged. the bot unregistered its handlers on the delete
+    // clears the cached code so the bot gets the file again even if you write it back unchanged. the bot unregistered its handlers on the delete
     private forgetCode(modules: EnvironmentModuleNode[]): EnvironmentModuleNode[] {
         for (const { id } of modules) if (id !== null) this.botCode.delete(id);
         return modules;
     }
 
-    // a new handler under root isn't in the bot's imports yet
+    // the bot can still read a file it doesn't import, like a new handler or a folder a plugin's onHmr watches
     private botMightLoad(file: string, modules: readonly EnvironmentModuleNode[]): boolean {
-        return modules.length > 0 || (this.layout.holds(file) && !this.layout.isSkipped(file));
+        return modules.length > 0 || !this.layout.isSkipped(file);
     }
 
     // a ?url import is just the file's path. editing the file doesn't change it
@@ -278,13 +283,18 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             if (id === null) return true;
             const before = this.botCode.get(id);
             if (!before) return true;
-            // a failed transform counts as a change. the bot unregisters a deleted file and reports a syntax error
             const transformed = await environment.transformRequest(url).then(
                 () => true,
                 () => false
             );
+            // the bot unregisters a file that fails to transform
+            // forgetting its code makes a revert reach the bot too
+            if (!transformed) {
+                this.botCode.delete(id);
+                return true;
+            }
             const after = this.botCode.get(id);
-            return !transformed || after?.code !== before.code || after.mappings !== before.mappings;
+            return after?.code !== before.code || after.mappings !== before.mappings;
         });
     }
 
@@ -292,11 +302,15 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         const { instance } = this.config;
         const imported = new Set(this.botImports(environment.moduleGraph));
         const read = importedNames(await readFile(instance, 'utf8'), instance);
-        return flatMapAsync([...read], async ([source, names]) => {
+        const found = await flatMapAsync([...read], async ([source, names]) => {
             const resolvedId = await environment.pluginContainer.resolveId(source, instance);
             const file = resolvedId ? resolve(resolvedId.id) : undefined;
             return file !== undefined && imported.has(file) ? [{ file: this.botPath(file), names }] : [];
         });
+        // './plugin' and './plugin.ts' are two sources for one file for example
+        const byFile = new Map<string, BotImport['names']>();
+        for (const { file, names } of found) byFile.set(file, mergeNames(byFile.get(file) ?? [], names));
+        return [...byFile].map(([file, names]) => ({ file, names }));
     }
 
     private importedByBot(graph: EnvironmentModuleGraph, files: readonly string[]): string[] {

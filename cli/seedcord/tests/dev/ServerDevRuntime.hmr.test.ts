@@ -17,6 +17,12 @@ const SCRATCH_ROOT = scratchPath('hmr-fixture');
 // imports by file url, the same way FolderExports loads a changed file
 const ENTRY = 'export async function read(url: string): Promise<string> { return (await import(url)).value; }\n';
 
+function updatesFor(received: [string, unknown][], file: string): unknown[] {
+    return received.flatMap(([event, save]) =>
+        event === 'seedcord:hmr' && Reflect.get(new Object(save), 'file') === file ? [save] : []
+    );
+}
+
 describe('dev runtime hot reload', () => {
     const runtimes: ServerDevRuntime[] = [];
 
@@ -159,14 +165,19 @@ import.meta.hot?.send('seedcord:read-bot-imports', {});
 
     it('answers the bot with its code imports and asks for a restart when you save a ?raw one', async () => {
         const { src, received, events } = await startedAskingBot({
-            'index.ts': `import schema from './schema.sql?raw';\nexport const sql = schema;\n${ASKING_BOT}`,
+            'index.ts': [
+                "import schema from './schema.sql?raw';",
+                "import { PORT } from './plugin.ts';",
+                'export const sql = schema + PORT;',
+                ASKING_BOT
+            ].join('\n'),
             'schema.sql': 'select 1;\n',
-            'plugin.ts': "export const greeting = 'before';\n"
+            'plugin.ts': "export const greeting = 'before';\nexport const PORT = 3000;\n"
         });
 
         expect(received).toContainEqual([
             'seedcord:bot-imports',
-            { imports: [{ file: join(src, 'plugin.ts'), names: ['greeting'] }] }
+            { imports: [{ file: join(src, 'plugin.ts'), names: ['PORT', 'greeting'] }] }
         ]);
         await saveUntilRestartRequired(join(src, 'schema.sql'), 'select 2;\n', events);
     }, 60_000);
@@ -179,7 +190,7 @@ import.meta.hot?.send('seedcord:read-bot-imports', {});
         await vi.waitFor(() => expect(events).toContainEqual({ type: 'restart-required' }), { timeout: 10_000 });
     }, 60_000);
 
-    it('sends the bot a save that reaches the bot file, once the bot has asked for its imports', async () => {
+    it('sends the bot an update for a file it imports once it has asked for its imports', async () => {
         const { src, received } = await startedAskingBot({
             'plugin.ts': "export { greeting } from './greeting';\n",
             'greeting.ts': "export const greeting = 'before';\n"
@@ -232,17 +243,26 @@ import.meta.hot?.send('seedcord:read-bot-imports', {});
         expect(events).not.toContainEqual({ type: 'restart-required' });
     }, 60_000);
 
-    it("skips a saved file outside the bot's root that the bot doesn't import", async () => {
+    it("sends the bot a saved file outside the bot's root, like a folder that a plugin watches", async () => {
         const { src, received } = await startedAskingBot({ 'plugin.ts': "export const greeting = 'before';\n" });
-        const [page, plugin] = [join(dirname(src), 'client', 'page.tsx'), join(src, 'plugin.ts')];
-        await mkdir(dirname(page), { recursive: true });
+        const locale = join(dirname(src), 'locales', 'en-US.ftl');
+        await mkdir(dirname(locale), { recursive: true });
 
-        await writeFile(page, 'export const page = 1;\n');
-        await saveUntil(plugin, "export const greeting = 'after';\n", () =>
-            expect(received).toContainEqual(['seedcord:hmr', expect.objectContaining({ file: plugin })])
+        await saveUntil(locale, 'hello = Hello\n', () =>
+            expect(received).toContainEqual(['seedcord:hmr', expect.objectContaining({ file: locale })])
         );
+    }, 60_000);
 
-        expect(received).not.toContainEqual(['seedcord:hmr', expect.objectContaining({ file: page })]);
+    it('sends the bot a file you break and then put back', async () => {
+        const code = "export const greeting = 'hello';\n";
+        const { src, received } = await startedAskingBot({ 'plugin.ts': code });
+        const plugin = join(src, 'plugin.ts');
+
+        await saveUntil(plugin, 'export const greeting = ;\n', () =>
+            expect(updatesFor(received, plugin).length).toBeGreaterThan(0)
+        );
+        const afterBreak = updatesFor(received, plugin).length;
+        await saveUntil(plugin, code, () => expect(updatesFor(received, plugin).length).toBeGreaterThan(afterBreak));
     }, 60_000);
 
     it('sends the bot a saved file whose code only moved down a line', async () => {
@@ -261,12 +281,15 @@ import.meta.hot?.send('seedcord:read-bot-imports', {});
         const plugin = join(src, 'plugin.ts');
 
         await rm(plugin);
-        await vi.waitFor(() =>
-            expect(received).toContainEqual(['seedcord:hmr', expect.objectContaining({ file: plugin, type: 'delete' })])
+        await vi.waitFor(
+            () => expect(updatesFor(received, plugin)).toContainEqual(expect.objectContaining({ type: 'delete' })),
+            {
+                timeout: 10_000
+            }
         );
-        await saveUntil(plugin, code, () =>
-            expect(received).toContainEqual(['seedcord:hmr', expect.objectContaining({ file: plugin, type: 'create' })])
-        );
+        const afterDelete = updatesFor(received, plugin).length;
+        // the watcher can report the write as a change under load
+        await saveUntil(plugin, code, () => expect(updatesFor(received, plugin).length).toBeGreaterThan(afterDelete));
     }, 60_000);
 
     it("asks for a restart when the bot answers that it can't reload the save", async () => {

@@ -14,14 +14,17 @@ function exportName({ importName }: Entry): string | undefined {
     return importName.kind === 'Name' && importName.name !== null ? importName.name : undefined;
 }
 
+export function mergeNames(first: BotImport['names'], second: BotImport['names']): BotImport['names'] {
+    return first === 'all' || second === 'all' ? 'all' : [...first, ...second];
+}
+
 // skips type-only imports. typescript removes them before the code runs
 export function importedNames(code: string, file: string): Map<string, BotImport['names']> {
     const { module } = parseSync(file, code);
     const names = new Map<string, BotImport['names']>();
     const read = (source: string, entries: readonly Entry[]): void => {
         const values = entries.filter((entry) => !entry.isType).map(exportName);
-        const before = names.get(source) ?? [];
-        names.set(source, before !== 'all' && values.every(isNotNil) ? [...before, ...values] : 'all');
+        names.set(source, mergeNames(names.get(source) ?? [], values.every(isNotNil) ? values : 'all'));
     };
 
     for (const { moduleRequest, entries } of module.staticImports) read(moduleRequest.value, entries);
