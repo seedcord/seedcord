@@ -39,6 +39,9 @@ export function withTimeout(name: string, run: () => Promisable<void>, timeoutMs
     });
 }
 
+// add this to the time limit of a task that waits with settleWithin(). the task's timer starts first and would run out before the wait
+export const TASK_HEADROOM_MS = 1000;
+
 // the caller does not get work's rejection
 export function settleWithin(work: Promise<unknown>, timeoutMs: number): Promise<void> {
     return raceTimer(

@@ -5,7 +5,7 @@ import { Logger } from '@seedcord/logger';
 import { KeyedQueue } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
-import { settleWithin } from '#src/lifecycle/withTimeout';
+import { settleWithin, TASK_HEADROOM_MS } from '#src/lifecycle/withTimeout';
 
 import { getDevChannel, setDevChannel } from './devChannel';
 import { PluginReloader } from './PluginReloader';
@@ -28,6 +28,7 @@ export const RELOAD_PAUSE_MS = 5000;
 
 // learn() takes a few ms. this cap only matters if the CLI never answers. saves then ask for a restart
 export const LEARN_WAIT_MS = 5000;
+export const LEARN_TASK_TIMEOUT_MS = LEARN_WAIT_MS + TASK_HEADROOM_MS;
 
 export class HmrManager {
     private readonly logger = new Logger('HMR', { channel: 'hmr' });

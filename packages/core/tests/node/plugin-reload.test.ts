@@ -8,6 +8,7 @@ import { HostPlugins } from '@seedcord/types/internal';
 import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { setDevChannel } from '#hmr/devChannel';
+import { LEARN_TASK_TIMEOUT_MS } from '#hmr/HmrManager';
 import { MemberValues } from '#src/dispatch/DispatchContext';
 import { Plugin } from '#src/plugin/Plugin';
 import { fakeCliChannel } from '#tests/utils/fakeCliChannel';
@@ -156,6 +157,22 @@ describe('reloading a plugin under seedcord dev', () => {
 
         expect(calls).toEqual([...STARTED, 'sent seedcord:read-bot-imports']);
     });
+
+    it(
+        'finishes starting when the CLI never answers which files the bot file imports',
+        async () => {
+            // the startup task's time limit is only the learn() wait because this plugin doesn't define ready()
+            class Quiet extends Plugin {
+                public init(): void {}
+            }
+            setDevChannel(fakeCli().channel);
+            onTestFinished(() => setDevChannel(undefined));
+
+            // waits out LEARN_WAIT_MS for real. fake timers stall startup's other timers
+            await using _host = await new TestServerHost().attach('quiet', Quiet).run();
+        },
+        2 * LEARN_TASK_TIMEOUT_MS
+    );
 
     it.each([
         ['web', (host: TestServerHost) => Reflect.get(host, 'web') as unknown],
