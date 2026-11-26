@@ -1,6 +1,6 @@
 ---
 title: Reloading in dev
-description: Reload the files that your plugin loads when you save them under seedcord dev, and ask for a restart or a command refresh for the rest.
+description: Reload your plugin and the files it loads when you save them under seedcord dev, and ask for a restart or a command refresh for the rest.
 ---
 
 When you save a handler, a command, or a subscriber under [`seedcord dev`](/tooling/dev), seedcord reloads it in the running bot without a restart. When you save a plugin that your bot file attaches, seedcord [starts it again](#saving-the-plugins-own-source) from the saved code. If your plugin loads a folder itself, your plugin's `onHmr` has to reload that folder. Otherwise the plugin keeps running the old code from that folder until you restart, and a restart reconnects a gateway bot to Discord.
@@ -187,7 +187,7 @@ export class Descriptions extends Plugin {
 
 Each file in `descriptions` holds the description for the command it's named after, so `ban.txt` would have the description of `/ban` for example. [`readFiles`](ref:utils/readFiles) only reads a folder that you list in [`files`](/build/data-files). If you list `descriptions` there and save `ban.txt`, `seedcord dev` shows the same prompt as it does for a command file. When you answer `y`, seedcord runs `prepareCommands` again before it sends your commands.
 
-If a pattern starts with `!`, saving a file that it matches doesn't show the prompt. A `descriptions/README.txt` doesn't change any command, so add `'!descriptions/README.txt'` to the list so that saving it doesn't show the prompt. Outside `seedcord dev`, seedcord never reads these patterns.
+If a pattern starts with `!`, saving a file that it matches doesn't show the prompt. A `descriptions/README.txt` doesn't change any command. Add `'!descriptions/README.txt'` to the list to skip the prompt for it. Outside `seedcord dev`, seedcord never reads these patterns.
 
 ## Saving the plugin's own source
 
