@@ -5,7 +5,7 @@ import type { Logger } from '@seedcord/logger';
 
 export class InFlight {
     private readonly running = new Set<Promise<unknown>>();
-    private opening = Promise.withResolvers<boolean>();
+    private opening = Promise.withResolvers<undefined>();
     private state: 'held' | 'open' | 'paused' | 'closed' = 'held';
 
     constructor(
@@ -20,18 +20,19 @@ export class InFlight {
     public open(): void {
         if (this.state !== 'held') return;
         this.state = 'open';
-        this.opening.resolve(true);
+        this.opening.resolve(undefined);
     }
 
     public close(): void {
         this.state = 'closed';
-        this.opening.resolve(false);
+        this.opening.resolve(undefined);
     }
 
     public admit<Result>(work: () => Promise<Result>): Promise<Result | undefined> {
         if (this.state === 'closed') return Promise.resolve(undefined);
         if (this.state === 'open') return this.run(work);
-        return this.opening.promise.then((opened) => (opened ? this.run(work) : undefined));
+        // check again because a pause or close can run before this callback
+        return this.opening.promise.then(() => this.admit(work));
     }
 
     // a plugin reload calls this so no request or event reaches a plugin that hasn't started yet
@@ -43,7 +44,7 @@ export class InFlight {
         return () => {
             if (this.state !== 'paused') return;
             this.state = 'open';
-            this.opening.resolve(true);
+            this.opening.resolve(undefined);
         };
     }
 

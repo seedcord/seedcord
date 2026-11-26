@@ -120,8 +120,13 @@ describe('reloading a plugin under seedcord dev', () => {
         attachBefore(host);
         host.attach(key, Web, 'hello');
         attachAfter(host);
+        // startup waits for this answer, the way the real CLI gives it
+        const send = cli.channel.send.bind(cli.channel);
+        cli.channel.send = (event, payload) => {
+            send(event, payload);
+            if (event === 'seedcord:read-bot-imports') cli.sends('seedcord:bot-imports', { imports });
+        };
         await host.run();
-        cli.sends('seedcord:bot-imports', { imports });
         return host;
     }
 

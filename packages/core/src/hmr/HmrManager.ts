@@ -5,6 +5,8 @@ import { Logger } from '@seedcord/logger';
 import { KeyedQueue } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
+import { settleWithin } from '#src/lifecycle/withTimeout';
+
 import { getDevChannel, setDevChannel } from './devChannel';
 import { PluginReloader } from './PluginReloader';
 import { wrapHot } from './wrapHot';
@@ -24,12 +26,16 @@ export function connectDevChannel(): CliChannel | undefined {
 // long enough for a handler to answer inside discord's 3s deadline
 export const RELOAD_PAUSE_MS = 5000;
 
+// learn() takes a few ms. this cap only matters if the CLI never answers. saves then ask for a restart
+export const LEARN_WAIT_MS = 5000;
+
 export class HmrManager {
     private readonly logger = new Logger('HMR', { channel: 'hmr' });
     private readonly listeners = new Set<HmrAware>();
     private readonly saves = new KeyedQueue();
     private readonly gates = new Set<InFlight>();
     private plugins?: PluginReloader;
+    private learned?: Promise<void>;
     private stopped = false;
 
     private constructor(private readonly channel: CliChannel) {
@@ -63,18 +69,30 @@ export class HmrManager {
         await this.saves.run('hmr', () => Promise.resolve());
     }
 
-    public reloadPlugins(plugins: ReloadablePlugins): void {
+    // startup waits for this. if you save a file before learn() imports it, vite loads the new class and learn() can't match it
+    public reloadPlugins(plugins: ReloadablePlugins): Promise<void> {
         // an edge bot runs its startup again when the first run fails
-        if (this.plugins) return;
+        if (this.learned) return this.learned;
+        // without the CLI's answer every save that reaches the bot file asks for a restart, which is right when zero plugins are attached
+        if (plugins.attachments.length === 0) return Promise.resolve();
 
         const reloader = new PluginReloader(plugins, this);
         this.plugins = reloader;
+        const learned = Promise.withResolvers<undefined>();
         // queued with the updates because learn() has to finish before the next update runs
         this.channel.on(
             'seedcord:bot-imports',
-            ({ imports }) => void this.saves.run('hmr', () => reloader.learn(imports))
+            ({ imports }) =>
+                void this.saves
+                    .run('hmr', () => reloader.learn(imports))
+                    .then(
+                        () => learned.resolve(undefined),
+                        () => learned.resolve(undefined)
+                    )
         );
         this.channel.send('seedcord:read-bot-imports', {});
+        this.learned = settleWithin(learned.promise, LEARN_WAIT_MS);
+        return this.learned;
     }
 
     public async pauseGates(): Promise<() => void> {

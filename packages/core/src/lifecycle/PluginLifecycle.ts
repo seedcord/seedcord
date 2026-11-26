@@ -4,6 +4,7 @@ import { Logger } from '@seedcord/logger';
 import { HostPlugins } from '@seedcord/types/internal';
 import { sumBy } from 'es-toolkit';
 
+import { LEARN_WAIT_MS } from '#hmr/HmrManager';
 import { StartupPhase } from '#src/lifecycle/phases';
 import { HostHmr, rebuildAttachment, replaceAttachment } from '#src/plugin/PluginHost';
 import { pluginLoggerOf } from '#src/plugin/pluginSlots';
@@ -130,14 +131,16 @@ export class PluginLifecycle {
         const withReady = this.attachments.filter(({ instance }) => instance.ready);
         if (readyInits.length === 0 && withReady.length === 0 && !hmr) return;
         const budget =
-            sumBy(readyInits, ({ spec }) => spec.init.timeout) + sumBy(withReady, ({ spec }) => spec.ready.timeout);
+            sumBy(readyInits, ({ spec }) => spec.init.timeout) +
+            sumBy(withReady, ({ spec }) => spec.ready.timeout) +
+            (hmr ? LEARN_WAIT_MS : 0);
         this.startup.addTask(
             StartupPhase.Ready,
             'plugins-ready',
             async () => {
                 await this.runInits(readyInits);
                 for (const attachment of withReady) await this.ready(attachment);
-                hmr?.reloadPlugins(this);
+                await hmr?.reloadPlugins(this);
             },
             budget
         );

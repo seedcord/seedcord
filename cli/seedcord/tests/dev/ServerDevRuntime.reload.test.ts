@@ -30,9 +30,6 @@ class Bot extends ServerHost {
     }
 }
 
-// small race related work around for testing purposes to make sure bot imports are answered before continuing
-export const answered = new Promise((resolve) => import.meta.hot.on('seedcord:bot-imports', resolve));
-
 export const bot = new Bot().attach('web', Web);
 await bot.run();
 `;
@@ -48,11 +45,6 @@ export class Web extends Plugin {
 
 interface ReloadingBot extends AsyncDisposable {
     readonly web: { readonly version: string };
-}
-
-interface BotModule {
-    readonly bot: ReloadingBot;
-    readonly answered: Promise<unknown>;
 }
 
 describe('dev runtime on a node bot', () => {
@@ -76,10 +68,8 @@ describe('dev runtime on a node bot', () => {
             await runtime.start(devContextFor(project.path, 'bot.ts'));
             const { module } = await runtime.loadEntry();
             // justified: botFile() above exports a ServerHost, which disposes itself, with a Web plugin at web
-            const { bot: started, answered } = module as BotModule;
-            await using bot = started;
+            await using bot = (module as { bot: ReloadingBot }).bot;
             expect(bot.web.version).toBe('before');
-            await answered;
 
             await saveUntil(join(src, 'Web.ts'), webPlugin('after'), () => expect(bot.web.version).toBe('after'));
         },

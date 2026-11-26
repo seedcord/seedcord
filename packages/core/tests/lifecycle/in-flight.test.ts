@@ -48,10 +48,26 @@ describe('InFlight', () => {
         const resume = await inFlight.pause(WINDOW_MS);
         order.push('paused');
         const held = inFlight.admit(() => Promise.resolve(order.push('held')));
+        await setTimeout(0);
         order.push('resumed');
         resume();
         await held;
 
         expect(order).toEqual(['running', 'paused', 'resumed', 'held']);
+    });
+
+    it('holds work that waited for open() when a pause starts before it runs', async () => {
+        const inFlight = new InFlight(new Logger('Test'), 'Test');
+        const order: string[] = [];
+
+        const held = inFlight.admit(() => Promise.resolve(order.push('held')));
+        inFlight.open();
+        const pausing = inFlight.pause(WINDOW_MS);
+        await setTimeout(0);
+        order.push('resumed');
+        (await pausing)();
+        await held;
+
+        expect(order).toEqual(['resumed', 'held']);
     });
 });

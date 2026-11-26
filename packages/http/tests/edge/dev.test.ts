@@ -33,7 +33,7 @@ interface FakeCli {
     save(event: HmrUpdateEvent): void;
 }
 
-// the channel that seedcord dev opens to the worker. it answers a read with `deployed`
+// the channel that seedcord dev opens to the worker. startup waits on both answers, the way it does with the real CLI
 function connectCli(deployed?: DeployedHashes): FakeCli {
     const sent: [string, unknown][] = [];
     const handlers = new Map<string, (data: unknown) => void>();
@@ -41,6 +41,7 @@ function connectCli(deployed?: DeployedHashes): FakeCli {
         send: (event, data) => {
             sent.push([event, data]);
             if (event === 'seedcord:read-deployed') handlers.get('seedcord:last-deploy')?.({ deployed });
+            else if (event === 'seedcord:read-bot-imports') handlers.get('seedcord:bot-imports')?.({ imports: [] });
         },
         // justified: the fake stores every handler under one signature
         on: (event, handler) => handlers.set(event, handler as (data: unknown) => void),
@@ -165,7 +166,6 @@ describe('the edge Seedcord under seedcord dev', () => {
                 'seedcord:read-deployed',
                 'seedcord:commands-deployed',
                 'seedcord:commands-deployed',
-                'seedcord:read-bot-imports',
                 'seedcord:started'
             ])
         );
@@ -246,7 +246,6 @@ describe('the edge Seedcord under seedcord dev', () => {
                 'seedcord:read-deployed',
                 'seedcord:commands-deployed',
                 'seedcord:commands-deployed',
-                'seedcord:read-bot-imports',
                 'seedcord:started'
             ])
         );
