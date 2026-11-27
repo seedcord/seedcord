@@ -2,7 +2,8 @@ const VITE_CLIENT = '<script type="module" src="/@vite/client"></script>';
 // html can leave out both closing tags. a module script runs from anywhere in the page
 const CLOSING_TAG = /<\/head>|<\/body>/i;
 
-// vite's client in a plugin's html reloads the tab when you save a file under seedcord dev
+// under seedcord dev, vite puts a small script in every page in client/. that script reloads the tab when you save a file.
+// this adds the same script to html that a plugin returns from fetch() because vite never reads that html
 export async function finishPage(response: Response): Promise<Response> {
     const { headers: sent } = response;
     // splicing the script into a compressed body would corrupt it

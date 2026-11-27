@@ -11,6 +11,7 @@ import { captureLogs } from '@seedcord/logger/internal';
 import { beforeAll, describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { WebServer } from '#node/WebServer';
+import { finishPage } from '#src/plugin/finishPage';
 
 import type { WebServerOptions } from '#node/WebServer';
 import type { ServerConfig } from '@seedcord/types';
@@ -47,15 +48,16 @@ function page(request: Request): Promise<Response | undefined> {
 
 function webServer(setup: Setup = {}): WebServer {
     const { config = LOCAL, startup = { isReady: true, hasBegun: true }, answer = page } = setup;
-    return new WebServer({
+    const server = new WebServer({
         config: () => config,
         shutdown: { addTask: () => undefined },
         startup,
         plugins: { answer, answersRequests: setup.answersRequests ?? true },
         interactions: setup.interactions,
-        dev: () => setup.dev,
         clientDir: setup.clientDir
     });
+    if (setup.dev) server.dev = setup.dev;
+    return server;
 }
 
 interface Listening extends AsyncDisposable {
@@ -76,7 +78,13 @@ async function listening(setup: Setup = {}): Promise<Listening> {
 const get = (path: string): Request => new Request(`http://bot.test${path}`);
 
 function devServer(servesPages: boolean): DevServer {
-    return { servesPages, serve: () => Promise.resolve(false), upgrade: () => false, closeSockets: () => undefined };
+    return {
+        servesPages,
+        serve: () => Promise.resolve(false),
+        upgrade: () => false,
+        closeSockets: () => undefined,
+        finish: (response) => Promise.resolve(response)
+    };
 }
 
 describe('WebServer requests', () => {
@@ -410,7 +418,8 @@ describe('WebServer under seedcord dev', () => {
                 socket.write('HTTP/1.1 101 Switching Protocols\r\n\r\n');
                 return true;
             },
-            closeSockets: () => held.forEach((socket) => socket.destroy())
+            closeSockets: () => held.forEach((socket) => socket.destroy()),
+            finish: finishPage
         };
     }
 

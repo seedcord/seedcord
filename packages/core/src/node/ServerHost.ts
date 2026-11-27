@@ -46,8 +46,6 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     public [HostListenHost]?: string | undefined;
     /** @internal */
     public [HostDevUrl]?: string | undefined;
-    /** @internal */
-    public [HostDevServer]?: DevServer | undefined;
 
     public abstract override readonly config: ServerHostConfig;
 
@@ -97,7 +95,6 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
             startup,
             plugins: this[HostPlugins],
             interactions: this.answerInteractions?.bind(this),
-            dev: () => this[HostDevServer],
             clientDir: builtClientDir()
         });
         startup.addTask(StartupPhase.Ready, 'web-server', async () => {
@@ -109,6 +106,16 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
 
     /** @internal */
     protected answerInteractions?(request: Request): Promise<Response>;
+
+    /** @internal */
+    public get [HostDevServer](): DevServer {
+        return this.#web.dev;
+    }
+
+    // seedcord dev sets this before start() because serve() reads servesPages to decide on a port
+    public set [HostDevServer](server: DevServer) {
+        this.#web.dev = server;
+    }
 
     // seedcord dev opens its tunnel only to a server that takes interactions
     get #devTunnel(): { listenHost: string | undefined; url: string | undefined } | undefined {

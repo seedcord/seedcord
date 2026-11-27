@@ -10,7 +10,6 @@ import { asError, isPortInUse } from '@seedcord/utils/internal';
 import { answerPluginsOrInteractions } from '#src/answerPluginsOrInteractions';
 import { InFlight } from '#src/lifecycle/InFlight';
 import { ShutdownPhase } from '#src/lifecycle/phases';
-import { finishPage } from '#src/plugin/finishPage';
 import { requestPath } from '#src/requestPath';
 import { DEFAULT_SERVER_PORT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE } from '#src/webConstants';
 
@@ -43,16 +42,24 @@ export interface WebServerOptions {
     readonly plugins: Pick<PluginRegistry, 'answer' | 'answersRequests'>;
     // http answers Discord's interactions here. a gateway bot takes them over its websocket
     readonly interactions: Interactions | undefined;
-    // seedcord dev sets this before start()
-    readonly dev: () => DevServer | undefined;
     readonly clientDir: string | undefined;
 }
+
+// outside seedcord dev, vite never answers and pages go out the way the bot wrote them
+const WITHOUT_DEV: DevServer = {
+    servesPages: false,
+    serve: () => Promise.resolve(false),
+    upgrade: () => false,
+    closeSockets: () => undefined,
+    finish: (response) => Promise.resolve(response)
+};
 
 // answers a node bot's web requests: health, built client files, then Discord's interactions, plugins, and a 404. serve() also puts it on a port
 export class WebServer {
     private readonly logger = new Logger('Server', { channel: 'server' });
     private readonly inFlight = new InFlight(this.logger, 'Requests');
     private readonly clientFiles: ClientFiles | undefined;
+    public dev = WITHOUT_DEV;
     private server?: Server;
     private bound: number | undefined;
 
@@ -95,8 +102,7 @@ export class WebServer {
     }
 
     private async respond(request: Request): Promise<Response> {
-        const response = await this.answerFrom(request);
-        return this.options.dev() ? finishPage(response) : response;
+        return this.dev.finish(await this.answerFrom(request));
     }
 
     // the same order as seedcord dev, where vite answers before the bot
@@ -128,13 +134,13 @@ export class WebServer {
     }
 
     private get hasRoutes(): boolean {
-        const { interactions, plugins, dev } = this.options;
+        const { interactions, plugins } = this.options;
         return (
             this.healthPath !== undefined ||
             interactions !== undefined ||
             plugins.answersRequests ||
             this.clientFiles !== undefined ||
-            dev()?.servesPages === true
+            this.dev.servesPages
         );
     }
 
@@ -162,7 +168,7 @@ export class WebServer {
         });
         this.server = server;
         server.on('upgrade', (incoming, socket, head) => {
-            if (!this.options.dev()?.upgrade(incoming, socket, head)) socket.destroy();
+            if (!this.dev.upgrade(incoming, socket, head)) socket.destroy();
         });
 
         server.listen(port, host);
@@ -183,7 +189,7 @@ export class WebServer {
     }
 
     private async answer(server: Server, incoming: IncomingMessage, outgoing: ServerResponse): Promise<void> {
-        if (await this.options.dev()?.serve(incoming, outgoing)) return;
+        if (await this.dev.serve(incoming, outgoing)) return;
         const request = await toWebRequest(incoming, this.config.bodyLimit ?? DEFAULT_BODY_LIMIT);
         const response = request ? await this.fetch(request) : new Response(null, { status: PAYLOAD_TOO_LARGE });
         await writeWebResponse(response, outgoing);
@@ -197,7 +203,7 @@ export class WebServer {
         const server = this.server;
         // close() on a server that isn't listening calls back with an error and never emits 'close'
         if (!server?.listening) return Promise.resolve();
-        this.options.dev()?.closeSockets();
+        this.dev.closeSockets();
 
         return new Promise((resolve, reject) => {
             server.close((error) => {

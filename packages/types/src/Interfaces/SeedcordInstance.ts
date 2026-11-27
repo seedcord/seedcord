@@ -27,6 +27,8 @@ export interface DevServer {
     upgrade(request: IncomingMessage, socket: Duplex, head: Buffer): boolean;
     // node's server.close() waits for every socket that upgrade() took, and a browser holds them open
     closeSockets(): void;
+    // saving a file reloads the tab because this adds vite's client to the pages the bot answers
+    finish(response: Response): Promise<Response>;
 }
 
 // Core implements this. the CLI narrows a loaded module export to it after the SeedcordBrand runtime check
@@ -54,6 +56,6 @@ export interface SeedcordInstance {
     // seedcord dev sets this before start() when `dev.tunnel` is a URL. core.url returns it while server.url is unset
     [HostDevUrl]?: string | undefined;
     // seedcord dev sets this before start() on a node bot
-    [HostDevServer]?: DevServer | undefined;
+    [HostDevServer]?: DevServer;
     start(): Promise<unknown>;
 }

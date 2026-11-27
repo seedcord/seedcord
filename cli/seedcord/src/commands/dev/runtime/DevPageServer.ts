@@ -1,5 +1,6 @@
 import { createServer } from 'node:http';
 
+import { finishPage } from '@seedcord/core/internal';
 import { isGetOrHead } from '@seedcord/utils/internal';
 
 import type { DevServer } from '@seedcord/types/internal';
@@ -57,5 +58,9 @@ export class DevPageServer implements DevServer {
     // vite only closes these with its own server, and that server closes after the one in front of it
     public closeSockets(): void {
         for (const socket of this.upgraded) socket.destroy();
+    }
+
+    public finish(response: Response): Promise<Response> {
+        return finishPage(response);
     }
 }
