@@ -1,5 +1,6 @@
 import { cn, Icon, PosterSection, SECTION_HEADING, tw } from '@seedcord/ui';
 import {
+    AppWindow,
     AtSign,
     BadgeCheck,
     Blocks,
@@ -153,7 +154,8 @@ const GROUPS: Group[] = [
         rows: [
             { icon: HeartPulse, label: 'lifecycle', gloss: 'phased startup and shutdown' },
             { icon: ScrollText, label: 'logger', gloss: 'named channels, levels and sinks' },
-            { icon: Globe, label: 'web server', gloss: 'a health check and your plugin routes on one port' },
+            { icon: Globe, label: 'web server', gloss: 'a health check, pages and plugin routes on one port' },
+            { icon: AppWindow, label: 'web pages', gloss: 'Vite pages from client/, with any framework' },
             { icon: Webhook, label: 'webhook reporters', gloss: 'faults posted to a Discord webhook' },
             { icon: Variable, label: 'typed env', gloss: 'envapt reads .env, your shell and Worker bindings' },
             {
