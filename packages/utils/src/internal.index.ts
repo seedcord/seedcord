@@ -3,10 +3,13 @@ export { BotLayout } from './files/BotLayout';
 export type { BotEntry } from './files/BotLayout';
 export { importFailed, recordThrownBy, vitePluginThrew } from './files/importFailed';
 export { fileUrl, importSpecifier, isInside, posixRelative, toPosixPath, workerdPath } from './files/paths';
+export { INDEX_PAGE, staticFileAt } from './files/staticFileAt';
 export {
     BOT_FILES_KEY,
     BUILT_FILES_READY_KEY,
+    CLIENT_FOLDER,
     botConfigDir,
+    builtClientDir,
     builtRoot,
     runsUnderSeedcordDev,
     setBuiltFiles,

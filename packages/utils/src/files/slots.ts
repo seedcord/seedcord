@@ -23,6 +23,8 @@ export interface BuiltSlot extends BotLayoutData {
     listedFiles: Record<string, EncodedFileLoader>;
     // seedcord dev runs the source files themselves
     sourcePaths?: boolean;
+    // a node build writes its pages to outDir/client
+    pages?: boolean;
 }
 
 // the CLI reads the source files off disk. dev runs the bot, every other command only imports it
@@ -56,6 +58,14 @@ function builtSlot(): BuiltSlot | undefined {
 export function setBuiltFilesHook(callback: () => void): void {
     if (builtSlot()) callback();
     else Reflect.set(globalThis, Symbol.for(BUILT_FILES_READY_KEY), callback);
+}
+
+// the default pages folder beside seedcord.config.ts, and the folder a node build writes them to in outDir
+export const CLIENT_FOLDER = 'client';
+
+export function builtClientDir(): string | undefined {
+    const slot = builtSlot();
+    return slot?.pages ? path.join(slot.root, CLIENT_FOLDER) : undefined;
 }
 
 export function runsUnderSeedcordDev(): boolean {

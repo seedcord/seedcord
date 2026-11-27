@@ -10,7 +10,7 @@ const DUPLICATES_DIR = path.resolve(import.meta.dirname, './duplicates');
 
 describe('http filesystem discovery, duplicate routes', () => {
     it('throws reporting the route id and both classes with their files', async () => {
-        const dispatcher = new InteractionDispatcher(new PluginRegistry(), DUPLICATES_DIR);
+        const dispatcher = new InteractionDispatcher(new PluginRegistry(false), DUPLICATES_DIR);
 
         const error: unknown = await dispatcher.init().then(
             () => null,

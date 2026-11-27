@@ -4,15 +4,15 @@ import { createServer as createNetServer } from 'node:net';
 import { DEV_URL_HEADER } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { resolveConfig } from 'vite';
 import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
+import { DevFront, viteSocketServer } from '#commands/dev/runtime/DevFront';
 import { listenForInteractions } from '#commands/dev/runtime/listenForInteractions';
 
 import type { LogRecord } from '@seedcord/types';
 import type { IncomingMessage } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import type { Connect } from 'vite';
+import type { Connect, ViteDevServer } from 'vite';
 
 type Handle = (request: IncomingMessage, next: (error?: unknown) => void) => void;
 
@@ -22,12 +22,13 @@ function middlewares(handle: Handle): Connect.Server {
         handle(request, next)) as unknown as Connect.Server;
 }
 
-// .glb is a type a bot author would add through a vite plugin. vite doesn't count it as an asset by default
-const { assetsInclude } = await resolveConfig({ configFile: false, assetsInclude: ['**/*.glb'] }, 'serve');
-const QUICK = { port: 0, host: '127.0.0.1', configFile: 'seedcord.config.ts', rootKey: '/src', assetsInclude };
+const QUICK = { port: 0, host: '127.0.0.1', configFile: 'seedcord.config.ts' };
+
+// justified: listenForInteractions only calls servedByVite and upgrade, and neither one reads vite
+const front = new DevFront({} as ViteDevServer, viteSocketServer());
 
 async function listening(app: Connect.Server): Promise<string> {
-    const { server, port } = await listenForInteractions(app, QUICK);
+    const { server, port } = await listenForInteractions(app, front, QUICK);
     onTestFinished(() => {
         server.close();
     });
@@ -49,19 +50,7 @@ describe('listenForInteractions', () => {
         expect(seen).toEqual(['/']);
     });
 
-    it.each([
-        ['/src/bot.ts', '/'],
-        ['/src/locales/en.json', '/'],
-        ['/src/pages/styles.css', '/src/pages/styles.css'],
-        ['/src/pages/logo.png', '/src/pages/logo.png'],
-        ['/src/pages/intro.mp4', '/src/pages/intro.mp4'],
-        ['/src/models/ship.glb', '/src/models/ship.glb'],
-        ['/@fs/home/bot/src/bot.ts', '/'],
-        ['/dash/', '/dash/'],
-        ['/logo.png', '/logo.png'],
-        ['/node_modules/.vite/deps/react.js', '/node_modules/.vite/deps/react.js'],
-        ['/@fs/home/bot/node_modules/vite/client/env.mjs', '/@fs/home/bot/node_modules/vite/client/env.mjs']
-    ])('hands a GET for %s to vite as %s, with its real path in a header', async (path, handed) => {
+    it('hands a GET on with its own path, and its path in a header too', async () => {
         const seen: { url: string | undefined; devUrl: unknown }[] = [];
         const url = await listening(
             middlewares(({ url: requested, headers }, next) => {
@@ -70,9 +59,9 @@ describe('listenForInteractions', () => {
             })
         );
 
-        await fetch(`${url}${path}`);
+        await fetch(`${url}/dash`);
 
-        expect(seen).toEqual([{ url: handed, devUrl: path }]);
+        expect(seen).toEqual([{ url: '/dash', devUrl: '/dash' }]);
     });
 
     it('throws PortInUse when another process holds the port on 127.0.0.1', async () => {
@@ -84,6 +73,7 @@ describe('listenForInteractions', () => {
         await expect(
             listenForInteractions(
                 middlewares(() => undefined),
+                front,
                 { ...QUICK, port }
             )
         ).rejects.toHaveProperty('code', SeedcordErrorCode.PortInUse);
@@ -98,6 +88,7 @@ describe('listenForInteractions', () => {
 
         const endpoint = await listenForInteractions(
             middlewares((_request, next) => next()),
+            front,
             { ...QUICK, port }
         ).catch((error: unknown) => error);
 

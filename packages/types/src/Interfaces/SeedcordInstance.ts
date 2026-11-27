@@ -1,6 +1,7 @@
 import type {
     HostAugmentTarget,
     HostContract,
+    HostDevServer,
     HostDevUrl,
     HostListenHost,
     HostPlugins,
@@ -11,8 +12,20 @@ import type {
 import type { Config } from './Config';
 import type { REST } from '@discordjs/rest';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { Duplex } from 'node:stream';
 
 export type TransportPackage = '@seedcord/gateway' | '@seedcord/http';
+
+// the parts of vite's dev server that a node bot's own web server hands requests to
+export interface DevServer {
+    // false when vite passes the request on to the bot
+    serve(request: IncomingMessage, response: ServerResponse): Promise<boolean>;
+    // false when the socket isn't vite's
+    upgrade(request: IncomingMessage, socket: Duplex, head: Buffer): boolean;
+    // node's server.close() waits for every socket that upgrade() took, and a browser holds them open
+    closeSockets(): void;
+}
 
 // Core implements this. the CLI narrows a loaded module export to it after the SeedcordBrand runtime check
 export interface SeedcordInstance {
@@ -38,5 +51,7 @@ export interface SeedcordInstance {
     [HostListenHost]?: string | undefined;
     // seedcord dev sets this before start() when `dev.tunnel` is a URL. core.url returns it while server.url is unset
     [HostDevUrl]?: string | undefined;
+    // seedcord dev sets this before start() on a node bot
+    [HostDevServer]?: DevServer | undefined;
     start(): Promise<unknown>;
 }

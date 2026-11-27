@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { createLogger, createServer } from 'vite';
 import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
+import { viteSocketServer } from '#commands/dev/runtime/DevFront';
 import { edgeViteConfig, serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { ProjectFiles } from '#core/project/ProjectFiles';
@@ -33,9 +34,16 @@ function project(): string {
 
 describe('dev vite config', () => {
     it.each([
-        ['a server', (root: string): InlineConfig => serverViteConfig(configAt(root), layoutAt(root))],
-        ['an edge', (root: string): InlineConfig => edgeViteConfig(layoutAt(root), root)]
-    ])("doesn't open an hmr websocket for %s bot while another process holds its port", async (_kind, config) => {
+        [
+            'a server',
+            (root: string): InlineConfig => serverViteConfig(configAt(root), layoutAt(root), viteSocketServer())
+        ],
+        [
+            'an edge',
+            (root: string): InlineConfig =>
+                edgeViteConfig(layoutAt(root), root, join(root, 'client'), viteSocketServer())
+        ]
+    ])("doesn't open its own hmr port for %s bot while another process holds that port", async (_kind, config) => {
         await holdViteHmrPort();
         const root = project();
         const errors: string[] = [];

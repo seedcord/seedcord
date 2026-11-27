@@ -57,4 +57,18 @@ describe('HmrManager', () => {
 
         await vi.waitFor(() => expect(ran).toEqual(['ok']));
     });
+
+    it('tells the CLI once every listener has handled the update', async () => {
+        const { manager, sent, sends: cliSends } = listening();
+        const { promise: reloaded, resolve: finishReload } = Promise.withResolvers<undefined>();
+        const onHmr = vi.fn(() => reloaded);
+        manager.register({ onHmr });
+
+        cliSends('seedcord:hmr', { file: 'x.ts', type: 'update' });
+        await vi.waitFor(() => expect(onHmr).toHaveBeenCalled());
+        expect(sent).toEqual([]);
+        finishReload(undefined);
+
+        await vi.waitFor(() => expect(sent).toEqual([['seedcord:hmr-applied', {}]]));
+    });
 });

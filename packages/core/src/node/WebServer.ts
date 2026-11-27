@@ -1,4 +1,5 @@
 import { once } from 'node:events';
+import { existsSync } from 'node:fs';
 import { createServer } from 'node:http';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
@@ -6,12 +7,14 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { asError, isPortInUse } from '@seedcord/utils/internal';
 
+import { answerPluginsOrInteractions } from '#src/answerPluginsOrInteractions';
 import { InFlight } from '#src/lifecycle/InFlight';
 import { ShutdownPhase } from '#src/lifecycle/phases';
 import { requestPath } from '#src/requestPath';
 import { DEFAULT_SERVER_PORT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE } from '#src/webConstants';
 
 import { answerHealth } from './answerHealth';
+import { ClientFiles } from './ClientFiles';
 import { DRAIN_TASK_TIMEOUT_MS, DRAIN_WINDOW_MS } from './Lifecycle/drainWindow';
 import { toWebRequest, writeWebResponse } from './webBridge';
 
@@ -20,6 +23,7 @@ import type { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import type { PluginRegistry } from '#src/plugin/PluginRegistry';
 import type { ShutdownTasks } from './Lifecycle/CoordinatedShutdown';
 import type { ServerConfig } from '@seedcord/types';
+import type { DevServer } from '@seedcord/types/internal';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
@@ -37,17 +41,22 @@ export interface WebServerOptions {
     readonly plugins: Pick<PluginRegistry, 'answer' | 'answersRequests'>;
     // http answers Discord's interactions here. a gateway bot takes them over its websocket
     readonly interactions: ((request: Request) => Promise<Response>) | undefined;
+    // seedcord dev sets this before start()
+    readonly dev: () => DevServer | undefined;
+    readonly clientDir: string | undefined;
 }
 
-// answers a node bot's web requests: health, plugins, then interactions or a 404. serve() also puts it on a port
+// answers a node bot's web requests: health, built client files, plugins, then interactions or a 404. serve() also puts it on a port
 export class WebServer {
     private readonly logger = new Logger('Server', { channel: 'server' });
     private readonly inFlight = new InFlight(this.logger, 'Requests');
+    private readonly clientFiles: ClientFiles | undefined;
     private server?: Server;
     private bound: number | undefined;
 
     constructor(private readonly options: WebServerOptions) {
-        const { shutdown } = options;
+        const { shutdown, clientDir } = options;
+        this.clientFiles = this.clientFilesIn(clientDir);
         shutdown.addTask(ShutdownPhase.Unbind, 'close-web-server', () => this.close(), STOP_TIMEOUT_MS);
         shutdown.addTask(
             ShutdownPhase.Drain,
@@ -71,7 +80,7 @@ export class WebServer {
     }
 
     public async fetch(request: Request): Promise<Response> {
-        const { startup, plugins, interactions } = this.options;
+        const { startup } = this.options;
         if (!startup.hasBegun) throw new SeedcordError(SeedcordErrorCode.CoreFetchBeforeStart);
 
         // health answers before admit() so a check during startup gets its 503 right away
@@ -79,12 +88,18 @@ export class WebServer {
         const health = healthPath && answerHealth(request, healthPath, startup.isReady && !this.inFlight.closed);
         if (health) return health;
 
-        const response = await this.inFlight.admit(
-            async () =>
-                (await plugins.answer(request)) ??
-                (interactions ? interactions(request) : new Response(null, { status: NOT_FOUND }))
-        );
+        const response = await this.inFlight.admit(() => this.respond(request));
         return response ?? new Response(null, { status: SERVICE_UNAVAILABLE });
+    }
+
+    // the same order as seedcord dev, where vite answers before the bot
+    private async respond(request: Request): Promise<Response> {
+        const { plugins, interactions } = this.options;
+        return (
+            (await this.clientFiles?.answer(request)) ??
+            (await answerPluginsOrInteractions(request, plugins, interactions)) ??
+            new Response(null, { status: NOT_FOUND })
+        );
     }
 
     // ServerHost calls this when Ready begins, and requests that arrive earlier wait until then.
@@ -107,8 +122,24 @@ export class WebServer {
     }
 
     private get hasRoutes(): boolean {
-        const { interactions, plugins } = this.options;
-        return this.healthPath !== undefined || interactions !== undefined || plugins.answersRequests;
+        const { interactions, plugins, dev } = this.options;
+        return (
+            this.healthPath !== undefined ||
+            interactions !== undefined ||
+            plugins.answersRequests ||
+            this.clientFiles !== undefined ||
+            dev() !== undefined
+        );
+    }
+
+    // next.js and bun build --compile copy the bot's code into their own output without the pages folder
+    private clientFilesIn(clientDir: string | undefined): ClientFiles | undefined {
+        if (clientDir === undefined) return undefined;
+        if (existsSync(clientDir)) return new ClientFiles(clientDir);
+        this.logger.warn(
+            `The bot can't serve its web pages because ${paint.path(clientDir)} doesn't exist beside it. Serve that folder from the host that runs your bot.`
+        );
+        return undefined;
     }
 
     private async listen(port: number, host: string | undefined): Promise<void> {
@@ -124,6 +155,9 @@ export class WebServer {
             });
         });
         this.server = server;
+        server.on('upgrade', (incoming, socket, head) => {
+            if (!this.options.dev()?.upgrade(incoming, socket, head)) socket.destroy();
+        });
 
         server.listen(port, host);
         try {
@@ -143,6 +177,7 @@ export class WebServer {
     }
 
     private async answer(server: Server, incoming: IncomingMessage, outgoing: ServerResponse): Promise<void> {
+        if (await this.options.dev()?.serve(incoming, outgoing)) return;
         const request = await toWebRequest(incoming, this.config.bodyLimit ?? DEFAULT_BODY_LIMIT);
         const response = request ? await this.fetch(request) : new Response(null, { status: PAYLOAD_TOO_LARGE });
         // node's close() doesn't close a busy connection once it becomes idle
@@ -156,6 +191,7 @@ export class WebServer {
         const server = this.server;
         // close() on a server that isn't listening calls back with an error and never emits 'close'
         if (!server?.listening) return Promise.resolve();
+        this.options.dev()?.closeSockets();
 
         return new Promise((resolve, reject) => {
             server.close((error) => {

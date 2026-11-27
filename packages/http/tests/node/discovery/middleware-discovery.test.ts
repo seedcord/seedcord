@@ -10,7 +10,7 @@ const HANDLERS_DIR = path.resolve(__dirname, './fixtures/handlers');
 const MIDDLEWARES_DIR = path.resolve(__dirname, './fixtures/middlewares');
 
 async function readyDispatcher(middlewaresDir?: string): Promise<InteractionDispatcher> {
-    const dispatcher = new InteractionDispatcher(new PluginRegistry(), HANDLERS_DIR, middlewaresDir);
+    const dispatcher = new InteractionDispatcher(new PluginRegistry(false), HANDLERS_DIR, middlewaresDir);
     await dispatcher.init();
     return dispatcher;
 }

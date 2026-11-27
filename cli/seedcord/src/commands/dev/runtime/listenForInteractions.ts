@@ -4,14 +4,14 @@ import { createServer } from 'node:http';
 import { DEV_URL_HEADER } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { isPortInUse, withoutQuery } from '@seedcord/utils/internal';
-import { isCSSRequest } from 'vite';
+import { isPortInUse } from '@seedcord/utils/internal';
 
 import { cliLogger } from '#core/cliLogger';
 
-import type { IncomingMessage, Server } from 'node:http';
+import type { DevFront } from './DevFront';
+import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import type { Connect, ResolvedConfig } from 'vite';
+import type { Connect } from 'vite';
 
 const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
@@ -29,32 +29,17 @@ interface ListenOptions {
     // undefined binds every address
     readonly host: string | undefined;
     readonly configFile: string;
-    // where vite serves the bot's root folder, like /src
-    readonly rootKey: string;
-    readonly assetsInclude: ResolvedConfig['assetsInclude'];
 }
 
-function servedByVite(
-    { method, url = '/' }: IncomingMessage,
-    { rootKey, assetsInclude }: Pick<ListenOptions, 'rootKey' | 'assetsInclude'>
-): boolean {
-    // first, the bot answers every POST. if vite got one for a path with a static file, discord would get a 405
-    // and the request would never reach the bot
-    if (method !== 'GET' && method !== 'HEAD') return false;
-    // then the bot answers requests for its own folder too because vite would hand its source to anyone with the tunnel url.
-    // vite still serves stylesheets and assets from it because a page that imports one with ?url links to it there
-    if (url.startsWith(`${rootKey}/`)) return isCSSRequest(url) || assetsInclude(withoutQuery(url));
-    // last, vite only gets /@fs/ for node_modules, where its client and a site's packages load from
-    return !url.startsWith('/@fs/') || url.includes('/node_modules/');
-}
-
+// vite's middlewares run first on every request, and the cloudflare plugin's middleware hands the worker the ones vite passes on
 export async function listenForInteractions(
     middlewares: Connect.Server,
-    { port, host, configFile, ...served }: ListenOptions
+    front: Pick<DevFront, 'servedByVite' | 'upgrade'>,
+    { port, host, configFile }: ListenOptions
 ): Promise<InteractionsEndpoint> {
     const server = createServer((request, response) => {
         request.headers[DEV_URL_HEADER] = request.url ?? '/';
-        if (!servedByVite(request, served)) request.url = '/';
+        if (!front.servedByVite(request)) request.url = '/';
         middlewares(request, response, (error?: unknown) => {
             if (error === undefined) {
                 response.writeHead(NOT_FOUND).end();
@@ -63,6 +48,9 @@ export async function listenForInteractions(
             logger.error('The worker failed to answer a request', error);
             response.writeHead(SERVER_ERROR).end();
         });
+    });
+    server.on('upgrade', (request, socket, head) => {
+        if (!front.upgrade(request, socket, head)) socket.destroy();
     });
     server.listen(port, host);
     try {

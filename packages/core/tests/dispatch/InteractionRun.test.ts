@@ -26,7 +26,7 @@ function configFor(
     return {
         dispatch: new DispatchContext(kind, 'probe'),
         // justified: the run reads only core.config.errors, core.bus, and the members
-        core: { bus: busWith(), config: {}, [HostPlugins]: new PluginRegistry() } as unknown as CoreBase,
+        core: { bus: busWith(), config: {}, [HostPlugins]: new PluginRegistry(false) } as unknown as CoreBase,
         HandlerCtor,
         logger: new Logger('Test'),
         interactionId: 'i1',

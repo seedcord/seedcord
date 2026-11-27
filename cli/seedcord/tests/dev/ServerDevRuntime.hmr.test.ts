@@ -115,6 +115,14 @@ describe('dev runtime hot reload', () => {
             await vi.waitFor(() => expect(events).toContainEqual({ type: 'restart-required' }));
         }, 60_000);
 
+        it('asks for a restart when you add the first page', async () => {
+            const { src, events } = await startedProject({ 'index.ts': 'export const ready = true;\n' });
+            const pageFolder = join(dirname(src), 'client', 'uptime');
+            await mkdir(pageFolder, { recursive: true });
+
+            await saveUntilRestartRequired(join(pageFolder, 'index.html'), '<p>uptime</p>\n', events);
+        }, 60_000);
+
         it('asks for a restart when a file the entry imports is saved', async () => {
             const { src, runtime, events } = await startedProject({
                 'index.ts': "export { greeting } from './plugin';\n",
@@ -251,6 +259,19 @@ import.meta.hot?.send('seedcord:read-bot-imports', {});
         await saveUntil(locale, 'hello = Hello\n', () =>
             expect(received).toContainEqual(['seedcord:hmr', expect.objectContaining({ file: locale })])
         );
+    }, 60_000);
+
+    it("skips a saved page in the client folder that the bot doesn't import", async () => {
+        const { src, received } = await startedAskingBot({ 'plugin.ts': "export const greeting = 'before';\n" });
+        const [page, plugin] = [join(dirname(src), 'client', 'page.tsx'), join(src, 'plugin.ts')];
+        await mkdir(dirname(page), { recursive: true });
+
+        await writeFile(page, 'export const page = 1;\n');
+        await saveUntil(plugin, "export const greeting = 'after';\n", () =>
+            expect(received).toContainEqual(['seedcord:hmr', expect.objectContaining({ file: plugin })])
+        );
+
+        expect(received).not.toContainEqual(['seedcord:hmr', expect.objectContaining({ file: page })]);
     }, 60_000);
 
     it('sends the bot a file you break and then put back', async () => {

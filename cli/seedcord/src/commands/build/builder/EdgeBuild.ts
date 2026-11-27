@@ -17,7 +17,7 @@ import { functionExportsOf } from '#core/modules/workerExports';
 import { assertNodeCompat } from './assertNodeCompat';
 import { bootWorker } from './bootWorker';
 import { CloudflareWorker } from './CloudflareWorker';
-import { BOT_CHECKS, bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
+import { BOT_CHECKS, bundleFailed, bundleStats, captureChunks, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { readDiscord } from './readDiscord';
 import { TargetBuild } from './TargetBuild';
@@ -35,7 +35,7 @@ import type { REST } from '@discordjs/rest';
 import type { BakedIds } from '@seedcord/core/internal';
 import type { CommandsConfig } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
-import type { EnvironmentOptions, Plugin, Rolldown } from 'vite';
+import type { EnvironmentOptions, Rolldown } from 'vite';
 
 interface EdgeBuildDeps {
     importCloudflare: ImportCloudflare;
@@ -43,16 +43,6 @@ interface EdgeBuildDeps {
 }
 
 const DEFAULT_DEPS: EdgeBuildDeps = { importCloudflare, openDiscord: restOf };
-
-function captureChunks(onChunks: (chunks: Rolldown.OutputChunk[]) => void): Plugin {
-    return {
-        name: 'seedcord:capture-chunks',
-        applyToEnvironment: (environment) => environment.name === BOT_ENVIRONMENT,
-        generateBundle(_options, bundle) {
-            onChunks(Object.values(bundle).filter((file) => file.type === 'chunk'));
-        }
-    };
-}
 
 function workerEnvironment(): Record<string, EnvironmentOptions> {
     return {
@@ -152,6 +142,7 @@ export class EdgeBuild extends TargetBuild {
                     chunks = captured;
                 }),
                 cloudflare.plugins({ persistState: false }),
+                files.client.vitePlugin({ edge: true }),
                 config.vitePlugins.create()
             ],
             resolve: { tsconfigPaths: true },

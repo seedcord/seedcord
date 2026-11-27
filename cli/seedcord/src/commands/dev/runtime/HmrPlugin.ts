@@ -6,7 +6,7 @@ import { paint } from '@seedcord/errors';
 import { displayPath } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
-import { workerdPath } from '@seedcord/utils/internal';
+import { isInside, workerdPath } from '@seedcord/utils/internal';
 
 import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
@@ -151,6 +151,11 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         this.dev?.on('seedcord:restart-required', ({ file }) => {
             this.reportRestartRequired(file);
         });
+
+        // every open tab reloads because a plugin page can show anything the bot holds
+        this.dev?.on('seedcord:hmr-applied', () => {
+            server.environments.client.hot.send({ type: 'full-reload', path: '*' });
+        });
     }
 
     // per type because an atomic save sends a delete then a create for the same file
@@ -252,9 +257,11 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         this.restartTimers.add(timer);
     }
 
-    // the bot can still read a file it doesn't import, like a new handler or a folder a plugin's onHmr watches
+    // the bot can still read a file it doesn't import, like a new handler or a folder a plugin's onHmr watches.
+    // vite's client environment serves the client folder
     private botMightLoad(file: string, modules: readonly EnvironmentModuleNode[]): boolean {
-        return modules.length > 0 || !this.layout.isSkipped(file);
+        if (modules.length > 0) return true;
+        return !this.layout.isSkipped(file) && !isInside(this.config.client.dir, file);
     }
 }
 

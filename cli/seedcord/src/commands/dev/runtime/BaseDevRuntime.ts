@@ -9,6 +9,7 @@ import { HmrPlugin } from './HmrPlugin';
 import { RestartFiles } from './RestartFiles';
 
 import type { EvaluatedModule, ModuleLoader } from '#core/modules/ModuleLoader';
+import type { DevFront } from './DevFront';
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 import type { DevEvent } from './events';
 import type { SeedcordInstance } from '@seedcord/types/internal';
@@ -17,6 +18,7 @@ export interface StartedRuntime {
     readonly context: DevRuntimeContext;
     readonly modules: ModuleLoader;
     readonly hmr: HmrPlugin;
+    readonly front: DevFront;
     readonly resources: AsyncDisposableStack;
 }
 
@@ -97,6 +99,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         targetRestartFiles: readonly string[] = []
     ): HmrPlugin {
         const restartFiles = new RestartFiles(context.config, context.files.layout, targetRestartFiles);
+        restartFiles.addPatterns(context.files.client.restartPatterns());
         const hmr = new HmrPlugin(context.config, context.state, restartFiles, context.files.layout);
         hmr.on('event', (event) => this.emit(context, event));
         // a restart builds a new runtime in the same process

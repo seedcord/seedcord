@@ -19,6 +19,7 @@ import { WorkerEnv } from '#core/modules/workerEnv';
 import { functionExportsOf } from '#core/modules/workerExports';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
+import { DevFront, viteSocketServer } from './DevFront';
 import { devWatchOptions, edgeViteConfig } from './devServerConfig';
 import { fenceSignals } from './fenceSignals';
 import { listenForInteractions } from './listenForInteractions';
@@ -84,16 +85,17 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
         const nodeCopy = await openModuleLoader(dirname(config.configFile), this.target, config.viteMode, config, {
-            watch: devWatchOptions(files.layout),
+            watch: devWatchOptions(files.layout, config.client.dir),
             workerEnv
         }).catch(rethrowVitePluginError);
         resources.use(nodeCopy);
         // vite reruns the entry's load hook after any update that reaches the entry. bot.ts throws when it runs a second time
         let functionExports: Promise<string[]> | undefined;
         const hmr = this.openHmr(context, resources, [basename(this.target.cloudflareConfig), ...workerEnv.files]);
+        const sockets = viteSocketServer();
         const server = await openViteServer(
             resources,
-            mergeViteConfig(edgeViteConfig(files.layout, viteRoot), {
+            mergeViteConfig(edgeViteConfig(files.layout, viteRoot, config.client.dir, sockets), {
                 mode: config.viteMode,
                 plugins: [
                     workerEntry({
@@ -107,22 +109,25 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                     hmr.plugin,
                     invokeErrorsAsJson(),
                     cloudflare.plugins(),
+                    files.client.vitePlugin({ edge: true }),
                     config.vitePlugins.create()
                 ]
             })
         ).catch(rethrowVitePluginError);
         await loadWorkerEntry(server.middlewares, config.instance);
-        const endpoint = await listenForInteractions(server.middlewares, {
+        const front = new DevFront(server, sockets);
+        const endpoint = await listenForInteractions(server.middlewares, front, {
             port: this.target.port,
             host: listenHostFor(config.tunnel),
-            configFile: config.configFile,
-            rootKey,
-            assetsInclude: server.config.assetsInclude
+            configFile: config.configFile
         });
         resources.use(endpoint.server);
-        // close() waits on open keep-alive sockets
-        resources.defer(() => endpoint.server.closeAllConnections());
-        return { context, server, modules: nodeCopy, hmr, port: endpoint.port, resources };
+        // close() waits on open keep-alive sockets and on the browser's sockets to vite
+        resources.defer(() => {
+            endpoint.server.closeAllConnections();
+            front.closeSockets();
+        });
+        return { context, server, modules: nodeCopy, hmr, port: endpoint.port, front, resources };
     }
 
     private async readFunctionExports(context: DevRuntimeContext, modules: ModuleLoader): Promise<string[]> {

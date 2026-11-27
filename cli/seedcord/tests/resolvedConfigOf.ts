@@ -26,6 +26,7 @@ export function resolvedConfigOf(
         vitePlugins: vitePluginsOf(),
         make: { templates: at('templates'), helpers: {} },
         emojis: { dir: at('emojis') },
+        client: { dir: at('client') },
         ...fields
     };
 }

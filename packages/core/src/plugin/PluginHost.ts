@@ -53,7 +53,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     public readonly [HostHmr]: HmrManager | undefined;
 
     /** @internal */
-    public readonly [HostPlugins] = new PluginRegistry();
+    public readonly [HostPlugins]: PluginRegistry;
 
     /** @internal */
     public readonly [HostContract] = HOST_CONTRACT;
@@ -63,6 +63,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         // workerd's logs reach the CLI only as console lines. a node bot alrdy shares the CLI's process
         if (cli && runtime === 'edge') forwardLogsToCli();
         this[HostHmr] = HmrManager.listenTo(cli);
+        this[HostPlugins] = new PluginRegistry(this[HostHmr] !== undefined);
         this.#scope = { transport, runtime };
         this.bus = new Bus(this);
         LoggerChannelRegistry.instance.trackSinkRuns(keepRequestOpenFor);

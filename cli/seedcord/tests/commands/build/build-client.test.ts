@@ -1,0 +1,74 @@
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
+
+import { fixtureCopy, HTTP_BOT } from './fixtureCopy';
+import { quickBuildRunner } from './quickBuildRunner';
+
+async function write(projectDir: string, files: Record<string, string>): Promise<void> {
+    for (const [path, text] of Object.entries(files)) {
+        await mkdir(join(projectDir, path, '..'), { recursive: true });
+        await writeFile(join(projectDir, path), text);
+    }
+}
+
+describe('seedcord build on a node bot with web pages', () => {
+    let clientDir = '';
+
+    beforeAll(async () => {
+        const copy = await fixtureCopy(HTTP_BOT);
+        clientDir = join(copy.path, 'dist/client');
+        await write(copy.path, {
+            'client/uptime/index.html':
+                '<html><head></head><body><script type="module" src="./main.ts"></script></body></html>',
+            'client/uptime/main.ts': "import './uptime.css';\nimport { start } from '../counter';\nstart();\n",
+            'client/uptime/uptime.css': 'body { color: red; }\n',
+            'client/counter.ts': "export const start = () => document.body.append('ticking');\n",
+            'public/robots.txt': 'User-agent: *\n'
+        });
+        await quickBuildRunner().run(copy.path);
+        return () => copy[Symbol.asyncDispose]();
+    }, 120_000);
+
+    it('builds each page to its own folder, with the hashed script and stylesheet linked', async () => {
+        const page = await readFile(join(clientDir, 'uptime/index.html'), 'utf8');
+
+        expect(page).toMatch(/<script type="module" crossorigin src="\/assets\/index-[\w-]+\.js"><\/script>/);
+        expect(page).toMatch(/<link rel="stylesheet" crossorigin href="\/assets\/index-[\w-]+\.css">/);
+    });
+
+    it('puts only the pages, their assets and public/ in the client folder', async () => {
+        const served = await readdir(clientDir, { recursive: true });
+
+        expect(served.toSorted()).toEqual([
+            'assets',
+            expect.stringMatching(/^assets\/index-.+\.css$/),
+            expect.stringMatching(/^assets\/index-.+\.js$/),
+            'robots.txt',
+            'uptime',
+            'uptime/index.html'
+        ]);
+    });
+});
+
+describe('seedcord build refusing a layout that would serve the wrong files', () => {
+    async function codeOfBuildWith(files: Record<string, string>): Promise<unknown> {
+        await using copy = await fixtureCopy(HTTP_BOT);
+        await write(copy.path, files);
+        const error: unknown = await quickBuildRunner()
+            .run(copy.path)
+            .catch((caught: unknown) => caught);
+        return Reflect.get(new Object(error), 'code');
+    }
+
+    it('throws CliBuildClientFolderTaken for a client folder of bot code in root beside pages', async () => {
+        const code = await codeOfBuildWith({
+            'src/client/widget.ts': 'export {};\n',
+            'client/home/index.html': '<p>home</p>'
+        });
+
+        expect(code).toBe(SeedcordErrorCode.CliBuildClientFolderTaken);
+    }, 120_000);
+});

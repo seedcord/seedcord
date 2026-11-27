@@ -407,6 +407,14 @@ export enum SeedcordErrorCode {
     CliEmojiDownloadFailed = 3153,
     /** A replace in `seedcord emojis push` failed, and putting the old emoji back failed too. */
     CliEmojiRollbackFailed = 3154,
+    /** A node bot with pages has a `client` folder of bot code in `root`, which builds into the folder that serves the pages. */
+    CliBuildClientFolderTaken = 3155,
+    /** A bot with pages has `public/assets` or a page under `assets/`, which share a URL path with the hashed files that browsers cache for a year. */
+    CliAssetsPathTaken = 3156,
+    /** A Vite plugin set `base` to something other than `/`, and seedcord serves pages from the bot's root. */
+    CliViteBaseUnsupported = 3157,
+    /** `client.dir` in `seedcord.config.ts` is outside the config's folder, is that folder, or holds `root`. */
+    CliClientDirUnusable = 3158,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

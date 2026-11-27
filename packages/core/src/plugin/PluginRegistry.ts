@@ -7,6 +7,8 @@ import { pluginLoggerOf, readsCommandFile } from '#src/plugin/pluginSlots';
 import { requestPath } from '#src/requestPath';
 import { INTERNAL_SERVER_ERROR } from '#src/webConstants';
 
+import { finishPage } from './finishPage';
+
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
 import type { ResolvedPluginLifecycleSpec } from './lifecycle';
@@ -129,6 +131,8 @@ export class PluginRegistry {
     private readonly claimed = new Map<string, ClaimedMember>();
     private readonly list: Attachment[] = [];
 
+    constructor(private readonly underDev: boolean) {}
+
     public get attachments(): readonly Attachment[] {
         return this.list;
     }
@@ -250,7 +254,7 @@ export class PluginRegistry {
     public async answer(request: Request): Promise<Response | undefined> {
         for (const attachment of this.list) {
             const response = await answerFrom(attachment.instance, request);
-            if (response) return response;
+            if (response) return finishPage(response, this.underDev);
             // getReader() locks the body without setting bodyUsed
             if (request.bodyUsed || request.body?.locked) {
                 throw new SeedcordError(SeedcordErrorCode.CorePluginFetchReadBody, [

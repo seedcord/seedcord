@@ -8,7 +8,14 @@ import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 import { encodeFile } from '#src/files/encodedFile';
 import { toPosixPath } from '#src/files/paths';
 import { readFiles, importFiles } from '#src/files/readers';
-import { BUILT_FILES_READY_KEY, botConfigDir, setBuiltFiles, setBuiltFilesHook, setDevFiles } from '#src/files/slots';
+import {
+    BUILT_FILES_READY_KEY,
+    botConfigDir,
+    builtClientDir,
+    setBuiltFiles,
+    setBuiltFilesHook,
+    setDevFiles
+} from '#src/files/slots';
 import { clearBuiltFiles } from '#tests/builtFilesSlot';
 
 import type { EncodedFile } from '#src/files/encodedFile';
@@ -81,6 +88,18 @@ describe('botConfigDir', () => {
         using _built = register({ root: path.join(elsewhere.path, 'app'), configFile: '/../seedcord.config.ts' });
 
         expect(botConfigDir()).toBeUndefined();
+    });
+});
+
+describe('builtClientDir', () => {
+    it('returns the client folder only for a build with pages', () => {
+        const withPages = (pages: boolean): string | undefined => {
+            using _built = register({ pages });
+            return builtClientDir();
+        };
+
+        // a build without pages can still write bot modules from root/client to that folder
+        expect([withPages(true), withPages(false)]).toEqual([at('client'), undefined]);
     });
 });
 
