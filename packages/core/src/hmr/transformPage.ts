@@ -20,7 +20,7 @@ export async function transformPage(
     return new Response(body, { status: response.status, statusText: response.statusText, headers });
 }
 
-// the edge adds the script by hand because workerd runs apart from the vite server. vite plugins' html hooks don't run on it
+// the edge adds the script by hand because workerd runs apart from the vite server. vite plugins' html hooks never get this html
 export function addViteClient(html: string): string {
     const at = CLOSING_TAG.exec(html)?.index ?? html.length;
     return html.slice(0, at) + VITE_CLIENT + html.slice(at);

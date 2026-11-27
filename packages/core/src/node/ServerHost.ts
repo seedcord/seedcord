@@ -107,12 +107,8 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     /** @internal */
     protected answerInteractions?(request: Request): Promise<Response>;
 
-    /** @internal */
-    public get [HostDevServer](): DevServer {
-        return this.#web.dev;
-    }
-
     // seedcord dev sets this before start() because serve() reads servesPages to decide on a port
+    /** @internal */
     public set [HostDevServer](server: DevServer) {
         this.#web.dev = server;
     }

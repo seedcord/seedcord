@@ -61,7 +61,7 @@ export class DevPageServer implements DevServer {
     }
 
     // the html hooks of vite plugins run here too, like react's refresh preamble
-    public finish(path: string, response: Response): Promise<Response> {
+    public transformPage(path: string, response: Response): Promise<Response> {
         return transformPage(response, (html) => this.vite.transformIndexHtml(path, html));
     }
 }

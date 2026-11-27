@@ -40,12 +40,6 @@ my-bot/
 </html>
 ```
 
-<Callout type="tip">
-
-seedcord takes each page's path from its folder, so `client/stats/index.html` is the page at `/stats/`.
-
-</Callout>
-
 The `<script>` loads `./main.ts` from the page's own folder. That script asks the bot for `/api/uptime` and writes the answer into the heading:
 
 ```ts plain title="client/uptime/main.ts"
@@ -94,7 +88,7 @@ You can also answer other requests in `fetch()`, like a webhook that GitHub post
 
 <Callout type="tip">
 
-A page in `client/` is built ahead of time, so it fetches the bot's data after it loads. If the HTML itself has to change with each request, have your plugin's `fetch()` build it and return it. [Hot reload](/tooling/hot-reload#pages-in-your-browser) covers what `seedcord dev` adds to that HTML.
+If the HTML itself has to change with each request, have your plugin's `fetch()` build it and return it. [Hot reload](/tooling/hot-reload#pages-in-your-browser) covers what `seedcord dev` adds to that HTML.
 
 </Callout>
 
@@ -113,7 +107,7 @@ seedcord tries these steps in order, and the first one to return a `Response` an
 | step | gateway | http |
 | --- | --- | --- |
 | 1 | the [health path](/build/server#the-health-check) | the health path, on a server |
-| 2 | a built page or a file from `public/`, for a GET or HEAD | the same, on a server |
+| 2 | a built page or a file from `public/`, for a GET or HEAD | the same. On Workers, Cloudflare serves them before the bot runs |
 | 3 | (none) | the interactions engine, for an interaction that Discord sent |
 | 4 | each plugin's [`fetch()`](ref:core/Plugin.fetch), in attach order | each plugin's [`fetch()`](ref:core/Plugin.fetch), in attach order |
 | 5 | a 404 | the interactions engine for a POST, a 404 for anything else |
@@ -122,11 +116,11 @@ seedcord tries these steps in order, and the first one to return a `Response` an
 
 The bot answers with a built page or a `public/` file before any plugin runs, so keep your routes off those paths.
 
-On an http bot, the interactions engine runs your command and component handlers. It answers every interaction from Discord before your plugins run, whatever path your interactions endpoint URL uses. So a slow `fetch()` never uses up Discord's three seconds. Discord's [webhook events](https://discord.com/developers/docs/events/webhook-events) aren't interactions, so they reach your `fetch()` like any other request.
+On an http bot, the interactions engine runs your command and component handlers. It answers every interaction from Discord before your plugins run, whatever path your interactions endpoint URL uses. That way a slow `fetch()` never uses up Discord's three seconds. Discord's [webhook events](https://discord.com/developers/docs/events/webhook-events) aren't interactions, so they reach your `fetch()` like any other request.
 
 ### Check the path before you await
 
-Your `fetch()` runs for every request that gets past the plugins attached before it, and the plugins after yours wait until it returns. Check the path and the method, return `undefined` for anything that isn't yours, and await only after that, like reading the body or a database call.
+Your `fetch()` runs for every request that gets past the plugins attached before it, and the plugins after yours wait until it returns. Check the path and the method, return `undefined` for anything that isn't yours, and only then await anything, like reading the body or querying a database.
 
 ```ts twoslash title="src/plugins/GithubHooks.ts"
 import { Plugin } from '@seedcord/http';
@@ -282,7 +276,7 @@ With `dispose: { phase: ShutdownPhase.Unbind }` in the constructor, `dispose()` 
 
 <Callout type="transport" only="edge">
 
-A Worker can't push server-sent events to a page. Your `/ping` handler runs in one request, and the page's stream belongs to another. [Cloudflare stops a request](https://developers.cloudflare.com/workers/observability/errors/) from writing to a stream that a different request opened. Each isolate also keeps its own count. Have the page fetch `/api/pings` on a timer.
+On Workers, your `/ping` handler can't write to the page's stream. It runs in one request, and the page's stream belongs to another. [Cloudflare stops a request](https://developers.cloudflare.com/workers/observability/errors/) from writing to a stream that a different request opened. Each isolate also keeps its own count. Have the page fetch `/api/pings` on a timer.
 
 </Callout>
 
@@ -306,7 +300,7 @@ export default defineConfig({
 });
 ```
 
-With `react()` in the list, the page's `<script>` can load a `main.tsx` that renders your components. Under `seedcord dev`, saving a component updates it in the open tab.
+With `react()` in the list, saving a component under `seedcord dev` updates it in the open tab without a reload.
 
 <Callout type="tip">
 
@@ -354,12 +348,12 @@ In dev, a browser can load any file in `client/` except the `.html` files, which
 
 The build writes the pages to `client/` inside your `outDir`, and the bot serves them from its [web server](/build/server#the-web-server) before any plugin route. The bot redirects a request for `/uptime` or `/uptime/index.html` to `/uptime/` with a 307. The bot sends files under `/assets/` with a header that lets browsers cache them for a year. A new build gives a changed file a new name, so a visitor never keeps an old one.
 
-The build also writes each module under `root` to the same path in `outDir`. If `root` has a `client/` folder of bot code, the build would write it over your pages, so seedcord stops with `CliBuildClientFolderTaken`.
+The build also writes each module under `root` to the same path in `outDir`. If `root` has a `client/` folder of bot code, building your pages would delete those modules, so seedcord stops with `CliBuildClientFolderTaken`.
 
 </Tab>
 <Tab label="Workers">
 
-The build deploys the pages as Cloudflare's [static assets](https://developers.cloudflare.com/workers/static-assets/), which Cloudflare serves before your Worker runs. seedcord writes a `_headers` file with a one-year cache rule for the files under `/assets/`. If you put your own `_headers` file in `public/`, seedcord deploys yours and doesn't write one, so copy the one-year rule for `/assets/*` into it.
+The build writes the pages as Cloudflare's [static assets](https://developers.cloudflare.com/workers/static-assets/), which Cloudflare serves before your Worker runs. seedcord writes a `_headers` file with a one-year cache rule for the files under `/assets/`. If you put your own `_headers` file in `public/`, seedcord keeps yours and doesn't write one, so copy the one-year rule for `/assets/*` into it.
 
 </Tab>
 </Tabs>
@@ -372,7 +366,7 @@ Cloudflare [checks for a matching asset](https://developers.cloudflare.com/worke
 
 ## The public folder
 
-A build only writes the files that a page imports. Put a file that a browser asks for by name, like `robots.txt` or a favicon, in a `public/` folder beside `seedcord.config.ts`. The bot serves those files unchanged at the same path, so `public/robots.txt` is the file at `/robots.txt`. A bot on Node or Bun serves `public/` once it has a page, and a bot on Workers always deploys it.
+Put a file that a browser asks for by name, like `robots.txt` or a favicon, in a `public/` folder beside `seedcord.config.ts`. The bot serves those files unchanged at the same path, so `public/robots.txt` is the file at `/robots.txt`. A bot on Node or Bun serves `public/` once it has a page, and a bot on Workers always deploys it.
 
 Keep your own files out of `public/assets/`, and don't put a page in `client/assets/`. seedcord sends everything under `/assets/` with a one-year cache header, so visitors would keep an old copy of a file you replace there. If you have a page and break either rule, seedcord stops with `CliAssetsPathTaken`.
 

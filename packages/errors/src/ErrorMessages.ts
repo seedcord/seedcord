@@ -2,6 +2,7 @@ import { PRODUCTION_SITES } from '@seedcord/brand';
 
 import { SeedcordErrorCode } from './ErrorCodes';
 import {
+    clientDirProblems,
     deployFix,
     emojiFileProblems,
     listedFolderProblems,
@@ -416,13 +417,13 @@ const messages = {
     [SeedcordErrorCode.CliEmojiRollbackFailed]: (reason: string, parked: string) =>
         `${reason}, and the old emoji is still on Discord as ${paint.bold(parked)}. Delete it with ${paint.bold(`seedcord emojis remove ${parked}`)}, then push again`,
     [SeedcordErrorCode.CliBuildClientFolderTaken]: (folder: string, outDir: string) =>
-        `${paint.path(folder)} builds into ${paint.path(outDir)}, where your bot serves its pages, so anyone could download that code. Rename the folder.`,
+        `${paint.path(folder)} builds into ${paint.path(outDir)}. Your built bot would lose those modules because building your pages empties that folder. Rename the folder.`,
     [SeedcordErrorCode.CliAssetsPathTaken]: (folder: string, assetsPath: string) =>
-        `${paint.path(folder)} would be served under ${paint.sky(assetsPath)}, where Vite writes your pages' hashed files and browsers keep everything for a year. Visitors would keep an old copy of any file you replace there. Rename the folder, like to ${paint.sky('images')}.`,
+        `${paint.path(folder)} would be served under ${paint.sky(assetsPath)}, where Vite writes your pages' hashed files and browsers keep everything for a year. Visitors would keep an old copy of any file you replace there. Rename it, for example to ${paint.sky('images')}.`,
     [SeedcordErrorCode.CliViteBaseUnsupported]: (base: string) =>
         `A Vite plugin in ${paint.bold('vitePlugins')} set ${paint.bold('base')} to ${paint.sky(base)}, but seedcord serves your pages from the bot's root. The pages' links would then point at files the bot doesn't serve. Remove the ${paint.bold('base')} option from that plugin.`,
-    [SeedcordErrorCode.CliClientDirUnusable]: (folder: string, configDir: string, root: string) =>
-        `${paint.bold('client.dir')} in seedcord.config.ts points at ${paint.path(folder)}. It has to be a folder inside ${paint.path(configDir)}. It also can't hold your bot's ${paint.bold('root')} (${paint.path(root)}) because browsers can load every file in ${paint.bold('client.dir')}. Point ${paint.bold('client.dir')} at a folder of its own, like ${paint.sky('./client')}.`,
+    [SeedcordErrorCode.CliClientDirUnusable]: (folder: string, problem: keyof typeof clientDirProblems) =>
+        `${paint.bold('client.dir')} in seedcord.config.ts points at ${paint.path(folder)}, ${clientDirProblems[problem]} Point ${paint.bold('client.dir')} at a folder of its own, like ${paint.sky('./client')}.`,
     [SeedcordErrorCode.CliPickerNeedsTerminal]: (opener: string, skipWith: string, example: string) =>
         `${paint.bold(opener)} without ${skipWith} opens a picker, but a picker only opens in a terminal with ${paint.bold('CI')} unset. Pass ${skipWith}, as in ${paint.bold(example)}.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>

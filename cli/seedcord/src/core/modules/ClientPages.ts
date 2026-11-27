@@ -16,6 +16,8 @@ import {
 } from '@seedcord/utils/internal';
 import { searchForWorkspaceRoot, send } from 'vite';
 
+import { CLIENT_ENVIRONMENT } from './botEnvironment';
+
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ServerResponse } from 'node:http';
 import type { Connect, Plugin, ResolvedConfig, ViteDevServer } from 'vite';
@@ -61,6 +63,7 @@ export class ClientPages {
 
     public vitePlugin({ edge }: { edge: boolean }): Plugin {
         const publicDir = join(this.configDir, 'public');
+        const folderFrom = this.folderFrom.bind(this);
         // vite serves any file in the workspace otherwise, and the tunnel url would hand anyone the bot's source
         const allow = (folders: string[]): { server: { fs: { allow: string[] } } } => ({
             server: { fs: { allow: [...folders, join(searchForWorkspaceRoot(this.configDir), 'node_modules')] } }
@@ -69,13 +72,12 @@ export class ClientPages {
         if (!this.hasPages)
             return { name: PLUGIN_NAME, config: () => ({ ...allow([]), publicDir: edge ? publicDir : false }) };
 
-        const builtFrom = posixRelative(this.configDir, this.dir);
         return {
             name: PLUGIN_NAME,
             config: () => ({
                 ...allow([this.dir]),
                 publicDir,
-                environments: { client: { build: { rolldownOptions: { input: [...this.pages] } } } }
+                environments: { [CLIENT_ENVIRONMENT]: { build: { rolldownOptions: { input: [...this.pages] } } } }
             }),
             configResolved: (config) => this.assertServable(config, publicDir),
             configureServer: (server) => {
@@ -85,10 +87,11 @@ export class ClientPages {
             generateBundle: {
                 order: 'post',
                 handler(_options, bundle) {
-                    if (this.environment.name !== 'client') return;
+                    if (this.environment.name !== CLIENT_ENVIRONMENT) return;
+                    const folder = `${folderFrom(this.environment.config.root)}/`;
                     for (const file of Object.values(bundle)) {
-                        if (file.type === 'asset' && file.fileName.startsWith(`${builtFrom}/`)) {
-                            file.fileName = file.fileName.slice(builtFrom.length + 1);
+                        if (file.type === 'asset' && file.fileName.startsWith(folder)) {
+                            file.fileName = file.fileName.slice(folder.length);
                         }
                     }
                     if (edge && !existsSync(join(publicDir, '_headers'))) {
@@ -97,6 +100,10 @@ export class ClientPages {
                 }
             }
         };
+    }
+
+    private folderFrom(root: string): string {
+        return posixRelative(root, this.dir);
     }
 
     private assertServable(config: ResolvedConfig, publicDir: string): void {
@@ -110,7 +117,8 @@ export class ClientPages {
     }
 
     private servePages(server: ViteDevServer): Connect.NextHandleFunction {
-        const clientPath = `/${posixRelative(this.configDir, this.dir)}`;
+        const { root } = server.config;
+        const clientPath = `/${this.folderFrom(root)}`;
 
         const answer = async (request: Connect.IncomingMessage, response: ServerResponse): Promise<boolean> => {
             const url = request.url ?? '/';
@@ -123,7 +131,7 @@ export class ClientPages {
             }
             if (basename(found.file) === INDEX_PAGE) {
                 const html = await readFile(found.file, 'utf8');
-                const page = await server.transformIndexHtml(`/${posixRelative(this.configDir, found.file)}`, html);
+                const page = await server.transformIndexHtml(`/${posixRelative(root, found.file)}`, html);
                 send(request, response, page, 'html', { headers: server.config.server.headers });
                 return true;
             }

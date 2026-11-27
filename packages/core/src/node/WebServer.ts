@@ -5,7 +5,7 @@ import { createServer } from 'node:http';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { asError, isPortInUse } from '@seedcord/utils/internal';
+import { asError, CLIENT_FOLDER, isPortInUse } from '@seedcord/utils/internal';
 
 import { answerPluginsOrInteractions } from '#src/answerPluginsOrInteractions';
 import { InFlight } from '#src/lifecycle/InFlight';
@@ -51,7 +51,7 @@ const WITHOUT_DEV: DevServer = {
     serve: () => Promise.resolve(false),
     upgrade: () => false,
     closeSockets: () => undefined,
-    finish: (_path, response) => Promise.resolve(response)
+    transformPage: (_path, response) => Promise.resolve(response)
 };
 
 // answers a node bot's web requests: health, built client files, then Discord's interactions, plugins, and a 404. serve() also puts it on a port
@@ -102,10 +102,9 @@ export class WebServer {
     }
 
     private async respond(request: Request): Promise<Response> {
-        return this.dev.finish(new URL(request.url).pathname, await this.answerFrom(request));
+        return this.dev.transformPage(new URL(request.url).pathname, await this.answerFrom(request));
     }
 
-    // the same order as seedcord dev, where vite answers before the bot
     private async answerFrom(request: Request): Promise<Response> {
         const { plugins, interactions } = this.options;
         const file = await this.clientFiles?.answer(request);
@@ -149,7 +148,7 @@ export class WebServer {
         if (clientDir === undefined) return undefined;
         if (existsSync(clientDir)) return new ClientFiles(clientDir);
         this.logger.warn(
-            `The bot can't serve its web pages because ${paint.path(clientDir)} doesn't exist beside it. Serve that folder from the host that runs your bot.`
+            `The bot can't serve its web pages because the ${paint.path(CLIENT_FOLDER)} folder that seedcord build wrote beside its entry file is missing. Next.js and bun build --compile leave that folder out of their output. Copy it beside the file that starts your bot, or serve it from your own web server.`
         );
         return undefined;
     }

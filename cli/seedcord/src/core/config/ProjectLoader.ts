@@ -33,6 +33,7 @@ import type {
     SeedcordBuildConfig,
     SeedcordHmrConfig
 } from './schema';
+import type { SeedcordErrorArguments } from '@seedcord/errors/internal';
 import type { Promisable } from 'type-fest';
 
 // runs before any plugin in vitePlugins starts
@@ -55,11 +56,18 @@ function realPathUnder(base: string, path: string): RealPath {
     return realPath(resolve(base, path));
 }
 
+type ClientDirProblem = SeedcordErrorArguments<SeedcordErrorCode.CliClientDirUnusable>[1];
+
+function clientDirProblem(configDir: string, root: string, folder: string): ClientDirProblem | undefined {
+    if (folder === configDir) return 'configFolder';
+    if (!isInside(configDir, folder)) return 'outside';
+    return isInside(folder, root) ? 'holdsRoot' : undefined;
+}
+
 function clientDirUnder(configDir: string, root: string, dir = CLIENT_FOLDER): RealPath {
     const folder = realPathUnder(configDir, dir);
-    if (!isInside(configDir, folder) || folder === configDir || isInside(folder, root)) {
-        throw new SeedcordTypeError(SeedcordErrorCode.CliClientDirUnusable, [folder, configDir, root]);
-    }
+    const problem = clientDirProblem(configDir, root, folder);
+    if (problem) throw new SeedcordTypeError(SeedcordErrorCode.CliClientDirUnusable, [folder, problem]);
     return folder;
 }
 

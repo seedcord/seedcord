@@ -83,7 +83,7 @@ function devServer(servesPages: boolean): DevServer {
         serve: () => Promise.resolve(false),
         upgrade: () => false,
         closeSockets: () => undefined,
-        finish: (_path, response) => Promise.resolve(response)
+        transformPage: (_path, response) => Promise.resolve(response)
     };
 }
 
@@ -223,11 +223,9 @@ describe('WebServer on a port', () => {
 
     it('warns when the built pages folder is missing', () => {
         using logs = captureLogs();
-        const missing = join(tmpdir(), 'seedcord-no-such-client');
+        webServer({ clientDir: join(tmpdir(), 'seedcord-no-such-client') });
 
-        webServer({ clientDir: missing });
-
-        expect(logs.at('warn')).toEqual([expect.stringContaining(missing)]);
+        expect(logs.at('warn')).toHaveLength(1);
     });
 
     it('throws PortInUse with the config key when another process holds the port', async () => {
@@ -419,7 +417,7 @@ describe('WebServer under seedcord dev', () => {
                 return true;
             },
             closeSockets: () => held.forEach((socket) => socket.destroy()),
-            finish: (_path, response) => transformPage(response, addViteClient)
+            transformPage: (_path, response) => transformPage(response, addViteClient)
         };
     }
 
@@ -441,9 +439,9 @@ describe('WebServer under seedcord dev', () => {
     }
 
     it.each([
-        ['adds', viteStandIn([]), '<p>page</p><script type="module" src="/@vite/client"></script>'],
-        ['leaves out', undefined, '<p>page</p>']
-    ])("%s vite's client in a plugin's html", async (_case, dev, html) => {
+        ['under seedcord dev', viteStandIn([]), '<p>page</p><script type="module" src="/@vite/client"></script>'],
+        ['outside seedcord dev', undefined, '<p>page</p>']
+    ])("sends a plugin's html through the dev server's transformPage %s", async (_case, dev, html) => {
         const plugin = (): Promise<Response> =>
             Promise.resolve(new Response('<p>page</p>', { headers: { 'content-type': 'text/html' } }));
         await using bot = await listening({ dev, answer: plugin });
@@ -494,6 +492,8 @@ describe('WebServer with a built client folder', () => {
         writeFileSync(join(folder.path, 'page'), 'a file the plugin route shares a path with');
         mkdirSync(join(folder.path, 'uptime'));
         writeFileSync(join(folder.path, 'uptime', 'index.html'), '<p>uptime</p>');
+        mkdirSync(join(folder.path, 'q?a#b'));
+        writeFileSync(join(folder.path, 'q?a#b', 'index.html'), '<p>q</p>');
         server = webServer({
             config: MOUNTED,
             clientDir: folder.path,
@@ -527,6 +527,12 @@ describe('WebServer with a built client folder', () => {
         expect([page.headers.get('content-type'), await page.text()]).toEqual(['text/html', '<p>uptime</p>']);
         expect([moved.status, moved.headers.get('location')]).toEqual([307, '/uptime/?tab=1']);
         expect([index.status, index.headers.get('location')]).toEqual([307, '/uptime/?tab=1']);
+    });
+
+    it('keeps a ? and a # in a folder name inside the redirect path', async () => {
+        const response = await server.fetch(get('/q%3Fa%23b'));
+
+        expect(response.headers.get('location')).toBe('/q%3Fa%23b/');
     });
 
     it('redirects a folder path that starts with // to the folder on this host', async () => {

@@ -137,16 +137,28 @@ describe('DevPageServer with pages in client/', () => {
         socket.close();
     });
 
-    // last because closeSockets() closes every socket that the server holds
+    it("runs a plugin's html through vite's html hooks", async () => {
+        const html = new Response('<html><head></head><body>plugin</body></html>', {
+            headers: { 'content-type': 'text/html' }
+        });
+
+        const page = await pageServer.transformPage('/plugin-page', html);
+
+        expect(await page.text()).toContain('/@vite/client');
+    });
+});
+
+describe('DevPageServer sockets', () => {
     it("connects the browser's hmr socket to vite, and closes it with closeSockets()", async () => {
-        const socket = new WebSocket(`ws://${url}/`, 'vite-hmr');
+        await using started = await served({ ...BOT_FILES, ...PAGES });
+        const socket = new WebSocket(`ws://${started.url}/`, 'vite-hmr');
         const connected = new Promise((resolve) =>
             socket.addEventListener('message', ({ data }) => resolve(JSON.parse(String(data))))
         );
         const closed = new Promise((resolve) => socket.addEventListener('close', resolve));
 
         expect(await connected).toEqual({ type: 'connected' });
-        pageServer.closeSockets();
+        started.pageServer.closeSockets();
         await expect(closed).resolves.toBeDefined();
     });
 });

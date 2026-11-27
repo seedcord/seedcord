@@ -7,11 +7,9 @@ import type { Stats } from 'node:fs';
 
 export const INDEX_PAGE = 'index.html';
 
-type FoundEntry = Pick<Stats, 'isFile' | 'isDirectory' | 'size'>;
-
 type StaticFile = { file: string; size: number } | { redirect: string };
 
-function statIfExists(file: string): Promise<FoundEntry | undefined> {
+function statIfExists(file: string): Promise<Stats | undefined> {
     return stat(file).catch(() => undefined);
 }
 
@@ -32,8 +30,9 @@ function fileAtUrlPath(folder: string, urlPath: string): string | undefined {
 
 // built from the folder on disk. the raw path can start with // and point the browser at another host
 function folderRedirect(folder: string, page: string, search: string): StaticFile {
-    const relative = posixRelative(folder, page);
-    return { redirect: `${encodeURI(relative === '' ? '/' : `/${relative}/`)}${search}` };
+    // the browser reads a ? or # in a folder name as the end of the path. encodeURI keeps both
+    const segments = posixRelative(folder, page).split('/').filter(Boolean).map(encodeURIComponent);
+    return { redirect: `${segments.length === 0 ? '/' : `/${segments.join('/')}/`}${search}` };
 }
 
 // matches cloudflare's static assets. /uptime and /uptime/index.html redirect to /uptime/

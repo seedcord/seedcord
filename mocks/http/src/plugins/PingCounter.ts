@@ -13,9 +13,7 @@ export class PingCounter extends Plugin {
     private readonly pages = new Set<ReadableStreamDefaultController<Uint8Array>>();
 
     public constructor(host: CoreBase) {
-        // every browser tab showing the page holds a connection to this bot.
-        // we need to close them in dispose() first because the server's close()
-        // waits for all of them
+        // dispose() runs in Unbind before the server's close() waits on the tabs' open connections
         super(host, { dispose: { phase: ShutdownPhase.Unbind } });
     }
 
@@ -31,15 +29,15 @@ export class PingCounter extends Plugin {
 
     public override fetch(request: Request): Response | undefined {
         if (new URL(request.url).pathname !== '/api/pings') return undefined;
-        let opened: ReadableStreamDefaultController<Uint8Array>;
+        let page: ReadableStreamDefaultController<Uint8Array>;
         const events = new ReadableStream<Uint8Array>({
-            start: (page) => {
-                opened = page;
+            start: (controller) => {
+                page = controller;
                 this.pages.add(page);
                 this.send(page);
             },
             cancel: () => {
-                this.pages.delete(opened);
+                this.pages.delete(page);
             }
         });
         return new Response(events, { headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' } });

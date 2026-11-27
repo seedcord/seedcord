@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { BotLayout, CLIENT_FOLDER, withoutQuery } from '@seedcord/utils/internal';
 import { createBuilder } from 'vite';
 
-import { BOT_ENVIRONMENT, botEnvironment, viteEnvironment } from '#core/modules/botEnvironment';
+import { BOT_ENVIRONMENT, botEnvironment, CLIENT_ENVIRONMENT, viteEnvironment } from '#core/modules/botEnvironment';
 import { envBootstrap } from '#core/modules/envBootstrap';
 
 import { assertOutDirSafe } from './assertOutDirSafe';
@@ -87,7 +87,7 @@ export abstract class ServerBuild<Target extends ResolvedServerTarget = Resolved
             }
         );
         if (files.client.hasPages) {
-            await builder.build(viteEnvironment(builder.environments, 'client')).catch(bundleFailed);
+            await builder.build(viteEnvironment(builder.environments, CLIENT_ENVIRONMENT)).catch(bundleFailed);
         }
         return bundleStats(chunks, layout, join(outDir, ENTRY_FILE_NAME));
     }
@@ -105,7 +105,7 @@ export abstract class ServerBuild<Target extends ResolvedServerTarget = Resolved
             resolve: { tsconfigPaths: true },
             environments: {
                 [BOT_ENVIRONMENT]: { resolve: { external: true }, build: { ...build, copyPublicDir: false } },
-                client: { build: { outDir: join(this.target.outDir, CLIENT_FOLDER) } }
+                [CLIENT_ENVIRONMENT]: { build: { outDir: join(this.target.outDir, CLIENT_FOLDER) } }
             }
         }).catch(bundleFailed);
         await builder.build(botEnvironment(builder.environments)).catch(bundleFailed);

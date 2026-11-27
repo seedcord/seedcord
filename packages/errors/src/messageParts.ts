@@ -25,6 +25,12 @@ export const listedFolderProblems = {
     outsideProject: `which is outside the folder that holds seedcord.config.ts. Move it into that folder and list its new path.`
 };
 
+export const clientDirProblems = {
+    outside: 'which is outside the folder that holds seedcord.config.ts.',
+    configFolder: 'which is the folder that holds seedcord.config.ts.',
+    holdsRoot: `which holds your bot's ${paint.bold('root')}. It can't hold your bot's code because browsers can load every file in it.`
+};
+
 export const emojiFileProblems = {
     name: 'Discord takes a name of 2 to 32 letters, digits, and underscores. Rename the file.',
     format: 'Discord takes a PNG, JPEG, GIF, APNG, WebP, or AVIF file. Convert this one, or move it out of the emojis folder.',

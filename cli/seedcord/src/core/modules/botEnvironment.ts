@@ -3,6 +3,8 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 // renaming this breaks user plugins that check for 'seedcord'
 export const BOT_ENVIRONMENT = 'seedcord';
+// vite builds and serves the browser's code in this one
+export const CLIENT_ENVIRONMENT = 'client';
 
 export const LOOK_FOR_BUILD_PLUGIN = `Look in ${paint.bold('vitePlugins')} for a plugin that changes how Vite builds the ${paint.bold(BOT_ENVIRONMENT)} environment.`;
 

@@ -5,7 +5,10 @@ export const DEV_URL_HEADER = 'x-seedcord-dev-url';
 export const WORKER_PROBE = { header: 'x-seedcord-probe', status: 204 } as const;
 
 // a browser can cache these forever because vite puts a hash of each file's content in its name
-export const HASHED_ASSETS = { path: '/assets/', cacheControl: 'public, max-age=31536000, immutable' } as const;
+export const HASHED_ASSETS = {
+    path: '/assets/',
+    cacheControl: `public, max-age=${String(365 * 24 * 60 * 60)}, immutable`
+} as const;
 
 // 307 to match cloudflare's static assets. a browser caches a 301 forever
 export const FOLDER_REDIRECT = 307;
