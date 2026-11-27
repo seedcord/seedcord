@@ -4,7 +4,7 @@ import { basename, dirname, extname, join } from 'node:path';
 
 import { FOLDER_REDIRECT, HASHED_ASSETS } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 import {
     CLIENT_FOLDER,
     INDEX_PAGE,
@@ -27,7 +27,7 @@ const PAGES_GLOB = `**/${INDEX_PAGE}`;
 const ASSET_HEADERS = `${HASHED_ASSETS.path}*\n  Cache-Control: ${HASHED_ASSETS.cacheControl}\n`;
 
 export class ClientPages {
-    public readonly dir: string;
+    private readonly dir: string;
     private readonly pages: readonly string[];
     private readonly configDir: string;
 
@@ -52,7 +52,10 @@ export class ClientPages {
     public assertFolderFree(root: string, outDir: string): void {
         const folder = join(root, CLIENT_FOLDER);
         if (this.hasPages && folder !== this.dir && existsSync(folder)) {
-            throw new SeedcordError(SeedcordErrorCode.CliBuildClientFolderTaken, [folder, join(outDir, CLIENT_FOLDER)]);
+            throw new SeedcordTypeError(SeedcordErrorCode.CliBuildClientFolderTaken, [
+                folder,
+                join(outDir, CLIENT_FOLDER)
+            ]);
         }
     }
 
@@ -98,8 +101,8 @@ export class ClientPages {
 
     private assertServable(config: ResolvedConfig, publicDir: string): void {
         if (config.base !== '/') throw new SeedcordTypeError(SeedcordErrorCode.CliViteBaseUnsupported, [config.base]);
-        const taken = (folder: string): SeedcordError =>
-            new SeedcordError(SeedcordErrorCode.CliAssetsPathTaken, [folder, HASHED_ASSETS.path]);
+        const taken = (folder: string): SeedcordTypeError =>
+            new SeedcordTypeError(SeedcordErrorCode.CliAssetsPathTaken, [folder, HASHED_ASSETS.path]);
         const pagesAssets = join(this.dir, HASHED_ASSETS.path);
         if (this.pages.some((page) => isInside(pagesAssets, page))) throw taken(pagesAssets);
         const publicAssets = join(publicDir, HASHED_ASSETS.path);
@@ -111,7 +114,8 @@ export class ClientPages {
 
         const answer = async (request: Connect.IncomingMessage, response: ServerResponse): Promise<boolean> => {
             const url = request.url ?? '/';
-            const found = await staticFileAt(this.dir, new URL(url, 'http://dev'));
+            // new URL(url, base) reads //evil.test/ as a host. production keeps it in the path
+            const found = await staticFileAt(this.dir, new URL(`http://dev${url}`));
             if (found === undefined) return false;
             if ('redirect' in found) {
                 response.writeHead(FOLDER_REDIRECT, { location: found.redirect }).end();

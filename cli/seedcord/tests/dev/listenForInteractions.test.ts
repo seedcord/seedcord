@@ -15,10 +15,10 @@ import type { AddressInfo } from 'node:net';
 import type { Connect } from 'vite';
 
 type Handle = (request: IncomingMessage, next: (error?: unknown) => void) => void;
-type Front = Pick<DevPageServer, 'upgrade' | 'middlewares'>;
+type PageServer = Pick<DevPageServer, 'upgrade' | 'middlewares'>;
 
 // justified: a Connect app is a request handler, and the endpoint only calls it as one
-function middlewares(handle: Handle): Front {
+function middlewares(handle: Handle): PageServer {
     const app = ((request: IncomingMessage, _response: unknown, next: (error?: unknown) => void) =>
         handle(request, next)) as unknown as Connect.Server;
     return { middlewares: app, upgrade: () => false };
@@ -26,7 +26,7 @@ function middlewares(handle: Handle): Front {
 
 const QUICK = { port: 0, host: '127.0.0.1', configFile: 'seedcord.config.ts' };
 
-async function listening(pageServer: Front): Promise<string> {
+async function listening(pageServer: PageServer): Promise<string> {
     const { server, port } = await listenForInteractions(pageServer, QUICK);
     onTestFinished(() => {
         server.close();

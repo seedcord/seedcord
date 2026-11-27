@@ -2,4 +2,4 @@
 '@seedcord/utils': patch
 ---
 
-`@seedcord/core` and `seedcord` now read `CLIENT_FOLDER`, `builtClientDir`, `INDEX_PAGE`, and `staticFileAt` from here.
+`@seedcord/core` and `seedcord` read some more internals from here.

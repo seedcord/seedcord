@@ -53,7 +53,7 @@ describe('a plugin fetch method on edge', () => {
         expect(calls).toEqual(['init']);
     });
 
-    it('sends a request that discord signed to the interactions engine before any plugin', async () => {
+    it('sends a signed-looking interaction to the engine before any plugin', async () => {
         class Everything extends Plugin {
             public init(): void {}
 

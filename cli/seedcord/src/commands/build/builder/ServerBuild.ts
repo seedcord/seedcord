@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { BotLayout, CLIENT_FOLDER, withoutQuery } from '@seedcord/utils/internal';
 import { createBuilder } from 'vite';
 
-import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
+import { BOT_ENVIRONMENT, botEnvironment, viteEnvironment } from '#core/modules/botEnvironment';
 import { envBootstrap } from '#core/modules/envBootstrap';
 
 import { assertOutDirSafe } from './assertOutDirSafe';
@@ -86,8 +86,9 @@ export abstract class ServerBuild<Target extends ResolvedServerTarget = Resolved
                 }
             }
         );
-        const { client } = builder.environments;
-        if (client && files.client.hasPages) await builder.build(client).catch(bundleFailed);
+        if (files.client.hasPages) {
+            await builder.build(viteEnvironment(builder.environments, 'client')).catch(bundleFailed);
+        }
         return bundleStats(chunks, layout, join(outDir, ENTRY_FILE_NAME));
     }
 

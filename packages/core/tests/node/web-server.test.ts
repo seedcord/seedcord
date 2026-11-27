@@ -38,6 +38,7 @@ interface Setup {
 const STREAM_WAIT_MS = 500;
 const LOCAL: ServerConfig = { port: 0, host: '127.0.0.1' };
 const MOUNTED: ServerConfig = { port: false };
+const SIGNED = { 'x-signature-ed25519': 'ab', 'x-signature-timestamp': '1' };
 
 function page(request: Request): Promise<Response | undefined> {
     const isPage = new URL(request.url).pathname === '/page';
@@ -133,11 +134,16 @@ describe('WebServer requests', () => {
         expect(seen).toEqual(['plugins /other', 'interactions /other']);
     });
 
-    // discord signs a webhook event with the same headers. only an interaction has a token
     it.each([
-        ['an interaction to the interactions before any plugin', { type: 1, token: 't' }, ['interactions']],
-        ['a webhook event to the plugins', { version: 1, type: 0 }, ['plugins']]
-    ])('sends %s', async (_case, body, order) => {
+        ['an interaction to the interactions before any plugin', SIGNED, { type: 1, token: 't' }, ['interactions']],
+        ['a webhook event to the plugins', SIGNED, { version: 1, type: 0 }, ['plugins']],
+        [
+            'a request with one of the two headers to the plugins',
+            { 'x-signature-ed25519': 'ab' },
+            { type: 1, token: 't' },
+            ['plugins']
+        ]
+    ])('sends %s', async (_case, headers, body, order) => {
         const seen: string[] = [];
         const server = webServer({
             config: MOUNTED,
@@ -152,12 +158,7 @@ describe('WebServer requests', () => {
         });
         await server.serve(undefined);
 
-        const signed = new Request('http://bot.test/', {
-            method: 'POST',
-            headers: { 'x-signature-ed25519': 'ab', 'x-signature-timestamp': '1' },
-            body: JSON.stringify(body)
-        });
-        await server.fetch(signed);
+        await server.fetch(new Request('http://bot.test/', { method: 'POST', headers, body: JSON.stringify(body) }));
 
         expect(seen).toEqual(order);
     });

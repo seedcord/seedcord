@@ -6,8 +6,12 @@ export const BOT_ENVIRONMENT = 'seedcord';
 
 export const LOOK_FOR_BUILD_PLUGIN = `Look in ${paint.bold('vitePlugins')} for a plugin that changes how Vite builds the ${paint.bold(BOT_ENVIRONMENT)} environment.`;
 
-export function botEnvironment<Environment>(environments: Record<string, Environment>): Environment {
-    const environment = environments[BOT_ENVIRONMENT];
+export function viteEnvironment<Environment>(environments: Record<string, Environment>, name: string): Environment {
+    const environment = environments[name];
     if (environment) return environment;
-    throw new SeedcordError(SeedcordErrorCode.CliViteEnvironmentMissing, [BOT_ENVIRONMENT, Object.keys(environments)]);
+    throw new SeedcordError(SeedcordErrorCode.CliViteEnvironmentMissing, [name, Object.keys(environments)]);
+}
+
+export function botEnvironment<Environment>(environments: Record<string, Environment>): Environment {
+    return viteEnvironment(environments, BOT_ENVIRONMENT);
 }

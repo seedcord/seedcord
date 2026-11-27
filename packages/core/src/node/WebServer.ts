@@ -20,6 +20,7 @@ import { DRAIN_TASK_TIMEOUT_MS, DRAIN_WINDOW_MS } from './Lifecycle/drainWindow'
 import { toWebRequest, writeWebResponse } from './webBridge';
 
 import type { HmrManager } from '#hmr/HmrManager';
+import type { Interactions } from '#src/answerPluginsOrInteractions';
 import type { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import type { PluginRegistry } from '#src/plugin/PluginRegistry';
 import type { ShutdownTasks } from './Lifecycle/CoordinatedShutdown';
@@ -41,13 +42,13 @@ export interface WebServerOptions {
     readonly startup: Pick<CoordinatedStartup, 'isReady' | 'hasBegun'>;
     readonly plugins: Pick<PluginRegistry, 'answer' | 'answersRequests'>;
     // http answers Discord's interactions here. a gateway bot takes them over its websocket
-    readonly interactions: ((request: Request) => Promise<Response>) | undefined;
+    readonly interactions: Interactions | undefined;
     // seedcord dev sets this before start()
     readonly dev: () => DevServer | undefined;
     readonly clientDir: string | undefined;
 }
 
-// answers a node bot's web requests: health, built client files, plugins, then interactions or a 404. serve() also puts it on a port
+// answers a node bot's web requests: health, built client files, then Discord's interactions, plugins, and a 404. serve() also puts it on a port
 export class WebServer {
     private readonly logger = new Logger('Server', { channel: 'server' });
     private readonly inFlight = new InFlight(this.logger, 'Requests');
@@ -186,8 +187,7 @@ export class WebServer {
         const request = await toWebRequest(incoming, this.config.bodyLimit ?? DEFAULT_BODY_LIMIT);
         const response = request ? await this.fetch(request) : new Response(null, { status: PAYLOAD_TOO_LARGE });
         await writeWebResponse(response, outgoing);
-        // node's close() only closes the connections that are idle when you call it.
-        // this one just went idle, like the connection of an SSE stream that dispose() closed
+        // node's close() only closes connections that are idle when it runs. this one turns idle here once dispose() ends its SSE stream
         if (!server.listening) server.closeIdleConnections();
     }
 

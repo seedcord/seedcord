@@ -19,7 +19,7 @@ export type TransportPackage = '@seedcord/gateway' | '@seedcord/http';
 
 // the parts of vite's dev server that a node bot's own web server hands requests to
 export interface DevServer {
-    // the bot needs a port under dev only to serve pages, or for its own routes
+    // true when the bot has pages. under dev that gives it a port even without routes
     readonly servesPages: boolean;
     // false when vite passes the request on to the bot
     serve(request: IncomingMessage, response: ServerResponse): Promise<boolean>;

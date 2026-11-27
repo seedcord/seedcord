@@ -20,7 +20,7 @@ export class DevPageServer implements DevServer {
 
     private constructor(
         public readonly vite: ViteDevServer,
-        // without a server in ws.server, vite opens a second port for its websockets. upgrade() hands them over here
+        // vite's ws.server. upgrade() hands its sockets over here
         private readonly sockets: Server,
         public readonly servesPages: boolean
     ) {}

@@ -2,4 +2,4 @@
 '@seedcord/http': minor
 ---
 
-**BREAKING:** Discord's interactions now go to the interactions engine before any plugin's `fetch()`, so a slow `fetch()` no longer uses up their three seconds. A plugin that answered POSTs on your interactions endpoint path no longer gets them.
+**BREAKING:** Discord's interactions now go straight to the interactions engine on any path, and a plugin's `fetch()` never gets them. A slow `fetch()` used to use up part of their three seconds.

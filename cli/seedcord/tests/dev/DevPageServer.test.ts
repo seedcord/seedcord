@@ -108,9 +108,12 @@ describe('DevPageServer with pages in client/', () => {
 
     it("refuses the bot's source and config, and passes the bot's own routes on", async () => {
         const statuses = await Promise.all(
-            ['/seedcord.config.ts', '/package.json', '/src/bot.ts'].map((path) =>
-                fetch(`http://${url}${path}`).then((response) => response.status)
-            )
+            [
+                '/seedcord.config.ts',
+                '/package.json',
+                '/src/bot.ts',
+                `/@fs${pageServer.vite.config.root}/src/bot.ts`
+            ].map((path) => fetch(`http://${url}${path}`).then((response) => response.status))
         );
         const botPaths = ['/api/pings', '/%00', '/notes.html'];
         const routes = await Promise.all(
@@ -118,7 +121,7 @@ describe('DevPageServer with pages in client/', () => {
         );
         const post = await fetch(`http://${url}/uptime/`, { method: 'POST', body: '{}' });
 
-        expect(statuses).toEqual([403, 403, 403]);
+        expect(statuses).toEqual([403, 403, 403, 403]);
         expect(routes).toEqual(botPaths.map((path) => `the bot got ${path}`));
         expect(await post.text()).toBe('the bot got /uptime/');
     });

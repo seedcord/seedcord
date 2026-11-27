@@ -10,6 +10,7 @@ import { preview } from 'vite';
 import { afterAll, beforeAll, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { BOT_ENVIRONMENT } from '#core/modules/botEnvironment';
+import { writeFiles } from '#tests/tempProject';
 
 import {
     copyEdgeBot,
@@ -68,12 +69,11 @@ describe('seedcord build on an edge bot', () => {
         });
         await writeFile(join(projectDir, '.env'), 'VITE_GREETING=built\nAPP_GREETING=built-app\n');
         await appendFile(join(projectDir, '.dev.vars'), 'RUNTIME_GREETING=before\n');
-        await mkdir(join(projectDir, 'client/page'), { recursive: true });
-        await writeFile(
-            join(projectDir, 'client/page/index.html'),
-            '<html><head></head><body><script type="module" src="./main.ts"></script></body></html>'
-        );
-        await writeFile(join(projectDir, 'client/page/main.ts'), "document.body.append('ticking');\n");
+        await writeFiles(projectDir, {
+            'client/page/index.html':
+                '<html><head></head><body><script type="module" src="./main.ts"></script></body></html>',
+            'client/page/main.ts': "document.body.append('ticking');\n"
+        });
         const bot = join(projectDir, 'src/bot.ts');
         await writeFile(
             bot,

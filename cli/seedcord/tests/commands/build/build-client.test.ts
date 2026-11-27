@@ -49,21 +49,16 @@ describe('seedcord build on a node bot with web pages', () => {
 });
 
 describe('seedcord build refusing a layout that would serve the wrong files', () => {
-    async function codeOfBuildWith(files: Record<string, string>): Promise<unknown> {
-        await using copy = await fixtureCopy(HTTP_BOT);
-        await writeFiles(copy.path, files);
-        const error: unknown = await quickBuildRunner()
-            .run(copy.path)
-            .catch((caught: unknown) => caught);
-        return Reflect.get(new Object(error), 'code');
-    }
-
     it('throws CliBuildClientFolderTaken for a client folder of bot code in root beside pages', async () => {
-        const code = await codeOfBuildWith({
+        await using copy = await fixtureCopy(HTTP_BOT);
+        await writeFiles(copy.path, {
             'src/client/widget.ts': 'export {};\n',
             'client/home/index.html': '<p>home</p>'
         });
 
-        expect(code).toBe(SeedcordErrorCode.CliBuildClientFolderTaken);
+        await expect(quickBuildRunner().run(copy.path)).rejects.toHaveProperty(
+            'code',
+            SeedcordErrorCode.CliBuildClientFolderTaken
+        );
     }, 120_000);
 });

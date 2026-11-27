@@ -90,7 +90,7 @@ seedcord doesn't route requests for you, so you have to check the path in each p
 
 To put the route on your bot, attach `Uptime` in `bot.ts` with `attach('uptime', Uptime)` like [any other plugin](/plugins). This sample imports `Plugin` from `@seedcord/gateway`. On an http bot, the `Plugin` from `@seedcord/http` has the same `fetch()`.
 
-In `fetch()`, you can answer other requests too, like a webhook that GitHub posts, or return HTML that your plugin builds.
+You can also answer other requests in `fetch()`, like a webhook that GitHub posts, or return HTML that your plugin builds.
 
 <Callout type="tip">
 
@@ -100,7 +100,7 @@ A page in `client/` is built ahead of time, so it fetches the bot's data after i
 
 <Callout type="warning">
 
-Anyone who can reach your bot can request `/api/uptime`, the same as the page does. Before a route returns something private, like a server's settings, check who's asking. You could use the [OAuth plugin](/plugins/oauth) for that. It logs people in with Discord.
+Anyone who can reach your bot can request `/api/uptime`, the same as the page does. Before a route returns something private, like a server's settings, check who's asking. The [OAuth plugin](/plugins/oauth) can check that for you by logging people in with Discord.
 
 </Callout>
 
@@ -122,7 +122,7 @@ seedcord tries these steps in order, and the first one to return a `Response` an
 
 The bot answers with a built page or a `public/` file before any plugin runs, so keep your routes off those paths.
 
-On an http bot, the interactions engine runs your command and component handlers. It answers every interaction from Discord before your plugins run, whatever path your interactions endpoint URL uses. Your `fetch()` can't use up any of Discord's three seconds that way. Discord's [webhook events](https://discord.com/developers/docs/events/webhook-events) aren't interactions, so they reach your `fetch()` like any other request.
+On an http bot, the interactions engine runs your command and component handlers. It answers every interaction from Discord before your plugins run, whatever path your interactions endpoint URL uses. So a slow `fetch()` never uses up Discord's three seconds. Discord's [webhook events](https://discord.com/developers/docs/events/webhook-events) aren't interactions, so they reach your `fetch()` like any other request.
 
 ### Check the path before you await
 
@@ -189,7 +189,7 @@ export class GithubHooks extends Plugin {
 
 A path that starts with a slash replaces the whole path of `core.url`, so write your route's path without one. For a bot at `https://example.com/bot`, `new URL()` keeps the `/bot` part for `'github/seedcord/push'` and removes it for `'/github/seedcord/push'`.
 
-`core.url` comes from [`server.url`](/build/server#your-bots-address), which the bot's author has to set. If they haven't, `core.url` throws an error with the line to add, so read it in `init()` and the error stops the bot at startup. Under `seedcord dev`, `core.url` is the bot's localhost or tunnel address.
+`core.url` comes from [`server.url`](/build/server#your-bots-address), which the bot's author has to set. If they haven't, `core.url` throws an error with the line to add, so read it in `init()` to make the error stop the bot at startup. Under `seedcord dev`, `core.url` is the bot's localhost or tunnel address.
 
 ### Where requests arrive
 
@@ -262,7 +262,7 @@ export class PingCounter extends Plugin {
 }
 ```
 
-Every browser tab on the page opens its own stream, so `PingCounter` has to keep one entry per tab in `tabs` to reach them all. `start` sends the current count right away, and `cancel` runs when the tab closes. A message is a `data:` line and a blank line after it, which is why `send()` ends with two newlines. With `no-cache`, a cache between the bot and the browser asks the bot again each time. A tab never gets an old copy of the stream.
+Every browser tab on the page opens its own stream, so `PingCounter` has to keep one entry per tab in `tabs` to reach them all. `start` sends the current count right away, and `cancel` runs when the tab closes. A message is a `data:` line and a blank line after it, which is why `send()` ends with two newlines. With `no-cache`, a cache between the bot and the browser asks the bot again each time. That way a tab never gets an old copy of the stream.
 
 Attach it with `attach('pings', PingCounter)`. To send every open tab the new count, call `this.core.pings.bump()` in your `/ping` handler.
 
@@ -316,7 +316,7 @@ You can add any other Vite plugin for browser code to the same list, like `@tail
 
 ### Types for the browser code
 
-Your bot's tsconfig only includes `src/`, so `tsc` never checks the files in `client/`, and it doesn't have the browser's types like `document` either. Give the folder its own tsconfig:
+Your bot's tsconfig only includes `src/`, so `tsc` never checks the files in `client/`. The bot's tsconfig also doesn't have the browser's types, like `document`. Give the folder its own tsconfig:
 
 ```json plain title="client/tsconfig.json"
 {
@@ -341,7 +341,7 @@ If you add your first page while `seedcord dev` runs, the terminal shows the **R
 
 <Callout type="warning">
 
-In dev, a browser can load any file in `client/`. A build only writes the pages and the files that they import. If a page links `/logo.png` by its full path, dev serves `client/logo.png`, but the build doesn't copy it, so your bot answers that path with a 404. Put files like that, and your favicon, in [`public/`](#the-public-folder).
+In dev, a browser can load any file in `client/` except the `.html` files, which go to your bot. The pages are the one exception. A build only writes the pages and the files that they import. If a page links `/logo.png` by its full path, dev serves `client/logo.png`, but the build doesn't copy it, so your bot answers that path with a 404. Put files like that, and your favicon, in [`public/`](#the-public-folder).
 
 </Callout>
 
@@ -352,7 +352,7 @@ In dev, a browser can load any file in `client/`. A build only writes the pages 
 <Tabs>
 <Tab label="Node and Bun">
 
-The build writes the pages to `client/` inside your `outDir`, and the bot serves them from its [web server](/build/server#the-web-server) before any plugin route. The bot redirects a request for `/uptime` or `/uptime/index.html` to `/uptime/` with a 307. The bot sends files under `/assets/` with a cache header, and browsers keep them for a year. A new build gives a changed file a new name, so a visitor never keeps an old one.
+The build writes the pages to `client/` inside your `outDir`, and the bot serves them from its [web server](/build/server#the-web-server) before any plugin route. The bot redirects a request for `/uptime` or `/uptime/index.html` to `/uptime/` with a 307. The bot sends files under `/assets/` with a header that lets browsers cache them for a year. A new build gives a changed file a new name, so a visitor never keeps an old one.
 
 The build also writes each module under `root` to the same path in `outDir`. If `root` has a `client/` folder of bot code, the build would write it over your pages, so seedcord stops with `CliBuildClientFolderTaken`.
 

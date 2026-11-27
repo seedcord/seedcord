@@ -387,7 +387,7 @@ const messages = {
     [SeedcordErrorCode.CliNotProjectInstall]: (cliDir: string, projectInstall: string) =>
         `This ${paint.bold('seedcord')} runs from ${paint.path(cliDir)}, but the project installs its own at ${paint.path(projectInstall)}. The CLI and the bot must load the same seedcord packages. Run the command through a script in the project's ${paint.path('package.json')}.`,
     [SeedcordErrorCode.CliViteEnvironmentMissing]: (name: string, created: readonly string[]) =>
-        `seedcord runs the bot in Vite's ${paint.bold(name)} environment, but Vite created only ${allOf.format(created.map((environment) => paint.bold(environment)))}. Look in ${paint.bold('vitePlugins')} for a plugin whose ${paint.bold('config')} hook rewrites ${paint.bold('environments')}.`,
+        `seedcord needs Vite's ${paint.bold(name)} environment, but Vite created only ${allOf.format(created.map((environment) => paint.bold(environment)))}. Look in ${paint.bold('vitePlugins')} for a plugin whose ${paint.bold('config')} hook rewrites ${paint.bold('environments')}.`,
     [SeedcordErrorCode.CliListedFolderUnusable]: (folder: string, problem: keyof typeof listedFolderProblems) =>
         `${paint.bold('files')} in seedcord.config.ts lists ${paint.path(folder)}, ${listedFolderProblems[problem]}`,
     [SeedcordErrorCode.CliDevAlreadyRunning]: (configDir: string, pid: number, startedAt: string, lockFile: string) =>

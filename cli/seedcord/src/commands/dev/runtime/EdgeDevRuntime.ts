@@ -35,7 +35,6 @@ import type {
 import type { Plugin, ViteDevServer } from 'vite';
 
 interface EdgeStarted extends StartedRuntime {
-    readonly server: ViteDevServer;
     readonly port: number;
 }
 
@@ -114,8 +113,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             plugins
         );
 
-        const server = pageServer.vite;
-        await loadWorkerEntry(server.middlewares, config.instance);
+        await loadWorkerEntry(pageServer.middlewares, config.instance);
 
         const endpoint = await listenForInteractions(pageServer, {
             port: this.target.port,
@@ -130,7 +128,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             pageServer.closeSockets();
         });
 
-        return { context, server, modules: nodeCopy, hmr, port: endpoint.port, pageServer, resources };
+        return { context, modules: nodeCopy, hmr, port: endpoint.port, pageServer, resources };
     }
 
     private async readFunctionExports(context: DevRuntimeContext, modules: ModuleLoader): Promise<string[]> {
@@ -143,8 +141,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
 
     // workerd runs its own copy of the bot
     public startBot(_instance: SeedcordInstance): Promise<string | undefined> {
-        const { context, server, port } = this.require('startBot');
-        const cli = workerChannel(server);
+        const { context, pageServer, port } = this.require('startBot');
+        const cli = workerChannel(pageServer.vite);
         return new Promise((resolve, reject) => {
             this.settleStart = () => resolve(undefined);
             cli.on('seedcord:started', ({ username }) => {

@@ -39,11 +39,10 @@ function folderRedirect(folder: string, page: string, search: string): StaticFil
 // matches cloudflare's static assets. /uptime and /uptime/index.html redirect to /uptime/
 export async function staticFileAt(
     folder: string,
-    { pathname, search }: Pick<URL, 'pathname' | 'search'>,
-    stat: (file: string) => Promise<FoundEntry | undefined> = statIfExists
+    { pathname, search }: Pick<URL, 'pathname' | 'search'>
 ): Promise<StaticFile | undefined> {
     const target = fileAtUrlPath(folder, pathname);
-    const entry = target === undefined ? undefined : await stat(target);
+    const entry = target === undefined ? undefined : await statIfExists(target);
     if (target === undefined || entry === undefined) return undefined;
 
     if (entry.isFile()) {
@@ -52,7 +51,7 @@ export async function staticFileAt(
     }
 
     const page = path.join(target, INDEX_PAGE);
-    const pageEntry = entry.isDirectory() ? await stat(page) : undefined;
+    const pageEntry = entry.isDirectory() ? await statIfExists(page) : undefined;
     if (!pageEntry?.isFile()) return undefined;
     return pathname.endsWith('/') ? { file: page, size: pageEntry.size } : folderRedirect(folder, target, search);
 }

@@ -5,4 +5,4 @@
 '@seedcord/http': minor
 ---
 
-Your bot can now serve web pages built with Vite. Each `index.html` in a `client/` folder beside `seedcord.config.ts` is a page, like `client/uptime/index.html` at `/uptime/`, under `seedcord dev` and after `seedcord build`.
+Your bot can now serve web pages built with Vite, under `seedcord dev` and after `seedcord build`. The pages go in a `client/` folder beside `seedcord.config.ts` where each `index.html` is a page.

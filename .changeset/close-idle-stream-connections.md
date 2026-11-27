@@ -4,4 +4,4 @@
 '@seedcord/http': patch
 ---
 
-Fixed a node bot's shutdown waiting 5 seconds for a browser connection that had a server-sent events stream on it, like a page reading live updates.
+Fixed a node bot's shutdown waiting 5 seconds on a browser connection after its server-sent events stream closed.
