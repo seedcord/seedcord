@@ -180,9 +180,10 @@ export class WebServer {
         if (await this.options.dev()?.serve(incoming, outgoing)) return;
         const request = await toWebRequest(incoming, this.config.bodyLimit ?? DEFAULT_BODY_LIMIT);
         const response = request ? await this.fetch(request) : new Response(null, { status: PAYLOAD_TOO_LARGE });
-        // node's close() doesn't close a busy connection once it becomes idle
-        if (!server.listening) outgoing.setHeader('connection', 'close');
         await writeWebResponse(response, outgoing);
+        // node's close() only closes the connections that are idle when you call it.
+        // this one just went idle, like the connection of an SSE stream that dispose() closed
+        if (!server.listening) server.closeIdleConnections();
     }
 
     // new requests get 503, and the port closes once the open connections finish

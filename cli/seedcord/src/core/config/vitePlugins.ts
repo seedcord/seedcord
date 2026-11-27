@@ -44,10 +44,28 @@ function rethrowing(hook: HookFunction, record: RecordThrow): HookFunction {
     };
 }
 
+// the fields besides handler that vite and rolldown read from a hook object
+const HOOK_FIELDS = ['order', 'filter', 'sequential'] as const;
+
+// reads each field from the plugin's own hook because svelte sets filter on it in configResolved, after the wrap.
+// own getters because a build ignored a filter that sat on the prototype
+function handlerObject(hook: Record<string, unknown>, handler: HookFunction): object {
+    const fields: PropertyDescriptorMap = { handler: { value: handler, enumerable: true } };
+    for (const field of HOOK_FIELDS) {
+        // configurable because a build redefines filter on the hook it gets
+        fields[field] = {
+            get: () => hook[field],
+            enumerable: true,
+            configurable: true
+        };
+    }
+    return Object.defineProperties({}, fields);
+}
+
 // a hook is a function, or an object holding one in handler
 function wrapHook(hook: unknown, record: RecordThrow): unknown {
     if (isFunction(hook)) return rethrowing(hook, record);
-    if (isPlainObject(hook) && isFunction(hook.handler)) return { ...hook, handler: rethrowing(hook.handler, record) };
+    if (isPlainObject(hook) && isFunction(hook.handler)) return handlerObject(hook, rethrowing(hook.handler, record));
     return hook;
 }
 

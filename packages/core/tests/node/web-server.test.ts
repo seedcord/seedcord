@@ -1,5 +1,6 @@
 import { once } from 'node:events';
 import { mkdirSync, mkdtempDisposableSync, writeFileSync } from 'node:fs';
+import { Agent, get as get_ } from 'node:http';
 import { connect, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -14,6 +15,7 @@ import { WebServer } from '#node/WebServer';
 import type { WebServerOptions } from '#node/WebServer';
 import type { ServerConfig } from '@seedcord/types';
 import type { DevServer } from '@seedcord/types/internal';
+import type { IncomingMessage } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { Duplex } from 'node:stream';
 
@@ -316,6 +318,32 @@ describe('WebServer on a port', () => {
         const afterAbort = await Promise.race([cancelled.promise, sleep(STREAM_WAIT_MS).then(() => 'still open')]);
 
         expect([first, afterAbort]).toEqual(['first', 'cancelled']);
+    });
+
+    it('closes a kept-alive connection once its stream ends after close() started', async () => {
+        let stream!: ReadableStreamDefaultController<string>;
+        const events = new ReadableStream<string>({
+            start: (opened) => {
+                stream = opened;
+                opened.enqueue('first');
+            }
+        });
+        const bot = await listening({
+            answer: () => Promise.resolve(new Response(events.pipeThrough(new TextEncoderStream())))
+        });
+        // a browser keeps the connection open for its next request, like this agent
+        const agent = new Agent({ keepAlive: true });
+        onTestFinished(() => agent.destroy());
+        const response = await new Promise<IncomingMessage>((resolve) => {
+            get_(`${bot.url}/events`, { agent }, resolve).on('error', () => undefined);
+        });
+        await once(response, 'data');
+
+        const closing = bot.server.close().then(() => 'closed');
+        stream.close();
+        response.resume();
+
+        await expect(Promise.race([closing, sleep(STREAM_WAIT_MS).then(() => 'still open')])).resolves.toBe('closed');
     });
 
     it('writes the status and headers of an empty response', async () => {
