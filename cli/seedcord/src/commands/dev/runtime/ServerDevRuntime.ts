@@ -4,15 +4,11 @@ import { HostDevServer, HostDevUrl, HostListenHost } from '@seedcord/types/inter
 import { createServerModuleRunner } from 'vite';
 
 import { listenHostFor, stableUrlOf } from '#commands/dev/tunnel/listenHost';
-import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { botEnvironment } from '#core/modules/botEnvironment';
 import { envBootstrap } from '#core/modules/envBootstrap';
-import { openViteServer } from '#core/modules/openViteServer';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
-import { mergeViteConfig } from '#core/modules/userCodeConfig';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
-import { DevFront, viteSocketServer } from './DevFront';
 import { serverViteConfig } from './devServerConfig';
 import { InstanceLifecycle } from './InstanceLifecycle';
 
@@ -26,32 +22,33 @@ export class ServerDevRuntime extends BaseDevRuntime {
     protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<StartedRuntime> {
         const { config } = context;
         const hmr = this.openHmr(context, resources);
-        const sockets = viteSocketServer();
-        const server = await openViteServer(
+
+        const pageServer = await this.openPageServer(
+            context,
             resources,
-            mergeViteConfig(serverViteConfig(config, context.files.layout, sockets), {
-                mode: config.viteMode,
-                plugins: [
-                    envBootstrap({ runtime: 'node', directory: dirname(config.configFile) }),
-                    hmr.plugin,
-                    context.files.client.vitePlugin({ edge: false }),
-                    config.vitePlugins.create()
-                ]
-            })
-        ).catch(rethrowVitePluginError);
-        const modules = resources.use(
-            new RunnerModuleLoader(createServerModuleRunner(botEnvironment(server.environments)))
+            (sockets) => serverViteConfig(config, context.files.layout, sockets),
+            [
+                envBootstrap({ runtime: 'node', directory: dirname(config.configFile) }),
+                hmr.plugin,
+                context.files.client.vitePlugin({ edge: false }),
+                config.vitePlugins.create()
+            ]
         );
+
+        const modules = resources.use(
+            new RunnerModuleLoader(createServerModuleRunner(botEnvironment(pageServer.vite.environments)))
+        );
+
         await modules.bindEnv();
-        return { context, modules, hmr, front: new DevFront(server, sockets), resources };
+        return { context, modules, hmr, pageServer, resources };
     }
 
     public startBot(instance: SeedcordInstance): Promise<string | undefined> {
-        const { context, front } = this.require('startBot');
+        const { context, pageServer } = this.require('startBot');
         const { tunnel } = context.config;
         instance[HostListenHost] = listenHostFor(tunnel);
         instance[HostDevUrl] = stableUrlOf(tunnel);
-        instance[HostDevServer] = front;
+        instance[HostDevServer] = pageServer;
         return this.lifecycle.start(instance);
     }
 

@@ -1,11 +1,11 @@
 import { mkdtempDisposableSync, writeFileSync } from 'node:fs';
+import { Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { createLogger, createServer } from 'vite';
 import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
-import { viteSocketServer } from '#commands/dev/runtime/DevFront';
 import { edgeViteConfig, serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { ProjectFiles } from '#core/project/ProjectFiles';
@@ -34,14 +34,10 @@ function project(): string {
 
 describe('dev vite config', () => {
     it.each([
-        [
-            'a server',
-            (root: string): InlineConfig => serverViteConfig(configAt(root), layoutAt(root), viteSocketServer())
-        ],
+        ['a server', (root: string): InlineConfig => serverViteConfig(configAt(root), layoutAt(root), new Server())],
         [
             'an edge',
-            (root: string): InlineConfig =>
-                edgeViteConfig(layoutAt(root), root, join(root, 'client'), viteSocketServer())
+            (root: string): InlineConfig => edgeViteConfig(layoutAt(root), root, join(root, 'client'), new Server())
         ]
     ])("doesn't open its own hmr port for %s bot while another process holds that port", async (_kind, config) => {
         await holdViteHmrPort();

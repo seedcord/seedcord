@@ -1,10 +1,13 @@
-import { join } from 'node:path';
+import { createServer as createHttpServer } from 'node:http';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { createServer } from 'vite';
 import { describe, expect, it } from 'vite-plus/test';
 
+import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { ClientPages } from '#core/modules/ClientPages';
+import { mergeViteConfig } from '#core/modules/userCodeConfig';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { tempProject } from '#tests/tempProject';
 
@@ -13,23 +16,22 @@ import type { Plugin } from 'vite';
 const PAGE = { 'client/uptime/index.html': '<p>uptime</p>' };
 
 function openVite(root: string, plugins: Plugin[] = []): Promise<unknown> {
-    return createServer({
-        root,
-        configFile: false,
-        logLevel: 'silent',
-        appType: 'custom',
-        plugins: [new ClientPages(resolvedConfigOf(root)).vitePlugin({ edge: false }), ...plugins],
-        server: { middlewareMode: true, watch: null }
-    });
+    const config = resolvedConfigOf(root);
+    const project = new ProjectFiles(config);
+    return createServer(
+        mergeViteConfig(serverViteConfig(config, project.layout, createHttpServer()), {
+            logLevel: 'silent',
+            plugins: [project.client.vitePlugin({ edge: false }), ...plugins],
+            server: { watch: null }
+        })
+    );
 }
 
 describe('ClientPages', () => {
-    it("finds each index.html in the pages folder and skips the folder's own node_modules", async () => {
-        await using project = await tempProject({ ...PAGE, 'client/node_modules/pkg/index.html': '<p>pkg</p>' });
+    it("doesn't count an index.html in the pages folder's own node_modules as a page", async () => {
+        await using project = await tempProject({ 'client/node_modules/pkg/index.html': '<p>pkg</p>' });
 
-        const { pages } = new ClientPages(resolvedConfigOf(project.root));
-
-        expect(pages).toEqual([join(project.root, 'client/uptime/index.html')]);
+        expect(new ClientPages(resolvedConfigOf(project.root)).hasPages).toBe(false);
     });
 
     it('throws CliViteBaseUnsupported when a vite plugin moves the pages under a base', async () => {

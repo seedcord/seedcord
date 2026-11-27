@@ -1,5 +1,5 @@
 import { existsSync, globSync } from 'node:fs';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { basename, dirname, extname, join } from 'node:path';
 
 import { FOLDER_REDIRECT, HASHED_ASSETS } from '@seedcord/core/internal';
@@ -8,6 +8,7 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import {
     CLIENT_FOLDER,
     INDEX_PAGE,
+    isGetOrHead,
     isInside,
     posixRelative,
     staticFileAt,
@@ -27,7 +28,7 @@ const ASSET_HEADERS = `${HASHED_ASSETS.path}*\n  Cache-Control: ${HASHED_ASSETS.
 
 export class ClientPages {
     public readonly dir: string;
-    public readonly pages: readonly string[];
+    private readonly pages: readonly string[];
     private readonly configDir: string;
 
     constructor({ configFile, client }: Pick<ResolvedSeedcordConfig, 'configFile' | 'client'>) {
@@ -110,9 +111,7 @@ export class ClientPages {
 
         const answer = async (request: Connect.IncomingMessage, response: ServerResponse): Promise<boolean> => {
             const url = request.url ?? '/';
-            const found = await staticFileAt(this.dir, new URL(url, 'http://dev'), (file) =>
-                stat(file).catch(() => undefined)
-            );
+            const found = await staticFileAt(this.dir, new URL(url, 'http://dev'));
             if (found === undefined) return false;
             if ('redirect' in found) {
                 response.writeHead(FOLDER_REDIRECT, { location: found.redirect }).end();
@@ -130,7 +129,7 @@ export class ClientPages {
         };
 
         return (request, response, next) => {
-            if (request.method !== 'GET' && request.method !== 'HEAD') {
+            if (!isGetOrHead(request.method)) {
                 next();
                 return;
             }

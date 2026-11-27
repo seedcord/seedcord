@@ -320,7 +320,7 @@ describe('DevSession on a real runtime', () => {
 });
 
 describe('DevSession with a broken entry', () => {
-    it('puts the entry path once in front of the parse error', async () => {
+    it('puts the entry path once in pageServer of the parse error', async () => {
         const temp = await mkdtempDisposable(join(tmpdir(), 'dev-session-'));
         await linkPackages(temp.path, ['envapt']);
         onTestFinished(() => temp.remove());

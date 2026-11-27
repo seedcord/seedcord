@@ -25,6 +25,7 @@ export * from './misc/asError';
 export * from './misc/discordErrorOf';
 export * from './misc/errorReason';
 export * from './misc/hasErrorCode';
+export * from './misc/isGetOrHead';
 export * from './misc/isInteractive';
 export * from './misc/isPortInUse';
 export * from './misc/KeyedQueue';

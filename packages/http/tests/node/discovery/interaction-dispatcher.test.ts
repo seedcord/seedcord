@@ -13,7 +13,7 @@ import type { APIInteraction } from 'discord-api-types/v10';
 const HANDLERS_DIR = path.resolve(__dirname, './fixtures/handlers');
 
 async function readyDispatcher(): Promise<InteractionDispatcher> {
-    const dispatcher = new InteractionDispatcher(new PluginRegistry(false), HANDLERS_DIR);
+    const dispatcher = new InteractionDispatcher(new PluginRegistry(), HANDLERS_DIR);
     await dispatcher.init();
     return dispatcher;
 }

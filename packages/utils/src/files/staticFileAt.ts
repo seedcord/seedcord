@@ -1,3 +1,4 @@
+import { stat } from 'node:fs/promises';
 import * as path from 'node:path';
 
 import { isInside, posixRelative } from './paths';
@@ -9,6 +10,10 @@ export const INDEX_PAGE = 'index.html';
 type FoundEntry = Pick<Stats, 'isFile' | 'isDirectory' | 'size'>;
 
 type StaticFile = { file: string; size: number } | { redirect: string };
+
+function statIfExists(file: string): Promise<FoundEntry | undefined> {
+    return stat(file).catch(() => undefined);
+}
 
 // undefined when the path escapes folder or can't be a file name
 function fileAtUrlPath(folder: string, urlPath: string): string | undefined {
@@ -35,7 +40,7 @@ function folderRedirect(folder: string, page: string, search: string): StaticFil
 export async function staticFileAt(
     folder: string,
     { pathname, search }: Pick<URL, 'pathname' | 'search'>,
-    stat: (file: string) => Promise<FoundEntry | undefined>
+    stat: (file: string) => Promise<FoundEntry | undefined> = statIfExists
 ): Promise<StaticFile | undefined> {
     const target = fileAtUrlPath(folder, pathname);
     const entry = target === undefined ? undefined : await stat(target);

@@ -31,6 +31,7 @@ export { publicUrl } from '#src/publicUrl';
 export { answerPluginsOrInteractions, SIGNATURE_HEADER, TIMESTAMP_HEADER } from '#src/answerPluginsOrInteractions';
 export { keepRequestOpenFor, requestScope } from '#src/requestScope';
 export { HostHmr, sealAttachments } from '#src/plugin/PluginHost';
+export { finishPage } from '#src/plugin/finishPage';
 export { PluginRegistry } from '#src/plugin/PluginRegistry';
 export { splitPluginKey } from '#src/plugin/splitPluginKey';
 export { CoordinatedStartup, type StartupTasks } from '#src/lifecycle/CoordinatedStartup';

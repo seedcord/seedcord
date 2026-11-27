@@ -1,4 +1,5 @@
 import { appendFileSync, mkdirSync, mkdtempDisposableSync, writeFileSync } from 'node:fs';
+import { Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -6,7 +7,6 @@ import { posixRelative } from '@seedcord/utils/internal';
 import { createServer } from 'vite';
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
-import { viteSocketServer } from '#commands/dev/runtime/DevFront';
 import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { ProjectFiles } from '#core/project/ProjectFiles';
@@ -65,7 +65,7 @@ async function watchProject(root: string, botRoot = root): Promise<WatchedProjec
         target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'build')) }
     });
     server = await createServer(
-        mergeViteConfig(serverViteConfig(config, new ProjectFiles(config).layout, viteSocketServer()), {
+        mergeViteConfig(serverViteConfig(config, new ProjectFiles(config).layout, new Server()), {
             plugins: [
                 {
                     name: 'record',

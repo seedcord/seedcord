@@ -23,7 +23,7 @@ function dispatcherWith(seed: (d: InteractionDispatcher) => void): {
     dispatcher: InteractionDispatcher;
     warn: MockInstance<Logger['warn']>;
 } {
-    const dispatcher = new InteractionDispatcher(new PluginRegistry(false), HANDLERS_DIR);
+    const dispatcher = new InteractionDispatcher(new PluginRegistry(), HANDLERS_DIR);
     seed(dispatcher);
     return { dispatcher, warn: vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined) };
 }

@@ -6,29 +6,28 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
-import { DevFront, viteSocketServer } from '#commands/dev/runtime/DevFront';
 import { listenForInteractions } from '#commands/dev/runtime/listenForInteractions';
 
+import type { DevPageServer } from '#commands/dev/runtime/DevPageServer';
 import type { LogRecord } from '@seedcord/types';
 import type { IncomingMessage } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import type { Connect, ViteDevServer } from 'vite';
+import type { Connect } from 'vite';
 
 type Handle = (request: IncomingMessage, next: (error?: unknown) => void) => void;
+type Front = Pick<DevPageServer, 'upgrade' | 'middlewares'>;
 
 // justified: a Connect app is a request handler, and the endpoint only calls it as one
-function middlewares(handle: Handle): Connect.Server {
-    return ((request: IncomingMessage, _response: unknown, next: (error?: unknown) => void) =>
+function middlewares(handle: Handle): Front {
+    const app = ((request: IncomingMessage, _response: unknown, next: (error?: unknown) => void) =>
         handle(request, next)) as unknown as Connect.Server;
+    return { middlewares: app, upgrade: () => false };
 }
 
 const QUICK = { port: 0, host: '127.0.0.1', configFile: 'seedcord.config.ts' };
 
-// justified: listenForInteractions only calls servedByVite and upgrade, and neither one reads vite
-const front = new DevFront({} as ViteDevServer, viteSocketServer());
-
-async function listening(app: Connect.Server): Promise<string> {
-    const { server, port } = await listenForInteractions(app, front, QUICK);
+async function listening(pageServer: Front): Promise<string> {
+    const { server, port } = await listenForInteractions(pageServer, QUICK);
     onTestFinished(() => {
         server.close();
     });
@@ -73,7 +72,6 @@ describe('listenForInteractions', () => {
         await expect(
             listenForInteractions(
                 middlewares(() => undefined),
-                front,
                 { ...QUICK, port }
             )
         ).rejects.toHaveProperty('code', SeedcordErrorCode.PortInUse);
@@ -88,7 +86,6 @@ describe('listenForInteractions', () => {
 
         const endpoint = await listenForInteractions(
             middlewares((_request, next) => next()),
-            front,
             { ...QUICK, port }
         ).catch((error: unknown) => error);
 

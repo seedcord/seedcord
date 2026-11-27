@@ -4,8 +4,10 @@ import { createServer as createHttpServer } from 'node:http';
 import { createServer } from 'vite';
 import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
-import { DevFront, viteSocketServer } from '#commands/dev/runtime/DevFront';
-import { ClientPages } from '#core/modules/ClientPages';
+import { DevPageServer } from '#commands/dev/runtime/DevPageServer';
+import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
+import { mergeViteConfig } from '#core/modules/userCodeConfig';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { tempProject } from '#tests/tempProject';
 
@@ -27,7 +29,7 @@ const PAGES = {
 };
 
 interface Served extends AsyncDisposable {
-    front: DevFront;
+    pageServer: DevPageServer;
     url: string;
 }
 
@@ -36,24 +38,27 @@ async function served(files: Record<string, string>): Promise<Served> {
     const resources = new AsyncDisposableStack();
     const { root } = resources.use(await tempProject(files));
 
-    const sockets = viteSocketServer();
-    const vite = await createServer({
-        root,
-        configFile: false,
-        logLevel: 'silent',
-        appType: 'custom',
-        plugins: [new ClientPages(resolvedConfigOf(root)).vitePlugin({ edge: false })],
-        server: { middlewareMode: true, watch: null, ws: { server: sockets } }
-    });
-    resources.defer(() => vite.close());
-    const front = new DevFront(vite, sockets);
+    const config = resolvedConfigOf(root);
+    const project = new ProjectFiles(config);
+    const pageServer = await DevPageServer.open(
+        (sockets) =>
+            createServer(
+                mergeViteConfig(serverViteConfig(config, project.layout, sockets), {
+                    logLevel: 'silent',
+                    plugins: [project.client.vitePlugin({ edge: false })],
+                    server: { watch: null }
+                })
+            ),
+        project.client.hasPages
+    );
+    resources.defer(() => pageServer.vite.close());
     const bot = createHttpServer((request, response) => {
-        void front.serve(request, response).then((handled) => {
+        void pageServer.serve(request, response).then((handled) => {
             if (!handled) response.end(`the bot got ${request.url ?? ''}`);
         });
     });
     bot.on('upgrade', (request, socket, head) => {
-        if (!front.upgrade(request, socket, head)) socket.destroy();
+        if (!pageServer.upgrade(request, socket, head)) socket.destroy();
     });
     bot.listen(0, '127.0.0.1');
     await once(bot, 'listening');
@@ -62,16 +67,16 @@ async function served(files: Record<string, string>): Promise<Served> {
     // justified: address() is AddressInfo once a TCP server is listening
     const url = `127.0.0.1:${String((bot.address() as AddressInfo).port)}`;
     const stack = resources.move();
-    return { front, url, [Symbol.asyncDispose]: () => stack.disposeAsync() };
+    return { pageServer, url, [Symbol.asyncDispose]: () => stack.disposeAsync() };
 }
 
-describe('DevFront with pages in client/', () => {
-    let front: DevFront;
+describe('DevPageServer with pages in client/', () => {
+    let pageServer: DevPageServer;
     let url: string;
 
     beforeAll(async () => {
         const started = await served({ ...BOT_FILES, ...PAGES });
-        ({ front, url } = started);
+        ({ pageServer, url } = started);
         return () => started[Symbol.asyncDispose]();
     });
 
@@ -138,12 +143,12 @@ describe('DevFront with pages in client/', () => {
         const closed = new Promise((resolve) => socket.addEventListener('close', resolve));
 
         expect(await connected).toEqual({ type: 'connected' });
-        front.closeSockets();
+        pageServer.closeSockets();
         await expect(closed).resolves.toBeDefined();
     });
 });
 
-describe('DevFront without pages', () => {
+describe('DevPageServer without pages', () => {
     it("refuses public/ and the bot's source", async () => {
         await using started = await served(BOT_FILES);
 

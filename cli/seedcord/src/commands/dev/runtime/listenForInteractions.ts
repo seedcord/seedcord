@@ -8,10 +8,11 @@ import { isPortInUse } from '@seedcord/utils/internal';
 
 import { cliLogger } from '#core/cliLogger';
 
-import type { DevFront } from './DevFront';
+import { servedByVite } from './DevPageServer';
+
+import type { DevPageServer } from './DevPageServer';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import type { Connect } from 'vite';
 
 const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
@@ -33,14 +34,13 @@ interface ListenOptions {
 
 // vite's middlewares run first on every request, and the cloudflare plugin's middleware hands the worker the ones vite passes on
 export async function listenForInteractions(
-    middlewares: Connect.Server,
-    front: Pick<DevFront, 'servedByVite' | 'upgrade'>,
+    pageServer: Pick<DevPageServer, 'upgrade' | 'middlewares'>,
     { port, host, configFile }: ListenOptions
 ): Promise<InteractionsEndpoint> {
     const server = createServer((request, response) => {
         request.headers[DEV_URL_HEADER] = request.url ?? '/';
-        if (!front.servedByVite(request)) request.url = '/';
-        middlewares(request, response, (error?: unknown) => {
+        if (!servedByVite(request)) request.url = '/';
+        pageServer.middlewares(request, response, (error?: unknown) => {
             if (error === undefined) {
                 response.writeHead(NOT_FOUND).end();
                 return;
@@ -50,7 +50,7 @@ export async function listenForInteractions(
         });
     });
     server.on('upgrade', (request, socket, head) => {
-        if (!front.upgrade(request, socket, head)) socket.destroy();
+        if (!pageServer.upgrade(request, socket, head)) socket.destroy();
     });
     server.listen(port, host);
     try {

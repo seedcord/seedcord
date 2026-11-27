@@ -1,11 +1,11 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { createServer, createServerModuleRunner } from 'vite';
 import { afterAll, beforeAll, describe, expect, it } from 'vite-plus/test';
 
-import { viteSocketServer } from '#commands/dev/runtime/DevFront';
 import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { botEnvironment } from '#core/modules/botEnvironment';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
@@ -93,7 +93,7 @@ describe('dev runtime module resolution', () => {
 
         const config = resolvedConfigOf(root);
         server = await createServer(
-            mergeViteConfig(serverViteConfig(config, new ProjectFiles(config).layout, viteSocketServer()), {
+            mergeViteConfig(serverViteConfig(config, new ProjectFiles(config).layout, new Server()), {
                 server: { hmr: false, watch: null }
             })
         );

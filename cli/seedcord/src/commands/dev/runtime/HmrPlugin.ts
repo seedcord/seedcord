@@ -6,7 +6,7 @@ import { paint } from '@seedcord/errors';
 import { displayPath } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
-import { isInside, workerdPath } from '@seedcord/utils/internal';
+import { workerdPath } from '@seedcord/utils/internal';
 
 import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
@@ -257,11 +257,9 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         this.restartTimers.add(timer);
     }
 
-    // the bot can still read a file it doesn't import, like a new handler or a folder a plugin's onHmr watches.
-    // vite's client environment serves the client folder
+    // the bot can still read a file it doesn't import, like a new handler or a folder a plugin's onHmr watches
     private botMightLoad(file: string, modules: readonly EnvironmentModuleNode[]): boolean {
-        if (modules.length > 0) return true;
-        return !this.layout.isSkipped(file) && !isInside(this.config.client.dir, file);
+        return modules.length > 0 || !this.layout.isSkipped(file);
     }
 }
 

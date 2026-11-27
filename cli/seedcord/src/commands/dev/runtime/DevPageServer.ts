@@ -1,33 +1,45 @@
 import { createServer } from 'node:http';
 
+import { isGetOrHead } from '@seedcord/utils/internal';
+
 import type { DevServer } from '@seedcord/types/internal';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import type { Duplex } from 'node:stream';
-import type { ViteDevServer } from 'vite';
+import type { Connect, ViteDevServer } from 'vite';
 
 // vite's client pings with vite-ping until a restarted server answers
 const VITE_SOCKETS: ReadonlySet<string | undefined> = new Set(['vite-hmr', 'vite-ping']);
 
-// vite opens its own port without a server here. this one never listens
-export function viteSocketServer(): Server {
-    return createServer();
+// the bot answers every POST. if vite got one for a path with a static file, discord would get a 405
+export function servedByVite({ method }: IncomingMessage): boolean {
+    return isGetOrHead(method);
 }
 
-export class DevFront implements DevServer {
+export class DevPageServer implements DevServer {
     private readonly upgraded = new Set<Duplex>();
 
-    constructor(
-        private readonly vite: ViteDevServer,
-        private readonly sockets: Server
+    private constructor(
+        public readonly vite: ViteDevServer,
+        // without a server in ws.server, vite opens a second port for its websockets. upgrade() hands them over here
+        private readonly sockets: Server,
+        public readonly servesPages: boolean
     ) {}
 
-    // the bot answers every POST. if vite got one for a path with a static file, discord would get a 405
-    public servedByVite({ method }: IncomingMessage): boolean {
-        return method === 'GET' || method === 'HEAD';
+    // this creates the socket server first because vite reads it from its config
+    public static async open(
+        openVite: (sockets: Server) => Promise<ViteDevServer>,
+        servesPages: boolean
+    ): Promise<DevPageServer> {
+        const sockets = createServer();
+        return new DevPageServer(await openVite(sockets), sockets, servesPages);
+    }
+
+    public get middlewares(): Connect.Server {
+        return this.vite.middlewares;
     }
 
     public serve(request: IncomingMessage, response: ServerResponse): Promise<boolean> {
-        if (!this.servedByVite(request)) return Promise.resolve(false);
+        if (!servedByVite(request)) return Promise.resolve(false);
         return new Promise((resolve) => {
             this.vite.middlewares(request, response, () => resolve(false));
             response.once('close', () => resolve(true));

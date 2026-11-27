@@ -10,6 +10,7 @@ import { asError, isPortInUse } from '@seedcord/utils/internal';
 import { answerPluginsOrInteractions } from '#src/answerPluginsOrInteractions';
 import { InFlight } from '#src/lifecycle/InFlight';
 import { ShutdownPhase } from '#src/lifecycle/phases';
+import { finishPage } from '#src/plugin/finishPage';
 import { requestPath } from '#src/requestPath';
 import { DEFAULT_SERVER_PORT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE } from '#src/webConstants';
 
@@ -92,8 +93,13 @@ export class WebServer {
         return response ?? new Response(null, { status: SERVICE_UNAVAILABLE });
     }
 
-    // the same order as seedcord dev, where vite answers before the bot
     private async respond(request: Request): Promise<Response> {
+        const response = await this.answerFrom(request);
+        return this.options.dev() ? finishPage(response) : response;
+    }
+
+    // the same order as seedcord dev, where vite answers before the bot
+    private async answerFrom(request: Request): Promise<Response> {
         const { plugins, interactions } = this.options;
         const file = await this.clientFiles?.answer(request);
         if (file) return file;
@@ -127,7 +133,7 @@ export class WebServer {
             interactions !== undefined ||
             plugins.answersRequests ||
             this.clientFiles !== undefined ||
-            dev() !== undefined
+            dev()?.servesPages === true
         );
     }
 

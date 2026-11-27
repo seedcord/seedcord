@@ -30,7 +30,7 @@ interface Setup {
     answer?: (request: Request) => Promise<Response | undefined>;
     answersRequests?: boolean;
     interactions?: WebServerOptions['interactions'];
-    dev?: DevServer;
+    dev?: DevServer | undefined;
     clientDir?: string;
 }
 
@@ -73,6 +73,10 @@ async function listening(setup: Setup = {}): Promise<Listening> {
 }
 
 const get = (path: string): Request => new Request(`http://bot.test${path}`);
+
+function devServer(servesPages: boolean): DevServer {
+    return { servesPages, serve: () => Promise.resolve(false), upgrade: () => false, closeSockets: () => undefined };
+}
 
 describe('WebServer requests', () => {
     it('throws CoreFetchBeforeStart before startup begins', async () => {
@@ -198,16 +202,14 @@ describe('WebServer on a port', () => {
         expect(server.port).toBeUndefined();
     });
 
-    it.each<[string, Partial<Setup>]>([
-        ['built pages', { clientDir: tmpdir() }],
-        [
-            'the seedcord dev server',
-            { dev: { serve: () => Promise.resolve(false), upgrade: () => false, closeSockets: () => undefined } }
-        ]
-    ])('listens with health off for %s', async (_case, extra) => {
+    it.each<[string, Partial<Setup>, 'number' | 'undefined']>([
+        ['built pages', { clientDir: tmpdir() }, 'number'],
+        ['pages under seedcord dev', { dev: devServer(true) }, 'number'],
+        ['seedcord dev without pages', { dev: devServer(false) }, 'undefined']
+    ])('with health off and no routes, gives %s a port', async (_case, extra, port) => {
         await using bot = await listening({ config: { ...LOCAL, health: false }, answersRequests: false, ...extra });
 
-        expect(bot.server.port).toBeTypeOf('number');
+        expect(bot.server.port).toBeTypeOf(port);
     });
 
     it('warns when the built pages folder is missing', () => {
@@ -331,7 +333,7 @@ describe('WebServer on a port', () => {
                 opened.enqueue('first');
             }
         });
-        const bot = await listening({
+        await using bot = await listening({
             answer: () => Promise.resolve(new Response(events.pipeThrough(new TextEncoderStream())))
         });
         // a browser keeps the connection open for its next request, like this agent
@@ -394,6 +396,7 @@ describe('WebServer under seedcord dev', () => {
     function viteStandIn(upgrades: string[]): DevServer {
         const held = new Set<Duplex>();
         return {
+            servesPages: true,
             serve: (request, response) => {
                 if (request.url !== '/@vite/client') return Promise.resolve(false);
                 response.writeHead(200).end('vite client');
@@ -427,6 +430,19 @@ describe('WebServer under seedcord dev', () => {
         return { reply, closed };
     }
 
+    it.each([
+        ['adds', viteStandIn([]), '<p>page</p><script type="module" src="/@vite/client"></script>'],
+        ['leaves out', undefined, '<p>page</p>']
+    ])("%s vite's client in a plugin's html", async (_case, dev, html) => {
+        const plugin = (): Promise<Response> =>
+            Promise.resolve(new Response('<p>page</p>', { headers: { 'content-type': 'text/html' } }));
+        await using bot = await listening({ dev, answer: plugin });
+
+        const page = await fetch(`${bot.url}/page`);
+
+        expect(await page.text()).toBe(html);
+    });
+
     it('lets vite answer first and sends the bot what vite passes on', async () => {
         await using bot = await listening({ dev: viteStandIn([]) });
 
@@ -448,7 +464,7 @@ describe('WebServer under seedcord dev', () => {
     });
 
     it("closes while a browser holds one of vite's sockets", async () => {
-        const bot = await listening({ dev: viteStandIn([]) });
+        await using bot = await listening({ dev: viteStandIn([]) });
         const browser = upgrade(bot.url, 'vite-hmr');
         await browser.reply;
 
