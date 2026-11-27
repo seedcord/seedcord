@@ -2,6 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { toPosixPath } from '@seedcord/utils/internal';
 import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { writeFiles } from '#tests/tempProject';
@@ -35,9 +36,9 @@ describe('seedcord build on a node bot with web pages', () => {
     });
 
     it('puts only the pages, their assets and public/ in the client folder', async () => {
-        const served = await readdir(clientDir, { recursive: true });
+        const entries = await readdir(clientDir, { recursive: true });
 
-        expect(served.toSorted()).toEqual([
+        expect(entries.map(toPosixPath).toSorted()).toEqual([
             'assets',
             expect.stringMatching(/^assets\/index-.+\.css$/),
             expect.stringMatching(/^assets\/index-.+\.js$/),

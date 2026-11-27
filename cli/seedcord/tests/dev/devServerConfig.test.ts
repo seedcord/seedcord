@@ -35,10 +35,7 @@ function project(): string {
 describe('dev vite config', () => {
     it.each([
         ['a server', (root: string): InlineConfig => serverViteConfig(configAt(root), layoutAt(root), new Server())],
-        [
-            'an edge',
-            (root: string): InlineConfig => edgeViteConfig(layoutAt(root), root, join(root, 'client'), new Server())
-        ]
+        ['an edge', (root: string): InlineConfig => edgeViteConfig(layoutAt(root), root, configAt(root), new Server())]
     ])("doesn't open its own hmr port for %s bot while another process holds that port", async (_kind, config) => {
         await holdViteHmrPort();
         const root = project();

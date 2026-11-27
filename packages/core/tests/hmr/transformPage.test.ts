@@ -6,25 +6,14 @@ const CLIENT = '<script type="module" src="/@vite/client"></script>';
 const HTML = { 'content-type': 'text/html; charset=utf-8' };
 
 describe('transformPage with addViteClient', () => {
-    it("adds vite's client to the head and keeps the status and headers", async () => {
-        const page = new Response('<html><head></head><body>page</body></html>', {
-            status: 201,
-            headers: { ...HTML, 'x-from-plugin': 'yes' }
-        });
+    it("adds vite's client after the page, and keeps a closing tag inside a script, the status and the headers", async () => {
+        const html = '<html><head><script>const tag = "</head>";</script></head><body>page</body></html>';
+        const page = new Response(html, { status: 201, headers: { ...HTML, 'x-from-plugin': 'yes' } });
 
         const finished = await transformPage(page, addViteClient);
 
-        expect(await finished.text()).toBe(`<html><head>${CLIENT}</head><body>page</body></html>`);
+        expect(await finished.text()).toBe(html + CLIENT);
         expect([finished.status, finished.headers.get('x-from-plugin')]).toEqual([201, 'yes']);
-    });
-
-    it('adds the client at the end of a page without closing tags', async () => {
-        // the html spec lets a page skip </head> and </body>. browsers still run a script at the end
-        const bare = '<!doctype html><title>bare</title><p>page';
-
-        const finished = await transformPage(new Response(bare, { headers: HTML }), addViteClient);
-
-        expect(await finished.text()).toBe(bare + CLIENT);
     });
 
     it('leaves json, a 304 without a body, and a compressed page as they were', async () => {

@@ -109,7 +109,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const pageServer = await this.openPageServer(
             context,
             resources,
-            (sockets) => edgeViteConfig(files.layout, viteRoot, config.client.dir, sockets),
+            (sockets) => edgeViteConfig(files.layout, viteRoot, config, sockets),
             plugins
         );
 

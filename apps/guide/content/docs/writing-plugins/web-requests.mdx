@@ -226,15 +226,16 @@ export class PingCounter extends Plugin {
     }
 
     public override fetch(request: Request): Response | undefined {
-        if (!PINGS.test(request.url)) return undefined;
-        let opened: Tab;
+        if (request.method !== 'GET' || !PINGS.test(request.url))
+            return undefined;
+        let tab: Tab;
         const events = new ReadableStream<Uint8Array>({
-            start: (tab) => {
-                opened = tab;
+            start: (controller) => {
+                tab = controller;
                 this.tabs.add(tab);
                 this.send(tab);
             },
-            cancel: () => void this.tabs.delete(opened)
+            cancel: () => void this.tabs.delete(tab)
         });
         return new Response(events, {
             headers: {
@@ -276,7 +277,14 @@ With `dispose: { phase: ShutdownPhase.Unbind }` in the constructor, `dispose()` 
 
 <Callout type="transport" only="edge">
 
-On Workers, your `/ping` handler can't write to the page's stream. It runs in one request, and the page's stream belongs to another. [Cloudflare stops a request](https://developers.cloudflare.com/workers/observability/errors/) from writing to a stream that a different request opened. Each isolate also keeps its own count. Have the page fetch `/api/pings` on a timer.
+On Workers, your `/ping` handler can't write to the page's stream. It runs in one request, and the page's stream belongs to another. [Cloudflare stops a request](https://developers.cloudflare.com/workers/observability/errors/) from writing to a stream that a different request opened. Each isolate also keeps its own count. Have the page fetch `/api/pings` on a timer, and answer it with the count:
+
+```ts plain
+public override fetch(request: Request): Response | undefined {
+    if (request.method !== 'GET' || !PINGS.test(request.url)) return undefined;
+    return Response.json({ runs: this.runs });
+}
+```
 
 </Callout>
 

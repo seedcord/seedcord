@@ -166,8 +166,10 @@ export class WebServer {
             });
         });
         this.server = server;
+        // vite's client reconnects as soon as closeSockets() runs.
+        // close() would wait on that new socket
         server.on('upgrade', (incoming, socket, head) => {
-            if (!this.dev.upgrade(incoming, socket, head)) socket.destroy();
+            if (!server.listening || !this.dev.upgrade(incoming, socket, head)) socket.destroy();
         });
 
         server.listen(port, host);
@@ -188,10 +190,11 @@ export class WebServer {
     }
 
     private async answer(server: Server, incoming: IncomingMessage, outgoing: ServerResponse): Promise<void> {
-        if (await this.dev.serve(incoming, outgoing)) return;
-        const request = await toWebRequest(incoming, this.config.bodyLimit ?? DEFAULT_BODY_LIMIT);
-        const response = request ? await this.fetch(request) : new Response(null, { status: PAYLOAD_TOO_LARGE });
-        await writeWebResponse(response, outgoing);
+        if (!(await this.dev.serve(incoming, outgoing))) {
+            const request = await toWebRequest(incoming, this.config.bodyLimit ?? DEFAULT_BODY_LIMIT);
+            const response = request ? await this.fetch(request) : new Response(null, { status: PAYLOAD_TOO_LARGE });
+            await writeWebResponse(response, outgoing);
+        }
         // node's close() only closes connections that are idle when it runs. this one turns idle here once dispose() ends its SSE stream
         if (!server.listening) server.closeIdleConnections();
     }

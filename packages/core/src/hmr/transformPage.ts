@@ -1,9 +1,6 @@
 const VITE_CLIENT = '<script type="module" src="/@vite/client"></script>';
-// html can leave out both closing tags. a module script runs from anywhere in the page
-const CLOSING_TAG = /<\/head>|<\/body>/i;
 
-// under seedcord dev, vite puts a small script in every page in client/. that script reloads the tab when you save a file.
-// html that a plugin returns from fetch() gets the script here because vite never reads it
+// adds vite's reload script to a plugin's fetch() html because vite never reads that html
 export async function transformPage(
     response: Response,
     transform: (html: string) => Promise<string> | string
@@ -20,8 +17,7 @@ export async function transformPage(
     return new Response(body, { status: response.status, statusText: response.statusText, headers });
 }
 
-// the edge adds the script by hand because workerd runs apart from the vite server. vite plugins' html hooks never get this html
+// the edge adds the script by hand because workerd runs apart from the vite server
 export function addViteClient(html: string): string {
-    const at = CLOSING_TAG.exec(html)?.index ?? html.length;
-    return html.slice(0, at) + VITE_CLIENT + html.slice(at);
+    return html + VITE_CLIENT;
 }

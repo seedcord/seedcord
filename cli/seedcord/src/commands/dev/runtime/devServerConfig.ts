@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import { isInside, posixRelative, toPosixPath } from '@seedcord/utils/internal';
 import { minimatch } from 'minimatch';
 
+import { tunnelHostsOf } from '#commands/dev/tunnel/listenHost';
 import { BOT_ENVIRONMENT } from '#core/modules/botEnvironment';
 import { mergeViteConfig, NODE_CONDITIONS, userCodeBase, userCodeConfig } from '#core/modules/userCodeConfig';
 import { STATE_FOLDER } from '#core/state/StateFolder';
@@ -30,8 +31,10 @@ export function devWatchOptions(layout: BotLayout, clientDir: string): NonNullab
     return { ignored };
 }
 
+type DevSettings = Pick<ResolvedSeedcordConfig, 'client' | 'tunnel'>;
+
 // vite writes resolved options back into the config object it receives
-function devViteConfig(base: UserConfig, layout: BotLayout, clientDir: string, sockets: Server): InlineConfig {
+function devViteConfig(base: UserConfig, layout: BotLayout, dev: DevSettings, sockets: Server): InlineConfig {
     return mergeViteConfig(base, {
         // vite searches its own root for a config file
         configFile: false,
@@ -41,26 +44,26 @@ function devViteConfig(base: UserConfig, layout: BotLayout, clientDir: string, s
             // vite would open a second port without this. the tunnel only forwards the bot's port
             ws: { server: sockets },
             // requests arrive under the tunnel's hostname, and vite blocks unlisted hosts
-            allowedHosts: true,
-            watch: devWatchOptions(layout, clientDir)
+            allowedHosts: tunnelHostsOf(dev.tunnel),
+            watch: devWatchOptions(layout, dev.client.dir)
         }
     });
 }
 
 export function serverViteConfig(
-    { configFile, client }: Pick<ResolvedSeedcordConfig, 'configFile' | 'client'>,
+    config: DevSettings & Pick<ResolvedSeedcordConfig, 'configFile'>,
     layout: BotLayout,
     sockets: Server
 ): InlineConfig {
-    const configDir = dirname(configFile);
-    return mergeViteConfig(devViteConfig(userCodeConfig(NODE_CONDITIONS, configDir), layout, client.dir, sockets), {
+    const configDir = dirname(config.configFile);
+    return mergeViteConfig(devViteConfig(userCodeConfig(NODE_CONDITIONS, configDir), layout, config, sockets), {
         root: configDir,
         logLevel: 'error'
     });
 }
 
-export function edgeViteConfig(layout: BotLayout, viteRoot: string, clientDir: string, sockets: Server): InlineConfig {
-    return mergeViteConfig(devViteConfig(userCodeBase(), layout, clientDir, sockets), {
+export function edgeViteConfig(layout: BotLayout, viteRoot: string, dev: DevSettings, sockets: Server): InlineConfig {
+    return mergeViteConfig(devViteConfig(userCodeBase(), layout, dev, sockets), {
         root: viteRoot,
         customLogger: workerLogger(),
         // the plugin's dep scan comes up empty in a virtual main. vite then reloads mid-start and leaves a second envapt without a source bound

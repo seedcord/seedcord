@@ -28,7 +28,7 @@ export class PingCounter extends Plugin {
     }
 
     public override fetch(request: Request): Response | undefined {
-        if (new URL(request.url).pathname !== '/api/pings') return undefined;
+        if (request.method !== 'GET' || new URL(request.url).pathname !== '/api/pings') return undefined;
         let page: ReadableStreamDefaultController<Uint8Array>;
         const events = new ReadableStream<Uint8Array>({
             start: (controller) => {

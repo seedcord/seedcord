@@ -1,5 +1,5 @@
 import { once } from 'node:events';
-import { createServer as createHttpServer } from 'node:http';
+import { createServer as createHttpServer, get } from 'node:http';
 
 import { createServer } from 'vite';
 import { beforeAll, describe, expect, it } from 'vite-plus/test';
@@ -11,6 +11,7 @@ import { ProjectFiles } from '#core/project/ProjectFiles';
 import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { tempProject } from '#tests/tempProject';
 
+import type { IncomingMessage } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
 const BOT_FILES = {
@@ -112,7 +113,8 @@ describe('DevPageServer with pages in client/', () => {
                 '/seedcord.config.ts',
                 '/package.json',
                 '/src/bot.ts',
-                `/@fs${pageServer.vite.config.root}/src/bot.ts`
+                // a windows root starts with a drive letter and a posix root with a slash
+                `/@fs/${pageServer.vite.config.root.replace(/^\//, '')}/src/bot.ts`
             ].map((path) => fetch(`http://${url}${path}`).then((response) => response.status))
         );
         const botPaths = ['/api/pings', '/%00', '/notes.html'];
@@ -135,6 +137,21 @@ describe('DevPageServer with pages in client/', () => {
 
         expect(opened).toBe(true);
         socket.close();
+    });
+
+    it('answers a quick tunnel host and refuses any other host', async () => {
+        // fetch() won't send its own Host header
+        const statusFor = async (host: string): Promise<number | undefined> => {
+            const [, port] = url.split(':');
+            const request = get({ host: '127.0.0.1', port, path: '/uptime/', headers: { host } });
+            const [response] = (await once(request, 'response')) as [IncomingMessage];
+            response.resume();
+            return response.statusCode;
+        };
+
+        const statuses = await Promise.all(['some-words.trycloudflare.com', 'rebind.evil.test'].map(statusFor));
+
+        expect(statuses).toEqual([200, 403]);
     });
 
     it("runs a plugin's html through vite's html hooks", async () => {
