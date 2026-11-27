@@ -6,6 +6,7 @@ import { afterAll, describe, expect, it, vi } from 'vite-plus/test';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { scratchPath } from '#tests/scratchPath';
+import { writeFiles } from '#tests/tempProject';
 
 import { devContextFor } from './devConfigFor';
 import { saveUntil } from './saveUntil';
@@ -89,7 +90,7 @@ describe('dev runtime hot reload', () => {
         await mkdir(join(src, 'schema'), { recursive: true });
         await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'hmr-fixture', type: 'module' }));
         await writeFile(join(dir, 'seedcord.config.ts'), 'export default {};\n');
-        for (const [file, text] of Object.entries(files)) await writeFile(join(src, file), text);
+        await writeFiles(src, files);
         const events: DevEvent[] = [];
 
         const runtime = new ServerDevRuntime();
@@ -262,9 +263,11 @@ import.meta.hot?.send('seedcord:read-bot-imports', {});
     }, 60_000);
 
     it("skips a saved page in the client folder that the bot doesn't import", async () => {
-        const { src, received } = await startedAskingBot({ 'plugin.ts': "export const greeting = 'before';\n" });
-        const [page, plugin] = [join(dirname(src), 'client', 'page.tsx'), join(src, 'plugin.ts')];
-        await mkdir(dirname(page), { recursive: true });
+        const { src, received } = await startedAskingBot({
+            'plugin.ts': "export const greeting = 'before';\n",
+            '../client/home/index.html': '<p>home</p>'
+        });
+        const [page, plugin] = [join(dirname(src), 'client', 'home', 'page.tsx'), join(src, 'plugin.ts')];
 
         await writeFile(page, 'export const page = 1;\n');
         await saveUntil(plugin, "export const greeting = 'after';\n", () =>

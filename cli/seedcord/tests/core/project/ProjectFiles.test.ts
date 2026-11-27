@@ -10,6 +10,7 @@ import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 import { resolvedConfigOf } from '#tests/resolvedConfigOf';
+import { writeFiles } from '#tests/tempProject';
 
 import type { RealPath } from '#core/project/realPath';
 
@@ -127,6 +128,16 @@ describe('ProjectFiles', () => {
         await writeFile(join(root, 'handlers', 'group.ts', 'Ping.ts'), 'export {};\n');
 
         await expect(filesUnder(root).modulePaths()).resolves.toEqual([join(root, 'handlers', 'group.ts', 'Ping.ts')]);
+    });
+
+    it.each([
+        ['loads a client folder without a page as bot code', {}, ['client/Ready.ts']],
+        ['skips the client folder once it holds a page', { 'client/home/index.html': '<p>home</p>' }, []]
+    ])('%s', async (_case, pages, modules) => {
+        const root = await projectRoot();
+        await writeFiles(root, { 'client/Ready.ts': 'export {};\n', ...pages });
+
+        await expect(filesUnder(root).modulePaths()).resolves.toEqual(modules.map((file) => join(root, file)));
     });
 
     it('skips a project file written beside the config after the layout was read', async () => {

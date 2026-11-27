@@ -93,7 +93,8 @@ export class Ping extends SlashHandler<'ping'> {
 - Typed config from `.env` and the shell through [envapt](https://envapt.materwelon.dev)
 - Typed plugins with `init`, `ready`, and `dispose`, on a server or on Workers
 - Plugins that answer web requests with `fetch()`, like a webhook from another service or a status page
-- A web server on Node and Bun bots, for your health check and plugin routes
+- A web server that serves your health check, plugin routes, and pages on Node and Bun
+- Web pages built with Vite and served by your bot on a server or on Workers
 - A typed event bus on both transports
 - A typed kv store, in memory or on any Keyv or unstorage driver
 - Cron jobs and scheduled tasks

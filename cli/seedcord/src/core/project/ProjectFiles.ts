@@ -16,7 +16,7 @@ export interface BuiltLists {
     emojis: FolderEmoji[];
 }
 
-function layoutOf({ root, configFile, files, target, emojis, client }: ProjectPaths): BotLayout {
+function layoutOf({ root, configFile, files, target, emojis }: ProjectPaths, client: ClientPages): BotLayout {
     const configDir = dirname(configFile);
     const keysOf = (paths: string[]): string[] => paths.map((path) => BotLayout.keyUnder(root, path));
     const outDir = target.kind === 'server' ? [target.outDir] : [];
@@ -24,8 +24,7 @@ function layoutOf({ root, configFile, files, target, emojis, client }: ProjectPa
     return new BotLayout({
         root,
         listed: keysOf(files),
-        // the bot never loads a module from client.dir because it holds the pages for the browser
-        skippedFolders: keysOf([...outDir, logsFolderIn(configDir), client.dir]),
+        skippedFolders: keysOf([...outDir, logsFolderIn(configDir), ...client.skippedFolders]),
         configFile: BotLayout.keyUnder(root, configFile),
         emojiFolder: BotLayout.keyUnder(root, emojis.dir)
     });
@@ -37,7 +36,7 @@ export class ProjectFiles {
 
     constructor(private readonly paths: ProjectPaths) {
         this.client = new ClientPages(paths);
-        this.layout = layoutOf(paths);
+        this.layout = layoutOf(paths, this.client);
     }
 
     public async modulePaths(folder = this.layout.root): Promise<string[]> {

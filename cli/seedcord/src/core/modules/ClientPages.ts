@@ -45,6 +45,11 @@ export class ClientPages {
         return this.pages.length > 0;
     }
 
+    // a page's scripts are browser code. a client folder without a page is just bot code
+    public get skippedFolders(): string[] {
+        return this.hasPages ? [this.dir] : [];
+    }
+
     // vite only lets a browser read the pages folder when dev starts with a page
     public restartPatterns(): string[] {
         return this.hasPages ? [] : [toPosixPath(join(this.dir, PAGES_GLOB))];
