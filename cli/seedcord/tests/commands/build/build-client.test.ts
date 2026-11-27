@@ -1,18 +1,13 @@
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
+import { writeFiles } from '#tests/tempProject';
+
 import { fixtureCopy, HTTP_BOT } from './fixtureCopy';
 import { quickBuildRunner } from './quickBuildRunner';
-
-async function write(projectDir: string, files: Record<string, string>): Promise<void> {
-    for (const [path, text] of Object.entries(files)) {
-        await mkdir(join(projectDir, path, '..'), { recursive: true });
-        await writeFile(join(projectDir, path), text);
-    }
-}
 
 describe('seedcord build on a node bot with web pages', () => {
     let clientDir = '';
@@ -20,7 +15,7 @@ describe('seedcord build on a node bot with web pages', () => {
     beforeAll(async () => {
         const copy = await fixtureCopy(HTTP_BOT);
         clientDir = join(copy.path, 'dist/client');
-        await write(copy.path, {
+        await writeFiles(copy.path, {
             'client/uptime/index.html':
                 '<html><head></head><body><script type="module" src="./main.ts"></script></body></html>',
             'client/uptime/main.ts': "import './uptime.css';\nimport { start } from '../counter';\nstart();\n",
@@ -56,7 +51,7 @@ describe('seedcord build on a node bot with web pages', () => {
 describe('seedcord build refusing a layout that would serve the wrong files', () => {
     async function codeOfBuildWith(files: Record<string, string>): Promise<unknown> {
         await using copy = await fixtureCopy(HTTP_BOT);
-        await write(copy.path, files);
+        await writeFiles(copy.path, files);
         const error: unknown = await quickBuildRunner()
             .run(copy.path)
             .catch((caught: unknown) => caught);

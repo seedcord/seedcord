@@ -6,13 +6,16 @@ export interface TempProject extends AsyncDisposable {
     root: string;
 }
 
-// keys are paths under the project's folder
-export async function tempProject(files: Record<string, string>): Promise<TempProject> {
-    const folder = await mkdtempDisposable(join(tmpdir(), 'seedcord-project-'));
-    const root = await realpath(folder.path);
-    for (const [file, content] of Object.entries(files)) {
+export async function writeFiles(root: string, contentByPath: Record<string, string>): Promise<void> {
+    for (const [file, content] of Object.entries(contentByPath)) {
         await mkdir(dirname(join(root, file)), { recursive: true });
         await writeFile(join(root, file), content);
     }
+}
+
+export async function tempProject(files: Record<string, string>): Promise<TempProject> {
+    const folder = await mkdtempDisposable(join(tmpdir(), 'seedcord-project-'));
+    const root = await realpath(folder.path);
+    await writeFiles(root, files);
     return { root, [Symbol.asyncDispose]: () => folder.remove() };
 }

@@ -13,7 +13,7 @@ import { pinModulePaths } from './pinModulePaths';
 import { ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
 import { TargetBuild } from './TargetBuild';
 
-import type { ResolvedSeedcordConfig, ResolvedServerTarget } from '#core/config/schema';
+import type { ResolvedServerTarget } from '#core/config/schema';
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
 import type { BuildEnvironmentOptions, PluginOption, Rolldown, ViteBuilder } from 'vite';
@@ -37,7 +37,7 @@ export abstract class ServerBuild<Target extends ResolvedServerTarget = Resolved
         super(project);
     }
 
-    public static check(_config: ResolvedSeedcordConfig, { outDir }: ResolvedServerTarget): void {
+    public static check({ outDir }: ResolvedServerTarget): void {
         assertOutDirSafe(outDir);
     }
 

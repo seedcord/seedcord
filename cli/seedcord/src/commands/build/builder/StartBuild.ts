@@ -8,7 +8,7 @@ import { ServerBuild } from './ServerBuild';
 import { serverCommands } from './serverCommands';
 import { runStartFile } from './serverEntry';
 
-import type { ResolvedSeedcordConfig, ResolvedServerTarget } from '#core/config/schema';
+import type { ResolvedServerTarget } from '#core/config/schema';
 import type { BundleStats } from './output';
 import type { NextCommand } from './TargetBuild';
 import type { SetNonNullable } from 'type-fest';
@@ -20,11 +20,11 @@ export function startsItself(target: ResolvedServerTarget): target is StartTarge
 }
 
 export class StartBuild extends ServerBuild<StartTarget> {
-    public static override check(config: ResolvedSeedcordConfig, target: StartTarget): void {
+    public static override check(target: StartTarget): void {
         if (!existsSync(target.start)) {
             throw new SeedcordError(SeedcordErrorCode.CliFileNotFound, [target.start, 'build.start']);
         }
-        super.check(config, target);
+        super.check(target);
     }
 
     public nextCommands(bundle: BundleStats): NextCommand[] {

@@ -19,9 +19,9 @@ function buildKindFor(config: ResolvedSeedcordConfig): BuildKind {
         return { check: () => EdgeBuild.check(config), create: (project) => new EdgeBuild(project, target) };
     }
     if (startsItself(target)) {
-        return { check: () => StartBuild.check(config, target), create: (project) => new StartBuild(project, target) };
+        return { check: () => StartBuild.check(target), create: (project) => new StartBuild(project, target) };
     }
-    return { check: () => ExportBuild.check(config, target), create: (project) => new ExportBuild(project, target) };
+    return { check: () => ExportBuild.check(target), create: (project) => new ExportBuild(project, target) };
 }
 
 export async function checkBuildTarget(project: Project): Promise<void> {

@@ -1,5 +1,6 @@
 ---
 'seedcord': minor
+'@seedcord/core': minor
 '@seedcord/gateway': minor
 '@seedcord/http': minor
 ---
