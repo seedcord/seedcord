@@ -118,6 +118,17 @@ describe('a plugin from vitePlugins that throws', () => {
         expect(messageOf(caught)).toContain('its configResolved hook');
     });
 
+    it('keeps a filter that the plugin sets on its own hook after the wrap', async () => {
+        // vite-plugin-svelte sets this in configResolved when you don't configure a preprocessor.
+        // without the filter, its transform throws on every module the bot loads
+        const transform = { handler: (): undefined => undefined };
+        const plugin = await onlyPlugin({ name: 'svelte-like', transform });
+
+        Object.assign(transform, { filter: { id: /$./ } });
+
+        expect(plugin.transform).toMatchObject({ filter: { id: /$./ } });
+    });
+
     it('is found among the errors rolldown collects for a build', async () => {
         const plugin = await onlyPlugin({
             name: 'shop-loader',

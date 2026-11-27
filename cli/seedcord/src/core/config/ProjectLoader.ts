@@ -1,7 +1,9 @@
 import { dirname, resolve } from 'node:path';
 
 import { DEFAULT_SERVER_PORT } from '@seedcord/core/internal';
-import { setCliFiles } from '@seedcord/utils/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { CLIENT_FOLDER, isInside, setCliFiles } from '@seedcord/utils/internal';
 
 import { Project } from '#core/project/Project';
 import { ProjectFiles } from '#core/project/ProjectFiles';
@@ -31,6 +33,7 @@ import type {
     SeedcordBuildConfig,
     SeedcordHmrConfig
 } from './schema';
+import type { SeedcordErrorArguments } from '@seedcord/errors/internal';
 import type { Promisable } from 'type-fest';
 
 // runs before any plugin in vitePlugins starts
@@ -51,6 +54,21 @@ function resolveTypecheck(value: SeedcordHmrConfig['typecheck'], root: string): 
 
 function realPathUnder(base: string, path: string): RealPath {
     return realPath(resolve(base, path));
+}
+
+type ClientDirProblem = SeedcordErrorArguments<SeedcordErrorCode.CliClientDirUnusable>[1];
+
+function clientDirProblem(configDir: string, root: string, folder: string): ClientDirProblem | undefined {
+    if (folder === configDir) return 'configFolder';
+    if (!isInside(configDir, folder)) return 'outside';
+    return isInside(folder, root) ? 'holdsRoot' : undefined;
+}
+
+function clientDirUnder(configDir: string, root: string, dir = CLIENT_FOLDER): RealPath {
+    const folder = realPathUnder(configDir, dir);
+    const problem = clientDirProblem(configDir, root, folder);
+    if (problem) throw new SeedcordTypeError(SeedcordErrorCode.CliClientDirUnusable, [folder, problem]);
+    return folder;
 }
 
 export class ProjectLoader {
@@ -127,7 +145,8 @@ export class ProjectLoader {
                 templates: realPathUnder(configDir, config.make?.templates ?? 'templates'),
                 helpers: config.make?.helpers ?? {}
             },
-            emojis: { dir: realPathUnder(configDir, config.emojis?.dir ?? 'emojis') }
+            emojis: { dir: realPathUnder(configDir, config.emojis?.dir ?? 'emojis') },
+            client: { dir: clientDirUnder(configDir, root, config.client?.dir) }
         } satisfies ResolvedSeedcordConfig;
     }
 

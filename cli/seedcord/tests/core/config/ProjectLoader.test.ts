@@ -302,6 +302,35 @@ describe('ProjectLoader emojis', () => {
     });
 });
 
+describe('ProjectLoader client', () => {
+    it.each([
+        ['./client by default', undefined, 'client'],
+        ['client.dir', { dir: './web' }, 'web']
+    ])('reads the pages folder from %s, beside the config', async (_from, client, folder) => {
+        const { projectDir, load } = projectWith({ ...MINIMAL, root: './src', client });
+
+        const resolved = await load();
+
+        expect(resolved.client).toEqual({ dir: resolve(projectDir, folder) });
+    });
+
+    it.each([
+        ['outside the config folder', './src', '../web'],
+        ['the config folder itself', './src', '.'],
+        ['a folder that holds root', './src/bot', './src']
+    ])('throws CliClientDirUnusable for a pages folder that is %s', async (_case, root, dir) => {
+        const { load } = projectWith({ ...MINIMAL, root, client: { dir } });
+
+        await expect(load()).rejects.toHaveProperty('code', SeedcordErrorCode.CliClientDirUnusable);
+    });
+
+    it('throws CliConfigInvalidField when client is a string', async () => {
+        const { load } = projectWith({ ...MINIMAL, client: './web' });
+
+        await expect(load()).rejects.toHaveProperty('code', SeedcordErrorCode.CliConfigInvalidField);
+    });
+});
+
 describe('ProjectLoader paths with a #', () => {
     it('throws CliPathHasHash for a file under root whose name contains a #', async () => {
         const { projectDir, load } = projectWith(MINIMAL);

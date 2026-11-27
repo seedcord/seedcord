@@ -39,6 +39,7 @@ export const FEATURES = [
     'Cloudflare Workers',
     'your bot as an npm package',
     'plugin ecosystem',
+    'web pages built with Vite',
     'plugin web routes',
     'eslint rules for discord.js'
 ] as const;

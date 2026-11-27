@@ -2,8 +2,15 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeConsole, installNodeDefaults } from '@seedcord/logger/node';
-import { HostDevUrl, HostListenHost, HostPlugins, HostShutdown, HostStartup } from '@seedcord/types/internal';
-import { runsUnderSeedcordDev } from '@seedcord/utils/internal';
+import {
+    HostDevServer,
+    HostDevUrl,
+    HostListenHost,
+    HostPlugins,
+    HostShutdown,
+    HostStartup
+} from '@seedcord/types/internal';
+import { builtClientDir, runsUnderSeedcordDev } from '@seedcord/utils/internal';
 
 import { RELOAD_PAUSE_MS } from '#hmr/HmrManager';
 import { assertDeclaredRuntime } from '#node/assertDeclaredRuntime';
@@ -20,6 +27,7 @@ import type { CoordinatedShutdown, ShutdownTasks } from '#node/Lifecycle/Coordin
 import type { CoordinatedStartup, StartupTasks } from '#src/lifecycle/CoordinatedStartup';
 import type { Transport } from '#src/plugin/options';
 import type { Config, ServerHostConfig } from '@seedcord/types';
+import type { DevServer } from '@seedcord/types/internal';
 
 /** Base class for a transport `Seedcord` class that runs as a long-lived node or bun process. */
 export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT, 'server'> {
@@ -86,7 +94,8 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
             shutdown: this.shutdown,
             startup,
             plugins: this[HostPlugins],
-            interactions: this.answerInteractions?.bind(this)
+            interactions: this.answerInteractions?.bind(this),
+            clientDir: builtClientDir()
         });
         startup.addTask(StartupPhase.Ready, 'web-server', async () => {
             const tunnel = this.#devTunnel;
@@ -97,6 +106,12 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
 
     /** @internal */
     protected answerInteractions?(request: Request): Promise<Response>;
+
+    // seedcord dev sets this before start() because serve() reads servesPages to decide on a port
+    /** @internal */
+    public set [HostDevServer](server: DevServer) {
+        this.#web.dev = server;
+    }
 
     // seedcord dev opens its tunnel only to a server that takes interactions
     get #devTunnel(): { listenHost: string | undefined; url: string | undefined } | undefined {
@@ -122,9 +137,10 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     }
 
     /**
-     * Answers one web request: the health path, then each plugin's `fetch` in attach order. When
-     * every plugin passes, an http bot's interactions engine gets a POST, and anything else gets a
-     * 404. Mount it in your own server when you set `server: { port: false }`, and send it
+     * Answers one web request: the health path, then a built page or file, then an http bot's
+     * interactions engine for an interaction that Discord sent, then each plugin's `fetch` in attach
+     * order. When every plugin passes, an http bot's interactions engine gets a POST, and anything
+     * else gets a 404. Mount it in your own server when you set `server: { port: false }`, and send it
      * every path so plugin routes reach the bot.
      *
      * Rejects with `CoreFetchBeforeStart` until `start()` is called. Until every plugin's `ready()`

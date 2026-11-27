@@ -95,6 +95,7 @@
         "@seedcord/utils": "workspace:^",
         "discord-api-types": "catalog:deps",
         "es-toolkit": "catalog:deps",
+        "mrmime": "^2.0.1",
         "reflect-metadata": "catalog:deps",
         "type-fest": "catalog:deps",
         "verkit": "catalog:deps"

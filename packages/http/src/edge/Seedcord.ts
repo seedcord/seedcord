@@ -3,7 +3,10 @@ import {
     bindBotColor,
     CoordinatedStartup,
     DEV_URL_HEADER,
+    addViteClient,
+    transformPage,
     getDevChannel,
+    answerPluginsOrInteractions,
     HostHmr,
     InFlight,
     installLinks,
@@ -176,8 +179,9 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     /**
-     * Answers one web request: each plugin's `fetch` in attach order, then Discord's interactions.
-     * When every plugin passes, the interactions engine gets a POST and anything else gets a 404.
+     * Answers one web request. The interactions engine answers every interaction that Discord sends.
+     * seedcord passes anything else to each plugin's `fetch` in attach order. When every plugin
+     * passes, the interactions engine gets a POST and anything else gets a 404.
      * Until you attach a plugin with `fetch`, that 404 comes back before the bot starts.
      *
      * Cloudflare passes `env` and `ctx`, but this method reads only `ctx`. Import your bindings as
@@ -197,10 +201,12 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
         return requestScope.run(ctx, async () => {
             await this.#start();
-            const answer = async (): Promise<Response> =>
-                (await this[HostPlugins].answer(request)) ?? this.#service.engine.handle(request);
+            const { engine } = this.#service;
+            const answer = (): Promise<Response> =>
+                answerPluginsOrInteractions(request, this[HostPlugins], engine.handle.bind(engine));
             if (!this.#devRequests) return answer();
-            return (await this.#devRequests.admit(answer)) ?? new Response(null, { status: SERVICE_UNAVAILABLE });
+            const underDev = async (): Promise<Response> => transformPage(await answer(), addViteClient);
+            return (await this.#devRequests.admit(underDev)) ?? new Response(null, { status: SERVICE_UNAVAILABLE });
         });
     }
 

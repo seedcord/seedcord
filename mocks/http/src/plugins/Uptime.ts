@@ -13,4 +13,9 @@ export class Uptime extends Plugin {
     public sinceStart(): number {
         return Math.round((Date.now() - this.startedAt) / MS_PER_SECOND);
     }
+
+    public override fetch(request: Request): Response | undefined {
+        if (new URL(request.url).pathname !== '/api/uptime') return undefined;
+        return Response.json({ startedAt: this.startedAt });
+    }
 }

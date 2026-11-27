@@ -464,5 +464,6 @@ export class Web`
         cli.saves(file, [file]);
         await vi.waitFor(() => expect(restartsAsked(cli)).toEqual([{ file }, { file }]));
         expect(calls).toEqual([...STARTED, 'dispose before']);
+        expect(cli.sent.map(([event]) => event)).not.toContain('seedcord:hmr-applied');
     });
 });

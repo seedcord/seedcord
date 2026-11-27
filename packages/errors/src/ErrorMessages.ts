@@ -2,6 +2,7 @@ import { PRODUCTION_SITES } from '@seedcord/brand';
 
 import { SeedcordErrorCode } from './ErrorCodes';
 import {
+    clientDirProblems,
     deployFix,
     emojiFileProblems,
     listedFolderProblems,
@@ -387,7 +388,7 @@ const messages = {
     [SeedcordErrorCode.CliNotProjectInstall]: (cliDir: string, projectInstall: string) =>
         `This ${paint.bold('seedcord')} runs from ${paint.path(cliDir)}, but the project installs its own at ${paint.path(projectInstall)}. The CLI and the bot must load the same seedcord packages. Run the command through a script in the project's ${paint.path('package.json')}.`,
     [SeedcordErrorCode.CliViteEnvironmentMissing]: (name: string, created: readonly string[]) =>
-        `seedcord runs the bot in Vite's ${paint.bold(name)} environment, but Vite created only ${allOf.format(created.map((environment) => paint.bold(environment)))}. Look in ${paint.bold('vitePlugins')} for a plugin whose ${paint.bold('config')} hook rewrites ${paint.bold('environments')}.`,
+        `seedcord needs Vite's ${paint.bold(name)} environment, but Vite created only ${allOf.format(created.map((environment) => paint.bold(environment)))}. Look in ${paint.bold('vitePlugins')} for a plugin whose ${paint.bold('config')} hook rewrites ${paint.bold('environments')}.`,
     [SeedcordErrorCode.CliListedFolderUnusable]: (folder: string, problem: keyof typeof listedFolderProblems) =>
         `${paint.bold('files')} in seedcord.config.ts lists ${paint.path(folder)}, ${listedFolderProblems[problem]}`,
     [SeedcordErrorCode.CliDevAlreadyRunning]: (configDir: string, pid: number, startedAt: string, lockFile: string) =>
@@ -415,6 +416,14 @@ const messages = {
     [SeedcordErrorCode.CliEmojiDownloadFailed]: (status: number) => `Discord's CDN answered ${status}`,
     [SeedcordErrorCode.CliEmojiRollbackFailed]: (reason: string, parked: string) =>
         `${reason}, and the old emoji is still on Discord as ${paint.bold(parked)}. Delete it with ${paint.bold(`seedcord emojis remove ${parked}`)}, then push again`,
+    [SeedcordErrorCode.CliBuildClientFolderTaken]: (folder: string, outDir: string) =>
+        `${paint.path(folder)} builds into ${paint.path(outDir)}. Your built bot would lose those modules because building your pages empties that folder. Rename the folder.`,
+    [SeedcordErrorCode.CliAssetsPathTaken]: (folder: string, assetsPath: string) =>
+        `${paint.path(folder)} would be served under ${paint.sky(assetsPath)}, where Vite writes your pages' hashed files and browsers keep everything for a year. Visitors would keep an old copy of any file you replace there. Rename it, for example to ${paint.sky('images')}.`,
+    [SeedcordErrorCode.CliViteBaseUnsupported]: (base: string) =>
+        `A Vite plugin in ${paint.bold('vitePlugins')} set ${paint.bold('base')} to ${paint.sky(base)}, but seedcord serves your pages from the bot's root. The pages' links would then point at files the bot doesn't serve. Remove the ${paint.bold('base')} option from that plugin.`,
+    [SeedcordErrorCode.CliClientDirUnusable]: (folder: string, problem: keyof typeof clientDirProblems) =>
+        `${paint.bold('client.dir')} in seedcord.config.ts points at ${paint.path(folder)}, ${clientDirProblems[problem]} Point ${paint.bold('client.dir')} at a folder of its own, like ${paint.sky('./client')}.`,
     [SeedcordErrorCode.CliPickerNeedsTerminal]: (opener: string, skipWith: string, example: string) =>
         `${paint.bold(opener)} without ${skipWith} opens a picker, but a picker only opens in a terminal with ${paint.bold('CI')} unset. Pass ${skipWith}, as in ${paint.bold(example)}.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>

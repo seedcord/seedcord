@@ -3,8 +3,12 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { setDevFiles } from '@seedcord/utils/internal';
 
+import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { instanceModule } from '#core/modules/importInstance';
+import { openViteServer } from '#core/modules/openViteServer';
+import { mergeViteConfig } from '#core/modules/userCodeConfig';
 
+import { DevPageServer } from './DevPageServer';
 import { HmrPlugin } from './HmrPlugin';
 import { RestartFiles } from './RestartFiles';
 
@@ -12,11 +16,14 @@ import type { EvaluatedModule, ModuleLoader } from '#core/modules/ModuleLoader';
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 import type { DevEvent } from './events';
 import type { SeedcordInstance } from '@seedcord/types/internal';
+import type { Server } from 'node:http';
+import type { InlineConfig, PluginOption, ViteDevServer } from 'vite';
 
 export interface StartedRuntime {
     readonly context: DevRuntimeContext;
     readonly modules: ModuleLoader;
     readonly hmr: HmrPlugin;
+    readonly pageServer: DevPageServer;
     readonly resources: AsyncDisposableStack;
 }
 
@@ -97,11 +104,24 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         targetRestartFiles: readonly string[] = []
     ): HmrPlugin {
         const restartFiles = new RestartFiles(context.config, context.files.layout, targetRestartFiles);
+        restartFiles.addPatterns(context.files.client.restartPatterns());
         const hmr = new HmrPlugin(context.config, context.state, restartFiles, context.files.layout);
         hmr.on('event', (event) => this.emit(context, event));
         // a restart builds a new runtime in the same process
         resources.defer(() => hmr.close());
         return hmr;
+    }
+
+    protected openPageServer(
+        { config, files }: DevRuntimeContext,
+        resources: AsyncDisposableStack,
+        base: (sockets: Server) => InlineConfig,
+        plugins: PluginOption[]
+    ): Promise<DevPageServer> {
+        const open = (sockets: Server): Promise<ViteDevServer> =>
+            openViteServer(resources, mergeViteConfig(base(sockets), { mode: config.viteMode, plugins }));
+
+        return DevPageServer.open(open, files.client.hasPages).catch(rethrowVitePluginError);
     }
 
     protected emit({ onEvent }: DevRuntimeContext, event: DevEvent): void {

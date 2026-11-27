@@ -56,6 +56,7 @@ interface BuiltFilesOptions {
     rootKey: string;
     sourcePaths: boolean;
     configFile?: string;
+    pages?: boolean;
 }
 
 export function builtFilesSource({
@@ -64,7 +65,8 @@ export function builtFilesSource({
     rootExpression,
     rootKey,
     sourcePaths,
-    configFile
+    configFile,
+    pages
 }: BuiltFilesOptions): string {
     const moduleOptions = { base: rootKey };
     const fileOptions = { ...moduleOptions, query: LISTED_FILE_QUERY, import: 'default' };
@@ -82,6 +84,7 @@ export function builtFilesSource({
         `    listedFiles: import.meta.glob(${JSON.stringify(layout.listedFileGlobs())}, ${JSON.stringify(fileOptions)}),`,
         `    sourcePaths: ${String(sourcePaths)},`,
         ...(configFile === undefined ? [] : [`    configFile: ${JSON.stringify(configFile)},`]),
+        ...(pages ? ['    pages: true,'] : []),
         '};',
         `globalThis[Symbol.for(${JSON.stringify(BUILT_FILES_READY_KEY)})]?.();`,
         ''

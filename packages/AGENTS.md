@@ -53,7 +53,7 @@ Write one with `vp run cs` when you change a published package in a way that som
 
 A changeset is one or two plain sentences saying what changed for the user. Skip the sub-changes that rode along since the changelog reader has the diff. Mark a breaking change with a bold `**BREAKING:**` prefix line.
 
-A change to an `./internal` entry gets a patch changeset once another package imports from it. Without one the package doesn't publish, and the importing package ships asking for an export the registry doesn't have. Write one line saying which package reads it now, like "`@seedcord/logger` and `seedcord` now read `isPlainObject` from here." Skip it when the package already has a pending changeset because that one publishes the package anyway.
+A change to an `./internal` entry gets a patch changeset once another package imports from it. Without one the package doesn't publish, and the importing package ships asking for an export the registry doesn't have. Its only job is the version bump, so write one line saying which packages import from it now, like "`@seedcord/logger` and `seedcord` import more internals from here." Leave the symbol names out because nobody outside seedcord imports them. Skip it when the package already has a pending changeset because that one publishes the package anyway.
 
 ---
 

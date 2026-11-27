@@ -8,7 +8,7 @@ import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 import { workerdPath } from '@seedcord/utils/internal';
 
-import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
+import { BOT_ENVIRONMENT, botEnvironment, CLIENT_ENVIRONMENT, viteEnvironment } from '#core/modules/botEnvironment';
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
 
 import { BotImports } from './BotImports';
@@ -150,6 +150,11 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
         this.dev?.on('seedcord:restart-required', ({ file }) => {
             this.reportRestartRequired(file);
+        });
+
+        // every open tab reloads because a plugin page can show anything the bot holds
+        this.dev?.on('seedcord:hmr-applied', () => {
+            viteEnvironment(server.environments, CLIENT_ENVIRONMENT).hot.send({ type: 'full-reload', path: '*' });
         });
     }
 

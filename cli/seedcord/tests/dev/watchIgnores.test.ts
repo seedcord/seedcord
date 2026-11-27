@@ -1,4 +1,5 @@
 import { appendFileSync, mkdirSync, mkdtempDisposableSync, writeFileSync } from 'node:fs';
+import { Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -22,6 +23,7 @@ const SOURCE_FILE = '/src/logs/format.ts';
 const DIST_SOURCE_FILE = '/src/dist/shape.ts';
 const LOG_FILE = '/logs/combined.log';
 const BUILT_FILE = '/build/index.mjs';
+const PAGE_STYLE = '/client/uptime/uptime.css';
 
 let server: ViteDevServer | undefined;
 
@@ -36,9 +38,11 @@ function project(): string {
     onTestFinished(() => scratch.remove());
     const root = realPath(scratch.path);
 
-    for (const folder of ['logs', 'build', '.seedcord', 'src/logs', 'src/dist']) {
+    for (const folder of ['logs', 'build', '.seedcord', 'src/logs', 'src/dist', 'client/uptime']) {
         mkdirSync(join(root, folder), { recursive: true });
     }
+    writeFileSync(join(root, 'client/uptime/index.html'), '<p>uptime</p>\n');
+    writeFileSync(join(root, PAGE_STYLE), 'body {}\n');
     writeFileSync(join(root, 'bot.ts'), 'export const bot = 1;\n');
     writeFileSync(join(root, LOG_FILE), 'first line\n');
     writeFileSync(join(root, BUILT_FILE), 'export {};\n');
@@ -61,7 +65,7 @@ async function watchProject(root: string, botRoot = root): Promise<WatchedProjec
         target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'build')) }
     });
     server = await createServer(
-        mergeViteConfig(serverViteConfig(config, new ProjectFiles(config).layout), {
+        mergeViteConfig(serverViteConfig(config, new ProjectFiles(config).layout, new Server()), {
             plugins: [
                 {
                     name: 'record',
@@ -110,8 +114,8 @@ describe('dev server watch ignores', () => {
         TEST_TIMEOUT_MS
     );
 
-    it.each([SOURCE_FILE, DIST_SOURCE_FILE])(
-        'still reports a source file at %s',
+    it.each([SOURCE_FILE, DIST_SOURCE_FILE, PAGE_STYLE])(
+        'still reports a file at %s',
         async (file) => {
             const { touchUntilReported } = await watchProject(project());
 

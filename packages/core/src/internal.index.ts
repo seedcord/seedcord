@@ -19,10 +19,19 @@ export { FaultBoundary, type FaultDetails } from '#src/notices/FaultBoundary';
 export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
 export type { Runtime, Transport } from '#src/plugin/options';
-export { DEFAULT_SERVER_PORT, DEV_URL_HEADER, SERVICE_UNAVAILABLE, WORKER_PROBE } from '#src/webConstants';
+export {
+    DEFAULT_SERVER_PORT,
+    DEV_URL_HEADER,
+    FOLDER_REDIRECT,
+    HASHED_ASSETS,
+    SERVICE_UNAVAILABLE,
+    WORKER_PROBE
+} from '#src/webConstants';
 export { publicUrl } from '#src/publicUrl';
+export { answerPluginsOrInteractions, SIGNATURE_HEADER, TIMESTAMP_HEADER } from '#src/answerPluginsOrInteractions';
 export { keepRequestOpenFor, requestScope } from '#src/requestScope';
 export { HostHmr, sealAttachments } from '#src/plugin/PluginHost';
+export { addViteClient, transformPage } from '#src/hmr/transformPage';
 export { PluginRegistry } from '#src/plugin/PluginRegistry';
 export { splitPluginKey } from '#src/plugin/splitPluginKey';
 export { CoordinatedStartup, type StartupTasks } from '#src/lifecycle/CoordinatedStartup';

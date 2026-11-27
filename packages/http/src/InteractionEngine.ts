@@ -1,4 +1,4 @@
-import { keepRequestOpenFor, PublishDefault } from '@seedcord/core/internal';
+import { keepRequestOpenFor, PublishDefault, SIGNATURE_HEADER, TIMESTAMP_HEADER } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { asError } from '@seedcord/utils/internal';
@@ -14,9 +14,6 @@ import type { Core } from '#interfaces/Core';
 import type { Routes } from './dispatch/resolve';
 import type { MiddlewareRegistry } from '@seedcord/core/internal';
 import type { APIInteraction } from 'discord-api-types/v10';
-
-const SIGNATURE_HEADER = 'x-signature-ed25519';
-const TIMESTAMP_HEADER = 'x-signature-timestamp';
 
 const ACCEPTED = 202;
 const BAD_REQUEST = 400;

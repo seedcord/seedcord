@@ -53,6 +53,31 @@ describe('a plugin fetch method on edge', () => {
         expect(calls).toEqual(['init']);
     });
 
+    it('sends a signed-looking interaction to the engine before any plugin', async () => {
+        class Everything extends Plugin {
+            public init(): void {}
+
+            public override fetch(): Response {
+                calls.push('plugin');
+                return new Response('plugin');
+            }
+        }
+        const signer = await createSigner();
+        Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN }));
+        registerBakedIds({ publicKey: signer.publicKeyHex });
+        const seedcord = new Seedcord(CONFIG).attach('everything', Everything);
+        const forged = new Request('https://bot.test/', {
+            method: 'POST',
+            headers: { 'x-signature-ed25519': 'ab', 'x-signature-timestamp': String(Math.floor(Date.now() / 1000)) },
+            body: JSON.stringify({ type: 1, token: 't' })
+        });
+
+        const response = await seedcord.fetch(forged, undefined, capturingCtx());
+
+        expect(response.status).toBe(401);
+        expect(calls).toEqual([]);
+    });
+
     it("answers seedcord's probe before it starts", async () => {
         Envapter.useSource(new PortableSource({}));
         const seedcord = new Seedcord(CONFIG).attach('page', Page);

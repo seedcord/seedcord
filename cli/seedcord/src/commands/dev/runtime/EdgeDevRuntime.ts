@@ -13,8 +13,6 @@ import { listenHostFor, stableUrlOf } from '#commands/dev/tunnel/listenHost';
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { botEnvironment } from '#core/modules/botEnvironment';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
-import { openViteServer } from '#core/modules/openViteServer';
-import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { functionExportsOf } from '#core/modules/workerExports';
 
@@ -37,7 +35,6 @@ import type {
 import type { Plugin, ViteDevServer } from 'vite';
 
 interface EdgeStarted extends StartedRuntime {
-    readonly server: ViteDevServer;
     readonly port: number;
 }
 
@@ -75,6 +72,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const { viteRoot } = this.target;
         const rootKey = BotLayout.keyUnder(viteRoot, config.root);
         resources.use(fenceSignals());
+
         // ServerHost installs these for a server bot. the edge Seedcord does not
         installNodeDefaults();
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
@@ -84,45 +82,53 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
         const nodeCopy = await openModuleLoader(dirname(config.configFile), this.target, config.viteMode, config, {
-            watch: devWatchOptions(files.layout),
+            watch: devWatchOptions(files.layout, config.client.dir),
             workerEnv
         }).catch(rethrowVitePluginError);
         resources.use(nodeCopy);
         // vite reruns the entry's load hook after any update that reaches the entry. bot.ts throws when it runs a second time
         let functionExports: Promise<string[]> | undefined;
         const hmr = this.openHmr(context, resources, [basename(this.target.cloudflareConfig), ...workerEnv.files]);
-        const server = await openViteServer(
+
+        const plugins = [
+            workerEntry({
+                layout: files.layout,
+                lists,
+                instanceKey: BotLayout.keyUnder(viteRoot, config.instance),
+                rootKey,
+                functionExports: () => (functionExports ??= this.readFunctionExports(context, nodeCopy)),
+                mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
+            }),
+            hmr.plugin,
+            invokeErrorsAsJson(),
+            cloudflare.plugins(),
+            files.client.vitePlugin({ edge: true }),
+            config.vitePlugins.create()
+        ];
+
+        const pageServer = await this.openPageServer(
+            context,
             resources,
-            mergeViteConfig(edgeViteConfig(files.layout, viteRoot), {
-                mode: config.viteMode,
-                plugins: [
-                    workerEntry({
-                        layout: files.layout,
-                        lists,
-                        instanceKey: BotLayout.keyUnder(viteRoot, config.instance),
-                        rootKey,
-                        functionExports: () => (functionExports ??= this.readFunctionExports(context, nodeCopy)),
-                        mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
-                    }),
-                    hmr.plugin,
-                    invokeErrorsAsJson(),
-                    cloudflare.plugins(),
-                    config.vitePlugins.create()
-                ]
-            })
-        ).catch(rethrowVitePluginError);
-        await loadWorkerEntry(server.middlewares, config.instance);
-        const endpoint = await listenForInteractions(server.middlewares, {
+            (sockets) => edgeViteConfig(files.layout, viteRoot, config, sockets),
+            plugins
+        );
+
+        await loadWorkerEntry(pageServer.middlewares, config.instance);
+
+        const endpoint = await listenForInteractions(pageServer, {
             port: this.target.port,
             host: listenHostFor(config.tunnel),
-            configFile: config.configFile,
-            rootKey,
-            assetsInclude: server.config.assetsInclude
+            configFile: config.configFile
         });
+
         resources.use(endpoint.server);
-        // close() waits on open keep-alive sockets
-        resources.defer(() => endpoint.server.closeAllConnections());
-        return { context, server, modules: nodeCopy, hmr, port: endpoint.port, resources };
+        // close() waits on open keep-alive sockets and on the browser's sockets to vite
+        resources.defer(() => {
+            endpoint.server.closeAllConnections();
+            pageServer.closeSockets();
+        });
+
+        return { context, modules: nodeCopy, hmr, port: endpoint.port, pageServer, resources };
     }
 
     private async readFunctionExports(context: DevRuntimeContext, modules: ModuleLoader): Promise<string[]> {
@@ -135,8 +141,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
 
     // workerd runs its own copy of the bot
     public startBot(_instance: SeedcordInstance): Promise<string | undefined> {
-        const { context, server, port } = this.require('startBot');
-        const cli = workerChannel(server);
+        const { context, pageServer, port } = this.require('startBot');
+        const cli = workerChannel(pageServer.vite);
         return new Promise((resolve, reject) => {
             this.settleStart = () => resolve(undefined);
             cli.on('seedcord:started', ({ username }) => {

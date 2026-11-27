@@ -23,7 +23,7 @@
 
 seedcord is a TypeScript framework for Discord bots, typed end to end. Commands, events, components, checks, lifecycle, and plugins all come with it. A wrong route or a wrong option name is a compile error before the bot ever connects.
 
-You can build two kinds of bots with seedcord, and each one runs on its own package, called a transport. A gateway bot runs on `@seedcord/gateway`, which holds a websocket connection to Discord through the discord.js client and gets message, member, voice, and reaction events. An http bot runs on `@seedcord/http`, which answers the interaction requests Discord posts to your URL, on your own server or on Cloudflare Workers, without a discord.js dependency. You pick one when you scaffold. Handlers, checks, and the rest of the seedcord API work the same way on both. The objects a handler reads differ: discord.js objects on the gateway, raw payloads on http.
+You can build two kinds of bots with seedcord, and each one runs on its own package, called a transport. A gateway bot runs on `@seedcord/gateway`, which holds a websocket connection to Discord through the discord.js client and gets message, member, voice, and reaction events. An http bot runs on `@seedcord/http`, which answers the interaction requests Discord posts to your URL, on your own server or on Cloudflare Workers, without a discord.js dependency. You pick one when you scaffold. Handlers, checks, and the rest of the seedcord API work the same way on both. A handler gets discord.js objects on the gateway and raw payloads on http.
 
 Your bot runs through Vite, from the first `seedcord dev` to the production build. You can add any Vite plugin in `seedcord.config.ts`, so your handlers can import YAML, SQL, or whatever else a plugin loads. `ENV=staging` loads your `.env.staging` files. A saved handler reloads in place without restarting the bot. One `seedcord build` turns the same code into a Node or Bun server, a single Bun binary, a Cloudflare Worker, or a module your own server imports.
 
@@ -93,10 +93,12 @@ export class Ping extends SlashHandler<'ping'> {
 - Typed config from `.env` and the shell through [envapt](https://envapt.materwelon.dev)
 - Typed plugins with `init`, `ready`, and `dispose`, on a server or on Workers
 - Plugins that answer web requests with `fetch()`, like a webhook from another service or a status page
-- A web server on Node and Bun bots, for your health check and plugin routes
+- A web server that serves your health check, plugin routes, and pages on Node and Bun
+- Web pages built with Vite and served by your bot on a server or on Workers
 - A typed event bus on both transports
 - A typed kv store, in memory or on any Keyv or unstorage driver
 - Cron jobs and scheduled tasks
+- Discord login with OAuth, and Linked Roles with typed records
 - Custom emojis read by name, typed from the files in your emojis folder
 - Logging in named channels you can quiet one at a time
 

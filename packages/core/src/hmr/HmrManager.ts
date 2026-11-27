@@ -120,5 +120,6 @@ export class HmrManager {
         });
 
         await Promise.all(promises);
+        this.channel.send('seedcord:hmr-applied', {});
     }
 }

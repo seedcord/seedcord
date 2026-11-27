@@ -1,8 +1,9 @@
 import { dirname } from 'node:path';
 
-import { posixRelative, toPosixPath } from '@seedcord/utils/internal';
+import { isInside, posixRelative, toPosixPath } from '@seedcord/utils/internal';
 import { minimatch } from 'minimatch';
 
+import { tunnelHostsOf } from '#commands/dev/tunnel/listenHost';
 import { BOT_ENVIRONMENT } from '#core/modules/botEnvironment';
 import { mergeViteConfig, NODE_CONDITIONS, userCodeBase, userCodeConfig } from '#core/modules/userCodeConfig';
 import { STATE_FOLDER } from '#core/state/StateFolder';
@@ -11,15 +12,18 @@ import { workerLogger } from './workerLogger';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { BotLayout } from '@seedcord/utils/internal';
+import type { Server } from 'node:http';
 import type { InlineConfig, ServerOptions, UserConfig } from 'vite';
 
 // a linked workspace package lives outside root
 const OUTSIDE_ROOT_IGNORES = ['node_modules', 'dist', '.git', STATE_FOLDER].map((folder) => `**/${folder}{,/**}`);
 
-export function devWatchOptions(layout: BotLayout): NonNullable<ServerOptions['watch']> {
+export function devWatchOptions(layout: BotLayout, clientDir: string): NonNullable<ServerOptions['watch']> {
     const ignored = (file: string): boolean => {
         // HmrPlugin triggers a restart when one changes
         if (layout.isProjectFile(file)) return false;
+        // the bot never loads the pages folder, but vite has to see each save there to update the open pages
+        if (isInside(clientDir, file)) return false;
         if (layout.isSkipped(file)) return true;
         const posix = toPosixPath(file);
         return !layout.holds(file) && OUTSIDE_ROOT_IGNORES.some((pattern) => minimatch(posix, pattern, { dot: true }));
@@ -27,38 +31,41 @@ export function devWatchOptions(layout: BotLayout): NonNullable<ServerOptions['w
     return { ignored };
 }
 
+type DevSettings = Pick<ResolvedSeedcordConfig, 'client' | 'tunnel'>;
+
 // vite writes resolved options back into the config object it receives
-function devViteConfig(base: UserConfig, layout: BotLayout): InlineConfig {
+function devViteConfig(base: UserConfig, layout: BotLayout, dev: DevSettings, sockets: Server): InlineConfig {
     return mergeViteConfig(base, {
         // vite searches its own root for a config file
         configFile: false,
         clearScreen: false,
         server: {
             middlewareMode: true,
-            // no browser connects to vite's hmr socket on port 24678
-            ws: false,
-            watch: devWatchOptions(layout)
+            // vite would open a second port without this. the tunnel only forwards the bot's port
+            ws: { server: sockets },
+            // requests arrive under the tunnel's hostname, and vite blocks unlisted hosts
+            allowedHosts: tunnelHostsOf(dev.tunnel),
+            watch: devWatchOptions(layout, dev.client.dir)
         }
     });
 }
 
 export function serverViteConfig(
-    { configFile }: Pick<ResolvedSeedcordConfig, 'configFile'>,
-    layout: BotLayout
+    config: DevSettings & Pick<ResolvedSeedcordConfig, 'configFile'>,
+    layout: BotLayout,
+    sockets: Server
 ): InlineConfig {
-    const configDir = dirname(configFile);
-    return mergeViteConfig(devViteConfig(userCodeConfig(NODE_CONDITIONS, configDir), layout), {
+    const configDir = dirname(config.configFile);
+    return mergeViteConfig(devViteConfig(userCodeConfig(NODE_CONDITIONS, configDir), layout, config, sockets), {
         root: configDir,
         logLevel: 'error'
     });
 }
 
-export function edgeViteConfig(layout: BotLayout, viteRoot: string): InlineConfig {
-    return mergeViteConfig(devViteConfig(userCodeBase(), layout), {
+export function edgeViteConfig(layout: BotLayout, viteRoot: string, dev: DevSettings, sockets: Server): InlineConfig {
+    return mergeViteConfig(devViteConfig(userCodeBase(), layout, dev, sockets), {
         root: viteRoot,
         customLogger: workerLogger(),
-        // requests arrive under the tunnel's hostname, and vite blocks unlisted hosts
-        server: { allowedHosts: true },
         // the plugin's dep scan comes up empty in a virtual main. vite then reloads mid-start and leaves a second envapt without a source bound
         environments: {
             [BOT_ENVIRONMENT]: {

@@ -1,4 +1,5 @@
 import { mkdtempDisposableSync, writeFileSync } from 'node:fs';
+import { Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -33,9 +34,9 @@ function project(): string {
 
 describe('dev vite config', () => {
     it.each([
-        ['a server', (root: string): InlineConfig => serverViteConfig(configAt(root), layoutAt(root))],
-        ['an edge', (root: string): InlineConfig => edgeViteConfig(layoutAt(root), root)]
-    ])("doesn't open an hmr websocket for %s bot while another process holds its port", async (_kind, config) => {
+        ['a server', (root: string): InlineConfig => serverViteConfig(configAt(root), layoutAt(root), new Server())],
+        ['an edge', (root: string): InlineConfig => edgeViteConfig(layoutAt(root), root, configAt(root), new Server())]
+    ])("doesn't open its own hmr port for %s bot while another process holds that port", async (_kind, config) => {
         await holdViteHmrPort();
         const root = project();
         const errors: string[] = [];

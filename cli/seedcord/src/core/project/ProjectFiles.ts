@@ -3,10 +3,12 @@ import { basename, dirname, relative } from 'node:path';
 import { logsFolderIn } from '@seedcord/logger/internal';
 import { BotLayout, folderEmojisIn } from '@seedcord/utils/internal';
 
+import { ClientPages } from '#core/modules/ClientPages';
+
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { BotEntry, FolderEmoji } from '@seedcord/utils/internal';
 
-type ProjectPaths = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target' | 'emojis'>;
+type ProjectPaths = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target' | 'emojis' | 'client'>;
 
 // the build writes these into the entry because a built bot can't read them from disk
 export interface BuiltLists {
@@ -14,7 +16,7 @@ export interface BuiltLists {
     emojis: FolderEmoji[];
 }
 
-function layoutOf({ root, configFile, files, target, emojis }: ProjectPaths): BotLayout {
+function layoutOf({ root, configFile, files, target, emojis }: ProjectPaths, client: ClientPages): BotLayout {
     const configDir = dirname(configFile);
     const keysOf = (paths: string[]): string[] => paths.map((path) => BotLayout.keyUnder(root, path));
     const outDir = target.kind === 'server' ? [target.outDir] : [];
@@ -22,7 +24,7 @@ function layoutOf({ root, configFile, files, target, emojis }: ProjectPaths): Bo
     return new BotLayout({
         root,
         listed: keysOf(files),
-        skippedFolders: keysOf([...outDir, logsFolderIn(configDir)]),
+        skippedFolders: keysOf([...outDir, logsFolderIn(configDir), ...client.skippedFolders]),
         configFile: BotLayout.keyUnder(root, configFile),
         emojiFolder: BotLayout.keyUnder(root, emojis.dir)
     });
@@ -30,9 +32,11 @@ function layoutOf({ root, configFile, files, target, emojis }: ProjectPaths): Bo
 
 export class ProjectFiles {
     public readonly layout: BotLayout;
+    public readonly client: ClientPages;
 
     constructor(private readonly paths: ProjectPaths) {
-        this.layout = layoutOf(paths);
+        this.client = new ClientPages(paths);
+        this.layout = layoutOf(paths, this.client);
     }
 
     public async modulePaths(folder = this.layout.root): Promise<string[]> {

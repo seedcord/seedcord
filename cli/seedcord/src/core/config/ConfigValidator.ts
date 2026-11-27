@@ -70,13 +70,17 @@ function* makeProblems(value: unknown): Generator<SeedcordTypeError> {
     }
 }
 
-function* emojisProblems(value: unknown): Generator<SeedcordTypeError> {
+function* folderOptionProblems(
+    key: ExtractStrict<keyof SeedcordConfig, 'emojis' | 'client'>,
+    example: string,
+    value: unknown
+): Generator<SeedcordTypeError> {
     if (value === undefined) return;
     if (!isPlainObject(value)) {
-        yield invalidField('emojis', `an object, like ${paint.bold("{ dir: './assets/emojis' }")}`);
+        yield invalidField(key, `an object, like ${paint.bold(`{ dir: '${example}' }`)}`);
         return;
     }
-    if (value.dir !== undefined && !isNonEmptyString(value.dir)) yield invalidField('emojis.dir', 'a folder path');
+    if (value.dir !== undefined && !isNonEmptyString(value.dir)) yield invalidField(`${key}.dir`, 'a folder path');
 }
 
 function* tunnelProblems(value: unknown): Generator<SeedcordTypeError> {
@@ -145,7 +149,8 @@ export class ConfigValidator {
         yield* this.buildProblems(raw.build);
         yield* devProblems(raw.dev);
         yield* makeProblems(raw.make);
-        yield* emojisProblems(raw.emojis);
+        yield* folderOptionProblems('emojis', './assets/emojis', raw.emojis);
+        yield* folderOptionProblems('client', './web', raw.client);
         if (raw.vitePlugins !== undefined && typeof raw.vitePlugins !== 'function') {
             yield invalidField(
                 'vitePlugins',

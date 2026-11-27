@@ -40,6 +40,8 @@ export interface SeedcordFrameworkEvents {
     'seedcord:read-bot-imports': EmptyObject;
     // the bot's answer when it couldn't reload the plugins in botImports
     'seedcord:restart-required': { file: string };
+    // the bot sends this once it has reloaded a file, and the CLI then reloads the open pages
+    'seedcord:hmr-applied': EmptyObject;
 }
 
 // the CLI sends these back

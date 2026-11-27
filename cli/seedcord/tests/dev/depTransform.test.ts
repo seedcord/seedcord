@@ -1,4 +1,5 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -92,7 +93,7 @@ describe('dev runtime module resolution', () => {
 
         const config = resolvedConfigOf(root);
         server = await createServer(
-            mergeViteConfig(serverViteConfig(config, new ProjectFiles(config).layout), {
+            mergeViteConfig(serverViteConfig(config, new ProjectFiles(config).layout, new Server()), {
                 server: { hmr: false, watch: null }
             })
         );

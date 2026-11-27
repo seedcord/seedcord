@@ -20,7 +20,7 @@ Any other file, like a component or a helper, reloads through the files that imp
 
 ## Saving a command
 
-Discord keeps its own copy of each command's name, description, and options, so an edit there has to reach Discord before anyone sees it. When you save a file in your commands folder, the dev terminal lists the changed files and shows this prompt before seedcord sends anything:
+Discord keeps its own copy of each command's name, description, and options, so your edit only shows up in Discord after seedcord sends it. When you save a file in your commands folder, the dev terminal lists the changed files and shows this prompt before seedcord sends anything:
 
 ```txt output
 Commands updated:
@@ -38,6 +38,10 @@ Refresh commands? (y/n)
 {/* prettier-ignore-end */}
 
 A plugin can show the same prompt for files that change your commands, like the [i18n plugin](/plugins/i18n-commands) does for its translation files. [Reloading in dev](/writing-plugins/hot-reload#files-that-change-your-commands) shows how.
+
+## Pages in your browser
+
+If a plugin's `fetch()` returns HTML, `seedcord dev` adds Vite's client script to the page. When you save a file and the bot updates it in place, an open tab reloads. After a restart, the tab reloads once the bot is back. For the pages in your `client/` folder, read [Web pages](/writing-plugins/web-requests#under-seedcord-dev).
 
 ## How it works
 

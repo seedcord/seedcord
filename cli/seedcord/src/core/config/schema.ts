@@ -111,6 +111,20 @@ interface SeedcordEmojisConfig {
 }
 
 /**
+ * Options for the web pages that your bot serves.
+ */
+interface SeedcordClientConfig {
+    /**
+     * The folder that holds your pages. Each `index.html` in it is a page (for example, `uptime/index.html` is the
+     * page at `/uptime/`). It has to be inside the config file's folder. It can't hold `root` because a
+     * browser can load every file in this folder.
+     *
+     * @defaultValue `./client` beside the config file
+     */
+    dir?: string;
+}
+
+/**
  * Options for `seedcord dev`.
  */
 export interface SeedcordDevConfig {
@@ -189,6 +203,10 @@ export interface SeedcordConfig {
      * Options for the emojis that seedcord uploads to your application.
      */
     emojis?: SeedcordEmojisConfig;
+    /**
+     * Options for the web pages that your bot serves.
+     */
+    client?: SeedcordClientConfig;
 }
 
 /**
@@ -228,6 +246,7 @@ interface ResolvedSeedcordMakeConfig {
 export interface ResolvedSeedcordConfig {
     make: ResolvedSeedcordMakeConfig;
     emojis: { dir: RealPath };
+    client: { dir: RealPath };
     root: RealPath;
     instance: RealPath;
     files: RealPath[];

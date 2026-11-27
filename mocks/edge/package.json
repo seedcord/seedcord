@@ -20,7 +20,7 @@
         "clean": "rm -rf .cloudflare",
         "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
-        "tc": "tsgo --noEmit"
+        "tc": "tsgo --noEmit && tsgo --noEmit -p client"
     },
     "dependencies": {
         "@discordjs/builders": "catalog:peer",
@@ -36,7 +36,8 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "cf": "catalog:deps",
-        "seedcord": "workspace:^"
+        "seedcord": "workspace:^",
+        "vite": "catalog:deps"
     },
     "peerDependencies": {
         "typescript": "catalog:peer"

@@ -10,6 +10,7 @@ import { preview } from 'vite';
 import { afterAll, beforeAll, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { BOT_ENVIRONMENT } from '#core/modules/botEnvironment';
+import { writeFiles } from '#tests/tempProject';
 
 import {
     copyEdgeBot,
@@ -68,6 +69,11 @@ describe('seedcord build on an edge bot', () => {
         });
         await writeFile(join(projectDir, '.env'), 'VITE_GREETING=built\nAPP_GREETING=built-app\n');
         await appendFile(join(projectDir, '.dev.vars'), 'RUNTIME_GREETING=before\n');
+        await writeFiles(projectDir, {
+            'client/page/index.html':
+                '<html><head></head><body><script type="module" src="./main.ts"></script></body></html>',
+            'client/page/main.ts': "document.body.append('ticking');\n"
+        });
         const bot = join(projectDir, 'src/bot.ts');
         await writeFile(
             bot,
@@ -116,7 +122,7 @@ if (navigator.userAgent === 'Cloudflare-Workers' && !pinned) throw new Error('im
         expect(status, stderr).toBe(0);
     }, 60_000);
 
-    it('answers a PING signed with the key discord returned at build time', async () => {
+    it('answers a PING signed with the key discord returned at build time, and serves a page with its script cached for good', async () => {
         const server = await preview({
             root: projectDir,
             configFile: false,
@@ -125,14 +131,18 @@ if (navigator.userAgent === 'Cloudflare-Workers' && !pinned) throw new Error('im
             preview: { port: 0 }
         });
         try {
-            const response = await fetch(server.resolvedUrls?.local[0] ?? '', {
-                method: 'POST',
-                headers: await sign(PING),
-                body: PING
-            });
+            const url = server.resolvedUrls?.local[0] ?? '';
+            const [response, page] = await Promise.all([
+                fetch(url, { method: 'POST', headers: await sign(PING), body: PING }),
+                fetch(new URL('page/', url)).then((answer) => answer.text())
+            ]);
+            const scriptPath = /src="(\/assets\/[^"]+\.js)"/.exec(page)?.[1] ?? '';
+            const script = await fetch(new URL(scriptPath, url));
 
             expect(response.status).toBe(200);
             await expect(response.json()).resolves.toEqual({ type: 1 });
+            await expect(script.text()).resolves.toContain('ticking');
+            expect(script.headers.get('cache-control')).toBe('public, max-age=31536000, immutable');
         } finally {
             await server.close();
         }
