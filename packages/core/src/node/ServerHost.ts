@@ -134,9 +134,10 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     }
 
     /**
-     * Answers one web request: the health path, then each plugin's `fetch` in attach order. When
-     * every plugin passes, an http bot's interactions engine gets a POST, and anything else gets a
-     * 404. Mount it in your own server when you set `server: { port: false }`, and send it
+     * Answers one web request: the health path, then an http bot's interactions engine for a
+     * request that Discord signed, then a built page or file, then each plugin's `fetch` in attach
+     * order. When every plugin passes, an http bot's interactions engine gets a POST, and anything
+     * else gets a 404. Mount it in your own server when you set `server: { port: false }`, and send it
      * every path so plugin routes reach the bot.
      *
      * Rejects with `CoreFetchBeforeStart` until `start()` is called. Until every plugin's `ready()`

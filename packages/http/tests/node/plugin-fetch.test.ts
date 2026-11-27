@@ -127,12 +127,13 @@ describe('a plugin fetch method on node', () => {
         ['reads the body and passes the request on', BodyReader],
         ['locks the body with a reader', BodyLocker]
     ])('throws when a plugin %s', async (_case, Reader) => {
-        const signer = await bindSignedEnv();
+        await bindSignedEnv();
         await using host = new Seedcord(config()).attach('reader', Reader);
         await host.start();
         using _logs = captureLogs();
 
-        await expect(host.fetch(await signedRequest(signer, PING))).rejects.toThrow(
+        const hook = new Request('http://bot.test/hook', { method: 'POST', body: 'x' });
+        await expect(host.fetch(hook)).rejects.toThrow(
             expect.objectContaining({
                 code: SeedcordErrorCode.CorePluginFetchReadBody,
                 message: expect.stringContaining(`${Reader.name} at reader`) as string
@@ -163,19 +164,24 @@ describe('a plugin fetch method on node', () => {
     it.each([
         ['throws', Thrower],
         ['reads the body and throws', BodyReaderThatThrows]
-    ])('answers 500 when a plugin %s, and the plugins after it never run', async (_case, Broken) => {
-        const signer = await bindSignedEnv();
-        await using host = new Seedcord(config()).attach('broken', Broken).attach('pages', Pages);
-        await host.start();
-        using logs = captureLogs();
+    ])(
+        'answers 500 when a plugin %s, and the plugins after it never run, while interactions still reach the engine',
+        async (_case, Broken) => {
+            const signer = await bindSignedEnv();
+            await using host = new Seedcord(config()).attach('broken', Broken).attach('pages', Pages);
+            await host.start();
+            using logs = captureLogs();
 
-        const page = await host.fetch(new Request('http://bot.test/page?token=secret', { method: 'POST', body: 'x' }));
-        const interaction = await host.fetch(await signedRequest(signer, PING));
+            const page = await host.fetch(
+                new Request('http://bot.test/page?token=secret', { method: 'POST', body: 'x' })
+            );
+            const interaction = await host.fetch(await signedRequest(signer, PING));
 
-        expect([page.status, interaction.status]).toEqual([500, 500]);
-        const logged = logs.at('error').join('\n');
-        expect(logged).toContain('POST /page');
-        expect(logged).not.toContain('secret');
-        expect(logs.argsAt('error')).toContainEqual(expect.objectContaining({ message: 'boom' }));
-    });
+            expect([page.status, interaction.status]).toEqual([500, 200]);
+            const logged = logs.at('error').join('\n');
+            expect(logged).toContain('POST /page');
+            expect(logged).not.toContain('secret');
+            expect(logs.argsAt('error')).toContainEqual(expect.objectContaining({ message: 'boom' }));
+        }
+    );
 });
