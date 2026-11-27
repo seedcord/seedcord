@@ -195,6 +195,84 @@ Once a plugin has `fetch()`, the first request of any kind starts the bot in its
 
 </Callout>
 
+## Live updates
+
+Say a page shows how many times `/ping` has run. Without a way for the bot to send the new count, the page would fetch `/api/pings` every second and get the same answer most of the time. [Server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) let the bot send it instead. The browser opens one request, and the plugin keeps it open and writes a line to it each time the count changes.
+
+```ts twoslash title="src/plugins/PingCounter.ts"
+import { Plugin, ShutdownPhase } from '@seedcord/gateway';
+import type { CoreBase } from '@seedcord/gateway';
+
+const PINGS = new URLPattern({ pathname: '/api/pings' });
+const encoder = new TextEncoder();
+
+type Tab = ReadableStreamDefaultController<Uint8Array>;
+
+export class PingCounter extends Plugin {
+    private runs = 0;
+    private readonly tabs = new Set<Tab>();
+
+    public constructor(host: CoreBase) {
+        super(host, { dispose: { phase: ShutdownPhase.Unbind } });
+    }
+
+    public async init(): Promise<void> {}
+
+    public bump(): void {
+        this.runs++;
+        for (const tab of this.tabs) this.send(tab);
+    }
+
+    public override fetch(request: Request): Response | undefined {
+        if (!PINGS.test(request.url)) return undefined;
+        let opened: Tab;
+        const events = new ReadableStream<Uint8Array>({
+            start: (tab) => {
+                opened = tab;
+                this.tabs.add(tab);
+                this.send(tab);
+            },
+            cancel: () => void this.tabs.delete(opened)
+        });
+        return new Response(events, {
+            headers: { 'content-type': 'text/event-stream' }
+        });
+    }
+
+    public override dispose(): void {
+        for (const tab of this.tabs) tab.close();
+        this.tabs.clear();
+    }
+
+    private send(tab: Tab): void {
+        const line = `data: ${String(this.runs)}\n\n`;
+        tab.enqueue(encoder.encode(line));
+    }
+}
+```
+
+Every browser tab on the page opens its own stream, and `tabs` holds one entry per tab. `start` sends the current count right away, and `cancel` runs when the tab closes. A message is a `data:` line followed by a blank line, so `send()` writes `data: 3`, then two newlines. Call `bump()` from your `/ping` handler, and every open tab gets the new count.
+
+On the page, the browser's [`EventSource`](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) reads those messages:
+
+```ts plain title="client/pings/main.ts"
+const events = new EventSource('/api/pings');
+events.addEventListener('message', ({ data }) => {
+    document.getElementById('pings')!.textContent =
+        `/ping ran ${data} times`;
+});
+```
+
+`EventSource` connects again by itself a few seconds after the stream closes. That covers a restart, and under `seedcord dev` it covers a plugin reload too. The old plugin's `dispose()` closes its streams, and the next connection reaches the new plugin.
+
+`dispose()` runs in the Unbind phase because the web server stops in that phase too, and it waits for every open connection first. In the default phase, each open tab would hold the shutdown until that wait timed out.
+
+<Callout type="transport" only="edge">
+
+A Worker can't push to a page this way. Your `/ping` handler runs in one request, and the page's stream belongs to another. [Cloudflare stops a request](https://developers.cloudflare.com/workers/observability/errors/) from writing to a stream that a different request opened. Each isolate also keeps its own count. Have the page fetch `/api/pings` on a timer.
+
+</Callout>
+
 ## React or another framework
 
 A framework that renders in the browser, like React or Vue, works on a page through its Vite plugin. Add its plugin to [`vitePlugins`](/build/vite-plugins) in `seedcord.config.ts`. For React, that's `@vitejs/plugin-react`:
