@@ -3,7 +3,8 @@ import {
     bindBotColor,
     CoordinatedStartup,
     DEV_URL_HEADER,
-    finishPage,
+    addViteClient,
+    transformPage,
     getDevChannel,
     answerPluginsOrInteractions,
     HostHmr,
@@ -204,7 +205,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
             const answer = (): Promise<Response> =>
                 answerPluginsOrInteractions(request, this[HostPlugins], engine.handle.bind(engine));
             if (!this.#devRequests) return answer();
-            const underDev = async (): Promise<Response> => finishPage(await answer());
+            const underDev = async (): Promise<Response> => transformPage(await answer(), addViteClient);
             return (await this.#devRequests.admit(underDev)) ?? new Response(null, { status: SERVICE_UNAVAILABLE });
         });
     }

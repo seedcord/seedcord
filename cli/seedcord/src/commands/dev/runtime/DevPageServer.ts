@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 
-import { finishPage } from '@seedcord/core/internal';
+import { transformPage } from '@seedcord/core/internal';
 import { isGetOrHead } from '@seedcord/utils/internal';
 
 import type { DevServer } from '@seedcord/types/internal';
@@ -60,7 +60,8 @@ export class DevPageServer implements DevServer {
         for (const socket of this.upgraded) socket.destroy();
     }
 
-    public finish(response: Response): Promise<Response> {
-        return finishPage(response);
+    // the html hooks of vite plugins run here too, like react's refresh preamble
+    public finish(path: string, response: Response): Promise<Response> {
+        return transformPage(response, (html) => this.vite.transformIndexHtml(path, html));
     }
 }

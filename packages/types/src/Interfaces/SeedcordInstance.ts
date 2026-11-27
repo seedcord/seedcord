@@ -28,7 +28,7 @@ export interface DevServer {
     // node's server.close() waits for every socket that upgrade() took, and a browser holds them open
     closeSockets(): void;
     // saving a file reloads the tab because this adds vite's client to the pages the bot answers
-    finish(response: Response): Promise<Response>;
+    finish(path: string, response: Response): Promise<Response>;
 }
 
 // Core implements this. the CLI narrows a loaded module export to it after the SeedcordBrand runtime check

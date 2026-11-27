@@ -11,7 +11,7 @@ import { captureLogs } from '@seedcord/logger/internal';
 import { beforeAll, describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { WebServer } from '#node/WebServer';
-import { finishPage } from '#src/plugin/finishPage';
+import { addViteClient, transformPage } from '#src/hmr/transformPage';
 
 import type { WebServerOptions } from '#node/WebServer';
 import type { ServerConfig } from '@seedcord/types';
@@ -83,7 +83,7 @@ function devServer(servesPages: boolean): DevServer {
         serve: () => Promise.resolve(false),
         upgrade: () => false,
         closeSockets: () => undefined,
-        finish: (response) => Promise.resolve(response)
+        finish: (_path, response) => Promise.resolve(response)
     };
 }
 
@@ -419,7 +419,7 @@ describe('WebServer under seedcord dev', () => {
                 return true;
             },
             closeSockets: () => held.forEach((socket) => socket.destroy()),
-            finish: finishPage
+            finish: (_path, response) => transformPage(response, addViteClient)
         };
     }
 

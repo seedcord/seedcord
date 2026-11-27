@@ -51,7 +51,7 @@ const WITHOUT_DEV: DevServer = {
     serve: () => Promise.resolve(false),
     upgrade: () => false,
     closeSockets: () => undefined,
-    finish: (response) => Promise.resolve(response)
+    finish: (_path, response) => Promise.resolve(response)
 };
 
 // answers a node bot's web requests: health, built client files, then Discord's interactions, plugins, and a 404. serve() also puts it on a port
@@ -102,7 +102,7 @@ export class WebServer {
     }
 
     private async respond(request: Request): Promise<Response> {
-        return this.dev.finish(await this.answerFrom(request));
+        return this.dev.finish(new URL(request.url).pathname, await this.answerFrom(request));
     }
 
     // the same order as seedcord dev, where vite answers before the bot
