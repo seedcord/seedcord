@@ -38,7 +38,7 @@ function devViteConfig(base: UserConfig, layout: BotLayout, clientDir: string, s
         clearScreen: false,
         server: {
             middlewareMode: true,
-            // the server in front of vite hands it each socket that its browser client opens
+            // vite would open a second port without this. the tunnel only forwards the bot's port
             ws: { server: sockets },
             // requests arrive under the tunnel's hostname, and vite blocks unlisted hosts
             allowedHosts: true,

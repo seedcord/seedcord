@@ -115,9 +115,9 @@ interface SeedcordEmojisConfig {
  */
 interface SeedcordClientConfig {
     /**
-     * The folder that holds your pages. Each `index.html` in it is a page, so `uptime/index.html` is the
-     * page at `/uptime/`. It has to be inside the folder that holds the config file, and it can't hold `root`
-     * since a browser can load every file in it.
+     * The folder that holds your pages. Each `index.html` in it is a page (for example, `uptime/index.html` is the
+     * page at `/uptime/`). It has to be inside the config file's folder. It can't hold `root` because a
+     * browser can load every file in this folder.
      *
      * @defaultValue `./client` beside the config file
      */

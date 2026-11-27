@@ -123,7 +123,7 @@ export class ClientPages {
                 send(request, response, page, 'html', { headers: server.config.server.headers });
                 return true;
             }
-            // vite's static middleware passes every .html on, and a build only writes the pages
+            // the bot answers all the other .html files because a build only writes the pages
             if (extname(found.file) !== '.html') request.url = `${clientPath}${url}`;
             return false;
         };
