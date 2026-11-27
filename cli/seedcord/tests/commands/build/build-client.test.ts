@@ -37,15 +37,19 @@ describe('seedcord build on a node bot with web pages', () => {
 
     it('puts only the pages, their assets and public/ in the client folder', async () => {
         const entries = await readdir(clientDir, { recursive: true });
+        const served = entries.map(toPosixPath);
 
-        expect(entries.map(toPosixPath).toSorted()).toEqual([
-            'assets',
-            expect.stringMatching(/^assets\/index-.+\.css$/),
-            expect.stringMatching(/^assets\/index-.+\.js$/),
-            'robots.txt',
-            'uptime',
-            'uptime/index.html'
-        ]);
+        expect(served).toHaveLength(6);
+        expect(served).toEqual(
+            expect.arrayContaining([
+                'assets',
+                expect.stringMatching(/^assets\/index-.+\.css$/),
+                expect.stringMatching(/^assets\/index-.+\.js$/),
+                'robots.txt',
+                'uptime',
+                'uptime/index.html'
+            ])
+        );
     });
 });
 

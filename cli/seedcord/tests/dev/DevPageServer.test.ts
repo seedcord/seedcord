@@ -14,10 +14,15 @@ import { tempProject } from '#tests/tempProject';
 import type { IncomingMessage } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
+const SOURCES = {
+    '/seedcord.config.ts': 'config-marker',
+    '/package.json': 'package-marker',
+    '/src/bot.ts': 'bot-marker'
+};
 const BOT_FILES = {
-    'seedcord.config.ts': 'export const secret = "config";\n',
-    'package.json': '{"name":"bot"}\n',
-    'src/bot.ts': 'export const token = "secret";\n',
+    'seedcord.config.ts': `export const secret = '${SOURCES['/seedcord.config.ts']}';\n`,
+    'package.json': `{"name":"${SOURCES['/package.json']}"}\n`,
+    'src/bot.ts': `export const token = '${SOURCES['/src/bot.ts']}';\n`,
     'public/robots.txt': 'User-agent: *\n'
 };
 const PAGES = {
@@ -108,14 +113,26 @@ describe('DevPageServer with pages in client/', () => {
     });
 
     it("refuses the bot's source and config, and passes the bot's own routes on", async () => {
-        const statuses = await Promise.all(
-            [
-                '/seedcord.config.ts',
-                '/package.json',
-                '/src/bot.ts',
-                // a windows root starts with a drive letter and a posix root with a slash
-                `/@fs/${pageServer.vite.config.root.replace(/^\//, '')}/src/bot.ts`
-            ].map((path) => fetch(`http://${url}${path}`).then((response) => response.status))
+        // a windows root starts with a drive letter and a posix root with a slash
+        const fsPath = `/@fs/${pageServer.vite.config.root.replace(/^\//, '')}/src/bot.ts`;
+        const requests: [path: string, marker: string][] = [
+            ...Object.entries(SOURCES),
+            [fsPath, SOURCES['/src/bot.ts']]
+        ];
+        const answers = await Promise.all(
+            requests.map(async ([path, marker]) => {
+                const response = await fetch(`http://${url}${path}`);
+                const body = await response.text();
+                return { path, status: response.status, leaked: body.includes(marker), body };
+            })
+        );
+        const report = JSON.stringify(
+            {
+                allow: pageServer.vite.config.server.fs.allow,
+                bodies: answers.map(({ path, body }) => `${path}: ${body.slice(0, 120)}`)
+            },
+            null,
+            1
         );
         const botPaths = ['/api/pings', '/%00', '/notes.html'];
         const routes = await Promise.all(
@@ -123,7 +140,10 @@ describe('DevPageServer with pages in client/', () => {
         );
         const post = await fetch(`http://${url}/uptime/`, { method: 'POST', body: '{}' });
 
-        expect(statuses).toEqual([403, 403, 403, 403]);
+        expect(
+            answers.map(({ path, status, leaked }) => ({ path, status, leaked })),
+            report
+        ).toEqual(requests.map(([path]) => ({ path, status: 403, leaked: false })));
         expect(routes).toEqual(botPaths.map((path) => `the bot got ${path}`));
         expect(await post.text()).toBe('the bot got /uptime/');
     });
