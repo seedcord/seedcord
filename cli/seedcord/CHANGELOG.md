@@ -1,5 +1,24 @@
 # seedcord
 
+## 0.25.0-next.0
+
+### ✨ Minor
+
+- `seedcord dev` now _hot_ reloads a plugin that your bot file attaches when you save the plugin's file or one of its imports. It disposes the running plugin and starts the saved class with the arguments you passed to `attach()`. ([#480](https://github.com/seedcord/seedcord/pull/480))
+- Your bot can now serve web pages built with Vite, under `seedcord dev` and after `seedcord build`. The pages go in a `client/` folder beside `seedcord.config.ts` where each `index.html` is a page. ([#481](https://github.com/seedcord/seedcord/pull/481))
+
+### 🩹 Patch
+
+- Fixed `seedcord emojis pull` on Windows sometimes keeping the old image beside the new `.webp` when it downloads over a file.
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.17.0 → 0.18.0-next.0
+- `@seedcord/logger` 0.7.0 → 0.8.0-next.0
+- `@seedcord/errors` 0.16.1 → 0.17.0-next.0
+- `@seedcord/utils` 0.10.0 → 0.10.1-next.0
+- `@seedcord/core` 0.14.1 → 0.15.0-next.0
+
 ## 0.24.3
 
 ### 🩹 Patch

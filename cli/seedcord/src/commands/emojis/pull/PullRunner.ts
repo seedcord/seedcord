@@ -68,9 +68,10 @@ function assertNoClashes(planned: readonly Planned[]): void {
     );
 }
 
-// wave.WEBP and wave.webp are one file on macOS and Windows
+// wave.WEBP and wave.webp are one file on macOS and Windows.
+// bigint because two windows file ids over 2^53 can round to the same number
 async function sameFile(first: string, second: string): Promise<boolean> {
-    const [a, b] = await Promise.all([stat(first), stat(second)]);
+    const [a, b] = await Promise.all([stat(first, { bigint: true }), stat(second, { bigint: true })]);
     return a.dev === b.dev && a.ino === b.ino;
 }
 

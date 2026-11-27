@@ -1,5 +1,15 @@
 # @seedcord/plugin-i18n
 
+## 0.1.2-next.0
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.16.1 → 0.17.0-next.0
+- `@seedcord/utils` 0.10.0 → 0.10.1-next.0
+- `@seedcord/core` 0.14.1 → 0.15.0-next.0
+
 ## 0.1.1
 
 ### 🩹 Patch

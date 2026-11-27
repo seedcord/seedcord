@@ -1,5 +1,11 @@
 # @seedcord/errors
 
+## 0.17.0-next.0
+
+### ✨ Minor
+
+- Added the error codes that `seedcord dev` and `seedcord build` throw for a bot's web pages. ([#481](https://github.com/seedcord/seedcord/pull/481))
+
 ## 0.16.1
 
 ### 🩹 Patch

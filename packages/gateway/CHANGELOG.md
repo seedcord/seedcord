@@ -1,5 +1,26 @@
 # @seedcord/gateway
 
+## 0.12.0-next.0
+
+### ✨ Minor
+
+- A node bot now exits as soon as its log files are written. It used to wait 3 seconds after every shutdown. ([`a1566f9`](https://github.com/seedcord/seedcord/commit/a1566f96deb0b954caac2e0ce5e0ae03d673e238))
+- `seedcord dev` now _hot_ reloads a plugin that your bot file attaches when you save the plugin's file or one of its imports. It disposes the running plugin and starts the saved class with the arguments you passed to `attach()`. ([#480](https://github.com/seedcord/seedcord/pull/480))
+- Your bot can now serve web pages built with Vite, under `seedcord dev` and after `seedcord build`. The pages go in a `client/` folder beside `seedcord.config.ts` where each `index.html` is a page. ([#481](https://github.com/seedcord/seedcord/pull/481))
+
+### 🩹 Patch
+
+- Fixed a node bot that waited 5 extra seconds to shut down after a page's server-sent events stream closed. ([#481](https://github.com/seedcord/seedcord/pull/481))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.17.0 → 0.18.0-next.0
+- `@seedcord/logger` 0.7.0 → 0.8.0-next.0
+- `@seedcord/errors` 0.16.1 → 0.17.0-next.0
+- `@seedcord/utils` 0.10.0 → 0.10.1-next.0
+- `@seedcord/core` 0.14.1 → 0.15.0-next.0
+- `@seedcord/custom-id` 0.3.2 → 0.3.3-next.0
+
 ## 0.11.1
 
 ### 🩹 Patch

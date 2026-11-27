@@ -1,5 +1,16 @@
 # @seedcord/utils
 
+## 0.10.1-next.0
+
+### 🩹 Patch
+
+- `@seedcord/core` and `seedcord` read some more internals from here. ([#481](https://github.com/seedcord/seedcord/pull/481))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.17.0 → 0.18.0-next.0
+- `@seedcord/errors` 0.16.1 → 0.17.0-next.0
+
 ## 0.10.0
 
 ### 💥 Breaking

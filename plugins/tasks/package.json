@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/plugin-tasks",
-    "version": "0.1.1",
+    "version": "0.1.2-next.0",
     "description": "Run cron and scheduled tasks in a seedcord bot",
     "keywords": [
         "cron",
@@ -83,9 +83,9 @@
         "envapt": "catalog:peer"
     },
     "peerDependencies": {
-        "@seedcord/core": "workspace:>=0.14.1-next.0",
-        "@seedcord/gateway": "workspace:>=0.11.1-next.0",
-        "@seedcord/http": "workspace:>=0.14.1-next.0",
+        "@seedcord/core": "workspace:>=0.15.0-next.0",
+        "@seedcord/gateway": "workspace:>=0.12.0-next.0",
+        "@seedcord/http": "workspace:>=0.15.0-next.0",
         "typescript": "catalog:consumerTypes"
     },
     "peerDependenciesMeta": {

@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/plugin-oauth",
-    "version": "0.2.1",
+    "version": "0.2.2-next.0",
     "description": "Log people in with Discord from a seedcord bot and call the API as them",
     "keywords": [
         "discord-auth",
@@ -78,7 +78,7 @@
         "envapt": "catalog:peer"
     },
     "peerDependencies": {
-        "@seedcord/core": "workspace:>=0.14.1-next.0",
+        "@seedcord/core": "workspace:>=0.15.0-next.0",
         "envapt": "catalog:peer",
         "typescript": "catalog:consumerTypes"
     },

@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/utils",
-    "version": "0.10.0",
+    "version": "0.10.1-next.0",
     "description": "Type helpers and small functions used across seedcord",
     "keywords": [
         "discord-bot",

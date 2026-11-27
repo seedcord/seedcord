@@ -1,5 +1,19 @@
 # @seedcord/logger
 
+## 0.8.0-next.0
+
+### ✨ Minor
+
+- A log sink's `dispose()` can now return a promise, and a node bot waits for it before it exits. `WinstonFileSink` uses this to finish writing its file. ([`a1566f9`](https://github.com/seedcord/seedcord/commit/a1566f96deb0b954caac2e0ce5e0ae03d673e238))
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.17.0 → 0.18.0-next.0
+- `@seedcord/errors` 0.16.1 → 0.17.0-next.0
+- `@seedcord/utils` 0.10.0 → 0.10.1-next.0
+
 ## 0.7.0
 
 ### 💥 Breaking

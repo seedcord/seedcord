@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/mock-gateway",
-    "version": "0.2.39",
+    "version": "0.2.40-next.0",
     "private": true,
     "description": "Gateway-transport mock bot for demonstration and testing",
     "repository": {

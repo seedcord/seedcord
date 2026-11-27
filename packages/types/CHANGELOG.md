@@ -1,5 +1,16 @@
 # @seedcord/types
 
+## 0.18.0-next.0
+
+### ✨ Minor
+
+- A log sink's `dispose()` can now return a promise, and a node bot waits for it before it exits. `WinstonFileSink` uses this to finish writing its file. ([`a1566f9`](https://github.com/seedcord/seedcord/commit/a1566f96deb0b954caac2e0ce5e0ae03d673e238))
+
+### 🩹 Patch
+
+- `seedcord` and `@seedcord/core` now read `BotImport` and `HmrSave` from here. ([#480](https://github.com/seedcord/seedcord/pull/480))
+- `@seedcord/core` and `seedcord` import more internals from here. ([#481](https://github.com/seedcord/seedcord/pull/481))
+
 ## 0.17.0
 
 ### 💥 Breaking

@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/plugin-linked-roles",
-    "version": "0.2.0",
+    "version": "0.2.1-next.0",
     "description": "Discord Linked Roles for a seedcord bot, with typed records and the verification flow",
     "keywords": [
         "discord-bot",
@@ -71,7 +71,7 @@
         "envapt": "catalog:peer"
     },
     "peerDependencies": {
-        "@seedcord/core": "workspace:>=0.14.1-next.0",
+        "@seedcord/core": "workspace:>=0.15.0-next.0",
         "envapt": "catalog:peer",
         "typescript": "catalog:consumerTypes"
     },

@@ -1,5 +1,14 @@
 # @seedcord/guide
 
+## 0.0.7-next.0
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.16.1 → 0.17.0-next.0
+- `@seedcord/plugin-oauth` 0.2.1 → 0.2.2-next.0
+
 ## 0.0.6
 
 ### 🩹 Patch

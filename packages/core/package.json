@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/core",
-    "version": "0.14.1",
+    "version": "0.15.0-next.0",
     "description": "Foundational code shared by both transports",
     "keywords": [
         "discord",
