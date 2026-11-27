@@ -11,4 +11,9 @@ export class PingCounter extends Plugin {
         this.runs++;
         return this.runs;
     }
+
+    public override fetch(request: Request): Response | undefined {
+        if (new URL(request.url).pathname !== '/api/pings') return undefined;
+        return Response.json({ runs: this.runs });
+    }
 }
