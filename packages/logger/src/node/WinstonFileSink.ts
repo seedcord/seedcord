@@ -1,3 +1,4 @@
+import { once } from 'node:events';
 import * as path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -61,11 +62,15 @@ export class WinstonFileSink implements ILogSink {
         this.open().log(toInfo(record));
     }
 
-    public dispose(): void {
-        this.winston?.close();
+    public async dispose(): Promise<void> {
+        if (!this.winston) return;
+        // winston emits finish once every transport has written what it was given
+        const finished = once(this.winston, 'finish');
+        this.winston.end();
+        await finished;
     }
 
     public [Symbol.dispose](): void {
-        this.dispose();
+        void this.dispose();
     }
 }

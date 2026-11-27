@@ -1,5 +1,6 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordRangeError } from '@seedcord/errors/internal';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 
 import { CoordinatedLifecycle } from '#src/lifecycle/CoordinatedLifecycle';
 import { ShutdownPhase } from '#src/lifecycle/phases';
@@ -24,10 +25,9 @@ const PHASE_ORDER: ShutdownPhase[] = [
 
 const SHUTDOWN_SIGNALS: NodeJS.Signals[] = ['SIGTERM', 'SIGINT'];
 
-// gives the logger's file sink time to flush before process.exit
-const LOG_FLUSH_DELAY_MS = 3000;
+const LOG_FLUSH_TIMEOUT_MS = 3000;
 
-// 25s plus LOG_FLUSH_DELAY_MS is under kubernetes' 30s SIGKILL window
+// 25s plus LOG_FLUSH_TIMEOUT_MS is under kubernetes' 30s SIGKILL window
 const DEFAULT_SHUTDOWN_DEADLINE_MS = 25_000;
 
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
@@ -173,12 +173,10 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         } finally {
             if (exitProcess) {
                 this.logger.debug(`${paint.coral.bold('Exiting')} process with code ${paint.sky.bold(this.#exitCode)}`);
-                setTimeout(() => {
-                    process.exit(this.#exitCode);
-                }, LOG_FLUSH_DELAY_MS);
-            } else {
-                this.logger.debug(`${paint.amber.bold('Skipping')} process exit (dev mode)`);
+                await settleWithin(LoggerChannelRegistry.instance.close(), LOG_FLUSH_TIMEOUT_MS);
+                process.exit(this.#exitCode);
             }
+            this.logger.debug(`${paint.amber.bold('Skipping')} process exit (dev mode)`);
         }
     }
 }

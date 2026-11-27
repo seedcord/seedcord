@@ -47,8 +47,8 @@ export class LoggerChannelRegistry {
         const nextChannels = config.channels ?? {};
         const retained = new Set<ILogSink>([...nextSinks, ...channelSinks(nextChannels)]);
         // winston file handles close on dispose
-        for (const sink of new Set([...this.sinks, ...channelSinks(this.channels)])) {
-            if (!retained.has(sink)) sink.dispose?.();
+        for (const sink of this.configSinks) {
+            if (!retained.has(sink)) void sink.dispose?.();
         }
         this.level = config.level ?? defaultLevel();
         this.sinks = nextSinks;
@@ -115,10 +115,15 @@ export class LoggerChannelRegistry {
         return handle;
     }
 
+    /** @internal shutdown awaits this before the process exits */
+    public async close(): Promise<void> {
+        await Promise.all([...this.configSinks].map(async (sink) => sink.dispose?.()));
+    }
+
     /** @internal */
     public reset(): void {
         // dispose the config-layer sinks so a reset after a live install closes winston handles
-        for (const sink of new Set([...this.sinks, ...channelSinks(this.channels)])) sink.dispose?.();
+        for (const sink of this.configSinks) void sink.dispose?.();
         this.level = defaultLevel();
         this.buildDefaultSinks = objectConsoleSinks;
         this.sinks = this.buildDefaultSinks();
@@ -126,6 +131,10 @@ export class LoggerChannelRegistry {
         this.onSinkRun = () => undefined;
         this.captures.clear();
         this.nextCaptureId = 1;
+    }
+
+    private get configSinks(): Set<ILogSink> {
+        return new Set([...this.sinks, ...channelSinks(this.channels)]);
     }
 
     private isConsoleMuted(): boolean {

@@ -242,6 +242,16 @@ describe('winston sinks', () => {
         expect(content).toContain('events');
     });
 
+    it('closing the registry waits until the file sink has written its last line', async () => {
+        using folder = workingFolder();
+        registry.configure({ sinks: [new WinstonFileSink({ filename: 'last.log', format: 'json' })] });
+
+        for (let line = 0; line < 500; line++) registry.dispatch(record({ message: `line ${String(line)}` }));
+        await registry.close();
+
+        expect(readFileSync(join(folder.logs, 'last.log'), 'utf8')).toContain('line 499');
+    });
+
     it('the json sink stamps the record timestamp as ISO', async () => {
         using folder = workingFolder();
         using sink = new WinstonFileSink({ filename: 'ts.log', format: 'json' });

@@ -1,5 +1,5 @@
 import type { ILogger } from './ILogger';
-import type { LiteralUnion } from 'type-fest';
+import type { LiteralUnion, Promisable } from 'type-fest';
 
 /** Severity of a log record, highest to lowest. */
 export type LogLevel = keyof ILogger;
@@ -46,8 +46,11 @@ export interface ILogSink {
     readonly kind: LogSinkKind;
     /** Can be async. seedcord doesn't await it, and an edge bot keeps the request open until it finishes. */
     onLog(record: LogRecord): unknown;
-    /** Runs when a later logger config doesn't include this sink. Close a file handle or a connection here. */
-    dispose?(): void;
+    /**
+     * Runs when a later logger config doesn't include this sink. It also runs when a node bot shuts down. Close
+     * a file handle or a connection here. Shutdown waits for a returned promise before the process exits.
+     */
+    dispose?(): Promisable<void>;
 }
 
 interface ChannelOverride {
