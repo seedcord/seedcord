@@ -39,6 +39,10 @@ Refresh commands? (y/n)
 
 A plugin can show the same prompt for files that change your commands, like the [i18n plugin](/plugins/i18n-commands) does for its translation files. [Reloading in dev](/writing-plugins/hot-reload#files-that-change-your-commands) shows how.
 
+## Pages in your browser
+
+If a plugin's `fetch()` returns HTML, `seedcord dev` adds Vite's client script to the page. An open tab reloads when you save a file that the bot loads. After a restart, it reloads again once the bot is back. For the pages in your `client/` folder, read [Web pages](/writing-plugins/web-requests#under-seedcord-dev).
+
 ## How it works
 
 Node can't unload a module once it has imported it. A plain watcher like `node --watch`, `nodemon`, or `tsx watch` works around that by restarting the process. For a gateway bot that means logging in to Discord again, and Discord limits how many [sessions](https://discord.com/developers/docs/events/gateway#session-start-limit-object) a bot may start per day. `seedcord dev` runs your bot inside Vite's module runner instead, which keeps its own graph of the modules it evaluated. seedcord removes the saved file from that graph and imports it again, inside the process that's already running.

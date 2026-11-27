@@ -1,32 +1,108 @@
 ---
-title: Answering web requests
-description: Serve your own routes from a plugin, like a webhook from another service or a status page, by writing fetch() for the requests your bot receives.
+title: Requests and web pages
+description: Serve web pages from your bot and answer web requests like webhooks from a plugin, under seedcord dev and after a build.
 ---
 
-Some plugins need a URL of their own, like a route that GitHub posts webhooks to or a status page. Without a way to answer those from the bot, you'd run a second web server beside it for a route or two.
+A status page or a dashboard for your bot needs a frontend, the HTML and scripts that a browser loads. It also needs routes that send the frontend the bot's data. Without a way to serve both from the bot, you'd host the frontend on its own site and run a second web server for a route or two.
 
-A plugin can answer those requests itself. Give it a [`fetch()`](ref:core/Plugin.fetch) method that takes a web `Request` and returns a `Response`, or `undefined` to pass the request on.
+Your bot serves both. Each Vite `index.html` in a `client/` folder beside `seedcord.config.ts` is a page, and a plugin answers the routes that the page fetches.
 
-```ts twoslash title="src/plugins/Status.ts"
+## A first page
+
+Say you want a page that shows how long your bot has been running. It needs three files of its own:
+
+```txt plain
+my-bot/
+├── client/
+│   └── uptime/
+│       ├── index.html
+│       └── main.ts
+├── src/
+│   ├── bot.ts
+│   └── plugins/
+│       └── Uptime.ts
+└── seedcord.config.ts
+```
+
+`client/uptime/index.html` is the page at `/uptime/`. A `client/index.html` would be the page at `/`. The HTML is the same file that a Vite app starts from:
+
+```html plain title="client/uptime/index.html"
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Uptime</title>
+    </head>
+    <body>
+        <h1 id="uptime">Starting…</h1>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>
+```
+
+<Callout type="tip">
+
+The folders set the paths, so `client/stats/servers/index.html` is the page at `/stats/servers/`. A request for `/uptime` without the slash at the end redirects to `/uptime/`.
+
+</Callout>
+
+The `<script>` loads `./main.ts` from the page's own folder. That script asks the bot for `/api/uptime` and writes the answer into the heading:
+
+```ts plain title="client/uptime/main.ts"
+const response = await fetch('/api/uptime');
+if (!response.ok)
+    throw new Error(
+        `/api/uptime answered ${String(response.status)}`
+    );
+const { startedAt } = (await response.json()) as {
+    startedAt: number;
+};
+
+const seconds = Math.round((Date.now() - startedAt) / 1000);
+document.getElementById('uptime')!.textContent =
+    `Up for ${String(seconds)}s`;
+```
+
+The page doesn't have the bot's data in it. The browser loads the page first, then your script fetches `/api/uptime`, and the plugin in the next section answers that route.
+
+## Answering web requests
+
+A plugin answers a request when you give it a [`fetch()`](ref:core/Plugin.fetch) method. It takes a web `Request` and returns a `Response`, or `undefined` to pass the request on.
+
+```ts twoslash title="src/plugins/Uptime.ts"
 import { Plugin } from '@seedcord/gateway';
 
-const STATUS = new URLPattern({ pathname: '/status' });
+const UPTIME = new URLPattern({ pathname: '/api/uptime' });
 
-export class Status extends Plugin {
+export class Uptime extends Plugin {
+    private readonly startedAt = Date.now();
+
     public async init(): Promise<void> {}
 
     public override fetch(request: Request): Response | undefined {
-        if (!STATUS.test(request.url)) return undefined;
-
-        const guilds = this.core.bot.client.guilds.cache.size;
-        return Response.json({ guilds });
+        if (!UPTIME.test(request.url)) return undefined;
+        return Response.json({ startedAt: this.startedAt });
     }
 }
 ```
 
-`Status` answers `/status` and returns `undefined` for every other path. seedcord doesn't route requests, so you match the path yourself. [`URLPattern`](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) is built into Node, Bun, and Workers, and `STATUS.test()` returns whether a URL fits the pattern.
+`Uptime` answers `/api/uptime` and returns `undefined` for every other path. seedcord doesn't route requests, so you match the path yourself. [`URLPattern`](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) is built into Node, Bun, and Workers. Attach `Uptime` in `bot.ts` like [any other plugin](/plugins), with `attach('uptime', Uptime)`.
 
-## Which step answers
+In `fetch()`, you can answer other requests too, like a webhook that GitHub posts, or return HTML that your plugin builds.
+
+<Callout type="tip">
+
+A page in `client/` is built ahead of time, so it fetches the bot's data after it loads. If the HTML itself has to change with each request, have your plugin's `fetch()` build it and return it. [Hot reload](/tooling/hot-reload#pages-in-your-browser) covers what `seedcord dev` adds to that HTML.
+
+</Callout>
+
+<Callout type="warning">
+
+Anyone who can reach your bot can request `/api/uptime`, the same as the page does. Before a route returns something private, like a server's settings, check who's asking. You could use the [OAuth plugin](/plugins/oauth) for that. It logs people in with Discord.
+
+</Callout>
+
+### Which step answers
 
 seedcord tries these steps in order, and the first one to return a `Response` answers the request:
 
@@ -35,16 +111,18 @@ seedcord tries these steps in order, and the first one to return a `Response` an
 | step | gateway | http |
 | --- | --- | --- |
 | 1 | the [health path](/build/server#the-health-check) | the health path, on a server |
-| 2 | each plugin's [`fetch()`](ref:core/Plugin.fetch), in attach order | each plugin's [`fetch()`](ref:core/Plugin.fetch), in attach order |
-| 3 | a 404 | the interactions engine for a POST, a 404 for anything else |
+| 2 | (none) | the interactions engine, for a request that Discord signed |
+| 3 | a built page or a file from `public/`, for a GET or HEAD | the same, on a server |
+| 4 | each plugin's [`fetch()`](ref:core/Plugin.fetch), in attach order | each plugin's [`fetch()`](ref:core/Plugin.fetch), in attach order |
+| 5 | a 404 | the interactions engine for a POST, a 404 for anything else |
 
 {/* prettier-ignore-end */}
 
-Keep your routes off the path that your interactions endpoint URL points at. If your `fetch()` answers there, Discord's POSTs never reach the interactions engine.
+Keep your routes off the paths that your pages and files use, since built pages and `public/` files answer first. Discord signs every interaction it sends. On an http bot, those go straight to the interactions engine, and your `fetch()` never runs for one, whatever path your interactions endpoint URL uses.
 
-## Check the path before you await
+### Check the path before you await
 
-On an http bot, every interaction passes through your `fetch()` first, and Discord gives the bot [three seconds](/replying) to answer it. An `await` before your path check uses up part of that time on every interaction. Check the path and the method, return `undefined` for anything that isn't yours, and await only after that.
+Every request that reaches the plugins runs through your `fetch()`, and the plugins after yours wait until it returns. Check the path and the method, return `undefined` for anything that isn't yours, and await only after that, like reading the body or a database call.
 
 ```ts twoslash title="src/plugins/GithubHooks.ts"
 import { Plugin } from '@seedcord/http';
@@ -70,27 +148,25 @@ export class GithubHooks extends Plugin {
 
 The two `return undefined` lines run before the `await`. `:repo` in the pattern matches one part of the path, and `exec()` returns it under `pathname.groups`. You read `body` as text because [GitHub signs the exact payload](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries) that it sends. Check the request's `X-Hub-Signature-256` header against `body` before you trust it because anyone can post to a public route.
 
-## Reading the body
+### Reading the body
 
 <Callout type="warning">
 
-A request's body can only be read once. If you read it in `fetch()`, or call `getReader()` on it, and then return `undefined`, the plugins after yours can't read it. Neither can the interactions engine, which checks Discord's signature against those exact bytes. seedcord stops that request with an error:
+A request's body can only be read once. If you read it in `fetch()`, or call `getReader()` on it, and then return `undefined`, the plugins after yours can't read it. seedcord stops that request with an error:
 
 ```txt output
-[1241] GithubHooks at hooks read or locked the body of a request to /interactions without answering it. The steps after it can't read that body again. Check the path in fetch before you touch the body.
+[1241] GithubHooks at hooks read or locked the body of a request to /api/uptime without answering it. The steps after it can't read that body again. Check the path in fetch before you touch the body.
 ```
 
 </Callout>
 
-`GithubHooks` avoids it by reading the body only after both checks pass. To look at a body before you decide, read a copy with `await request.clone().text()`.
+In `GithubHooks`, you read the body only after both checks pass. If you need the body to decide whether to answer, read a copy with `await request.clone().text()` after your path check.
 
-## When `fetch()` throws
+### When `fetch()` throws
 
-seedcord logs the error on your plugin's logger, with the method and the path, and answers the request with a 500. The plugins after yours and the interactions engine never get that request.
+seedcord logs the error on your plugin's logger, with the method and the path, and answers the request with a 500. The plugins after yours never get that request.
 
-On an http bot every interaction gets a 500 if your `fetch()` throws before its path check. Make sure you always do the path check first.
-
-## Linking to your route
+### Linking to your route
 
 Sometimes your plugin has to tell someone where one of its routes is, like the webhook URL that you paste into GitHub. For that, it needs the address people reach the bot at. Read it from [`core.url`](ref:core/CoreBase.url):
 
@@ -105,16 +181,121 @@ export class GithubHooks extends Plugin {
 }
 ```
 
-`core.url` always ends in a slash. For a bot at `https://example.com/bot`, `GithubHooks` logs `https://example.com/bot/github/seedcord/push`. The bot's author sets that address as [`server.url`](/build/server#your-bots-address). If they haven't, `core.url` throws an error that tells them the line to add, and reading it in `init()` makes that happen at startup.
+The path of `core.url` always ends in a slash, so write your route's path without a leading slash. For a bot at `https://example.com/bot`, `'github/seedcord/push'` keeps the `/bot` part, and `'/github/seedcord/push'` would replace it. The bot's author has to set that address as [`server.url`](/build/server#your-bots-address). If they haven't, `core.url` throws an error that tells them the line to add. Read it in `init()` so that error stops the bot at startup. Under `seedcord dev`, `core.url` is the bot's localhost or tunnel address.
 
-## Where requests arrive
+### Where requests arrive
 
 A bot on Node or Bun serves web requests on its [web server](/build/server#the-web-server), which listens on port 3000 unless the bot sets `server.port`. A bot inside [your own server](/build/embed) gets whatever paths your server passes to `bot.fetch()`.
 
-Set up whatever your `fetch()` reads in `init()`. Every `init()` finishes before the first request reaches `fetch()` unless you moved it to the Ready phase. A `ready()` can still be running when a request arrives. [The lifecycle page](/plugins/lifecycle#where-each-one-runs) has the full order.
+Set up whatever your `fetch()` reads in `init()`. Every `init()` finishes before the first request reaches `fetch()` unless you move it to the Ready phase. A `ready()` can still be running when a request arrives. [The lifecycle page](/plugins/lifecycle#where-each-one-runs) has the full order.
 
 <Callout type="transport" only="edge">
 
 Once a plugin has `fetch()`, the first request of any kind starts the bot in its isolate so the plugin can answer it. A crawler's request counts too. Without a plugin that has `fetch()`, the Worker answers anything besides a POST with a 404 before the bot starts.
 
 </Callout>
+
+## React or another framework
+
+A framework that renders in the browser, like React or Vue, works on a page through its Vite plugin. Add its plugin to [`vitePlugins`](/build/vite-plugins) in `seedcord.config.ts`. For React, that's `@vitejs/plugin-react`:
+
+<Shell add="react react-dom" />
+
+<Shell add="-D @vitejs/plugin-react @types/react @types/react-dom" />
+
+```ts plain title="seedcord.config.ts"
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    build: { start: './index.ts' },
+    vitePlugins: () => [react()]
+});
+```
+
+With `react()` in the list, the page's `<script>` can load a `main.tsx` that renders your components. Under `seedcord dev`, saving a component updates it in the open tab.
+
+<Callout type="tip">
+
+You can add any other Vite plugin for browser code to the same list, like `@tailwindcss/vite` for Tailwind. `vitePlugins` runs on your pages and on your bot's code, under `seedcord dev` and in a build.
+
+</Callout>
+
+### Types for the browser code
+
+Your bot's tsconfig only includes `src/`, so `tsc` never checks the files in `client/`, and it doesn't have the browser's types like `document` either. Give the folder a tsconfig of its own:
+
+```json plain title="client/tsconfig.json"
+{
+    "extends": "@seedcord/tsconfig",
+    "compilerOptions": {
+        "rootDir": "./",
+        "jsx": "react-jsx",
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        "types": ["vite/client"]
+    },
+    "include": ["**/*.ts", "**/*.tsx"]
+}
+```
+
+`"DOM"` in `lib` types `document`, and `vite/client` types imports that Vite handles, like a `.css` file. Run `tsc --noEmit -p client` as well as your bot's own type check. Only `client/` gets the DOM types, so `document` in your bot's code is still an error.
+
+## Under seedcord dev
+
+`seedcord dev` serves your pages on the same address as your bot, through Vite. If you save a file that a page imports, the open tab updates. If you save your bot's code, every open tab reloads once the bot has loaded the change, so the page shows the new data. [Hot reload](/tooling/hot-reload) lists which of your bot's files need a restart.
+
+If you add your first page while `seedcord dev` runs, the terminal shows the **Restart required** card. Press `r` to restart the bot and serve the page.
+
+<Callout type="warning">
+
+In dev, a browser can load any file in `client/`. A build only writes the pages and the files that they import. If a page links `/logo.png` by its full path, dev serves `client/logo.png`, but the build doesn't copy it, and your bot answers that path with a 404. Put files like that, and your favicon, in [`public/`](#the-public-folder).
+
+</Callout>
+
+## After a build
+
+`seedcord build` bundles each page with the scripts and styles it imports. Vite writes those under `/assets/` with a hash of their contents in each file name.
+
+<Tabs>
+<Tab label="Node and Bun">
+
+The build writes the pages to `client/` inside your `outDir`, and the bot serves them from its [web server](/build/server#the-web-server) before any plugin route. The bot redirects a request for `/uptime` or `/uptime/index.html` to `/uptime/` with a 307. Files under `/assets/` get a cache header that keeps them in the browser for a year, since a new build gives a changed file a new name.
+
+</Tab>
+<Tab label="Workers">
+
+The build deploys the pages as Cloudflare's [static assets](https://developers.cloudflare.com/workers/static-assets/), which Cloudflare serves before your Worker runs. seedcord writes a `_headers` file that keeps the files under `/assets/` in the browser for a year. If `public/` has a `_headers` file of its own, seedcord deploys yours and doesn't write one.
+
+</Tab>
+</Tabs>
+
+<Callout type="transport" only="edge">
+
+Cloudflare [checks for a matching asset](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) before it runs your Worker. If you have a page at `/`, like `client/index.html`, Discord's POSTs to `/` never reach your bot. Set your bot's Interactions Endpoint URL in the Developer Portal to a path like `https://bot.example.com/interactions`. `seedcord dev` registers a path of its own, so only your deployed bot needs this.
+
+</Callout>
+
+## The public folder
+
+A build only writes the files that a page imports. Put a file that a browser asks for by name, like `robots.txt` or a favicon, in a `public/` folder beside `seedcord.config.ts`. The bot serves those files as they are, at the same path, so `public/robots.txt` is the file at `/robots.txt`. A bot on Node or Bun serves `public/` once it has a page, and a bot on Workers always deploys it.
+
+Keep your own files out of `public/assets/`, and don't put a page in `client/assets/`. Browsers cache everything under `/assets/` for a year, so visitors would keep an old copy of a file you replace there. If you have a page and break either rule, seedcord stops with `CliAssetsPathTaken`.
+
+## Another folder for your pages
+
+Set `client.dir` in `seedcord.config.ts` to serve your pages from another folder. The path is relative to the folder that holds the config, the same as `emojis.dir`.
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    build: { start: './index.ts' },
+    client: { dir: './web' }
+});
+```
+
+`./web` has to be inside the folder that holds `seedcord.config.ts`. It also can't hold `root`, `./src` here, because a browser can load every file in it, your bot's code included. If either rule breaks, seedcord stops with `CliClientDirUnusable`. The build still writes the pages to `client/` inside your `outDir`.
