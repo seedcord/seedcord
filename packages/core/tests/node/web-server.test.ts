@@ -129,7 +129,11 @@ describe('WebServer requests', () => {
         expect(seen).toEqual(['plugins /other', 'interactions /other']);
     });
 
-    it('sends a request that discord signed to the interactions before any plugin', async () => {
+    // discord signs a webhook event with the same headers. only an interaction has a token
+    it.each([
+        ['an interaction to the interactions before any plugin', { type: 1, token: 't' }, ['interactions']],
+        ['a webhook event to the plugins', { version: 1, type: 0 }, ['plugins']]
+    ])('sends %s', async (_case, body, order) => {
         const seen: string[] = [];
         const server = webServer({
             config: MOUNTED,
@@ -147,12 +151,11 @@ describe('WebServer requests', () => {
         const signed = new Request('http://bot.test/', {
             method: 'POST',
             headers: { 'x-signature-ed25519': 'ab', 'x-signature-timestamp': '1' },
-            body: '{}'
+            body: JSON.stringify(body)
         });
-        const response = await server.fetch(signed);
+        await server.fetch(signed);
 
-        expect(response.status).toBe(202);
-        expect(seen).toEqual(['interactions']);
+        expect(seen).toEqual(order);
     });
 
     it('answers 503 to health and every other request once closed', async () => {
@@ -498,6 +501,12 @@ describe('WebServer with a built client folder', () => {
         expect([page.headers.get('content-type'), await page.text()]).toEqual(['text/html', '<p>uptime</p>']);
         expect([moved.status, moved.headers.get('location')]).toEqual([307, '/uptime/?tab=1']);
         expect([index.status, index.headers.get('location')]).toEqual([307, '/uptime/?tab=1']);
+    });
+
+    it('redirects a folder path that starts with // to the folder on this host', async () => {
+        const response = await server.fetch(get('//evil.test/..%2Fuptime'));
+
+        expect([response.status, response.headers.get('location')]).toEqual([307, '/uptime/']);
     });
 
     it.each([

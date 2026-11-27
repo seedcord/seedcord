@@ -177,7 +177,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     /**
-     * Answers one web request. The interactions engine answers every request that Discord signed.
+     * Answers one web request. The interactions engine answers every interaction that Discord sends.
      * seedcord passes anything else to each plugin's `fetch` in attach order. When every plugin
      * passes, the interactions engine gets a POST and anything else gets a 404.
      * Until you attach a plugin with `fetch`, that 404 comes back before the bot starts.

@@ -69,7 +69,7 @@ describe('a plugin fetch method on edge', () => {
         const forged = new Request('https://bot.test/', {
             method: 'POST',
             headers: { 'x-signature-ed25519': 'ab', 'x-signature-timestamp': String(Math.floor(Date.now() / 1000)) },
-            body: '{}'
+            body: JSON.stringify({ type: 1, token: 't' })
         });
 
         const response = await seedcord.fetch(forged, undefined, capturingCtx());

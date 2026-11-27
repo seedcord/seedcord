@@ -111,14 +111,14 @@ seedcord tries these steps in order, and the first one to return a `Response` an
 | step | gateway | http |
 | --- | --- | --- |
 | 1 | the [health path](/build/server#the-health-check) | the health path, on a server |
-| 2 | (none) | the interactions engine, for a request that Discord signed |
-| 3 | a built page or a file from `public/`, for a GET or HEAD | the same, on a server |
+| 2 | a built page or a file from `public/`, for a GET or HEAD | the same, on a server |
+| 3 | (none) | the interactions engine, for an interaction that Discord sent |
 | 4 | each plugin's [`fetch()`](ref:core/Plugin.fetch), in attach order | each plugin's [`fetch()`](ref:core/Plugin.fetch), in attach order |
 | 5 | a 404 | the interactions engine for a POST, a 404 for anything else |
 
 {/* prettier-ignore-end */}
 
-Keep your routes off the paths that your pages and files use, since built pages and `public/` files answer first. Discord signs every interaction it sends. On an http bot, those go straight to the interactions engine, and your `fetch()` never runs for one, whatever path your interactions endpoint URL uses.
+Keep your routes off the paths that your pages and files use because built pages and `public/` files answer first. On an http bot, your `fetch()` gets every request that the steps before it pass on, the same as on a gateway bot. The one exception is an interaction from Discord. The interactions engine answers those first, whatever path your interactions endpoint URL uses, so your plugins don't use up any of Discord's three seconds. Discord's [webhook events](https://discord.com/developers/docs/events/webhook-events) aren't interactions. They reach your `fetch()` like any other request.
 
 ### Check the path before you await
 

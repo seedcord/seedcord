@@ -25,6 +25,12 @@ function fileAtUrlPath(folder: string, urlPath: string): string | undefined {
     return isInside(folder, file) ? file : undefined;
 }
 
+// built from the folder on disk. the raw path can start with // and point the browser at another host
+function folderRedirect(folder: string, page: string, search: string): StaticFile {
+    const relative = posixRelative(folder, page);
+    return { redirect: `${encodeURI(relative === '' ? '/' : `/${relative}/`)}${search}` };
+}
+
 // matches cloudflare's static assets. /uptime and /uptime/index.html redirect to /uptime/
 export async function staticFileAt(
     folder: string,
@@ -37,12 +43,11 @@ export async function staticFileAt(
 
     if (entry.isFile()) {
         if (path.basename(target) !== INDEX_PAGE) return { file: target, size: entry.size };
-        const parent = posixRelative(folder, path.dirname(target));
-        return { redirect: `${encodeURI(parent === '' ? '/' : `/${parent}/`)}${search}` };
+        return folderRedirect(folder, path.dirname(target), search);
     }
 
     const page = path.join(target, INDEX_PAGE);
     const pageEntry = entry.isDirectory() ? await stat(page) : undefined;
     if (!pageEntry?.isFile()) return undefined;
-    return pathname.endsWith('/') ? { file: page, size: pageEntry.size } : { redirect: `${pathname}/${search}` };
+    return pathname.endsWith('/') ? { file: page, size: pageEntry.size } : folderRedirect(folder, target, search);
 }

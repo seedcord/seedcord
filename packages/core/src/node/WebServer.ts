@@ -95,11 +95,10 @@ export class WebServer {
     // the same order as seedcord dev, where vite answers before the bot
     private async respond(request: Request): Promise<Response> {
         const { plugins, interactions } = this.options;
-        return (
-            (await this.clientFiles?.answer(request)) ??
-            (await answerPluginsOrInteractions(request, plugins, interactions)) ??
-            new Response(null, { status: NOT_FOUND })
-        );
+        const file = await this.clientFiles?.answer(request);
+        if (file) return file;
+        if (interactions) return answerPluginsOrInteractions(request, plugins, interactions);
+        return (await plugins.answer(request)) ?? new Response(null, { status: NOT_FOUND });
     }
 
     // ServerHost calls this when Ready begins, and requests that arrive earlier wait until then.

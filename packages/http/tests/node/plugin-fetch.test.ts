@@ -15,7 +15,8 @@ import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';
 import type { HttpServerConfig } from '#src/interfaces/Config';
 
 const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
-const PING = '{"type":1}';
+// the token is what tells an interaction apart from a webhook event. discord sends one with every interaction
+const PING = '{"type":1,"token":"t"}';
 // a shutdown with nothing to wait for finishes well inside this
 const STILL_OPEN_MS = 300;
 
