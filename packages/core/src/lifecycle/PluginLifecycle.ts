@@ -96,7 +96,7 @@ export class PluginLifecycle {
             const { key, instance, spec } = attachment;
 
             pluginLoggerOf(instance).utils.initialization(key, 'start');
-            const running = instance.init();
+            const running = instance.init?.();
             try {
                 await withTimeout(`Plugin (${key})`, () => running, spec.init.timeout);
             } catch (caught) {

@@ -4,11 +4,7 @@ import { describe, it, expect } from 'vite-plus/test';
 import { Plugin } from '#src/plugin/Plugin';
 import { TestPluginHost } from '#tests/utils/TestPluginHost';
 
-class Anywhere extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class Anywhere extends Plugin {}
 
 // a key built at runtime, past the compile gate
 const widen = (value: string): string => value;

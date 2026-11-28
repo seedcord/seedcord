@@ -19,7 +19,7 @@ const CONFIG: HttpEdgeConfig = {
 const calls: string[] = [];
 
 class Page extends Plugin {
-    public init(): Promise<void> {
+    public override init(): Promise<void> {
         calls.push('init');
         return Promise.resolve();
     }
@@ -55,8 +55,6 @@ describe('a plugin fetch method on edge', () => {
 
     it('sends a signed-looking interaction to the engine before any plugin', async () => {
         class Everything extends Plugin {
-            public init(): void {}
-
             public override fetch(): Response {
                 calls.push('plugin');
                 return new Response('plugin');

@@ -84,7 +84,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.serviceRegistry.handle(event);
     }
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         try {
             await this.connect();
             await this.serviceRegistry.load();

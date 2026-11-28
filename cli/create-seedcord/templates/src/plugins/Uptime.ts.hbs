@@ -5,7 +5,7 @@ import type { EpochMs } from '{{ transport }}';
 export class Uptime extends Plugin {
     public startedAt = 0 as EpochMs;
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         this.startedAt = Date.now() as EpochMs;
         await Promise.resolve();
     }

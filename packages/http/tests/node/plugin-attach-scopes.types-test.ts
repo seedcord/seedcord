@@ -9,32 +9,19 @@ class EdgeOnly extends Plugin<{ runtime: 'edge' }> {
     constructor(host: CoreBase) {
         super(host, { runtime: 'edge' });
     }
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 class ServerOnly extends Plugin<{ runtime: 'server' }> {
     constructor(host: CoreBase) {
         super(host, { runtime: 'server' });
     }
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
-class Anywhere extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class Anywhere extends Plugin {}
 
 class HttpOnly extends Plugin<{ transport: 'http' }> {
     constructor(host: CoreBase) {
         super(host, { transport: 'http' });
-    }
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 
@@ -42,17 +29,10 @@ class GatewayOnly extends Plugin<{ transport: 'gateway' }> {
     constructor(host: CoreBase) {
         super(host, { transport: 'gateway' });
     }
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 class Store<TValue> extends Plugin {
     public value?: TValue;
-
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 function probeServerAccepts(bot: Seedcord): void {

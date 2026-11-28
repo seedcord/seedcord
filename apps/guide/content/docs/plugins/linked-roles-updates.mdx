@@ -200,8 +200,6 @@ import { discordIdFor, signedByGithub } from '../github';
 const WEBHOOK = new URLPattern({ pathname: '/github' });
 
 export class GithubWebhook extends Plugin {
-    public async init(): Promise<void> {}
-
     public override async fetch(
         request: Request
     ): Promise<Response | undefined> {

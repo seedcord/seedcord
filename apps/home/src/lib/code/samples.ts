@@ -188,8 +188,6 @@ const TTL = 60 * 60 * 1000;
 const API = 'https://api.github.com/repos';
 
 export class GitHub extends Plugin {
-    public async init(): Promise<void> {}
-
     public async stars(repo: string): Promise<number> {
         const cache = this.kv.collection<number>('stars');
         const cached = await cache.get(repo);

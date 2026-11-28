@@ -70,8 +70,6 @@ const UPTIME = new URLPattern({ pathname: '/api/uptime' });
 export class Uptime extends Plugin {
     private readonly startedAt = Date.now();
 
-    public async init(): Promise<void> {}
-
     public override fetch(request: Request): Response | undefined {
         if (!UPTIME.test(request.url)) return undefined;
         const ms = Date.now() - this.startedAt;
@@ -128,8 +126,6 @@ import { Plugin } from '@seedcord/http';
 const PUSH = new URLPattern({ pathname: '/github/:repo/push' });
 
 export class GithubHooks extends Plugin {
-    public async init(): Promise<void> {}
-
     public override async fetch(
         request: Request
     ): Promise<Response | undefined> {
@@ -174,7 +170,7 @@ Sometimes your plugin has to tell someone where one of its routes is, like the w
 import { Plugin } from '@seedcord/http';
 // ---cut---
 export class GithubHooks extends Plugin {
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         const url = new URL('github/seedcord/push', this.core.url);
         this.logger.info(`add this webhook in GitHub: ${url.href}`);
     }
@@ -217,8 +213,6 @@ export class PingCounter extends Plugin {
     public constructor(host: CoreBase) {
         super(host, { dispose: { phase: ShutdownPhase.Unbind } });
     }
-
-    public async init(): Promise<void> {}
 
     public bump(): void {
         this.runs++;

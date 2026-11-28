@@ -12,10 +12,6 @@ type TestPlugin = new (host: CoreBase) => Plugin;
 
 function pluginAdding(suffix: string): TestPlugin {
     return class extends Plugin {
-        public init(): Promise<void> {
-            return Promise.resolve();
-        }
-
         public override prepareCommands(commands: Bodies): void {
             for (const command of commands) command.name += `-${suffix}`;
         }

@@ -61,7 +61,7 @@ export class Responders extends Plugin {
         });
     }
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         await this.files.load();
     }
 
@@ -133,7 +133,7 @@ export class Tags extends Plugin {
         super(host);
     }
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         this.registerCriticalFiles([`${this.dir}/**`]);
         for await (const { bytes } of readFiles(this.dir)) {
             this.logger.debug(`read ${bytes.length} bytes`);
@@ -159,8 +159,6 @@ export class Descriptions extends Plugin {
         super(host);
         this.registerCommandFiles(['descriptions/*.txt']);
     }
-
-    public init(): void {}
 
     public override async prepareCommands(
         commands: readonly Body[]

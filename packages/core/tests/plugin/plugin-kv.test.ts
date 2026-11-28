@@ -33,10 +33,6 @@ class Notes extends Plugin {
         this.logger.info('constructed');
     }
 
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public async save(id: string, text: string): Promise<void> {
         await this.notes.set(id, text);
     }
@@ -66,9 +62,6 @@ describe('a plugin under its attach key', () => {
     it('throws when a plugin is built with new outside attach()', () => {
         class Outer extends Plugin {
             public readonly inner = new Notes(this.core);
-            public init(): Promise<void> {
-                return Promise.resolve();
-            }
         }
 
         expect(() => new TestPluginHost().attach('outer', Outer)).toThrow(

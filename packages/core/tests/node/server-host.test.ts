@@ -28,7 +28,7 @@ class TestPlugin extends Plugin {
         super(core);
     }
 
-    public init(): Promise<void> {
+    public override init(): Promise<void> {
         this.initCalls++;
         this.onInit?.();
         return Promise.resolve();
@@ -89,9 +89,6 @@ describe('ServerHost', () => {
         class LogoutWriter extends Plugin {
             constructor(core: CoreBase) {
                 super(core, { dispose: { phase: ShutdownPhase.Logout } });
-            }
-            public init(): Promise<void> {
-                return Promise.resolve();
             }
             public override async dispose(): Promise<void> {
                 await delay(0);
@@ -268,9 +265,6 @@ describe('ServerHost', () => {
                 ) {
                     super(core, { dispose: { phase: ShutdownPhase.Logout } });
                 }
-                public init(): Promise<void> {
-                    return Promise.resolve();
-                }
                 public override dispose(): Promise<void> {
                     order.push(this.tag);
                     return Promise.resolve();
@@ -294,7 +288,7 @@ describe('ServerHost', () => {
             constructor(core: CoreBase) {
                 super(core, { init: { phase: StartupPhase.Ready } });
             }
-            public async init(): Promise<void> {
+            public override async init(): Promise<void> {
                 await delay(20);
                 order.push('init');
             }
@@ -317,7 +311,7 @@ describe('ServerHost', () => {
             constructor(core: CoreBase) {
                 super(core, { init: { phase: StartupPhase.Login } });
             }
-            public init(): Promise<void> {
+            public override init(): Promise<void> {
                 order.push('login-init');
                 return Promise.resolve();
             }
@@ -337,9 +331,6 @@ describe('ServerHost', () => {
         class LogoutDispose extends Plugin {
             constructor(core: CoreBase) {
                 super(core, { dispose: { phase: ShutdownPhase.Logout } });
-            }
-            public init(): Promise<void> {
-                return Promise.resolve();
             }
             public override dispose(): Promise<void> {
                 order.push('logout-dispose');
@@ -425,16 +416,13 @@ describe('ServerHost', () => {
             constructor(core: CoreBase) {
                 super(core, { init: { phase: StartupPhase.Ready } });
             }
-            public init(): Promise<void> {
+            public override init(): Promise<void> {
                 return Promise.reject(new Error('ready-init failed'));
             }
         }
         class OnlyReady extends Plugin {
             constructor(core: CoreBase) {
                 super(core);
-            }
-            public init(): Promise<void> {
-                return Promise.resolve();
             }
             public override ready(): Promise<void> {
                 order.push('ready');

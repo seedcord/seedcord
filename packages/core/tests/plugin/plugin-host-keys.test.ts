@@ -4,11 +4,7 @@ import { describe, it, expect } from 'vite-plus/test';
 import { Plugin } from '#src/plugin/Plugin';
 import { TestPluginHost } from '#tests/utils/TestPluginHost';
 
-class TestPlugin extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class TestPlugin extends Plugin {}
 
 describe('pluginKeys', () => {
     it('is empty before anything attaches', () => {

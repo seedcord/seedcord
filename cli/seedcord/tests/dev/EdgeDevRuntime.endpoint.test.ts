@@ -44,8 +44,6 @@ export class WaveHandler extends SlashHandler<'wave'> {
 const greeterPlugin = (says: string): string => `import { Plugin } from '@seedcord/http';
 
 export class Greeter extends Plugin {
-    public init(): void {}
-
     public override fetch(request: Request): Response | undefined {
         if (new URL(request.url).pathname !== '/greeting') return undefined;
         return new Response('${says}');

@@ -157,7 +157,7 @@ export class I18n extends Plugin {
         this.registerCommandFiles(this.translationFileGlobs);
     }
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         await this.loadedCatalogs();
     }
 

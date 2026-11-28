@@ -39,18 +39,11 @@ const ping = '{"type":1}';
 // a type resolve() does not recognize. the engine still publishes anyInteraction for it
 const unrouted = '{"type":99}';
 
-class Late extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class Late extends Plugin {}
 
 class ServerOnly extends Plugin<{ runtime: 'server' }> {
     constructor(host: CoreBase) {
         super(host, { runtime: 'server' });
-    }
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 
@@ -129,7 +122,7 @@ describe('the edge Seedcord', () => {
     it('answers a GET with 404 before reading env or starting plugins', async () => {
         const calls: string[] = [];
         class Recorder extends Plugin {
-            public init(): Promise<void> {
+            public override init(): Promise<void> {
                 calls.push('init');
                 return Promise.resolve();
             }
@@ -174,7 +167,7 @@ describe('the edge Seedcord', () => {
     it('runs each plugin init() then ready() once across concurrent first requests', async () => {
         const calls: string[] = [];
         class Counter extends Plugin {
-            public init(): Promise<void> {
+            public override init(): Promise<void> {
                 calls.push('init');
                 return Promise.resolve();
             }
@@ -200,7 +193,7 @@ describe('the edge Seedcord', () => {
             constructor(host: CoreBase) {
                 super(host, { init: { phase: StartupPhase.Ready } });
             }
-            public init(): Promise<void> {
+            public override init(): Promise<void> {
                 calls.push('plugin init');
                 return Promise.resolve();
             }
@@ -222,7 +215,7 @@ describe('the edge Seedcord', () => {
         const calls: string[] = [];
         let down = true;
         class Database extends Plugin {
-            public init(): Promise<void> {
+            public override init(): Promise<void> {
                 calls.push('database init');
                 return Promise.resolve();
             }
@@ -232,7 +225,7 @@ describe('the edge Seedcord', () => {
             }
         }
         class Cache extends Plugin {
-            public init(): Promise<void> {
+            public override init(): Promise<void> {
                 calls.push('cache init');
                 if (!down) return Promise.resolve();
                 down = false;
@@ -427,7 +420,7 @@ describe('the edge Seedcord', () => {
             constructor(host: CoreBase) {
                 super(host, { init: { timeout: 20 } });
             }
-            public init(): Promise<void> {
+            public override init(): Promise<void> {
                 calls.push('init');
                 if (!first) return Promise.resolve();
                 first = false;

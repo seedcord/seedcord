@@ -7,10 +7,6 @@ import { TestPluginHost } from '#tests/utils/TestPluginHost';
 import type { CoreBase } from '#interfaces/CoreBase';
 
 class Counter extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public reachCore(): CoreBase {
         return this.core;
     }
@@ -73,10 +69,6 @@ describe('PluginHost', () => {
             const constructed = vi.fn(() => true);
             class FromOtherCore extends OtherCopy {
                 public readonly built = constructed();
-
-                public init(): Promise<void> {
-                    return Promise.resolve();
-                }
             }
 
             expect(() => new TestPluginHost().attach('other', FromOtherCore)).toThrow(

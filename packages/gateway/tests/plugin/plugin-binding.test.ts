@@ -4,7 +4,6 @@ import { Plugin } from '#src/Plugin';
 
 import type { Core } from '#interfaces/Core';
 import type { CoreBase } from '@seedcord/core';
-import type { Promisable } from 'type-fest';
 
 // justified: the test only reads the members it declares
 const core = { bot: { client: { token: 'seed' } } } as unknown as Core;
@@ -12,9 +11,6 @@ const core = { bot: { client: { token: 'seed' } } } as unknown as Core;
 class GatewayScoped extends Plugin<{ transport: 'gateway' }> {
     constructor(host: CoreBase) {
         super(host);
-    }
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
     // annotated to the gateway Core, which fails to compile when the base binds CoreBase
     public peek(): Core {
@@ -26,34 +22,18 @@ class GatewayScoped extends Plugin<{ transport: 'gateway' }> {
 }
 
 // @ts-expect-error the gateway base rejects a plugin declaring the other transport
-class WrongTransport extends Plugin<{ transport: 'http' }> {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class WrongTransport extends Plugin<{ transport: 'http' }> {}
 void WrongTransport;
 
 // @ts-expect-error an http bot provides no gateway Core for this.core
-class Portable extends Plugin<{ transport: 'any' }> {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class Portable extends Plugin<{ transport: 'any' }> {}
 void Portable;
 
 // @ts-expect-error a websocket needs a long-lived process
-class OnEdge extends Plugin<{ runtime: 'edge' }> {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class OnEdge extends Plugin<{ runtime: 'edge' }> {}
 void OnEdge;
 
-class Declared extends Plugin<{ transport: 'gateway'; runtime: 'server' }> {
-    public init(): Promisable<void> {
-        return Promise.resolve();
-    }
-}
+class Declared extends Plugin<{ transport: 'gateway'; runtime: 'server' }> {}
 
 // a plugin with an empty declaration should always be scoped to only this base
 expectTypeOf<Plugin>().toEqualTypeOf<Declared>();

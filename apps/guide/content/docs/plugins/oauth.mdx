@@ -247,8 +247,6 @@ import { sessions } from '../sessions';
 const ME = new URLPattern({ pathname: '/api/me' });
 
 export class Account extends Plugin {
-    public async init(): Promise<void> {}
-
     public override async fetch(
         request: Request
     ): Promise<Response | undefined> {

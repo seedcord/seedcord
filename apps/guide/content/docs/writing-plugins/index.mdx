@@ -13,7 +13,7 @@ import { Plugin } from '@seedcord/gateway';
 export class Uptime extends Plugin {
     private startedAt = 0;
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         this.startedAt = Date.now();
     }
 
@@ -30,9 +30,7 @@ import { Plugin, Seedcord } from '@seedcord/gateway';
 
 declare const seedcord: Seedcord;
 
-class Uptime extends Plugin {
-    public async init(): Promise<void> {}
-}
+class Uptime extends Plugin {}
 
 // ---cut---
 export default seedcord.attach('uptime', Uptime);
@@ -50,7 +48,7 @@ import { Plugin } from '@seedcord/gateway';
 class Uptime extends Plugin {
     private startedAt = 0;
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         this.startedAt = Date.now();
     }
 
@@ -115,8 +113,6 @@ export class GuildSettings extends Plugin {
             return this.byGuild.get(guildId) ?? DEFAULTS;
         }
     };
-
-    public async init(): Promise<void> {}
 }
 ```
 
@@ -208,7 +204,7 @@ import { Plugin } from '@seedcord/gateway';
 export class Heartbeat extends Plugin {
     private timer: NodeJS.Timeout | undefined;
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         this.timer = setInterval(() => {
             this.logger.debug('still running');
         }, 30_000);
@@ -269,7 +265,7 @@ export class Uptime extends Plugin {
         super(host);
     }
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         this.logger.info(`tracking ${this.label}`);
     }
 }
@@ -304,8 +300,6 @@ export class Uptime extends Plugin {
         if (label.length === 0)
             this.rejectOptions('label is empty');
     }
-
-    public async init(): Promise<void> {}
 }
 ```
 
@@ -336,8 +330,6 @@ interface Post {
 export class Starboard extends Plugin {
     private readonly posts = this.kv.collection<Post>('post');
     private readonly tracked = new Map<string, Post>();
-
-    public async init(): Promise<void> {}
 
     public override async ready(): Promise<void> {
         for await (const [id, post] of this.posts.entries()) {

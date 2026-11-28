@@ -7,9 +7,6 @@ import type { RuntimeBrand, TransportBrand } from '#src/plugin/brands';
 
 class Defaults extends Plugin {
     // justified: never invoked, these fixtures exist for type probes only
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
     constructor(host: CoreBase) {
         super(host);
     }
@@ -17,9 +14,6 @@ class Defaults extends Plugin {
 
 class Narrowed extends Plugin<{ transport: 'gateway'; runtime: 'server' }> {
     // justified: never invoked, these fixtures exist for type probes only
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
     constructor(host: CoreBase) {
         super(host, { transport: 'gateway', runtime: 'server' });
     }

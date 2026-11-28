@@ -34,9 +34,6 @@ function fakeChannel(): { channel: FrameworkChannel; send: SendMock; on: OnMock 
 }
 
 class CriticalPlugin extends Plugin {
-    public async init(): Promise<void> {
-        await Promise.resolve();
-    }
     public declareCritical(patterns: string[]): void {
         this.registerCriticalFiles(patterns);
     }
@@ -47,8 +44,6 @@ class TranslationsPlugin extends Plugin {
         super(host);
         this.registerCommandFiles(patterns);
     }
-
-    public init(): void {}
 }
 
 const PING_COMMAND = `

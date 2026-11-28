@@ -39,7 +39,7 @@ Also list `@seedcord/core` in your plugin's `peerDependencies`, with the version
 
 ## Usage
 
-To write a plugin, extend `Plugin` from `@seedcord/core/plugin` and implement `init()`:
+To write a plugin, extend `Plugin` from `@seedcord/core/plugin`. Override `init()` for work it does at startup:
 
 ```ts
 import { Plugin } from '@seedcord/core/plugin';
@@ -47,7 +47,7 @@ import { Plugin } from '@seedcord/core/plugin';
 export class Uptime extends Plugin {
     private startedAt = 0;
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         this.startedAt = Date.now();
     }
 

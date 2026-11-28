@@ -112,7 +112,7 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
      * @throws A **SeedcordError** when `server.url` or `DISCORD_CLIENT_SECRET` isn't set.
      * @throws A **SeedcordTypeError** when the bot's `kv` keeps everything in memory.
      */
-    public init(): void {
+    public override init(): void {
         // read here only to fail at startup when one is missing. otherwise the first visitor finds out
         void this.core.url;
         void discordClientSecret();

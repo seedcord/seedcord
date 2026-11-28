@@ -5,7 +5,7 @@ const MS_PER_SECOND = 1000;
 export class Uptime extends Plugin {
     private startedAt = 0;
 
-    public init(): Promise<void> {
+    public override init(): Promise<void> {
         this.startedAt = Date.now();
         return Promise.resolve();
     }

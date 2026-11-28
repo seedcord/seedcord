@@ -118,10 +118,6 @@ describe('the edge Seedcord under seedcord dev', () => {
     ])('keeps its own origin when the dev header is %s', async (header, expected) => {
         const seen: string[] = [];
         class Recorder extends Plugin {
-            public init(): Promise<void> {
-                return Promise.resolve();
-            }
-
             public override fetch(request: Request): Response {
                 seen.push(request.url);
                 return new Response('ok');
@@ -255,9 +251,6 @@ describe('the edge Seedcord under seedcord dev', () => {
     it("passes a saved file to a plugin's onHmr once started", async () => {
         const saved: string[] = [];
         class Cache extends Plugin {
-            public init(): Promise<void> {
-                return Promise.resolve();
-            }
             public override onHmr(event: HmrUpdateEvent): Promise<void> {
                 saved.push(event.file);
                 return Promise.resolve();
@@ -287,9 +280,6 @@ describe('the edge Seedcord under seedcord dev', () => {
             public constructor(host: CoreBase) {
                 super(host);
                 this.registerCommandFiles([`${BUILT_ROOT}/descriptions/*.txt`]);
-            }
-            public init(): Promise<void> {
-                return Promise.resolve();
             }
         }
         registerBuiltFiles({ '/commands/Ping.ts': { Ping } });

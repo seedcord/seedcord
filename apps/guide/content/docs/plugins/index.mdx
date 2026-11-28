@@ -152,13 +152,9 @@ import { Plugin, Seedcord } from '@seedcord/gateway';
 // ---cut-start---
 declare const seedcord: Seedcord;
 
-class Users extends Plugin {
-    public async init(): Promise<void> {}
-}
+class Users extends Plugin {}
 
-class Tickets extends Plugin {
-    public async init(): Promise<void> {}
-}
+class Tickets extends Plugin {}
 // ---cut-end---
 export default seedcord
     .attach('app.users', Users)
@@ -177,13 +173,9 @@ import { Plugin, Seedcord } from '@seedcord/gateway';
 
 declare const seedcord: Seedcord;
 
-class Users extends Plugin {
-    public async init(): Promise<void> {}
-}
+class Users extends Plugin {}
 
-class Tickets extends Plugin {
-    public async init(): Promise<void> {}
-}
+class Tickets extends Plugin {}
 // ---cut---
 seedcord.attach('app.users', Users).attach('app', Tickets);
 ```

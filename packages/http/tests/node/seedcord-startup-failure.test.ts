@@ -20,10 +20,6 @@ function config(): HttpServerConfig {
 class FailsReadyOnce extends Plugin {
     private failed = false;
 
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public override ready(): Promise<void> {
         if (this.failed) return Promise.resolve();
         this.failed = true;

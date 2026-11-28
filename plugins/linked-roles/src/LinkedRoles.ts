@@ -199,7 +199,7 @@ export abstract class LinkedRoles<
      * @throws A **SeedcordTypeError** when the records break one of Discord's limits.
      * @throws A **SeedcordTypeError** when `keepTokens` is on and the bot's `kv` keeps everything in memory.
      */
-    public init(): void {
+    public override init(): void {
         // read here only to fail at startup when one is missing. otherwise the first visitor gets an error
         void this.core.url;
         void discordClientSecret();

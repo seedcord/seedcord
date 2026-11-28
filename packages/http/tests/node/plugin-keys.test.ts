@@ -7,18 +7,11 @@ import { serverConfig } from '#tests/helpers/nodeHost';
 
 import type { CoreBase } from '@seedcord/core';
 
-class Probe extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class Probe extends Plugin {}
 
 class EdgeOnly extends Plugin<{ runtime: 'edge' }> {
     constructor(host: CoreBase) {
         super(host, { runtime: 'edge' });
-    }
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 

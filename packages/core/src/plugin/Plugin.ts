@@ -38,8 +38,8 @@ export interface Initializeable {
 export const FixedScope = Symbol('seedcord:plugin:fixed-scope');
 
 /**
- * Base class for a seedcord plugin. Extend it and implement `init()`. `this.core` is the running
- * bot.
+ * Base class for a seedcord plugin. Extend it and override the hooks your plugin needs, like `init()`.
+ * `this.core` is the running bot.
  *
  * Take the host as your constructor's first parameter and pass it to `super()`. Add your own parameters after
  * it. `attach()` types them at the call site.
@@ -61,7 +61,7 @@ export const FixedScope = Symbol('seedcord:plugin:fixed-scope');
  *         super(host, { transport: 'gateway', init: { phase: StartupPhase.Login } });
  *     }
  *
- *     public async init(): Promise<void> {
+ *     public override async init(): Promise<void> {
  *         await this.connect(this.apiKey);
  *     }
  * }
@@ -74,7 +74,7 @@ export abstract class Plugin<
     TCore extends CoreBase = CoreBase,
     Fixed extends ScopeAxis = never
 >
-    implements Initializeable, HmrAware, PluginSlots
+    implements HmrAware, PluginSlots
 {
     /** @internal */
     protected static readonly [FixedScope]: Partial<DeclaredScope> = {};
@@ -147,7 +147,7 @@ export abstract class Plugin<
      * Runs in `StartupPhase.Configuration` by default.
      * Move it to a different phase with the {@link PluginLifecycleSpec}.
      */
-    abstract init(): Promisable<void>;
+    init?(): Promisable<void>;
 
     /**
      * Runs in the Ready phase after every attached plugin's `init()` has resolved. The other Ready

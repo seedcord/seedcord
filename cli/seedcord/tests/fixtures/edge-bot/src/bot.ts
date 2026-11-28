@@ -9,10 +9,6 @@ class EdgeCounter extends Plugin<{ runtime: 'edge' }> {
     constructor(host: CoreBase) {
         super(host, { runtime: 'edge' });
     }
-
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 export default new Seedcord({

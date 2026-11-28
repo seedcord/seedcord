@@ -4,20 +4,12 @@ import { Plugin } from '#src/plugin/Plugin';
 import type { PluginHost } from '#src/plugin/PluginHost';
 
 class Users extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public findByName(name: string): string {
         return name;
     }
 }
 
-class Tickets extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class Tickets extends Plugin {}
 
 declare const bot: PluginHost<'gateway', 'server'>;
 

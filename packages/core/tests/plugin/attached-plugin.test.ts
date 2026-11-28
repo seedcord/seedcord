@@ -5,10 +5,6 @@ import { Plugin } from '#src/plugin/Plugin';
 import type { AttachedPlugin } from '#src/plugin/Plugin';
 
 class Greeter extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public greet(): string {
         return 'hi';
     }

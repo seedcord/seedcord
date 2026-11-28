@@ -101,7 +101,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * @throws A **SeedcordTypeError** with `InvalidDuration` when a task's `every` isn't a duration.
      * @throws A **SeedcordError** with `CoreKvKeysUnsupported` when the `config.kv` driver can't list its keys.
      */
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         await this.#reloader.load();
         await this.#scheduled.restore();
 

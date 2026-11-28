@@ -21,8 +21,6 @@ class Uptime extends Plugin {
     public constructor(host: Core) {
         super(host);
     }
-
-    public async init(): Promise<void> {}
 }
 
 seedcord.attach('uptime', Uptime);
@@ -52,8 +50,6 @@ interface Session {
 
 export class KeyValue<TValue> extends Plugin {
     private readonly entries = new Map<string, TValue>();
-
-    public async init(): Promise<void> {}
 
     public get(key: string): TValue | undefined {
         return this.entries.get(key);
@@ -100,8 +96,6 @@ export abstract class Flags<TName extends string> extends Plugin {
         return Attached;
     }
 
-    public async init(): Promise<void> {}
-
     public isOn(name: TName): boolean {
         return this.names.includes(name);
     }
@@ -136,7 +130,7 @@ A plugin on the base from `@seedcord/core/plugin` has a `this.core` typed as `Co
 import { Plugin } from '@seedcord/core/plugin';
 
 export class Greeter extends Plugin {
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         this.core.hello.greet('world');
     }
 }
@@ -152,8 +146,6 @@ import type { CoreBase } from '@seedcord/gateway';
 declare const seedcord: Seedcord;
 
 class Hello extends Plugin {
-    public async init(): Promise<void> {}
-
     public greet(name: string): string {
         return `hi, ${name}`;
     }
@@ -167,7 +159,7 @@ class Greeter extends Plugin {
         super(host);
     }
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         this.logger.info(this.hello.greet('world'));
     }
 }

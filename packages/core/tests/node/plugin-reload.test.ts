@@ -40,7 +40,7 @@ export class Web extends Plugin {
         this.greeting = greeting;
     }
 
-    async init() {
+    override async init() {
         ${init}
         this.started = '${version}';
         globalThis.${CALLS_SLOT}.push('init ${version}');
@@ -162,9 +162,7 @@ describe('reloading a plugin under seedcord dev', () => {
         'finishes starting when the CLI never answers which files the bot file imports',
         async () => {
             // the startup task's time limit is only the learn() wait because this plugin doesn't define ready()
-            class Quiet extends Plugin {
-                public init(): void {}
-            }
+            class Quiet extends Plugin {}
             setDevChannel(fakeCli().channel);
             onTestFinished(() => setDevChannel(undefined));
 
@@ -269,8 +267,6 @@ describe('reloading a plugin under seedcord dev', () => {
             ) {
                 super(host);
             }
-
-            public init(): void {}
 
             public override dispose(): void {
                 calls.push(`dispose ${this.label}`);
@@ -408,8 +404,6 @@ describe('reloading a plugin under seedcord dev', () => {
         super(host);
         ${version === 'after' ? "throw new Error('typo');" : ''}
     }
-
-    init() {}
 }
 
 export class Web`
@@ -433,7 +427,6 @@ export class Web`
     it('keeps the old instance and its members when the saved class claims a member another plugin has', async () => {
         class Other extends Plugin {
             public override readonly dispatchMembers = { otherThing: (): string => 'other' };
-            public init(): void {}
         }
         const cli = fakeCli();
         const file = write('Web.ts', webPlugin('before'));

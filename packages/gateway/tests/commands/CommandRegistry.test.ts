@@ -247,10 +247,6 @@ describe('CommandRegistry Integration', () => {
         class ReadsCommands extends Plugin {
             public mention: string | undefined;
 
-            public init(): Promise<void> {
-                return Promise.resolve();
-            }
-
             public override ready(): Promise<void> {
                 // justified: SlashRegistry is empty in tests
                 this.mention = (Commands as Record<string, CommandInfo>).ping?.mention;

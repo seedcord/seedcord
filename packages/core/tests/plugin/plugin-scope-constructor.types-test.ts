@@ -4,19 +4,12 @@ import { Plugin } from '#src/plugin/Plugin';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { PluginHost } from '#src/plugin/PluginHost';
 
-class NoConstructor extends Plugin<{ runtime: 'server' }> {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class NoConstructor extends Plugin<{ runtime: 'server' }> {}
 
 class Drifted extends Plugin<{ runtime: 'server' }> {
     constructor(host: CoreBase) {
         // @ts-expect-error the type argument declares runtime 'server'
         super(host, { runtime: 'edge' });
-    }
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 
@@ -24,9 +17,6 @@ class Missing extends Plugin<{ runtime: 'server' }> {
     constructor(host: CoreBase) {
         // @ts-expect-error a plugin narrowed to 'server' passes its runtime
         super(host);
-    }
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 

@@ -37,8 +37,6 @@ export class DriverCache extends Plugin<{ runtime: 'server' }> {
     public constructor(host: CoreBase) {
         super(host, { runtime: 'server' });
     }
-
-    public async init(): Promise<void> {}
 }
 ```
 
@@ -69,8 +67,6 @@ class DriverCache extends Plugin<{ runtime: 'server' }> {
     public constructor(host: CoreBase) {
         super(host, { runtime: 'server' });
     }
-
-    public async init(): Promise<void> {}
 }
 
 declare const workersBot: PluginHost<'http', 'edge'>;

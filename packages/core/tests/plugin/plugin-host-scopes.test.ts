@@ -11,17 +11,11 @@ class GatewayScoped extends Plugin<{ transport: 'gateway' }> {
     constructor(host: CoreBase) {
         super(host, { transport: 'gateway' });
     }
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 class EdgeScoped extends Plugin<{ runtime: 'edge' }> {
     constructor(host: CoreBase) {
         super(host, { runtime: 'edge' });
-    }
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 
@@ -29,32 +23,19 @@ class ServerScoped extends Plugin<{ runtime: 'server' }> {
     constructor(host: CoreBase) {
         super(host, { runtime: 'server' });
     }
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
-class Unscoped extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class Unscoped extends Plugin {}
 
 class HttpScoped extends Plugin<{ transport: 'http'; runtime: 'server' }> {
     constructor(host: CoreBase) {
         super(host, { transport: 'http', runtime: 'server' });
-    }
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 
 class FullyScoped extends Plugin<{ transport: 'gateway'; runtime: 'server' }> {
     constructor(host: CoreBase) {
         super(host, { transport: 'gateway', runtime: 'server' });
-    }
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 
@@ -69,11 +50,7 @@ abstract class GatewayBase extends Plugin<
     protected static override readonly [FixedScope] = GATEWAY_SCOPE;
 }
 
-class FromGatewayBase extends GatewayBase {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class FromGatewayBase extends GatewayBase {}
 
 interface TransportCore extends CoreBase {
     readonly extra: string;
@@ -83,9 +60,6 @@ class NarrowedCtor extends Plugin<{ transport: 'gateway' }> {
     constructor(host: TransportCore) {
         super(host, { transport: 'gateway' });
     }
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 class WidenedCtor extends Plugin<{ transport: 'gateway' }> {
@@ -94,9 +68,6 @@ class WidenedCtor extends Plugin<{ transport: 'gateway' }> {
         public readonly options: { readonly dir: string }
     ) {
         super(host, { transport: 'gateway' });
-    }
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 

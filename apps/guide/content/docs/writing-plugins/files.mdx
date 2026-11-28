@@ -28,7 +28,7 @@ export class Arcade extends Plugin {
         super(host);
     }
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         for await (const { relativePath, imported } of importFiles(
             this.dir
         )) {
@@ -66,7 +66,7 @@ export class Tags extends Plugin {
         super(host);
     }
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         for await (const { pathInDir, bytes } of readFiles(
             this.dir
         )) {

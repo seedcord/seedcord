@@ -4,11 +4,7 @@ import { Plugin } from '#src/plugin/Plugin';
 
 import type { Generated } from '#src/plugin/Generated';
 
-abstract class Probe extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+abstract class Probe extends Plugin {}
 
 class NotGenerated extends Probe {
     public static readonly id = 'probe-not-generated';

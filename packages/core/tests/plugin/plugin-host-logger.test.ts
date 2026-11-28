@@ -24,7 +24,7 @@ beforeEach(() => {
 });
 
 class Database extends Plugin {
-    public init(): Promise<void> {
+    public override init(): Promise<void> {
         this.logger.info('connected');
         return Promise.resolve();
     }

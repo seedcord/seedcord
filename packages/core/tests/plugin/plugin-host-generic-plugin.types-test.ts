@@ -12,26 +12,14 @@ class Box<TValue extends string> extends Plugin {
     constructor(host: CoreBase, _size?: number) {
         super(host);
     }
-
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 class Cache<TValue> extends Plugin {
     public value?: TValue;
-
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 class Defaulted<TValue extends string = 'x'> extends Plugin {
     public value?: TValue;
-
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 class HttpBox<TValue extends string> extends Plugin<{ transport: 'http' }> {
@@ -39,10 +27,6 @@ class HttpBox<TValue extends string> extends Plugin<{ transport: 'http' }> {
 
     constructor(host: CoreBase) {
         super(host, { transport: 'http' });
-    }
-
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 
@@ -52,10 +36,6 @@ class ServerBox<TValue extends string> extends Plugin<{ runtime: 'server' }> {
     constructor(host: CoreBase) {
         super(host, { runtime: 'server' });
     }
-
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 class EdgeBox<TValue extends string> extends Plugin<{ runtime: 'edge' }> {
@@ -63,10 +43,6 @@ class EdgeBox<TValue extends string> extends Plugin<{ runtime: 'edge' }> {
 
     constructor(host: CoreBase) {
         super(host, { runtime: 'edge' });
-    }
-
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 
@@ -79,10 +55,6 @@ class NarrowBox<TValue extends string> extends Plugin {
 
     constructor(host: NarrowCore) {
         super(host);
-    }
-
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 

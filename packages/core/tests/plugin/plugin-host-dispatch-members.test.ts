@@ -12,11 +12,7 @@ import type { BaseReplySender } from '#reply/BaseReplySender';
 
 type TestPlugin = new (host: CoreBase) => Plugin;
 
-class Bare extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class Bare extends Plugin {}
 
 function pluginAdding(name: string): TestPlugin {
     return class extends Bare {

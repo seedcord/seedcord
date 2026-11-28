@@ -41,7 +41,7 @@ export class Tags extends Plugin {
         super(host);
     }
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         this.replies = await this.read();
     }
 
@@ -113,7 +113,7 @@ type Replies = Generated<typeof Tags>['replies'];
 
 declare class Tags extends Plugin {
     public static readonly id: 'seedcord-tags';
-    public init(): Promise<void>;
+    public override init(): Promise<void>;
     public override codegen(): Promise<{
         replies: Record<string, true>;
     }>;
@@ -163,7 +163,7 @@ export class Tags extends Plugin {
         super(host);
     }
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         this.replies = await this.read();
     }
 
@@ -232,7 +232,7 @@ type Replies = Generated<typeof Tags>['replies'];
 
 declare class Tags extends Plugin {
     public static readonly id: 'seedcord-tags';
-    public init(): Promise<void>;
+    public override init(): Promise<void>;
     public override codegen(): Promise<{
         replies: Record<string, string[]>;
     }>;
@@ -313,7 +313,7 @@ export class Arcade extends Plugin {
         });
     }
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         await this.files.load();
     }
 

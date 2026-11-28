@@ -17,10 +17,6 @@ export class PingCounter extends Plugin {
         super(host, { dispose: { phase: ShutdownPhase.Unbind } });
     }
 
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public bump(): number {
         this.runs++;
         for (const page of this.pages) this.send(page);

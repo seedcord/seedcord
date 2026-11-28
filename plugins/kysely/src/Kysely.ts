@@ -104,7 +104,7 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     /**
      * Connects through your dialect, runs any startup migrations, and loads decorated services.
      */
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         try {
             await this.connect();
             const { onStartup } = this.options.migrations;

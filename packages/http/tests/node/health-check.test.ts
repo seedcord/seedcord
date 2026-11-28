@@ -14,10 +14,6 @@ describe('the health path on a node http bot', () => {
         const { promise: readyStarted, resolve: markReadyStarted } = Promise.withResolvers<undefined>();
         const { promise: readyGate, resolve: finishReady } = Promise.withResolvers<undefined>();
         class SlowReady extends Plugin {
-            public init(): Promise<void> {
-                return Promise.resolve();
-            }
-
             public override ready(): Promise<void> {
                 markReadyStarted(undefined);
                 return readyGate;

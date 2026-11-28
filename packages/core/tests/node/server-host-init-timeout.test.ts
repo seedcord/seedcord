@@ -22,7 +22,7 @@ class SlowClaim extends Plugin {
         super(core, { init: { timeout: INIT_TIMEOUT_MS } });
     }
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         await delay(CLAIM_MS);
         this.claimHeld = true;
     }
@@ -95,7 +95,7 @@ describe('a plugin whose init outlasts its timeout', () => {
                 super(core, { init: { timeout: INIT_TIMEOUT_MS } });
             }
 
-            public async init(): Promise<void> {
+            public override async init(): Promise<void> {
                 await delay(CLAIM_MS);
                 throw new Error('late failure');
             }
@@ -117,7 +117,7 @@ describe('a plugin whose init outlasts its timeout', () => {
                 super(core, { init: { timeout: INIT_TIMEOUT_MS } });
             }
 
-            public async init(): Promise<void> {
+            public override async init(): Promise<void> {
                 await delay(CLAIM_MS);
             }
         }

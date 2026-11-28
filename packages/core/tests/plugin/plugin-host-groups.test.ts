@@ -13,10 +13,6 @@ class TestPlugin extends Plugin {
     ) {
         super(core);
     }
-
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 describe('PluginHost.attach with a grouped key', () => {

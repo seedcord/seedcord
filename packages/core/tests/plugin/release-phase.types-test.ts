@@ -12,9 +12,6 @@ shutdown.addTask(ShutdownPhase.Release, 'flush', () => Promise.resolve());
 
 export class LateDispose extends Plugin {
     // justified: never invoked, this fixture exists for type probes only
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
     constructor(host: CoreBase) {
         // @ts-expect-error a plugin's dispose() would race the config.kv close in Release
         super(host, { dispose: { phase: ShutdownPhase.Release } });

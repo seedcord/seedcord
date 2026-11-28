@@ -25,10 +25,6 @@ function config(): HttpServerConfig {
 }
 
 class Pages extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public override fetch(request: Request): Response | undefined {
         const { pathname } = new URL(request.url);
         if (pathname === '/page') return new Response(`${request.method} page`);
@@ -37,20 +33,12 @@ class Pages extends Plugin {
 }
 
 class BodyReader extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public override async fetch(request: Request): Promise<undefined> {
         await request.text();
     }
 }
 
 class BodyReaderThatThrows extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public override async fetch(request: Request): Promise<never> {
         await request.text();
         throw new Error('boom');
@@ -58,10 +46,6 @@ class BodyReaderThatThrows extends Plugin {
 }
 
 class BodyLocker extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public override fetch(request: Request): undefined {
         request.body?.getReader();
     }
@@ -70,10 +54,6 @@ class BodyLocker extends Plugin {
 const ROUTE_LOG = 'answered from the route';
 
 class Logs extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public override fetch(): Response {
         this.logger.info(ROUTE_LOG);
         return new Response('logged');
@@ -81,10 +61,6 @@ class Logs extends Plugin {
 }
 
 class Thrower extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public override fetch(): never {
         throw new Error('boom');
     }

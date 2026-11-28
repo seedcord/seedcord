@@ -39,8 +39,6 @@ const webPlugin = (version: string): string => `import { Plugin } from '@seedcor
 
 export class Web extends Plugin {
     version = '${version}';
-
-    init() {}
 }
 `;
 

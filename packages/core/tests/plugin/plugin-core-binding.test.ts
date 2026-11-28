@@ -12,9 +12,6 @@ interface TransportCore extends CoreBase {
 const host = { extra: { id: 'seed' } } as unknown as TransportCore;
 
 class Bound extends Plugin<{}, TransportCore> {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
     // annotated to the bound type, which fails to compile when `core` is still CoreBase
     public peek(): TransportCore {
         return this.core;
@@ -25,9 +22,6 @@ class Bound extends Plugin<{}, TransportCore> {
 }
 
 class Unbound extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
     public peek(): CoreBase {
         return this.core;
     }

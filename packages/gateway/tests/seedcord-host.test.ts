@@ -22,10 +22,6 @@ const ANY_PORT = { port: 0 } as const;
 const STILL_OPEN_MS = 300;
 
 class Page extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public override fetch(request: Request): Response | undefined {
         return new URL(request.url).pathname === '/page' ? new Response('page') : undefined;
     }
@@ -54,11 +50,7 @@ describe('Seedcord host', () => {
     });
 
     it('attaches under a key that type-checks even when the host keeps a field of that name', () => {
-        class Probe extends Plugin {
-            public init(): Promise<void> {
-                return Promise.resolve();
-            }
-        }
+        class Probe extends Plugin {}
 
         const seedcord = new Seedcord(testConfig()).attach('hmrManager', Probe);
 
@@ -85,10 +77,6 @@ describe('Seedcord host', () => {
     it('holds a shutdown open for a log sink that a plugin route started', async () => {
         const routeLog = 'answered from the route';
         class Logs extends Plugin {
-            public init(): Promise<void> {
-                return Promise.resolve();
-            }
-
             public override fetch(): Response {
                 this.logger.info(routeLog);
                 return new Response('logged');
@@ -179,7 +167,7 @@ describe('Seedcord host', () => {
         const { promise: initGate, resolve: finishInit } = Promise.withResolvers<undefined>();
         const dispose = vi.fn(() => Promise.resolve());
         class SlowConnect extends Plugin {
-            public async init(): Promise<void> {
+            public override async init(): Promise<void> {
                 markInitStarted(undefined);
                 await initGate;
             }

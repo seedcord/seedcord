@@ -94,10 +94,6 @@ import { Converters, Envapter } from 'envapt';
 import { Plugin } from '@seedcord/http';
 
 class Uptime extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public sinceStart(): number {
         return 0;
     }

@@ -10,9 +10,6 @@ import type { PluginLifecycleSpec } from '#src/plugin/Plugin';
 
 class SpecPlugin extends Plugin {
     // justified: never invoked, spec resolution is all these tests read
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
     constructor(host: CoreBase, spec?: PluginLifecycleSpec) {
         super(host, spec);
     }

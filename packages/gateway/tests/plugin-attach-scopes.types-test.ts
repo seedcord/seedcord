@@ -4,18 +4,11 @@ import { expectTypeOf } from 'vite-plus/test';
 import type { Seedcord } from '#src/Seedcord';
 import type { CoreBase } from '@seedcord/core';
 
-class Anywhere extends Plugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+class Anywhere extends Plugin {}
 
 class GatewayOnly extends Plugin<{ transport: 'gateway' }> {
     constructor(host: CoreBase) {
         super(host, { transport: 'gateway' });
-    }
-    public init(): Promise<void> {
-        return Promise.resolve();
     }
 }
 
@@ -23,26 +16,16 @@ class HttpOnly extends Plugin<{ transport: 'http' }> {
     constructor(host: CoreBase) {
         super(host, { transport: 'http' });
     }
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 class EdgeOnly extends Plugin<{ runtime: 'edge' }> {
     constructor(host: CoreBase) {
         super(host, { runtime: 'edge' });
     }
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 class Store<TValue> extends Plugin {
     public value?: TValue;
-
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
 }
 
 // compile-only. tc is the assertion, and an unused @ts-expect-error fails it.

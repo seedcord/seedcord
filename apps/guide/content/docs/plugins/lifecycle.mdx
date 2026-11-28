@@ -5,7 +5,7 @@ description: Control when a plugin starts and stops with init(), ready(), and di
 
 A plugin's setup often depends on timing. A database has to connect before the first handler reads it, a status update needs a logged-in client, and a timer should stop before the process exits. Code in a constructor runs too early for all three.
 
-seedcord calls your plugin at those points instead. `init()` is the one method every plugin writes. If you add `ready()` or `dispose()`, seedcord calls those too.
+seedcord calls your plugin at those points instead, through `init()`, `ready()`, and `dispose()`. Write only the ones your plugin needs.
 
 ```ts twoslash title="src/plugins/Presence.ts"
 import { Plugin } from '@seedcord/gateway';
@@ -13,7 +13,7 @@ import { Plugin } from '@seedcord/gateway';
 export class Presence extends Plugin {
     private timer?: NodeJS.Timeout;
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         this.logger.info('presence plugin starting');
     }
 
@@ -114,8 +114,6 @@ export class Presence extends Plugin {
             dispose: { phase: ShutdownPhase.Drain, timeout: 30_000 }
         });
     }
-
-    public async init(): Promise<void> {}
 }
 ```
 
@@ -181,7 +179,7 @@ declare class FeedClient {
 export class Feeds extends Plugin {
     private readonly client = new FeedClient();
 
-    public async init(): Promise<void> {
+    public override async init(): Promise<void> {
         await this.client.connect();
         try {
             await this.client.subscribe('updates');
