@@ -56,7 +56,7 @@
         "coverage": "vp test run --coverage"
     },
     "dependencies": {
-        "@microsoft/api-extractor": "7.59.3",
+        "@microsoft/api-extractor": "7.60.1",
         "typescript": "catalog:peer",
         "yaml": "catalog:deps"
     },

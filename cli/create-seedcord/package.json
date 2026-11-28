@@ -62,7 +62,7 @@
         "@seedcord/vite-config": "workspace:^",
         "discord.js": "catalog:peer",
         "handlebars": "catalog:deps",
-        "package-manager-detector": "^1.8.0",
+        "package-manager-detector": "^1.9.0",
         "type-fest": "catalog:deps",
         "typescript": "catalog:peer"
     },

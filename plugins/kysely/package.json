@@ -61,7 +61,7 @@
         "type-fest": "catalog:deps"
     },
     "devDependencies": {
-        "@electric-sql/pglite": "^0.5.16",
+        "@electric-sql/pglite": "^0.6.0",
         "@seedcord/core": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/gateway": "workspace:^",

@@ -13,8 +13,8 @@ overrides:
   # forces one api-types copy so the djs-free reply types assign to djs
   discord-api-types: catalog:deps
   # an older miniflare still in the tree pins 7.29.1, and < 7.30.1 has GHSA-4w7w-5xrc-9h26
-  'undici@7': ^7.30.1
-  katex: ^0.18.2
+  'undici@7': ^7.30.2
+  katex: ^0.19.1
   'zod@4': ^4.6.7
   vite@*: catalog:deps
   vitest@*: catalog:test
@@ -49,37 +49,37 @@ catalogs:
     '@discordjs/rest': ^2.6.3
     '@leeoniya/ufuzzy': ^1.0.19
     '@mdx-js/mdx': ^3.1.1
-    '@tailwindcss/postcss': ^4.3.3
+    '@tailwindcss/postcss': ^4.3.5
     '@types/better-sqlite3': ^9.6.0
     '@types/hast': ^3.0.5
     '@types/mdast': ^4.0.4
     '@types/mdx': ^2.0.14
-    '@types/node': ^26.1.2
+    '@types/node': ^26.6.10
     better-sqlite3: ^13.2.0
-    cf: ^1.0.0-rc.0
-    chalk: ^6.0.0
+    cf: ^1.0.0-rc.5
+    chalk: ^6.0.1
     cli-spinners: ^3.4.0
     cross-env: ^10.1.0
     db0: 0.4.2
-    discord-api-types: ^0.38.59
+    discord-api-types: ^0.38.60
     fumadocs-core: 16.15.18
     fumadocs-mdx: 15.4.6
     handlebars: ^4.7.10
     ink: ^8.0.0
     jsonc-parser: ^3.3.1
     keyv: 6.1.0
-    lucide-react: ^1.51.0
-    mdast-util-to-hast: ^13.2.1
-    mdast-util-to-markdown: ^2.1.3
-    motion: ^14.0.0
+    lucide-react: ^1.80.0
+    mdast-util-to-hast: ^13.2.2
+    mdast-util-to-markdown: ^2.2.4
+    motion: ^14.14.0
     next: ^16.4.6
-    prettier: ^3.9.6
+    prettier: ^3.10.1
     prettier-plugin-tailwindcss: ^0.8.1
     reflect-metadata: ^0.2.2
-    takumi-js: 2.14.0
-    tailwindcss: ^4.3.3
+    takumi-js: 2.22.1
+    tailwindcss: ^4.3.5
     type-fest: ^5.10.0
-    unist-util-visit: ^5.1.0
+    unist-util-visit: ^5.2.0
     unstorage: 2.0.0-beta.0
     vfile: ^6.0.3
     yaml: ^2.9.1
@@ -89,34 +89,34 @@ catalogs:
     vite-plus: 1.8.0
     zod: ^4.6.7
   eslint:
-    '@eslint-react/eslint-plugin': ^5.18.1
-    '@typescript-eslint/rule-tester': ^8.65.0
-    '@typescript-eslint/utils': ^8.65.0
+    '@eslint-react/eslint-plugin': ^5.30.6
+    '@typescript-eslint/rule-tester': ^8.74.0
+    '@typescript-eslint/utils': ^8.74.0
     '@types/eslint-plugin-security': ^3.0.1
-    '@typescript-eslint/parser': ^8.65.0
-    eslint: ^10.8.0
+    '@typescript-eslint/parser': ^8.74.0
+    eslint: ^10.15.0
     eslint-config-next: ^16.4.6
     eslint-config-prettier: ^10.1.8
     eslint-import-resolver-typescript: ^4.4.5
-    eslint-plugin-better-tailwindcss: ^4.7.0
-    eslint-plugin-import-x: ^4.17.1
-    eslint-plugin-mdx: ^3.8.1
+    eslint-plugin-better-tailwindcss: ^4.11.0
+    eslint-plugin-import-x: ^4.18.1
+    eslint-plugin-mdx: ^3.10.1
     eslint-plugin-react-hooks: ^7.1.1
-    eslint-plugin-security: ^4.0.1
-    eslint-plugin-tailwind-canonical-classes: ^1.4.1
+    eslint-plugin-security: ^4.2.1
+    eslint-plugin-tailwind-canonical-classes: ^1.6.1
     eslint-plugin-tsdoc: ^0.5.4
     eslint-plugin-unicorn: ^76.0.0
-    typescript-eslint: ^8.65.0
+    typescript-eslint: ^8.74.0
   peer:
-    '@cloudflare/vite-plugin': ^2.0.0-rc.0
-    '@discordjs/builders': ^1.14.1
-    discord.js: ^14.27.0
+    '@cloudflare/vite-plugin': ^2.0.0-rc.5
+    '@discordjs/builders': ^1.15.0
+    discord.js: ^14.28.1
     envapt: ^9.2.0
-    kysely: ^0.29.8
-    mongoose: ^9.12.0
+    kysely: ^0.29.9
+    mongoose: ^9.13.1
     typescript: ^6.0.3
-    vite: ^8.3.4
-    wrangler: ^4.150.0
+    vite: ^8.3.8
+    wrangler: ^4.168.0
   consumerTypes:
     typescript: ^5.9.3 || ^6.0.0 || ^7.0.0
   # typescript-eslint supports typescript below 6.1
@@ -127,12 +127,12 @@ catalogs:
     '@testing-library/dom': ^10.4.2
     '@testing-library/jest-dom': ^8.0.0
     '@testing-library/react': ^16.3.3
-    '@testing-library/user-event': ^14.6.7
+    '@testing-library/user-event': ^14.6.13
     '@vitest/coverage-v8': 5.1.1
-    jsdom: ^30.1.1
+    jsdom: ^30.1.3
     vitest: 5.1.1
   react:
-    '@types/react': ^19.3.0
+    '@types/react': ^19.3.3
     '@types/react-dom': ^19.3.0
     react: ^19.3.1
     react-dom: ^19.3.1
