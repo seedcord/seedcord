@@ -50,7 +50,7 @@
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
         "@vitest/coverage-v8": "catalog:test",
-        "eslint": "^9.39.4",
+        "eslint": "^10.15.0",
         "eslint-config-next": "catalog:eslint",
         "eslint-plugin-better-tailwindcss": "catalog:eslint",
         "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
