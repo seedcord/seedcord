@@ -23,13 +23,18 @@ const BOT_FILES = {
     'seedcord.config.ts': `export const secret = '${SOURCES['/seedcord.config.ts']}';\n`,
     'package.json': `{"name":"${SOURCES['/package.json']}"}\n`,
     'src/bot.ts': `export const token = '${SOURCES['/src/bot.ts']}';\n`,
+    'src/pages/styles.css': 'body { color: rebeccapurple; }\n',
+    'locales/en.ftl': 'hello = Hello\n',
     'public/robots.txt': 'User-agent: *\n'
 };
 const PAGES = {
     'client/index.html': '<html><head></head><body>home</body></html>',
     'client/uptime/index.html':
         '<html><head></head><body><script type="module" src="./main.ts"></script></body></html>',
-    'client/uptime/main.ts': "import { greeting } from '../greeting.ts';\ndocument.title = greeting;\n",
+    'client/uptime/main.ts':
+        "import { greeting } from '../greeting.ts';\nimport { shared } from '../../shared/text.ts';\ndocument.title = greeting + shared;\n",
+    'shared/text.ts': "export const shared = 'from shared';\n",
+    'shared/unused.ts': "export const unused = 'nothing imports this';\n",
     'client/greeting.ts': "export const greeting = 'hi';\n",
     'client/notes.html': '<p>notes</p>'
 };
@@ -55,7 +60,7 @@ async function served(files: Record<string, string>): Promise<Served> {
                     server: { watch: null }
                 })
             ),
-        project.client.hasPages
+        project.client
     );
     resources.defer(() => pageServer.vite.close());
     const bot = createHttpServer((request, response) => {
@@ -113,27 +118,58 @@ describe('DevPageServer with pages in client/', () => {
     });
 
     it("refuses the bot's source and config, and passes the bot's own routes on", async () => {
-        const answer = async (path: string, marker: string): Promise<{ status: number; leaked: boolean }> => {
+        const answer = async (path: string, marker: string): Promise<boolean> => {
             const response = await fetch(`http://${url}${path}`);
             const body = await response.text();
-            return { status: response.status, leaked: body.includes(marker) };
+            return body.includes(marker);
         };
-        const sources = await Promise.all(Object.entries(SOURCES).map(([path, marker]) => answer(path, marker)));
         // a windows root starts with a drive letter and a posix root with a slash
-        const fsPath = `/@fs/${pageServer.vite.config.root.replace(/^\//, '')}/src/bot.ts`;
-        const fsAnswer = await answer(fsPath, SOURCES['/src/bot.ts']);
+        const botFile = `${pageServer.vite.config.root.replace(/^\//, '')}/src/bot.ts`;
+        const requests: [path: string, marker: string][] = [
+            ...Object.entries(SOURCES),
+            ['/src/bot.ts?x.css', SOURCES['/src/bot.ts']],
+            ['/src/bot.ts?raw', SOURCES['/src/bot.ts']],
+            [`/@fs/${botFile}`, SOURCES['/src/bot.ts']],
+            [`/@id/${botFile}`, SOURCES['/src/bot.ts']],
+            [`/@id//${botFile}`, SOURCES['/src/bot.ts']]
+        ];
+        const leaks = await Promise.all(requests.map(([path, marker]) => answer(path, marker)));
         const botPaths = ['/api/pings', '/%00', '/notes.html'];
         const routes = await Promise.all(
             botPaths.map((path) => fetch(`http://${url}${path}`).then((response) => response.text()))
         );
         const post = await fetch(`http://${url}/uptime/`, { method: 'POST', body: '{}' });
 
-        expect(sources).toEqual(Object.keys(SOURCES).map(() => ({ status: 403, leaked: false })));
-        // only the leak check works for every os
-        // windows vite passes an /@fs/ path with a drive letter on to the bot
-        expect(fsAnswer.leaked).toBe(false);
+        // this checks only for a leak because the status differs by path and by os
+        expect(leaks).toEqual(requests.map(() => false));
         expect(routes).toEqual(botPaths.map((path) => `the bot got ${path}`));
         expect(await post.text()).toBe('the bot got /uptime/');
+    });
+
+    it('serves a file from outside client/ once a page imports it', async () => {
+        await fetch(`http://${url}/uptime/main.ts`);
+        const [imported, unused] = await Promise.all(
+            ['/shared/text.ts', '/shared/unused.ts'].map((path) =>
+                fetch(`http://${url}${path}`).then((response) => response.text())
+            )
+        );
+
+        expect(imported).toContain('from shared');
+        expect(unused).toBe('the bot got /shared/unused.ts');
+    });
+
+    it('lets the bot import project files with ?url or ?raw, and serves the stylesheet to the page', async () => {
+        // this test uses the client environment because an edge worker environment needs workerd. vite checks fs.allow in both
+        const { client } = pageServer.vite.environments;
+        const [stylesheet, locale] = await Promise.all([
+            client.transformRequest('/src/pages/styles.css?url'),
+            client.transformRequest('/locales/en.ftl?raw')
+        ]);
+        const asset = await fetch(`http://${url}/src/pages/styles.css`);
+
+        expect(stylesheet?.code).toContain('/src/pages/styles.css');
+        expect(locale?.code).toContain('hello = Hello');
+        expect(await asset.text()).toContain('rebeccapurple');
     });
 
     it('opens the socket that the browser pings while it waits for the dev server to come back', async () => {
@@ -198,6 +234,6 @@ describe('DevPageServer without pages', () => {
         ]);
 
         expect(await robots.text()).toBe('the bot got /robots.txt');
-        expect(source.status).toBe(403);
+        expect(await source.text()).toBe('the bot got /src/bot.ts');
     });
 });

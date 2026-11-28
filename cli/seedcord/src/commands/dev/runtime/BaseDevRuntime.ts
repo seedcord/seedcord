@@ -121,7 +121,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         const open = (sockets: Server): Promise<ViteDevServer> =>
             openViteServer(resources, mergeViteConfig(base(sockets), { mode: config.viteMode, plugins }));
 
-        return DevPageServer.open(open, files.client.hasPages).catch(rethrowVitePluginError);
+        return DevPageServer.open(open, files.client).catch(rethrowVitePluginError);
     }
 
     protected emit({ onEvent }: DevRuntimeContext, event: DevEvent): void {

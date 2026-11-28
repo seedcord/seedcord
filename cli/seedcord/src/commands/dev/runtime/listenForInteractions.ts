@@ -8,8 +8,6 @@ import { isPortInUse } from '@seedcord/utils/internal';
 
 import { cliLogger } from '#core/cliLogger';
 
-import { servedByVite } from './DevPageServer';
-
 import type { DevPageServer } from './DevPageServer';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -34,12 +32,12 @@ interface ListenOptions {
 
 // vite's middlewares run first on every request, and the cloudflare plugin's middleware hands the worker the ones vite passes on
 export async function listenForInteractions(
-    pageServer: Pick<DevPageServer, 'upgrade' | 'middlewares'>,
+    pageServer: Pick<DevPageServer, 'upgrade' | 'middlewares' | 'servedByVite'>,
     { port, host, configFile }: ListenOptions
 ): Promise<InteractionsEndpoint> {
     const server = createServer((request, response) => {
         request.headers[DEV_URL_HEADER] = request.url ?? '/';
-        if (!servedByVite(request)) request.url = '/';
+        if (!pageServer.servedByVite(request)) request.url = '/';
         pageServer.middlewares(request, response, (error?: unknown) => {
             if (error === undefined) {
                 response.writeHead(NOT_FOUND).end();

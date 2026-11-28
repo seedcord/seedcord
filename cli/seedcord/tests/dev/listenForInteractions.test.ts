@@ -4,6 +4,7 @@ import { createServer as createNetServer } from 'node:net';
 import { DEV_URL_HEADER } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
+import { isGetOrHead } from '@seedcord/utils/internal';
 import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { listenForInteractions } from '#commands/dev/runtime/listenForInteractions';
@@ -15,13 +16,13 @@ import type { AddressInfo } from 'node:net';
 import type { Connect } from 'vite';
 
 type Handle = (request: IncomingMessage, next: (error?: unknown) => void) => void;
-type PageServer = Pick<DevPageServer, 'upgrade' | 'middlewares'>;
+type PageServer = Pick<DevPageServer, 'upgrade' | 'middlewares' | 'servedByVite'>;
 
 // justified: a Connect app is a request handler, and the endpoint only calls it as one
 function middlewares(handle: Handle): PageServer {
     const app = ((request: IncomingMessage, _response: unknown, next: (error?: unknown) => void) =>
         handle(request, next)) as unknown as Connect.Server;
-    return { middlewares: app, upgrade: () => false };
+    return { middlewares: app, upgrade: () => false, servedByVite: ({ method }) => isGetOrHead(method) };
 }
 
 const QUICK = { port: 0, host: '127.0.0.1', configFile: 'seedcord.config.ts' };
