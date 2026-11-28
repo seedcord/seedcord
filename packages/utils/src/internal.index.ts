@@ -2,7 +2,17 @@ export { encodeFile } from './files/encodedFile';
 export { BotLayout } from './files/BotLayout';
 export type { BotEntry } from './files/BotLayout';
 export { importFailed, recordThrownBy, vitePluginThrew } from './files/importFailed';
-export { fileUrl, importSpecifier, isInside, posixRelative, toPosixPath, workerdPath } from './files/paths';
+export {
+    decodeUrlPath,
+    fileInFolder,
+    fileUrl,
+    fromWorkerdPath,
+    importSpecifier,
+    isInside,
+    posixRelative,
+    toPosixPath,
+    workerdPath
+} from './files/paths';
 export { INDEX_PAGE, staticFileAt } from './files/staticFileAt';
 export {
     BOT_FILES_KEY,

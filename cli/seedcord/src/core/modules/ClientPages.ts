@@ -1,22 +1,26 @@
 import { existsSync, globSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { basename, dirname, extname, join } from 'node:path';
+import { basename, dirname, extname, join, resolve } from 'node:path';
 
 import { FOLDER_REDIRECT, HASHED_ASSETS } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 import {
     CLIENT_FOLDER,
+    decodeUrlPath,
+    fileInFolder,
+    fromWorkerdPath,
     INDEX_PAGE,
     isGetOrHead,
     isInside,
     posixRelative,
     staticFileAt,
-    toPosixPath
+    toPosixPath,
+    withoutQuery
 } from '@seedcord/utils/internal';
-import { searchForWorkspaceRoot, send } from 'vite';
+import { isCSSRequest, send } from 'vite';
 
-import { CLIENT_ENVIRONMENT } from './botEnvironment';
+import { CLIENT_ENVIRONMENT, viteEnvironment } from './botEnvironment';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ServerResponse } from 'node:http';
@@ -24,6 +28,21 @@ import type { Connect, Plugin, ResolvedConfig, ViteDevServer } from 'vite';
 
 const PLUGIN_NAME = 'seedcord:client-pages';
 const PAGES_GLOB = `**/${INDEX_PAGE}`;
+
+// undefined for vite's own paths, like /@vite/client, and for a plugin's virtual module under /@id/__x00__.
+// vite loads any absolute path after /@fs/ or /@id/. those paths get the same checks as one under vite's root
+function fileAt(path: string, root: string): string | undefined {
+    const prefix = ['/@fs/', '/@id/'].find((start) => path.startsWith(start));
+    if (prefix === undefined) return path.startsWith('/@') ? undefined : toPosixPath(join(root, path));
+    const rest = path.slice(prefix.length - 1);
+    return rest.startsWith('/__x00__') ? undefined : toPosixPath(resolve(fromWorkerdPath(rest)));
+}
+
+// a page is at its folder's path, and a public/ file at its own. vite's publicDir is '' when it's off
+function existsIn(folder: string, path: string): boolean {
+    const file = folder === '' ? undefined : fileInFolder(folder, path);
+    return file !== undefined && existsSync(file);
+}
 
 // cloudflare serves vite's hashed files with max-age=0 unless a _headers rule sets another cache
 const ASSET_HEADERS = `${HASHED_ASSETS.path}*\n  Cache-Control: ${HASHED_ASSETS.cacheControl}\n`;
@@ -50,7 +69,21 @@ export class ClientPages {
         return this.hasPages ? [this.dir] : [];
     }
 
-    // vite only lets a browser read the pages folder when dev starts with a page
+    // vite gets only what a page loads. it would hand the bot's source to anyone with the tunnel url
+    public browserCanLoad(url: string, vite: ViteDevServer): boolean {
+        const path = decodeUrlPath(withoutQuery(url));
+        if (path === undefined) return false;
+        const { root, publicDir, assetsInclude } = vite.config;
+        if (isCSSRequest(path) || assetsInclude(path)) return true;
+        const file = fileAt(path, root);
+        if (file === undefined || file.includes('/node_modules/')) return true;
+        if (viteEnvironment(vite.environments, CLIENT_ENVIRONMENT).moduleGraph.getModulesByFile(file)) return true;
+        // without a page, the client folder just holds bot code
+        const pages = this.hasPages && (isInside(this.dir, file) || existsIn(this.dir, path));
+        return pages || existsIn(publicDir, path);
+    }
+
+    // the pages middleware and the build's page inputs only exist when dev starts with a page
     public restartPatterns(): string[] {
         return this.hasPages ? [] : [toPosixPath(join(this.dir, PAGES_GLOB))];
     }
@@ -68,19 +101,13 @@ export class ClientPages {
 
     public vitePlugin({ edge }: { edge: boolean }): Plugin {
         const publicDir = join(this.configDir, 'public');
-        const folderFrom = this.folderFrom.bind(this);
-        // vite serves any file in the workspace otherwise, and the tunnel url would hand anyone the bot's source
-        const allow = (folders: string[]): { server: { fs: { allow: string[] } } } => ({
-            server: { fs: { allow: [...folders, join(searchForWorkspaceRoot(this.configDir), 'node_modules')] } }
-        });
         // cloudflare deploys public/ for any worker. a node bot serves it once it has pages
-        if (!this.hasPages)
-            return { name: PLUGIN_NAME, config: () => ({ ...allow([]), publicDir: edge ? publicDir : false }) };
+        if (!this.hasPages) return { name: PLUGIN_NAME, config: () => ({ publicDir: edge ? publicDir : false }) };
+        const folderFrom = this.folderFrom.bind(this);
 
         return {
             name: PLUGIN_NAME,
             config: () => ({
-                ...allow([this.dir]),
                 publicDir,
                 environments: { [CLIENT_ENVIRONMENT]: { build: { rolldownOptions: { input: [...this.pages] } } } }
             }),

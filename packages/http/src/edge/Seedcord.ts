@@ -191,7 +191,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     public async fetch(incoming: Request, _env: unknown, ctx: EngineContext): Promise<Response> {
         if (incoming.headers.has(WORKER_PROBE.header)) return new Response(null, { status: WORKER_PROBE.status });
 
-        // seedcord dev sends every request to / so vite can't serve the bot's source
+        // seedcord dev hides the path of a request that vite mustn't serve. it sends the real path in this header
         const devUrl = this.#underDev ? incoming.headers.get(DEV_URL_HEADER) : null;
         const request = devUrl === null ? incoming : atDevPath(incoming, devUrl);
 

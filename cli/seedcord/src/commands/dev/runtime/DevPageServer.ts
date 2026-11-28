@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { transformPage } from '@seedcord/core/internal';
 import { isGetOrHead } from '@seedcord/utils/internal';
 
+import type { ClientPages } from '#core/modules/ClientPages';
 import type { DevServer } from '@seedcord/types/internal';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import type { Duplex } from 'node:stream';
@@ -11,11 +12,6 @@ import type { Connect, ViteDevServer } from 'vite';
 // vite's client pings with vite-ping until a restarted server answers
 const VITE_SOCKETS: ReadonlySet<string | undefined> = new Set(['vite-hmr', 'vite-ping']);
 
-// the bot answers every POST. if vite got one for a path with a static file, discord would get a 405
-export function servedByVite({ method }: IncomingMessage): boolean {
-    return isGetOrHead(method);
-}
-
 export class DevPageServer implements DevServer {
     private readonly upgraded = new Set<Duplex>();
 
@@ -23,16 +19,25 @@ export class DevPageServer implements DevServer {
         public readonly vite: ViteDevServer,
         // vite's ws.server. upgrade() hands its sockets over here
         private readonly sockets: Server,
-        public readonly servesPages: boolean
+        private readonly pages: ClientPages
     ) {}
 
     // this creates the socket server first because vite reads it from its config
     public static async open(
         openVite: (sockets: Server) => Promise<ViteDevServer>,
-        servesPages: boolean
+        pages: ClientPages
     ): Promise<DevPageServer> {
         const sockets = createServer();
-        return new DevPageServer(await openVite(sockets), sockets, servesPages);
+        return new DevPageServer(await openVite(sockets), sockets, pages);
+    }
+
+    public get servesPages(): boolean {
+        return this.pages.hasPages;
+    }
+
+    // the bot answers every POST. if vite got one for a path with a static file, discord would get a 405
+    public servedByVite({ method, url = '/' }: IncomingMessage): boolean {
+        return isGetOrHead(method) && this.pages.browserCanLoad(url, this.vite);
     }
 
     public get middlewares(): Connect.Server {
@@ -40,7 +45,7 @@ export class DevPageServer implements DevServer {
     }
 
     public serve(request: IncomingMessage, response: ServerResponse): Promise<boolean> {
-        if (!servedByVite(request)) return Promise.resolve(false);
+        if (!this.servedByVite(request)) return Promise.resolve(false);
         return new Promise((resolve) => {
             this.vite.middlewares(request, response, () => resolve(false));
             response.once('close', () => resolve(true));

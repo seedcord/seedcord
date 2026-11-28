@@ -8,14 +8,15 @@ import { isPortInUse } from '@seedcord/utils/internal';
 
 import { cliLogger } from '#core/cliLogger';
 
-import { servedByVite } from './DevPageServer';
-
 import type { DevPageServer } from './DevPageServer';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
 const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
+// vite passes a request for this path on to the worker because nothing else answers it.
+// the trailing slash keeps vite from treating it as a module
+const WORKER_ONLY_PATH = '/@seedcord/worker/';
 
 const logger = cliLogger('Worker');
 
@@ -34,12 +35,12 @@ interface ListenOptions {
 
 // vite's middlewares run first on every request, and the cloudflare plugin's middleware hands the worker the ones vite passes on
 export async function listenForInteractions(
-    pageServer: Pick<DevPageServer, 'upgrade' | 'middlewares'>,
+    pageServer: Pick<DevPageServer, 'upgrade' | 'middlewares' | 'servedByVite'>,
     { port, host, configFile }: ListenOptions
 ): Promise<InteractionsEndpoint> {
     const server = createServer((request, response) => {
         request.headers[DEV_URL_HEADER] = request.url ?? '/';
-        if (!servedByVite(request)) request.url = '/';
+        if (!pageServer.servedByVite(request)) request.url = WORKER_ONLY_PATH;
         pageServer.middlewares(request, response, (error?: unknown) => {
             if (error === undefined) {
                 response.writeHead(NOT_FOUND).end();
