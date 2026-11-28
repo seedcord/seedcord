@@ -21,7 +21,7 @@
         "coverage": "vp test run --coverage"
     },
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.1101.0",
+        "@aws-sdk/client-s3": "^3.1177.0",
         "@changesets/parse": "^1.0.0",
         "@manypkg/get-packages": "^3.1.0",
         "@seedcord/brand": "workspace:^",
@@ -40,7 +40,7 @@
         "@types/node": "catalog:deps",
         "@vitest/coverage-v8": "catalog:test",
         "jsonc-parser": "catalog:deps",
-        "string-argv": "^0.3.2",
+        "string-argv": "^0.4.0",
         "type-fest": "catalog:deps",
         "typescript": "catalog:peer",
         "vite": "catalog:deps",

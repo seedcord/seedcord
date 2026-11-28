@@ -26,7 +26,7 @@
         "coverage": "vp test run --coverage"
     },
     "dependencies": {
-        "get-tsconfig": "^4.14.1",
+        "get-tsconfig": "^4.14.3",
         "vite-plus": "catalog:deps"
     },
     "devDependencies": {

@@ -48,7 +48,7 @@
         "@types/mdx": "catalog:deps",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
-        "eslint": "^9.39.4",
+        "eslint": "^9.39.5",
         "eslint-config-next": "catalog:eslint",
         "eslint-plugin-better-tailwindcss": "catalog:eslint",
         "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
