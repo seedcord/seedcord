@@ -1,7 +1,7 @@
 import { stat } from 'node:fs/promises';
 import * as path from 'node:path';
 
-import { isInside, posixRelative } from './paths';
+import { decodeUrlPath, fileInFolder, posixRelative } from './paths';
 
 import type { Stats } from 'node:fs';
 
@@ -11,21 +11,6 @@ type StaticFile = { file: string; size: number } | { redirect: string };
 
 function statIfExists(file: string): Promise<Stats | undefined> {
     return stat(file).catch(() => undefined);
-}
-
-// undefined when the path escapes folder or can't be a file name
-function fileAtUrlPath(folder: string, urlPath: string): string | undefined {
-    let decoded: string;
-    try {
-        decoded = decodeURIComponent(urlPath);
-    } catch {
-        // decodeURIComponent throws on a malformed escape like %E0
-        return undefined;
-    }
-    // node's fs throws on a file name with a NUL byte
-    if (decoded.includes('\0')) return undefined;
-    const file = path.join(folder, decoded);
-    return isInside(folder, file) ? file : undefined;
 }
 
 // built from the folder on disk. the raw path can start with // and point the browser at another host
@@ -40,7 +25,8 @@ export async function staticFileAt(
     folder: string,
     { pathname, search }: Pick<URL, 'pathname' | 'search'>
 ): Promise<StaticFile | undefined> {
-    const target = fileAtUrlPath(folder, pathname);
+    const decoded = decodeUrlPath(pathname);
+    const target = decoded === undefined ? undefined : fileInFolder(folder, decoded);
     const entry = target === undefined ? undefined : await statIfExists(target);
     if (target === undefined || entry === undefined) return undefined;
 

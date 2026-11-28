@@ -2,15 +2,19 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vite-plus/test';
 
-import { importSpecifier, workerdPath } from '#src/files/paths';
+import { fromWorkerdPath, importSpecifier, workerdPath } from '#src/files/paths';
 
 describe('workerdPath', () => {
-    it('makes a Windows path absolute for POSIX path functions', () => {
-        expect(workerdPath(String.raw`D:\bot\src\handlers`)).toBe('/D:/bot/src/handlers');
+    it('makes a Windows path absolute for POSIX path functions, and fromWorkerdPath turns it back', () => {
+        const slashed = workerdPath(String.raw`D:\bot\src\handlers`);
+
+        expect(slashed).toBe('/D:/bot/src/handlers');
+        expect(fromWorkerdPath(slashed)).toBe('D:/bot/src/handlers');
     });
 
-    it("doesn't change a POSIX path", () => {
+    it("doesn't change a POSIX path either way", () => {
         expect(workerdPath('/home/bot/src')).toBe('/home/bot/src');
+        expect(fromWorkerdPath('/home/bot/src')).toBe('/home/bot/src');
     });
 });
 

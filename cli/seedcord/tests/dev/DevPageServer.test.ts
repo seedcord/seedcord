@@ -91,6 +91,9 @@ describe('DevPageServer with pages in client/', () => {
         return () => started[Symbol.asyncDispose]();
     });
 
+    // a project file's absolute path for /@fs/ and /@id/. a windows root starts with a drive letter, a posix one with a slash
+    const absolute = (file: string): string => `${pageServer.vite.config.root.replace(/^\//, '')}/${file}`;
+
     it("serves a page at its folder's path with vite's client, and redirects the path without a slash", async () => {
         const [moved, index, page, home] = await Promise.all([
             fetch(`http://${url}/uptime?tab=1`, { redirect: 'manual' }),
@@ -123,12 +126,14 @@ describe('DevPageServer with pages in client/', () => {
             const body = await response.text();
             return body.includes(marker);
         };
-        // a windows root starts with a drive letter and a posix root with a slash
-        const botFile = `${pageServer.vite.config.root.replace(/^\//, '')}/src/bot.ts`;
+        const botFile = absolute('src/bot.ts');
         const requests: [path: string, marker: string][] = [
             ...Object.entries(SOURCES),
             ['/src/bot.ts?x.css', SOURCES['/src/bot.ts']],
             ['/src/bot.ts?raw', SOURCES['/src/bot.ts']],
+            ['/client/%2e%2e/src/bot.ts', SOURCES['/src/bot.ts']],
+            ['/client/%252e%252e/src/bot.ts', SOURCES['/src/bot.ts']],
+            ['/@/src/bot.ts', SOURCES['/src/bot.ts']],
             [`/@fs/${botFile}`, SOURCES['/src/bot.ts']],
             [`/@id/${botFile}`, SOURCES['/src/bot.ts']],
             [`/@id//${botFile}`, SOURCES['/src/bot.ts']]
@@ -148,13 +153,17 @@ describe('DevPageServer with pages in client/', () => {
 
     it('serves a file from outside client/ once a page imports it', async () => {
         await fetch(`http://${url}/uptime/main.ts`);
-        const [imported, unused] = await Promise.all(
-            ['/shared/text.ts', '/shared/unused.ts'].map((path) =>
+        const byPath = `/@fs/${absolute('shared/text.ts')}`;
+        const [imported, importedByPath, unused] = await Promise.all(
+            ['/shared/text.ts', byPath, '/shared/unused.ts'].map((path) =>
                 fetch(`http://${url}${path}`).then((response) => response.text())
             )
         );
 
-        expect(imported).toContain('from shared');
+        expect([imported, importedByPath]).toEqual([
+            expect.stringContaining('from shared'),
+            expect.stringContaining('from shared')
+        ]);
         expect(unused).toBe('the bot got /shared/unused.ts');
     });
 

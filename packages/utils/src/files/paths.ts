@@ -34,8 +34,33 @@ export function importSpecifier(fromDir: string, file: string): string {
     return specifier.startsWith('../') ? specifier : `./${specifier}`;
 }
 
+const DRIVE_ROOT = /^[A-Za-z]:\//;
+
 // workerd's node:path is posix. it reads D:/bot as relative
 export function workerdPath(hostPath: string): string {
     const forward = hostPath.replaceAll('\\', '/');
-    return /^[A-Za-z]:\//.test(forward) ? `/${forward}` : forward;
+    return DRIVE_ROOT.test(forward) ? `/${forward}` : forward;
+}
+
+// the reverse of workerdPath. vite's /@fs/ urls carry a windows path as /D:/bot too
+export function fromWorkerdPath(slashed: string): string {
+    const rest = slashed.slice(1);
+    return DRIVE_ROOT.test(rest) ? rest : slashed;
+}
+
+// decodeURIComponent throws on a malformed escape like %E0. node's fs throws on a NUL byte
+export function decodeUrlPath(urlPath: string): string | undefined {
+    let decoded: string;
+    try {
+        decoded = decodeURIComponent(urlPath);
+    } catch {
+        return undefined;
+    }
+    return decoded.includes('\0') ? undefined : decoded;
+}
+
+// a url path with .. would otherwise reach the bot's source from a public folder
+export function fileInFolder(folder: string, decodedPath: string): string | undefined {
+    const file = path.join(folder, decodedPath);
+    return isInside(folder, file) ? file : undefined;
 }

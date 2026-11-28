@@ -7,6 +7,9 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 import {
     CLIENT_FOLDER,
+    decodeUrlPath,
+    fileInFolder,
+    fromWorkerdPath,
     INDEX_PAGE,
     isGetOrHead,
     isInside,
@@ -32,13 +35,13 @@ function fileAt(path: string, root: string): string | undefined {
     const prefix = ['/@fs/', '/@id/'].find((start) => path.startsWith(start));
     if (prefix === undefined) return path.startsWith('/@') ? undefined : toPosixPath(join(root, path));
     const rest = path.slice(prefix.length - 1);
-    return rest.startsWith('/__x00__') ? undefined : toPosixPath(resolve(rest));
+    return rest.startsWith('/__x00__') ? undefined : toPosixPath(resolve(fromWorkerdPath(rest)));
 }
 
 // a page is at its folder's path, and a public/ file at its own. vite's publicDir is '' when it's off
 function existsIn(folder: string, path: string): boolean {
-    const file = join(folder, path);
-    return folder !== '' && isInside(folder, file) && existsSync(file);
+    const file = folder === '' ? undefined : fileInFolder(folder, path);
+    return file !== undefined && existsSync(file);
 }
 
 // cloudflare serves vite's hashed files with max-age=0 unless a _headers rule sets another cache
@@ -68,12 +71,8 @@ export class ClientPages {
 
     // vite gets only what a page loads. it would hand the bot's source to anyone with the tunnel url
     public browserCanLoad(url: string, vite: ViteDevServer): boolean {
-        let path: string;
-        try {
-            path = decodeURIComponent(withoutQuery(url));
-        } catch {
-            return false;
-        }
+        const path = decodeUrlPath(withoutQuery(url));
+        if (path === undefined) return false;
         const { root, publicDir, assetsInclude } = vite.config;
         if (isCSSRequest(path) || assetsInclude(path)) return true;
         const file = fileAt(path, root);

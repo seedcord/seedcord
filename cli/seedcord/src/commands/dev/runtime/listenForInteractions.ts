@@ -14,6 +14,9 @@ import type { AddressInfo } from 'node:net';
 
 const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
+// vite passes a request for this path on to the worker because nothing else answers it.
+// the trailing slash keeps vite from treating it as a module
+const WORKER_ONLY_PATH = '/@seedcord/worker/';
 
 const logger = cliLogger('Worker');
 
@@ -37,7 +40,7 @@ export async function listenForInteractions(
 ): Promise<InteractionsEndpoint> {
     const server = createServer((request, response) => {
         request.headers[DEV_URL_HEADER] = request.url ?? '/';
-        if (!pageServer.servedByVite(request)) request.url = '/';
+        if (!pageServer.servedByVite(request)) request.url = WORKER_ONLY_PATH;
         pageServer.middlewares(request, response, (error?: unknown) => {
             if (error === undefined) {
                 response.writeHead(NOT_FOUND).end();

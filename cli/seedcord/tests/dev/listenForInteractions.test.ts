@@ -36,18 +36,21 @@ async function listening(pageServer: PageServer): Promise<string> {
 }
 
 describe('listenForInteractions', () => {
-    it('hands every POST to the worker as /', async () => {
+    it("keeps a POST and a GET that vite doesn't serve away from a page at /", async () => {
         const seen: (string | undefined)[] = [];
-        const url = await listening(
-            middlewares(({ url }, next) => {
-                seen.push(url);
+        const url = await listening({
+            ...middlewares(({ url: requested }, next) => {
+                seen.push(requested);
                 next();
-            })
-        );
+            }),
+            servedByVite: ({ method, url: requested }) => method === 'GET' && requested !== '/api/pings'
+        });
 
         await fetch(`${url}/interactions?probe=1`, { method: 'POST', body: '{}' });
+        await fetch(`${url}/api/pings`);
 
-        expect(seen).toEqual(['/']);
+        expect(seen).toHaveLength(2);
+        expect(seen).not.toContain('/');
     });
 
     it('hands a GET on with its own path, and its path in a header too', async () => {
