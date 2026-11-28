@@ -1,5 +1,11 @@
 # @seedcord/utils
 
+## 0.10.1-next.1
+
+### 🩹 Patch
+
+- `seedcord` imports more internals from here. ([#482](https://github.com/seedcord/seedcord/pull/482))
+
 ## 0.10.1-next.0
 
 ### 🩹 Patch

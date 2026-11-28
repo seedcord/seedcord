@@ -1,5 +1,15 @@
 # seedcord
 
+## 0.25.0-next.1
+
+### 🩹 Patch
+
+- Fixed `seedcord dev` failing to start an edge bot that imports a file with `?url` or `?raw`, like `import styles from './styles.css?url'`. ([#482](https://github.com/seedcord/seedcord/pull/482))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/utils` 0.10.1-next.0 → 0.10.1-next.1
+
 ## 0.25.0-next.0
 
 ### ✨ Minor
