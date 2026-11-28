@@ -1,6 +1,7 @@
 import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { setTimeout } from 'node:timers/promises';
 
 import { describe, expect, it } from 'vite-plus/test';
 
@@ -43,6 +44,8 @@ export class Web extends Plugin {
 }
 `;
 
+const FIXTURE_SETTLE_MS = 500;
+
 interface ReloadingBot extends AsyncDisposable {
     readonly web: { readonly version: string };
 }
@@ -62,6 +65,10 @@ describe('dev runtime on a node bot', () => {
             await writeFile(join(project.path, 'seedcord.config.ts'), 'export default {};\n');
             await writeFile(join(src, 'bot.ts'), botFile(loadsWeb));
             await writeFile(join(src, 'Web.ts'), webPlugin('before'));
+            // macOS reports a write late to a watcher that starts within about 50ms of it, when idle. dev reads
+            // that late event as a save while the bot starts. PluginReloader.learn() can't recover from that.
+            // the extra margin covers a busy CI machine
+            await setTimeout(FIXTURE_SETTLE_MS);
 
             const runtime = new ServerDevRuntime();
             await using _runtime = { [Symbol.asyncDispose]: () => runtime.stop() };

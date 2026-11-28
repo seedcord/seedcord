@@ -58,6 +58,12 @@ Each start follows these steps.
 
 Cloudflare assigns a fresh hostname every run, so the last step writes a new endpoint each time. When you quit, seedcord empties the interactions endpoint field on your Discord application since that hostname stops working once the tunnel closes.
 
+<Callout type="warning">
+
+A quick tunnel can stop working after your machine sleeps or changes networks. `cloudflared` keeps running, but its hostname doesn't resolve anymore so Discord's interactions stop reaching your bot. `seedcord dev` doesn't log anything when this happens. Quit `seedcord dev` and start it again to get a new tunnel. Pressing `r` won't fix it because a restart keeps the same tunnel.
+
+</Callout>
+
 ## When you already have a URL
 
 A quick tunnel changes your endpoint on every run, and each run takes a few seconds to set up. When you want an address that doesn't change, give `dev.tunnel` an https URL you already serve. A named cloudflared tunnel, a tailscale funnel, a reverse proxy, or a staging server all work.

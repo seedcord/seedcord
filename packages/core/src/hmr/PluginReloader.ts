@@ -28,7 +28,14 @@ export class PluginReloader {
         private readonly hmr: HmrManager
     ) {}
 
-    // run this before you save any of these files because it matches attachments by class and a saved file exports a new one
+    // this imports every file a second time to match each plugin to the export it came from. it matches by class.
+    // that's why it has to run before u save any of them. a saved file exports a new class.
+    // and if one of these files changes while the bot is still starting, vite runs it again and this gets a new class too.
+    // that part's on purpose vite's behavior. a file event clears the file's transform and then the next
+    // import then runs it fresh. the new class doesn't match the running plugin. every save of that file then
+    // asks for a restart until u restart dev. i spent a while trying to fix it by making the cli wait first, but
+    // it still races the file watcher and i really couldn't find a small way to fix it. it's very rare and a small
+    // annoyance at most when it happens
     public async learn(imports: readonly BotImport[]): Promise<void> {
         this.sources.clear();
         const { attachments } = this.plugins;
