@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/plugin-kysely",
-    "version": "0.9.2-next.0",
+    "version": "0.9.2-next.1",
     "description": "Connect a seedcord bot to any database that Kysely supports",
     "keywords": [
         "database",

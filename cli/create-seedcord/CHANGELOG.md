@@ -1,5 +1,11 @@
 # create-seedcord
 
+## 0.7.3-next.0
+
+### 🩹 Patch
+
+- `init()` is now marked `override` as `init()` is optional on `Plugin` in `@seedcord/core`. ([`b38e7c5`](https://github.com/seedcord/seedcord/commit/b38e7c549022e684a636757ee89538f2318e55e2))
+
 ## 0.7.2
 
 ### 🩹 Patch

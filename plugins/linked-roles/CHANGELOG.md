@@ -1,5 +1,15 @@
 # @seedcord/plugin-linked-roles
 
+## 0.2.1-next.1
+
+### 🩹 Patch
+
+- `init()` is now marked `override` as `init()` is optional on `Plugin` in `@seedcord/core`. ([`b38e7c5`](https://github.com/seedcord/seedcord/commit/b38e7c549022e684a636757ee89538f2318e55e2))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/plugin-oauth` 0.2.2-next.0 → 0.2.2-next.1
+
 ## 0.2.1-next.0
 
 ### 🩹 Patch

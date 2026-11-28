@@ -1,5 +1,11 @@
 # @seedcord/plugin-kysely-postgres
 
+## 0.9.2-next.1
+
+### 🩹 Patch
+
+- `init()` is now marked `override` as `init()` is optional on `Plugin` in `@seedcord/core`. ([`b38e7c5`](https://github.com/seedcord/seedcord/commit/b38e7c549022e684a636757ee89538f2318e55e2))
+
 ## 0.9.2-next.0
 
 ### 🩹 Patch

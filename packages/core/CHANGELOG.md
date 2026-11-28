@@ -1,5 +1,11 @@
 # @seedcord/core
 
+## 0.15.0-next.1
+
+### 💥 Breaking
+
+- `init()` on `Plugin` is now optional, like `ready()` and `dispose()`, so a plugin without startup work can leave it out. If your plugin defines `init()`, mark it `override` since `@seedcord/tsconfig` turns on `noImplicitOverride`. ([`b38e7c5`](https://github.com/seedcord/seedcord/commit/b38e7c549022e684a636757ee89538f2318e55e2))
+
 ## 0.15.0-next.0
 
 ### ✨ Minor
