@@ -83,6 +83,12 @@ Discord resizes most uploads to 128 pixels. A lossy AVIF or an animated GIF of 2
 
 While `seedcord dev` runs, a file you add to the folder [needs a restart](/tooling/hot-reload#files-that-need-a-restart). Run `push` first. Your bot stops at startup if the folder has a file that Discord doesn't have, and the error tells you to run `seedcord emojis push`. An edge bot's `seedcord build` fails the same way.
 
+<Callout type="warning">
+
+[Without a terminal](/tooling/dev#without-a-terminal), adding the file stops `seedcord dev`. Run `push`, then start it again.
+
+</Callout>
+
 On an edge bot, if `push` uploads anything, it also prints a reminder to run `seedcord build` again because the Worker holds the ids it read at build time. [Workers](/build/workers) has the order.
 
 ### Replace an image
